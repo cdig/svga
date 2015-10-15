@@ -1,0 +1,18 @@
+{
+  "name": "svg-activity",
+  "description": "Enables the ability to make activities using SVGs.",
+  "authors": [
+    "Sean Lynch <sean.zo.lynch@gmail.com>"
+  ],
+  "main": [
+    "dist/scripts.coffee"
+  ],
+  "ignore": [
+    "**/.*"
+  ],
+  "dependencies": {
+    "flow-arrows": "cdig/flow-arrows"
+  },
+  "license": "MIT",
+  "private": true
+}

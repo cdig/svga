@@ -4,15 +4,11 @@
   "authors": [
     "Sean Lynch <sean.zo.lynch@gmail.com>"
   ],
-  "main": [
-    "dist/scripts.coffee"
-  ],
-  "ignore": [
-    "**/.*"
-  ],
   "dependencies": {
     "flow-arrows": "cdig/flow-arrows"
   },
+  "main": [],
+  "ignore": [],
   "license": "MIT",
   "private": true
 }

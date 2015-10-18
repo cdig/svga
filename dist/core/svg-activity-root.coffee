@@ -1,5 +1,5 @@
 do ()-> 
-  Take ["defaultElement", "PureDom", "SVGActivities", "SVGTransform", "SVGStyle"], (defaultElement, PureDom, SVGActivities, SVGTransform, SVGStyle)-> 
+  Take ["defaultElement", "PureDom", "SVGTransform", "SVGStyle"], (defaultElement, PureDom, SVGTransform, SVGStyle)-> 
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)
@@ -41,10 +41,10 @@ do ()->
 
         setupDocument: (activityName, contentDocument)->
           scope.registerInstance("default", defaultElement)
+          console.log scope.instances
           scope.root = scope.instances["root"](contentDocument)
-          console.log scope.root
+          
           setupHighlighter(contentDocument.querySelector("defs"))
-          SVGActivities.registerActivity(activityName, scope.root)
           childElements = getChildElements(contentDocument)
           scope.root.children = []
           for child in childElements

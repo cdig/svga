@@ -1,0 +1,54 @@
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Caches and DBs and logs, oh my #
+########################################
+*.log
+*.sql
+*.sqlite
+.sass-cache/
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Icon must end with two \r.
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on an external disk
+.Spotlight-V100
+.Trashes
+
+# Secret Environment Variables #
+################################
+.env
+.powenv
+secrets.yml
+
+
+# Other Stuff We Don't Want #
+################################
+bower_components
+dev
+node_modules
+resources

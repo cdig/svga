@@ -5,7 +5,8 @@
     "Sean Lynch <sean.zo.lynch@gmail.com>"
   ],
   "main": [
-    "dist/scripts.coffee"
+    "dist/scripts.js",
+    "dist/styles.css"
   ],
   "ignore": [
     "**/.*"

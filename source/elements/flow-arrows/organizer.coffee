@@ -193,7 +193,7 @@ do ->
     return Math.atan2(b.y - a.y, b.x - a.x)
 
 
-  activity.Organizer = 
+  Make "Organizer", Organizer = 
     build: (parent, edgesData, arrowsContainer, flowArrows)->
       lineData = edgesToLines(edgesData)
       segments = []

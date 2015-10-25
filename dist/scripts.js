@@ -1079,97 +1079,99 @@
   })();
 
   (function() {
-    var FlowArrows, removeOriginalArrow, startAnimation;
-    removeOriginalArrow = function(selectedSymbol) {
-      var child, children, k, l, len, len1, ref, results;
-      children = [];
-      ref = selectedSymbol.childNodes;
-      for (k = 0, len = ref.length; k < len; k++) {
-        child = ref[k];
-        children.push(child);
-      }
-      results = [];
-      for (l = 0, len1 = children.length; l < len1; l++) {
-        child = children[l];
-        results.push(selectedSymbol.removeChild(child));
-      }
-      return results;
-    };
-    startAnimation = function(arrowsContainers) {
-      var currentTime, elapsedTime, update;
-      currentTime = null;
-      elapsedTime = 0;
-      update = function(time) {
-        var arrowsContainer, dT, k, len;
-        if (currentTime == null) {
-          currentTime = time;
+    return Take("Organizer", function(Organizer) {
+      var FlowArrows, removeOriginalArrow, startAnimation;
+      removeOriginalArrow = function(selectedSymbol) {
+        var child, children, k, l, len, len1, ref, results;
+        children = [];
+        ref = selectedSymbol.childNodes;
+        for (k = 0, len = ref.length; k < len; k++) {
+          child = ref[k];
+          children.push(child);
         }
-        dT = (time - currentTime) / 1000;
-        currentTime = time;
-        elapsedTime += dT;
-        for (k = 0, len = arrowsContainers.length; k < len; k++) {
-          arrowsContainer = arrowsContainers[k];
-          if (isNaN(time)) {
-            console.log("why is the stime nan?");
+        results = [];
+        for (l = 0, len1 = children.length; l < len1; l++) {
+          child = children[l];
+          results.push(selectedSymbol.removeChild(child));
+        }
+        return results;
+      };
+      startAnimation = function(arrowsContainers) {
+        var currentTime, elapsedTime, update;
+        currentTime = null;
+        elapsedTime = 0;
+        update = function(time) {
+          var arrowsContainer, dT, k, len;
+          if (currentTime == null) {
+            currentTime = time;
           }
-          arrowsContainer.update(dT);
-        }
+          dT = (time - currentTime) / 1000;
+          currentTime = time;
+          elapsedTime += dT;
+          for (k = 0, len = arrowsContainers.length; k < len; k++) {
+            arrowsContainer = arrowsContainers[k];
+            if (isNaN(time)) {
+              console.log("why is the stime nan?");
+            }
+            arrowsContainer.update(dT);
+          }
+          return requestAnimationFrame(update);
+        };
         return requestAnimationFrame(update);
       };
-      return requestAnimationFrame(update);
-    };
-    return Make("FlowArrows", FlowArrows = function() {
-      var scope;
-      return scope = {
-        SPEED: 200,
-        MIN_EDGE_LENGTH: 8,
-        MIN_SEGMENT_LENGTH: 1,
-        CONNECTED_DISTANCE: 1,
-        ARROWS_PROPERTY: "arrows",
-        scale: 0.75,
-        SPACING: 600,
-        FADE_LENGTH: 50,
-        arrowsContainers: [],
-        setup: function(parent, selectedSymbol, linesData) {
-          var arrowsContainer, k, len, lineData;
-          removeOriginalArrow(selectedSymbol);
-          arrowsContainer = new ArrowsContainer(selectedSymbol);
-          scope.arrowsContainers.push(arrowsContainer);
-          for (k = 0, len = linesData.length; k < len; k++) {
-            lineData = linesData[k];
-            activity.Organizer.build(parent, lineData.edges, arrowsContainer, this);
+      return Make("FlowArrows", FlowArrows = function() {
+        var scope;
+        return scope = {
+          SPEED: 200,
+          MIN_EDGE_LENGTH: 8,
+          MIN_SEGMENT_LENGTH: 1,
+          CONNECTED_DISTANCE: 1,
+          ARROWS_PROPERTY: "arrows",
+          scale: 0.75,
+          SPACING: 600,
+          FADE_LENGTH: 50,
+          arrowsContainers: [],
+          setup: function(parent, selectedSymbol, linesData) {
+            var arrowsContainer, k, len, lineData;
+            removeOriginalArrow(selectedSymbol);
+            arrowsContainer = new ArrowsContainer(selectedSymbol);
+            scope.arrowsContainers.push(arrowsContainer);
+            for (k = 0, len = linesData.length; k < len; k++) {
+              lineData = linesData[k];
+              Organizer.build(parent, lineData.edges, arrowsContainer, this);
+            }
+            return arrowsContainer;
+          },
+          show: function() {
+            var arrowsContainer, k, len, ref, results;
+            ref = scope.arrowsContainers;
+            results = [];
+            for (k = 0, len = ref.length; k < len; k++) {
+              arrowsContainer = ref[k];
+              results.push(arrowsContainer.visible = true);
+            }
+            return results;
+          },
+          hide: function() {
+            var arrowsContainer, k, len, ref, results;
+            ref = scope.arrowsContainers;
+            results = [];
+            for (k = 0, len = ref.length; k < len; k++) {
+              arrowsContainer = ref[k];
+              results.push(arrowsContainer.visible = false);
+            }
+            return results;
+          },
+          start: function() {
+            return startAnimation(scope.arrowsContainers);
           }
-          return arrowsContainer;
-        },
-        show: function() {
-          var arrowsContainer, k, len, ref, results;
-          ref = scope.arrowsContainers;
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            arrowsContainer = ref[k];
-            results.push(arrowsContainer.visible = true);
-          }
-          return results;
-        },
-        hide: function() {
-          var arrowsContainer, k, len, ref, results;
-          ref = scope.arrowsContainers;
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            arrowsContainer = ref[k];
-            results.push(arrowsContainer.visible = false);
-          }
-          return results;
-        },
-        start: function() {
-          return startAnimation(scope.arrowsContainers);
-        }
-      };
+        };
+      });
     });
   })();
 
   (function() {
-    var angle, cullShortEdges, cullShortSegments, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
+    var Organizer, angle, cullShortEdges, cullShortSegments, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
     edgesToLines = function(edgesData) {
       var edge, i, k, linesData, ref;
       linesData = [];
@@ -1363,7 +1365,7 @@
     angle = function(a, b) {
       return Math.atan2(b.y - a.y, b.x - a.x);
     };
-    return activity.Organizer = {
+    return Make("Organizer", Organizer = {
       build: function(parent, edgesData, arrowsContainer, flowArrows) {
         var lineData, segments;
         lineData = edgesToLines(edgesData);
@@ -1374,7 +1376,7 @@
         segments = cullUnusedPoints(segments);
         return finish(parent, segments, arrowsContainer, flowArrows);
       }
-    };
+    });
   })();
 
   Segment = (function() {

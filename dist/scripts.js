@@ -1,5 +1,6 @@
 (function() {
-  var SVGAnimation, SVGMask, SVGTransform, invert, invertSVGMatrix;
+  var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, invert, invertSVGMatrix,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   invert = function(matrix) {
     var copy, dim, i, identity, ii, j, k, l, m, n, o, p, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, temp;
@@ -886,6 +887,570 @@
         };
       });
     });
+  })();
+
+  Arrow = (function() {
+    var getScaleFactor;
+
+    Arrow.prototype.edge = null;
+
+    Arrow.prototype.element = null;
+
+    Arrow.prototype.visible = true;
+
+    Arrow.prototype.vector = null;
+
+    function Arrow(parent1, target, segment1, position1, edgeIndex1, flowArrows1) {
+      var self;
+      this.parent = parent1;
+      this.target = target;
+      this.segment = segment1;
+      this.position = position1;
+      this.edgeIndex = edgeIndex1;
+      this.flowArrows = flowArrows1;
+      this.update = bind(this.update, this);
+      this.setColor = bind(this.setColor, this);
+      this.createArrow = bind(this.createArrow, this);
+      this.createArrow();
+      this.edge = this.segment.edges[this.edgeIndex];
+      self = this;
+    }
+
+    Arrow.prototype.createArrow = function() {
+      var line, triangle;
+      this.element = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      triangle = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      triangle.setAttributeNS(null, "points", "0,-16 30,0 0,16");
+      line = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      line.setAttributeNS(null, "points", "0, 0, -23, 0");
+      line.setAttributeNS(null, "fill", "#fff");
+      line.setAttributeNS(null, "stroke-width", "11");
+      this.element.appendChild(triangle);
+      this.element.appendChild(line);
+      this.target.appendChild(this.element);
+      this.element.setAttributeNS(null, "fill", "blue");
+      return this.element.setAttributeNS(null, "stroke", "blue");
+    };
+
+    Arrow.prototype.setColor = function(fillColor) {
+      this.element.setAttributeNS(null, "fill", fillColor);
+      return this.element.setAttributeNS(null, "stroke", fillColor);
+    };
+
+    Arrow.prototype.update = function(deltaFlow) {
+      var angle, currentPosition, fadeLength, scaleFactor, scalingFactor, transString;
+      if (deltaFlow === 0) {
+        this.element.style.visibility = "hidden";
+      } else {
+        this.element.style.visibility = "visible";
+      }
+      this.position += deltaFlow;
+      while (this.position > this.edge.length) {
+        this.edgeIndex++;
+        if (this.edgeIndex >= this.segment.edges.length) {
+          this.edgeIndex = 0;
+        }
+        this.position -= this.edge.length;
+        this.edge = this.segment.edges[this.edgeIndex];
+      }
+      while (this.position < 0) {
+        this.edgeIndex--;
+        if (this.edgeIndex < 0) {
+          this.edgeIndex = this.segment.edges.length - 1;
+        }
+        this.edge = this.segment.edges[this.edgeIndex];
+        this.position += this.edge.length;
+      }
+      scaleFactor = 0;
+      fadeLength = this.flowArrows ? this.flowArrows.FADE_LENGTH : 50;
+      scaleFactor = getScaleFactor(this.position, this.segment.edges, this.edgeIndex, fadeLength);
+      scalingFactor = this.segment.scale * this.segment.arrowsContainer.scale;
+      if (this.flowArrows) {
+        scalingFactor *= this.flowArrows.scale;
+      }
+      scaleFactor = scaleFactor * scalingFactor;
+      currentPosition = {
+        x: 0,
+        y: 0
+      };
+      currentPosition.x = Math.cos(this.edge.angle) * this.position + this.edge.x;
+      currentPosition.y = Math.sin(this.edge.angle) * this.position + this.edge.y;
+      angle = this.edge.angle * 180 / Math.PI + (deltaFlow < 0 ? 180 : 0);
+      transString = "translate(" + currentPosition.x + ", " + currentPosition.y + ") scale(" + scaleFactor + ") rotate(" + angle + ")";
+      return this.element.setAttribute('transform', transString);
+    };
+
+    getScaleFactor = function(position, edges, edgeIndex, fadeLength) {
+      var edge, fadeEnd, fadeStart, firstHalf, scale;
+      edge = edges[edgeIndex];
+      firstHalf = position < edge.length / 2;
+      fadeStart = (firstHalf || edges.length > 1) && edgeIndex === 0;
+      fadeEnd = (!firstHalf || edges.length > 1) && edgeIndex === edges.length - 1;
+      scale = 1;
+      if (fadeStart) {
+        scale = (position / edge.length) * edge.length / fadeLength;
+      } else if (fadeEnd) {
+        scale = 1.0 - (position - (edge.length - fadeLength)) / fadeLength;
+      }
+      return Math.min(1, scale);
+    };
+
+    return Arrow;
+
+  })();
+
+  ArrowsContainer = (function() {
+    ArrowsContainer.prototype.segments = null;
+
+    ArrowsContainer.prototype.fadeStart = true;
+
+    ArrowsContainer.prototype.fadeEnd = true;
+
+    ArrowsContainer.prototype.direction = 1;
+
+    ArrowsContainer.prototype.scale = 1;
+
+    ArrowsContainer.prototype.name = "";
+
+    ArrowsContainer.prototype.flow = 1;
+
+    function ArrowsContainer(target) {
+      this.target = target;
+      this.update = bind(this.update, this);
+      this.setColor = bind(this.setColor, this);
+      this.reverse = bind(this.reverse, this);
+      this.addSegment = bind(this.addSegment, this);
+      this.segments = [];
+    }
+
+    ArrowsContainer.prototype.addSegment = function(segment) {
+      this.segments.push(segment);
+      return this[segment.name] = segment;
+    };
+
+    ArrowsContainer.prototype.reverse = function() {
+      return this.direction *= -1;
+    };
+
+    ArrowsContainer.prototype.setColor = function(fillColor) {
+      var k, len, ref, results, segment;
+      ref = this.segments;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        segment = ref[k];
+        results.push(segment.setColor(fillColor));
+      }
+      return results;
+    };
+
+    ArrowsContainer.prototype.update = function(deltaTime) {
+      var k, len, ref, results, segment;
+      deltaTime *= this.direction;
+      ref = this.segments;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        segment = ref[k];
+        if (segment.visible) {
+          results.push(segment.update(deltaTime, this.flow));
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
+
+    return ArrowsContainer;
+
+  })();
+
+  Edge = (function() {
+    Edge.prototype.x = null;
+
+    Edge.prototype.y = null;
+
+    Edge.prototype.angle = null;
+
+    Edge.prototype.length = null;
+
+    function Edge() {}
+
+    return Edge;
+
+  })();
+
+  (function() {
+    var FlowArrows, removeOriginalArrow, startAnimation;
+    removeOriginalArrow = function(selectedSymbol) {
+      var child, children, k, l, len, len1, ref, results;
+      children = [];
+      ref = selectedSymbol.childNodes;
+      for (k = 0, len = ref.length; k < len; k++) {
+        child = ref[k];
+        children.push(child);
+      }
+      results = [];
+      for (l = 0, len1 = children.length; l < len1; l++) {
+        child = children[l];
+        results.push(selectedSymbol.removeChild(child));
+      }
+      return results;
+    };
+    startAnimation = function(arrowsContainers) {
+      var currentTime, elapsedTime, update;
+      currentTime = null;
+      elapsedTime = 0;
+      update = function(time) {
+        var arrowsContainer, dT, k, len;
+        if (currentTime == null) {
+          currentTime = time;
+        }
+        dT = (time - currentTime) / 1000;
+        currentTime = time;
+        elapsedTime += dT;
+        for (k = 0, len = arrowsContainers.length; k < len; k++) {
+          arrowsContainer = arrowsContainers[k];
+          if (isNaN(time)) {
+            console.log("why is the stime nan?");
+          }
+          arrowsContainer.update(dT);
+        }
+        return requestAnimationFrame(update);
+      };
+      return requestAnimationFrame(update);
+    };
+    return Make("FlowArrows", FlowArrows = function() {
+      var scope;
+      return scope = {
+        SPEED: 200,
+        MIN_EDGE_LENGTH: 8,
+        MIN_SEGMENT_LENGTH: 1,
+        CONNECTED_DISTANCE: 1,
+        ARROWS_PROPERTY: "arrows",
+        scale: 0.75,
+        SPACING: 600,
+        FADE_LENGTH: 50,
+        arrowsContainers: [],
+        setup: function(parent, selectedSymbol, linesData) {
+          var arrowsContainer, k, len, lineData;
+          removeOriginalArrow(selectedSymbol);
+          arrowsContainer = new ArrowsContainer(selectedSymbol);
+          scope.arrowsContainers.push(arrowsContainer);
+          for (k = 0, len = linesData.length; k < len; k++) {
+            lineData = linesData[k];
+            activity.Organizer.build(parent, lineData.edges, arrowsContainer, this);
+          }
+          return arrowsContainer;
+        },
+        show: function() {
+          var arrowsContainer, k, len, ref, results;
+          ref = scope.arrowsContainers;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            arrowsContainer = ref[k];
+            results.push(arrowsContainer.visible = true);
+          }
+          return results;
+        },
+        hide: function() {
+          var arrowsContainer, k, len, ref, results;
+          ref = scope.arrowsContainers;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            arrowsContainer = ref[k];
+            results.push(arrowsContainer.visible = false);
+          }
+          return results;
+        },
+        start: function() {
+          return startAnimation(scope.arrowsContainers);
+        }
+      };
+    });
+  })();
+
+  (function() {
+    var angle, cullShortEdges, cullShortSegments, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
+    edgesToLines = function(edgesData) {
+      var edge, i, k, linesData, ref;
+      linesData = [];
+      edge = [];
+      for (i = k = 0, ref = edgesData.length - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+        edge = edgesData[i];
+        linesData.push(edge[0], edge[2]);
+      }
+      return linesData;
+    };
+    formSegments = function(lineData, flowArrows) {
+      var i, k, pointA, pointB, ref, segmentEdges, segments;
+      segments = [];
+      segmentEdges = null;
+      for (i = k = 0, ref = lineData.length - 1; k <= ref; i = k += 2) {
+        pointA = lineData[i];
+        pointB = lineData[i + 1];
+        if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1], flowArrows)) {
+          segmentEdges.push(pointB);
+        } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1], flowArrows)) {
+          segmentEdges.push(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB, flowArrows)) {
+          segmentEdges.unshift(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA, flowArrows)) {
+          segmentEdges.unshift(pointB);
+        } else {
+          segmentEdges = [pointA, pointB];
+          segments.push(segmentEdges);
+        }
+      }
+      return segments;
+    };
+    joinSegments = function(segments, flowArrows) {
+      var i, j, pointA, pointB, segA, segB;
+      segA = null;
+      segB = null;
+      pointA = null;
+      pointB = null;
+      i = segments.length;
+      while (i--) {
+        j = segments.length;
+        while (--j > i) {
+          segA = segments[i];
+          segB = segments[j];
+          pointA = segA[0];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segB.reverse();
+            segB.pop();
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segB.reverse();
+            segB.unshift();
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[0];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+        }
+      }
+      return segments;
+    };
+    cullShortEdges = function(segments, flowArrows) {
+      var i, j, pointA, pointB, seg;
+      i = segments.length;
+      seg = [];
+      pointA = pointB = null;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          if (distance(pointA, pointB) < flowArrows.MIN_EDGE_LENGTH) {
+            pointA.cull = true;
+          }
+        }
+      }
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          if (seg[j].cull) {
+            seg.splice(j, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    cullUnusedPoints = function(segments) {
+      var i, j, pointA, pointB, pointC, seg;
+      seg = [];
+      pointA = null;
+      pointB = null;
+      pointC = null;
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 2;
+        while (j-- > 0 && seg.length > 2) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          pointC = seg[j + 2];
+          if (isInline(pointA, pointB, pointC)) {
+            seg.splice(j + 1, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    cullShortSegments = function(segments, flowArrows) {
+      var i;
+      i = segments.length;
+      while (i--) {
+        if (segments.length < flowArrows.MIN_SEGMENT_LENGTH) {
+          segments.splice(i, 1);
+        }
+      }
+      return segments;
+    };
+    finish = function(parent, segments, arrowsContainer, flowArrows) {
+      var edge, edges, i, j, k, l, ref, ref1, results, segPoints, segmentLength;
+      results = [];
+      for (i = k = 0, ref = segments.length - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+        segPoints = segments[i];
+        segmentLength = 0;
+        edges = [];
+        for (j = l = 0, ref1 = segPoints.length - 2; 0 <= ref1 ? l <= ref1 : l >= ref1; j = 0 <= ref1 ? ++l : --l) {
+          edge = new Edge();
+          edge.x = segPoints[j].x;
+          edge.y = segPoints[j].y;
+          edge.length = distance(segPoints[j], segPoints[j + 1]);
+          edge.angle = angle(segPoints[j], segPoints[j + 1]);
+          segmentLength += edge.length;
+          edges.push(edge);
+        }
+        if (segmentLength < flowArrows.MIN_SEGMENT_LENGTH) {
+          continue;
+        }
+        results.push(new Segment(parent, edges, arrowsContainer, segmentLength, flowArrows));
+      }
+      return results;
+    };
+    isConnected = function(a, b, flowArrows) {
+      var dX, dY;
+      dX = Math.abs(a.x - b.x);
+      dY = Math.abs(a.y - b.y);
+      return dX < flowArrows.CONNECTED_DISTANCE && dY < flowArrows.CONNECTED_DISTANCE;
+    };
+    isInline = function(a, b, c) {
+      var crossproduct, dotproduct, squaredlengthba;
+      crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
+      if (Math.abs(crossproduct) > 0.01) {
+        return false;
+      }
+      dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
+      if (dotproduct < 0) {
+        return false;
+      }
+      squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+      if (dotproduct > squaredlengthba) {
+        return false;
+      }
+      return true;
+    };
+    distance = function(a, b) {
+      var dx, dy;
+      dx = b.x - a.x;
+      dy = b.y - a.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    angle = function(a, b) {
+      return Math.atan2(b.y - a.y, b.x - a.x);
+    };
+    return activity.Organizer = {
+      build: function(parent, edgesData, arrowsContainer, flowArrows) {
+        var lineData, segments;
+        lineData = edgesToLines(edgesData);
+        segments = [];
+        segments = formSegments(lineData, flowArrows);
+        segments = joinSegments(segments, flowArrows);
+        segments = cullShortEdges(segments, flowArrows);
+        segments = cullUnusedPoints(segments);
+        return finish(parent, segments, arrowsContainer, flowArrows);
+      }
+    };
+  })();
+
+  Segment = (function() {
+    Segment.prototype.arrows = null;
+
+    Segment.prototype.direction = 1;
+
+    Segment.prototype.flow = null;
+
+    Segment.prototype.name = "";
+
+    Segment.prototype.visible = true;
+
+    Segment.prototype.scale = 1.0;
+
+    Segment.prototype.fillColor = "white";
+
+    function Segment(parent1, edges1, arrowsContainer1, segmentLength1, flowArrows1) {
+      var arrow, edge, edgeIndex, i, k, position, ref, segmentArrows, segmentSpacing, self;
+      this.parent = parent1;
+      this.edges = edges1;
+      this.arrowsContainer = arrowsContainer1;
+      this.segmentLength = segmentLength1;
+      this.flowArrows = flowArrows1;
+      this.update = bind(this.update, this);
+      this.setColor = bind(this.setColor, this);
+      this.reverse = bind(this.reverse, this);
+      this.arrows = [];
+      this.name = "segment" + this.arrowsContainer.segments.length;
+      this.arrowsContainer.addSegment(this);
+      self = this;
+      segmentArrows = Math.max(1, Math.round(self.segmentLength / this.flowArrows.SPACING));
+      segmentSpacing = self.segmentLength / segmentArrows;
+      position = 0;
+      edgeIndex = 0;
+      edge = self.edges[edgeIndex];
+      for (i = k = 0, ref = segmentArrows - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+        while (position > edge.length) {
+          position -= edge.length;
+          edge = self.edges[++edgeIndex];
+        }
+        console.log("position is " + position);
+        arrow = new Arrow(self.parent, self.arrowsContainer.target, self, position, edgeIndex, this.flowArrows);
+        arrow.name = "arrow" + i;
+        self[arrow.name] = arrow;
+        self.arrows.push(arrow);
+        position += segmentSpacing;
+      }
+    }
+
+    Segment.prototype.reverse = function() {
+      return this.direction *= -1;
+    };
+
+    Segment.prototype.setColor = function(fillColor) {
+      return this.fillColor = fillColor;
+    };
+
+    Segment.prototype.update = function(deltaTime, ancestorFlow) {
+      var arrow, arrowFlow, k, len, ref, results;
+      arrowFlow = this.flow != null ? this.flow : ancestorFlow;
+      if (this.flowArrows) {
+        arrowFlow *= deltaTime * this.direction * this.flowArrows.SPEED;
+      }
+      ref = this.arrows;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        arrow = ref[k];
+        arrow.setColor(this.fillColor);
+        results.push(arrow.update(arrowFlow));
+      }
+      return results;
+    };
+
+    return Segment;
+
   })();
 
 }).call(this);

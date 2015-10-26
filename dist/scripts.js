@@ -151,7 +151,7 @@
   })();
 
   (function() {
-    return Take(["defaultElement", "FlowArrows", "PureDom", "SVGActivities", "SVGTransform", "SVGStyle"], function(defaultElement, FlowArrows, PureDom, SVGActivities, SVGTransform, SVGStyle) {
+    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGTransform", "SVGStyle"], function(defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle) {
       var SVGActivity, getChildElements, setupHighlighter, setupInstance;
       setupInstance = function(instance) {
         var child, k, len, ref;
@@ -200,13 +200,11 @@
           },
           setupDocument: function(activityName, contentDocument) {
             var child, childElements, k, len;
-            console.log(scope.root);
             scope.registerInstance("default", defaultElement);
+            console.log(scope.instances);
             scope.root = scope.instances["root"](contentDocument);
             scope.root.FlowArrows = new FlowArrows();
-            console.log(scope.root);
             setupHighlighter(contentDocument.querySelector("defs"));
-            SVGActivities.registerActivity(activityName, scope.root);
             childElements = getChildElements(contentDocument);
             scope.root.children = [];
             for (k = 0, len = childElements.length; k < len; k++) {

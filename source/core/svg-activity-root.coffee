@@ -1,5 +1,5 @@
 do ()-> 
-  Take ["defaultElement","FlowArrows", "PureDom", "SVGActivities", "SVGTransform", "SVGStyle" ], (defaultElement, FlowArrows, PureDom, SVGActivities, SVGTransform, SVGStyle)-> 
+  Take ["defaultElement", "PureDom","FlowArrows", "SVGTransform", "SVGStyle"], (defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle)-> 
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)
@@ -40,13 +40,11 @@ do ()->
           scope.instances[instanceName] = instance
 
         setupDocument: (activityName, contentDocument)->
-          console.log scope.root
           scope.registerInstance("default", defaultElement)
+          console.log scope.instances
           scope.root = scope.instances["root"](contentDocument)
           scope.root.FlowArrows = new FlowArrows()
-          console.log scope.root
           setupHighlighter(contentDocument.querySelector("defs"))
-          SVGActivities.registerActivity(activityName, scope.root)
           childElements = getChildElements(contentDocument)
           scope.root.children = []
           for child in childElements

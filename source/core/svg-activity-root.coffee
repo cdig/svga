@@ -41,7 +41,6 @@ do ()->
 
         setupDocument: (activityName, contentDocument)->
           scope.registerInstance("default", defaultElement)
-          console.log scope.instances
           scope.root = scope.instances["root"](contentDocument)
           scope.root.FlowArrows = new FlowArrows()
           setupHighlighter(contentDocument.querySelector("defs"))

@@ -34,9 +34,6 @@ class Arrow
     else
       @element.style.visibility = "visible"
     @position += deltaFlow
-    # if isNaN(@position)
-    #   @position = 0
-    #   console.log "delta flow is #{deltaFlow}"
     while @position > @edge.length
       @edgeIndex++
       if @edgeIndex >= @segment.edges.length

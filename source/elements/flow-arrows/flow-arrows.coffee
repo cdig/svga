@@ -16,8 +16,6 @@ do->
         currentTime = time
         elapsedTime += dT 
         for arrowsContainer in arrowsContainers
-          if isNaN(time)
-            console.log "why is the stime nan?"
           arrowsContainer.update(dT)
         requestAnimationFrame(update)
       requestAnimationFrame(update)

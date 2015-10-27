@@ -201,7 +201,6 @@
           setupDocument: function(activityName, contentDocument) {
             var child, childElements, k, len;
             scope.registerInstance("default", defaultElement);
-            console.log(scope.instances);
             scope.root = scope.instances["root"](contentDocument);
             scope.root.FlowArrows = new FlowArrows();
             setupHighlighter(contentDocument.querySelector("defs"));
@@ -1111,9 +1110,6 @@
           elapsedTime += dT;
           for (k = 0, len = arrowsContainers.length; k < len; k++) {
             arrowsContainer = arrowsContainers[k];
-            if (isNaN(time)) {
-              console.log("why is the stime nan?");
-            }
             arrowsContainer.update(dT);
           }
           return requestAnimationFrame(update);
@@ -1419,7 +1415,6 @@
           position -= edge.length;
           edge = self.edges[++edgeIndex];
         }
-        console.log("position is " + position);
         arrow = new Arrow(self.parent, self.arrowsContainer.target, self, position, edgeIndex, this.flowArrows);
         arrow.name = "arrow" + i;
         self[arrow.name] = arrow;

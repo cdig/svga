@@ -1,5 +1,5 @@
 # SVG Activity
-A library for making activities/animations with SVGs.
+A framework for making activities/animations with SVGs.
 
 ### Table of Contents
 - [Overview](#overview)

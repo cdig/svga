@@ -1,5 +1,5 @@
-# SVG Activity
-A framework for making activities/animations with SVGs.
+# SVG Activity Components
+A framework for making activities/animations with SVGs. If looking to build an SVG Activity, please look at the [SVG-Activity-Starter](https://github.com/cdig/svg-activity-starter)
 
 ### Table of Contents
 - [Overview](#overview)

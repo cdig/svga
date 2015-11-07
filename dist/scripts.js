@@ -85,10 +85,11 @@
 
   (function() {
     return Take(['crank', 'defaultElement', 'button', 'Joystick', 'SVGActivity'], function(crank, defaultElement, button, Joystick, SVGActivity) {
-      var SVGActivities, activities, activityDefinitions, waitingActivities;
+      var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
       activityDefinitions = [];
       activities = [];
       waitingActivities = [];
+      waitingForRunningActivity = [];
       return Make("SVGActivities", SVGActivities = {
         registerActivityDefinition: function(activity) {
           var k, l, len, len1, remove, results, toRemove, waitingActivity;
@@ -144,7 +145,8 @@
           svgActivity.registerInstance('default', activity.defaultElement);
           svg = svgElement.contentDocument.querySelector('svg');
           svgActivity.setupDocument(activityName, svg);
-          return activities[id] = svgActivity;
+          activities[id] = svgActivity;
+          return Make(id, activities[id].root);
         }
       });
     });

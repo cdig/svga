@@ -3,6 +3,7 @@ do ()->
     activityDefinitions = []
     activities = []
     waitingActivities = []
+    waitingForRunningActivity = []
     Make "SVGActivities", SVGActivities =
       registerActivityDefinition: (activity)->
         activityDefinitions[activity._name] = activity
@@ -15,6 +16,8 @@ do ()->
         for remove in toRemove
           waitingActivities.splice(waitingActivities.indexOf(remove), 1)
 
+
+        
       getActivity: (activityID)->
         return activities[activityName]
 
@@ -41,4 +44,5 @@ do ()->
 
         svgActivity.setupDocument(activityName, svg)
         activities[id] = svgActivity
+        Make id, activities[id].root
 

@@ -26,6 +26,7 @@ do ->
         callbacks: []    
         rangeMin: 0
         rangeMax: 1
+        sticky: true
         
         setup: ()->
           scope.setTransforms()
@@ -55,6 +56,9 @@ do ->
           scope.rangeMin = rMin
           scope.rangeMax = rMax
 
+        setSticky: (sticky)->
+          scope.sticky = sticky
+
         mouseClick: (e)->
           scope.movement = scope.default
           scope.setTransforms()
@@ -83,7 +87,7 @@ do ->
           if not scope.down
             return
           scope.down = false
-          if not scope.moved
+          if not scope.moved or not scope.sticky
             scope.movement = scope.default
             scope.setTransforms()
             for callback in scope.callbacks

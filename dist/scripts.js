@@ -810,6 +810,7 @@
           callbacks: [],
           rangeMin: 0,
           rangeMax: 1,
+          sticky: true,
           setup: function() {
             scope.setTransforms();
             PointerInput.addDown(svgElement, scope.mouseDown);
@@ -837,6 +838,9 @@
           setRange: function(rMin, rMax) {
             scope.rangeMin = rMin;
             return scope.rangeMax = rMax;
+          },
+          setSticky: function(sticky) {
+            return scope.sticky = sticky;
           },
           mouseClick: function(e) {
             scope.movement = scope["default"];
@@ -875,7 +879,7 @@
               return;
             }
             scope.down = false;
-            if (!scope.moved) {
+            if (!scope.moved || !scope.sticky) {
               scope.movement = scope["default"];
               scope.setTransforms();
               ref = scope.callbacks;

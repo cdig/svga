@@ -9,9 +9,9 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
 
       pressure: 0
 
-      setPressure: (val)->
+      setPressure: (val, alpha=1.0)->
         scope.pressure = val
-        scope.fill(HydraulicPressure(scope.pressure))
+        scope.fill(HydraulicPressure(scope.pressure, alpha))
 
 
       getPressure: ()->

@@ -379,9 +379,12 @@
           }
         },
         pressure: 0,
-        setPressure: function(val) {
+        setPressure: function(val, alpha) {
+          if (alpha == null) {
+            alpha = 1.0;
+          }
           scope.pressure = val;
-          return scope.fill(HydraulicPressure(scope.pressure));
+          return scope.fill(HydraulicPressure(scope.pressure, alpha));
         },
         getPressure: function() {
           return scope.pressure;

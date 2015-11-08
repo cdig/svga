@@ -84,7 +84,7 @@
   };
 
   (function() {
-    return Take(['crank', 'defaultElement', 'button', 'Joystick', 'SVGActivity'], function(crank, defaultElement, button, Joystick, SVGActivity) {
+    return Take(['crank', 'defaultElement', 'button', 'Joystick', 'SVGActivity', 'DOMContentLoaded'], function(crank, defaultElement, button, Joystick, SVGActivity) {
       var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
       activityDefinitions = [];
       activities = [];
@@ -153,7 +153,7 @@
   })();
 
   (function() {
-    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGTransform", "SVGStyle"], function(defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle) {
+    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGTransform", "SVGStyle", "DOMContentLoaded"], function(defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle) {
       var SVGActivity, getChildElements, setupHighlighter, setupInstance;
       setupInstance = function(instance) {
         var child, k, len, ref;

@@ -1,5 +1,5 @@
 do ()->
-  Take ['crank', 'defaultElement', 'button','Joystick', 'SVGActivity'], (crank, defaultElement, button, Joystick, SVGActivity)->
+  Take ['crank', 'defaultElement', 'button','Joystick', 'SVGActivity', 'DOMContentLoaded'], (crank, defaultElement, button, Joystick, SVGActivity)->
     activityDefinitions = []
     activities = []
     waitingActivities = []

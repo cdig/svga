@@ -1,5 +1,5 @@
 do ()-> 
-  Take ["defaultElement", "PureDom","FlowArrows", "SVGTransform", "SVGStyle"], (defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle)-> 
+  Take ["defaultElement", "PureDom","FlowArrows", "SVGTransform", "SVGStyle", "DOMContentLoaded"], (defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle)-> 
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)

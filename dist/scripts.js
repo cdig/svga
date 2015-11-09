@@ -145,6 +145,7 @@
           svgActivity.registerInstance('default', activity.defaultElement);
           svg = svgElement.contentDocument.querySelector('svg');
           svgActivity.setupDocument(activityName, svg);
+          svgElement.style.opacity = 1.0;
           activities[id] = svgActivity;
           return Make(id, activities[id].root);
         }
@@ -287,6 +288,17 @@
         return scope.running = false;
       }
     };
+  });
+
+  Take("DOMContentLoaded", function() {
+    var k, len, results, svgActivities, svgActivity;
+    svgActivities = document.querySelectorAll("svg-activity");
+    results = [];
+    for (k = 0, len = svgActivities.length; k < len; k++) {
+      svgActivity = svgActivities[k];
+      results.push(svgActivity.querySelector("object").style.opacity = 0);
+    }
+    return results;
   });
 
   (function() {

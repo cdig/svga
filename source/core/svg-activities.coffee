@@ -43,7 +43,7 @@ do ()->
         svg = svgElement.contentDocument.querySelector('svg')
 
         svgActivity.setupDocument(activityName, svg)
-        svgElement.animate([{opacity: 1}], {duration: 4000})
+        svgElement.style.opacity = 1.0
         activities[id] = svgActivity
         Make id, activities[id].root
 

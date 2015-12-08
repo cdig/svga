@@ -24,6 +24,7 @@ A framework for making activities/animations with SVGs. If looking to build an S
     - [Fill Colour] (#fill-colour)
     - [Hydraulic Pressure] (#hydraulic-pressure)
     - [Gradients] (#gradients)
+    - [Masking] (#masking)
     - [Text] (#text)
   - [Animating] (#animating)
 - [Built in Symbols] (#built-in-symbols)
@@ -194,9 +195,10 @@ Masking in an SVG Activity works very similarly to how masks worked in Flash, wi
 ```coffeescript
   Take "SVGMask", (SVGMask)->
     activity.root = (svgElement)->
-      setup: ()->
-        SVGMask(scope, scope.maskElement, scope.elementToMask, "mask")
+
       return scope = 
+        setup: ()->
+          SVGMask(scope, scope.maskElement, scope.elementToMask, "uniqueMaskName")
         getElement: ()->
           return svgElement
 ```
@@ -205,12 +207,12 @@ The first property passed to an SVG Mask call is the root object for your entire
 ###Animating
 Animating an object in an SVG involves using ```SVGAnimation``` which we ```Take``` the same as ```SVGMask```
 ```coffeescript
-do ->
+
   Take ["SVGMask", "SVGAnimation"], (SVGMask, SVGAnimation)->
     activity.root = (svgElement)->
-      animation: null
 
       return scope = 
+        animation: null
         setup: ()->
           SVGMask(scope, scope.oilMask, scope.oilPour, "oilMask")
           scope.animation = new SVGAnimation(scope.animate)

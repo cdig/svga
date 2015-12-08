@@ -31,7 +31,10 @@ A framework for making activities/animations with SVGs. If looking to build an S
     -  Crank (#crank)
     
 - [Flow Arrows] (#flow-arrows)
-  -[Flow Arrow Properties] (#flow-arrow-properties)    
+  -[Flow Arrow Properties] (#flow-arrow-properties)   
+  -[Linking with symbol] (#linking-with-symbol)
+  -[Animating arrows] (#animating-lines)
+  -[Styling arrows] (#styling-lines)
 
 - [Styling with CSS] (#styling-with-css)
 - [HTML and SVG Activity]
@@ -225,4 +228,22 @@ To animate an object, you first create an animation function under scope that ta
 
 
   
-#Flow Arrows
+##Flow Arrows
+Like in Flash, we have the ability to take Flow Arrows, link to these in code, and have them animate in our scene. 
+###Flow Arrow Properties
+By default, the ```root``` of every svg-activity has the ability to handle flow arrows. This is now built in to SVG Activity. By changing properties on flow arrows, this is for all arrows in an activity. They are changed by ```scope.root.FlowArrows.property = propertyValue``` where the possible properties are ```MIN_SEGMENT_LENGTH```,  ```scale```, ```SPACING```, and ```FADE_LENGTH```.
+###Linking With Symbol
+In order to link create a flow arrow, and link it with a line, make the following call from something like either the main stage or root, whichever hosts your flow arrows.
+```scope.arrows = scope.root.FlowArrows.setup(svgElement, scope.arrowInScene.getElement(), flowArrowsData)``` where ```svgElement``` is the element of the parent. ```scope.arrowInScene``` is the arrow we will be replacing, and the ```flowArrowsData``` is the data being used to give the line's path. This looks something like this:
+```coffeescript
+        flowArrowsData = []
+        flowArrowsData.push({path:[""], edges:[[{x: -116.15, y: 49.6},{x: -116.15, y: 98},{x: -116.15, y: 146.4}]]})
+        flowArrowsData.push({path:[""], edges:[[{x: -116.15, y: -11.2},{x: -116.15, y: -57.05},{x: -116.15, y: -102.9}]]})
+```
+Once an arrow has been created, it has properties that can be changed. For example, ```scope.arrows.flow = 0.4``` or ```scope.arrows.reverse()``` will reverse the direction of the arrows. You can even specify which segment to animate by calling ```scope.arrows.segment0.reverse()```. You can also change the scale of an arrow by ```scope.arrows.scale = 0.4```
+
+###Animating Arrows
+In order to start animating a series of arrows, call ```scope.root.FlowArrows.start()```. This will start the scene animation.
+
+###Styling Arrows
+You can specify the colour of an arrow by setting the colour property. In order to do this, on an arrow, call ```scope.arrows.setColor("red")```

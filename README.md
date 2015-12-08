@@ -4,21 +4,21 @@ A framework for making activities/animations with SVGs. If looking to build an S
 ### Table of Contents
 - [Overview](#overview)
 - [Getting Started](#getting-started)
-  - [Adding in HTML] (#adding-in-html)
+  - [Adding in HTML](#adding-in-html)
 
   
-- [Making an Activity] (#making-an-activity)
-  - [Symbol Definition]  (#symbol-definition)
-  - [Root Element] (#root-element)
-  - [Registering Symbols] (#registering-symbols)
+- [Making an Activity](#making-an-activity)
+  - [Symbol Definition](#symbol-definition)
+  - [Root Element](#root-element)
+  - [Registering Symbols](#registering-symbols)
   
 
-- [Instance of a Symbol] (#instance-of-a-symbol)
-  - [Properties of an instance] (#properties-of-an-instance)
-  - [Transform] (#transform)
-    - [Scaling] (#scaling)
-    - [Rotation] (#rotation)
-    - [Translation] (#translation)
+- [Instance of a Symbol](#instance-of-a-symbol)
+  - [Properties of an instance](#properties-of-an-instance)
+  - [Transform](#transform)
+    - [Scaling](#scaling)
+    - [Rotation](#rotation)
+    - [Translation](#translation)
   - [Style] (#style)
     - [Visibility] (#visibility)
     - [Fill Colour] (#fill-colour)
@@ -30,7 +30,6 @@ A framework for making activities/animations with SVGs. If looking to build an S
 - [Built in Symbols] (#built-in-symbols)
   -  Joystick (#joystick)  
   -  Crank (#crank)
-    
 - [Flow Arrows] (#flow-arrows)
   -[Flow Arrow Properties] (#flow-arrow-properties)   
   -[Linking with symbol] (#linking-with-symbol)

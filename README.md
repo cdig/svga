@@ -26,9 +26,9 @@ A framework for making activities/animations with SVGs. If looking to build an S
     - [Gradients] (#gradients)
     - [Text] (#text)
   - [Animating] (#animating)
-  - [Built in Symbols] (#built-in-symbols)
-    -  Joystick (#joystick)  
-    -  Crank (#crank)
+- [Built in Symbols] (#built-in-symbols)
+  -  Joystick (#joystick)  
+  -  Crank (#crank)
     
 - [Flow Arrows] (#flow-arrows)
   -[Flow Arrow Properties] (#flow-arrow-properties)   
@@ -224,7 +224,21 @@ To animate an object, you first create an animation function under scope that ta
 
 
 
+##Built-in Symbols
+Hey, we've got some symbols built in for you! 
 
+###Button 
+Say you have a symbol and you want it to be a button, all you need to do is to register it as a button. For example ```activity.registerInstance("myButton", "button")```. Then, somewhere in your scene, when referencing ```myButton``` to take advantage of when it's pressed, create a callback function and then pass it to the button like ```scope.myButton.setCallback(callbackFunction())```, then, whenever that button is clicked, the callbackFunction will be called.
+
+###Crank
+To register an object as a crank: ```activity.registerInstance("myCrank", "crank")```. Then there are a series of functions on ```myCrank```
+```scope.myCrank.setCallback(callbackFunction())```. This is what you will pass to the crank to receive a value for when the crank is turned.
+```scope.myCrank.setDomain: (min, max)```
+```scope.myCrank.setRange(min, max)```
+```scope.myCrank.addDeadband(min, set, max)```
+
+###Joystick
+To register an object as a joystick: ```activity.registerInstance("myJoystick", "joystick")```
 
 
   

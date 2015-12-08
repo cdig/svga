@@ -88,7 +88,7 @@ do ->
 ```
 
 ## Root Element
-Each SVG image has a root element and so, for an SVG Activity, we declare a root element that exists above all instances of SVG Symbol definitions. Here is a simple example of a root file:
+Each SVG image has a root element and so, for an SVG Activity, declare a root element that exists above all instances of SVG Symbol definitions. Here is a simple example of a root file:
 ```coffeescript
 do ->
   activity.root = (svgElement)->
@@ -97,7 +97,7 @@ do ->
       setup : ()->
   activity.registerInstance("root", "root") #register the root element with this root
 ```
-It is worth noting that a root element will be able to access all elements/instances in an SVG, so it works as a very good place to control an SVG Activity and all of its children. By listening for mouse events on a particular element, it can easily then call functions on other instances based on those mouse events.
+It is worth noting that a root element will be able to access all elements/instances in an SVG, so it works as a very good place to control an SVG Activity and all of its children. By listening for mouse events on a particular element, it can easily then call functions on other instances based on those mouse events. **Note** you must have a "root" element for an SVG Activity 
 
 ## Registering Symbols with Instances
 Each SVG has a series of instances, which are element names, and these have to be registered with your symbol definitions. To do this, you need to either use one of the files you've created in your file, or create an additional file where this registration is done. Anywhere in your code, the following code is for registering an instance ```activity.registerInstance("symbolDefinitionName", "instanceName")```. 
@@ -150,16 +150,16 @@ To rotate around a particular point, use the ```cx``` and ```cy``` values, which
 ####Translation
 The translation of an object has an *x and y* component. To set these: ```scope.transform.x = 100```, and ```scope.transform.y = 100``` respectively
 ###Style
-Each element instance is given a ```style``` property
+Each element instance is given a ```style``` property. You call functions on the style property to change style properites of an object
 ####Visibility
-To change the visibility
+To change the visibility call ```scope.style.visible(isVisible)``` and you call with a ```true``` or ```false``` value. 
 
 ####Fill colour
 In order to change the colour of an element, you call a function to change the colour of an element.
 ```scope.style.fill(color)```. **Note** This is a function, and not a value you assign.
 
 ####Hydraulic Pressure
-To set the colour to a Hydraulic Pressure, call ```scope.style.setPressure(pressureVal)```. You can also look up what the pressure value is by calling ```scope.style.getPressure()```. To compute a pressure colour, call ```scope.style.getPressureColor(pressureVal)```.
+To set the colour to a Hydraulic Pressure, call ```scope.style.setPressure(pressureVal)```. You can also look up what the pressure value is by calling ```scope.style.getPressure()```. To compute a pressure colour, call ```scope.style.getPressureColor(pressureVal, alphaVal)```. The ```alphaVal``` is an optional parameter and this handles the amount of transparency (by default the alpha value is 1).
 
 ####Gradients
 Gradients in SVG Activities are an abstraction on the internal [SVG Gradients](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Gradients). Both of the options below require ```stops``` as a parameter. 
@@ -167,12 +167,25 @@ Gradients in SVG Activities are an abstraction on the internal [SVG Gradients](h
 To set a linear gradient on an element, call ```scope.style.linearGradient(stops, x1, y1, x2, y2)```. The last four values are optional. To understand these, look into an explanation of [linear gradients in SVGs] (https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Gradients).
 
 ```stops``` are the stops with a color in an svg and are of the form ```{offset: offsetValueFromCenter, color: colorForStop}```.
+
 #####Radial Gradients
 To set a radial gradient on an element, call ```scope.style.radialGradient(stops, cx, cy, radius)```. The ```cx, cy``` properties are the center for the radial gradient. This allows you to move the gradient from off center if you would like. The radius is how large the gradient will expand.
 
 The stops work the same as in linear gradients.
 
 ###Masking
+Masking in an SVG Activity works very similarly to how masks worked in Flash, with a mask being specified over a particular object. Here is a code example for a mask.
+
+```coffeescript
+  Take "SVGMask", (SVGMask)->
+    activity.root = (svgElement)->
+      setup: ()->
+        SVGMask(scope, scope.maskElement, scope.elementToMask, "mask")
+      return scope = 
+        getElement: ()->
+          return svgElement
+```
+The first property passed to an SVG Mask call is the root object for your entire scene. In the above scene it is the ```scope``` since we are in the root already. Next pass the element being used for masking, then the element to mask, and lastly give this a **unique** name. Make sure that the ```scope.maskElement``` is placed on the main stage in Flash; additionally, masks in an SVG Activity **have to be white** if they are to allow through all colours of the objects they are masking. This allows us to have masks of different colours, if so desired, or even gradient masks.
 
 ###Animating
 

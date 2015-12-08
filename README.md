@@ -21,6 +21,9 @@ A framework for making activities/animations with SVGs. If looking to build an S
     - [Translation] (#translation)
   - [Style] (#style)
     - [Visibility] (#visibility)
+    - [Fill Color] (#fill-color)
+    - [Hydraulic Pressure] (#hydraulic-pressure)
+    - [Gradients] (#gradients)
   - [Animating] (#animating)
   - [Default Symbol] (#default-symbol)
   

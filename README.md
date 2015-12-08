@@ -239,6 +239,11 @@ To register an object as a crank: ```activity.registerInstance("myCrank", "crank
 
 ###Joystick
 To register an object as a joystick: ```activity.registerInstance("myJoystick", "joystick")```
+Joysticks have a series of functions on them.
+```scope.myJoystick.registeCallback(callbackFunction)``` this is the same as in crank and button.
+```scope.myJoystick.setDefault(defaultValue)``` sets the default starting position of a joystick
+```scope.myJoystick.setRange(min, max)``` sets the range
+```scope.myJoystick.setSticky(isSticky)``` if the joystick is not sticky, when it is released, it will return to its original position; otherwise, it will stay in place.
 
 
   

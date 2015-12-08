@@ -26,7 +26,15 @@ A framework for making activities/animations with SVGs. If looking to build an S
     - [Gradients] (#gradients)
     - [Text] (#text)
   - [Animating] (#animating)
-  - [Default Symbol] (#default-symbol)
+  - [Built in Symbols] (#built-in-symbols)
+    -  Joystick (#joystick)  
+    -  Crank (#crank)
+    
+- [Flow Arrows] (#flow-arrows)
+  -[Flow Arrow Properties] (#flow-arrow-properties)    
+
+- [Styling with CSS] (#styling-with-css)
+- [HTML and SVG Activity]
   
   
 # Overview
@@ -215,5 +223,6 @@ To animate an object, you first create an animation function under scope that ta
 
 
 
-  
 
+  
+#Flow Arrows

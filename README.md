@@ -212,17 +212,17 @@ Animating an object in an SVG involves using ```SVGAnimation``` which we ```Take
     activity.root = (svgElement)->
 
       return scope = 
-        animation: null
+        yourAnimationFunction: null
         setup: ()->
           SVGMask(scope, scope.oilMask, scope.oilPour, "oilMask")
-          scope.animation = new SVGAnimation(scope.animate)
-          scope.animation.start()
+          scope.yourAnimationFunction = new SVGAnimation(scope.animate)
+          scope.yourAnimationFunction.start()
 
         animate: (dT, time)->
           rotationSpeed = 10.0
           scope.oilPour.transform.angle += rotationSpeed * dT
 ```
-To animate an object, you first create an animation function under scope that takes two properties, ```dt``` and ```time``` (the function here is ```animate: (dt, time)```. The ```dT``` is the time, in seconds, between draw calls.  Next, in order to animate, an animation object needs to be created (usually done in setup) where this animation is created using ```new SVGAnimation(scope.yourAnimationFunction)```. Lastly, this animation can be started and stopped by ```scope.animation.start()``` and ```scope.animation.stop()``` respectively. 
+To animate an object, you first create an animation function under scope that takes two properties, ```dt``` and ```time``` (the function here is ```yourAnimationFunction: (dt, time)```. The ```dT``` is the time, in seconds, between draw calls.  Next, in order to animate, an animation object needs to be created (usually done in setup) where this animation is created using ```new SVGAnimation(scope.yourAnimationFunction)```. Lastly, this animation can be started and stopped by ```scope.yourAnimationFunction.start()``` and ```scope.yourAnimationFunction.stop()``` respectively. 
 
 **Note** Whereas in Flash you could set a frame rate and animate based on that framerate consistently, with SVG Animations an animation call will be as fast as possible. This is known as [Time-based animation] (http://blog.sklambert.com/using-time-based-animation-implement/).
 

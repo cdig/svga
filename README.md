@@ -163,33 +163,33 @@ To change the scale of an object, you can change the scale in both the x and y d
 The rotation of an object is set using the **angle** property on its transform, or by using **turns**. Angle ranges between *0 and 360 degrees*. Turns range between *0 and 1*. To set the angle, like in the example above: ```scope.transform.angle = 120```. Similarly, to set **turns** ```scope.transform.turns = 0.5```.
 
 To rotate around a particular point, use the ```cx``` and ```cy``` values, which sets the center for rotation.
-####Translation
+#### Translation
 The translation of an object has an *x and y* component. To set these: ```scope.transform.x = 100```, and ```scope.transform.y = 100``` respectively
-###Style
+### Style
 Each element instance is given a ```style``` property. You call functions on the style property to change style properites of an object
-####Visibility
+#### Visibility
 To change the visibility call ```scope.style.visible(isVisible)``` and you call with a ```true``` or ```false``` value. 
 
-####Fill colour
+#### Fill colour
 In order to change the colour of an element, you call a function to change the colour of an element.
 ```scope.style.fill(color)```. **Note** This is a function, and not a value you assign.
 
-####Hydraulic Pressure
+#### Hydraulic Pressure
 To set the colour to a Hydraulic Pressure, call ```scope.style.setPressure(pressureVal)```. You can also look up what the pressure value is by calling ```scope.style.getPressure()```. To compute a pressure colour, call ```scope.style.getPressureColor(pressureVal, alphaVal)```. The ```alphaVal``` is an optional parameter and this handles the amount of transparency (by default the alpha value is 1).
 
-####Gradients
+#### Gradients
 Gradients in SVG Activities are an abstraction on the internal [SVG Gradients](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Gradients). Both of the options below require ```stops``` as a parameter. 
 #####Linear Gradients
 To set a linear gradient on an element, call ```scope.style.linearGradient(stops, x1, y1, x2, y2)```. The last four values are optional. To understand these, look into an explanation of [linear gradients in SVGs] (https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Gradients).
 
 ```stops``` are the stops with a color in an svg and are of the form ```{offset: offsetValueFromCenter, color: colorForStop}```.
 
-#####Radial Gradients
+##### Radial Gradients
 To set a radial gradient on an element, call ```scope.style.radialGradient(stops, cx, cy, radius)```. The ```cx, cy``` properties are the center for the radial gradient. This allows you to move the gradient from off center if you would like. The radius is how large the gradient will expand.
 
 The stops work the same as in linear gradients.
 
-###Masking
+### Masking
 Masking in an SVG Activity works very similarly to how masks worked in Flash, with a mask being specified over a particular object. Here is a code example for a mask.
 
 ```coffeescript
@@ -204,7 +204,7 @@ Masking in an SVG Activity works very similarly to how masks worked in Flash, wi
 ```
 The first property passed to an SVG Mask call is the root object for your entire scene. In the above scene it is the ```scope``` since we are in the root already. Next pass the element being used for masking, then the element to mask, and lastly give this a **unique** name. Make sure that the ```scope.maskElement``` is placed on the main stage in Flash; additionally, masks in an SVG Activity **have to be white** if they are to allow through all colours of the objects they are masking. This allows us to have masks of different colours, if so desired, or even gradient masks.
 
-###Animating
+### Animating
 Animating an object in an SVG involves using ```SVGAnimation``` which we ```Take``` the same as ```SVGMask```
 ```coffeescript
 
@@ -222,7 +222,9 @@ Animating an object in an SVG involves using ```SVGAnimation``` which we ```Take
           rotationSpeed = 10.0
           scope.oilPour.transform.angle += rotationSpeed * dT
 ```
-To animate an object, you first create an animation function under scope that takes two properties, ```dt``` and ```time``` (the function here is ```animate: (dt, time)```. The ```dT``` is the time, in seconds, between draw calls. **Note** Whereas in Flash you could set a frame rate and animate based on that framerate consistently, with SVG Animations an animation call will be as fast as possible. This is known as [Time-based animation] (http://blog.sklambert.com/using-time-based-animation-implement/). Next, in order to animate, an animation object needs to be created (usually done in setup) where this animation is created using ```new SVGAnimation(scope.yourAnimationFunction)```. Lastly, this animation can be started and stopped by ```scope.animation.start()``` and ```scope.animation.stop()``` respectively. 
+To animate an object, you first create an animation function under scope that takes two properties, ```dt``` and ```time``` (the function here is ```animate: (dt, time)```. The ```dT``` is the time, in seconds, between draw calls.  Next, in order to animate, an animation object needs to be created (usually done in setup) where this animation is created using ```new SVGAnimation(scope.yourAnimationFunction)```. Lastly, this animation can be started and stopped by ```scope.animation.start()``` and ```scope.animation.stop()``` respectively. 
+
+**Note** Whereas in Flash you could set a frame rate and animate based on that framerate consistently, with SVG Animations an animation call will be as fast as possible. This is known as [Time-based animation] (http://blog.sklambert.com/using-time-based-animation-implement/).
 
 
 

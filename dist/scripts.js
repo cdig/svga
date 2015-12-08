@@ -644,7 +644,7 @@
         getElement: function() {
           return svgElement;
         },
-        addCallback: function(callback) {
+        setCallback: function(callback) {
           return scope.callbacks.push(callback);
         },
         clicked: function() {
@@ -902,7 +902,7 @@
             }
             return scope.moved = false;
           },
-          registerCallback: function(callback) {
+          setCallback: function(callback) {
             return scope.callbacks.push(callback);
           }
         };

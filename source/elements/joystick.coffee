@@ -93,5 +93,5 @@ do ->
             for callback in scope.callbacks
               callback Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax)
           scope.moved = false
-        registerCallback: (callback)->
+        setCallback: (callback)->
           scope.callbacks.push callback

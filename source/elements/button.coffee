@@ -7,7 +7,7 @@ do ->
       getElement: ()->
         return svgElement
 
-      addCallback: (callback)->
+      setCallback: (callback)->
         scope.callbacks.push callback
 
       clicked: ()->

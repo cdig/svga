@@ -115,6 +115,9 @@
           return activities[activityName];
         },
         startActivity: function(activityName, activityId, svgElement) {
+          if (activities[activityId] != null) {
+            return;
+          }
           if (!activityDefinitions[activityName]) {
             return waitingActivities.push({
               name: activityName,

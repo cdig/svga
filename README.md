@@ -80,7 +80,7 @@ A symbol definition works very similarly in an SVG Activity to how it works in A
 ```coffeescript
 #the do operator allows us to create a function for execution that runs immediately
 #also, for variables that are shared between all symbol definitions and are unchanged. Constants, for example, declare them above the symbol definition so they can be accessed within
-do ->
+Take [], ()->
   dummyValue = 100 
 
   #Each symbol definiton, when it is applied to a particular instance of an element, takes in an svgElement.
@@ -105,7 +105,7 @@ do ->
 ## Root Element
 Each SVG image has a root element and so, for an SVG Activity, declare a root element that exists above all instances of SVG Symbol definitions. Here is a simple example of a root file:
 ```coffeescript
-do ->
+Take [], ()->
   activity.root = (svgElement)->
     return scope = 
       gaugeCount: 0
@@ -123,7 +123,7 @@ For any one symbol definition, it can have many different instances. An instance
 ##Properties of an instance
 All functions and properties declared on an instance, when inside of an instance, are accessed using `scope`. To illustrate, here is a sample symbol definition.
 ```coffeescript```
-do->
+Take [], ()->
 
   activity.watch = (svgElement)->
     return scope =

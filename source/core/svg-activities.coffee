@@ -22,6 +22,8 @@ do ()->
         return activities[activityName]
 
       startActivity: (activityName, activityId, svgElement)->
+        if activities[activityId]?
+          return
         if not activityDefinitions[activityName]
           waitingActivities.push {name: activityName, id: activityId, svg: svgElement}
         else

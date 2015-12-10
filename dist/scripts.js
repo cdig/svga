@@ -206,6 +206,7 @@
             scope.registerInstance("default", defaultElement);
             scope.root = scope.instances["root"](contentDocument);
             scope.root.FlowArrows = new FlowArrows();
+            scope.root.root = scope.root;
             setupHighlighter(contentDocument.querySelector("defs"));
             childElements = getChildElements(contentDocument);
             scope.root.children = [];

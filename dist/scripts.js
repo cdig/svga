@@ -389,9 +389,9 @@
       return scope = {
         visible: function(isVisible) {
           if (isVisible) {
-            return svgElement.style.visibility = "visible";
+            return svgElement.style.opacity = 1.0;
           } else {
-            return svgElement.style.visibility = "hidden";
+            return svgElement.style.opacity = 0.0;
           }
         },
         pressure: 0,

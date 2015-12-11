@@ -3,9 +3,9 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
     scope = 
       visible: (isVisible)->
         if isVisible
-          svgElement.style.visibility = "visible"
+          svgElement.style.opacity = 1.0
         else
-          svgElement.style.visibility = "hidden"
+          svgElement.style.opacity = 0.0
 
       pressure: 0
 

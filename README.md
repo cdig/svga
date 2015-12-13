@@ -115,7 +115,7 @@ Take [], ()->
 It is worth noting that a root element will be able to access all elements/instances in an SVG, so it works as a very good place to control an SVG Activity and all of its children. By listening for mouse events on a particular element, it can easily then call functions on other instances based on those mouse events. **Note** you must have a "root" element for an SVG Activity 
 
 ## Registering Symbols with Instances
-Each SVG has a series of instances, which are element names, and these have to be registered with your symbol definitions. To do this, you need to either use one of the files you've created in your file, or create an additional file where this registration is done. Anywhere in your code, the following code is for registering an instance ```activity.registerInstance("symbolDefinitionName", "instanceName")```. 
+Each SVG has a series of instances, which are element names, and these have to be registered with your symbol definitions. To do this, you need to either use one of the files you've created in your file, or create an additional file where this registration is done. Anywhere in your code, the following code is for registering an instance ```activity.registerInstance("instanceName", "symbolDefinitionName")```. 
 
 #Instance of a Symbol
 For any one symbol definition, it can have many different instances. An instance of a symbol definition is an object containing the properties and methods defined in that symbol definition, but separate from all other instances. Function calls and property changes on that instance are separate from calls and property changes on other instances. 

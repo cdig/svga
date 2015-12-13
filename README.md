@@ -201,7 +201,7 @@ Masking in an SVG Activity works very similarly to how masks worked in Flash, wi
         getElement: ()->
           return svgElement
 ```
-The first property passed to an SVG Mask call is the root object for your entire scene. In the above scene it is the ```scope``` since we are in the root already. Next pass the element being used for masking, then the element to mask, and lastly give this a **unique** name. Make sure that the ```scope.maskElement``` is placed on the main stage in Flash; additionally, masks in an SVG Activity **have to be white** if they are to allow through all colours of the objects they are masking. This allows us to have masks of different colours, if so desired, or even gradient masks.
+The first property passed to an SVG Mask call is the root object for your entire scene. In the above scene it is the ```scope``` since we are in the root already. Next pass the element being used for masking, then the element to mask, and lastly give this a **unique** name. Make sure that the ```scope.maskElement``` is placed on the root in Flash, not the main stage or other symbol; additionally, masks in an SVG Activity **have to be white** if they are to allow through all colours of the objects they are masking. This allows us to have masks of different colours, if so desired, or even gradient masks.
 
 ### Animating
 Animating an object in an SVG involves using ```SVGAnimation``` which we ```Take``` the same as ```SVGMask```

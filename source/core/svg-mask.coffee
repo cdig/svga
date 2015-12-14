@@ -3,6 +3,13 @@
 #mask insance is what you're using to mask
 #masked instance is the element a mask is applied to
 #mask name is the name of the mask; make sure this is distinct
+getParentInverseTransform = (element, currentTransform)->
+  if element.nodeName is "svg"
+    return currentTransform
+  inversion = invertSVGMatrix(element.getAttribute("transform"))
+  currentTransform = "#{currentTransform} #{inversion}"
+  getParentInverseTransform(element.parentNode, currentTransform)
+
 Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   maskElement = maskInstance.getElement()
   maskedElement = maskedInstance.getElement()
@@ -23,7 +30,7 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
 
   rootElement.querySelector('defs').insertBefore(mask, null)
 
-  invertMatrix = invertSVGMatrix(maskedElement.getAttribute("transform"))
+  invertMatrix = getParentInverseTransform(maskedElement.parentNode, "")#invertSVGMatrix(maskedElement.getAttribute("transform"))
   origMatrix = maskElement.getAttribute("transform")
   transString = "#{invertMatrix} #{origMatrix}"
   maskElement.setAttribute('transform', transString)

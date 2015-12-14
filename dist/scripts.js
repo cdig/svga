@@ -1,5 +1,5 @@
 (function() {
-  var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, invert, invertSVGMatrix,
+  var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, getParentInverseTransform, invert, invertSVGMatrix,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   invert = function(matrix) {
@@ -357,6 +357,16 @@
     });
   })();
 
+  getParentInverseTransform = function(element, currentTransform) {
+    var inversion;
+    if (element.nodeName === "svg") {
+      return currentTransform;
+    }
+    inversion = invertSVGMatrix(element.getAttribute("transform"));
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(element.parentNode, currentTransform);
+  };
+
   Make("SVGMask", SVGMask = function(root, maskInstance, maskedInstance, maskName) {
     var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
     maskElement = maskInstance.getElement();
@@ -373,7 +383,7 @@
     maskedParent.appendChild(maskedElement);
     mask.appendChild(maskElement);
     rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = invertSVGMatrix(maskedElement.getAttribute("transform"));
+    invertMatrix = getParentInverseTransform(maskedElement.parentNode, "");
     origMatrix = maskElement.getAttribute("transform");
     transString = invertMatrix + " " + origMatrix;
     maskElement.setAttribute('transform', transString);
@@ -764,8 +774,8 @@
             }
           },
           mouseDown: function(e) {
-            PointerInput.addMove(scope.root.getElement, scope.mouseMove);
-            PointerInput.addUp(scope.root.getElement, scope.mouseUp);
+            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
             PointerInput.addUp(window, scope.mouseUp);
             scope.begin(e);
             return scope.compute(e);
@@ -774,8 +784,8 @@
             return scope.compute(e);
           },
           mouseUp: function(e) {
-            PointerInput.removeMove(scope.root.getElement, scope.mouseMove);
-            PointerInput.removeUp(scope.root.getElement, scope.mouseUp);
+            PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
             return PointerInput.removeUp(window, scope.mouseUp);
           }
         };

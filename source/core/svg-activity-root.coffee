@@ -44,6 +44,8 @@ do ()->
           scope.root = scope.instances["root"](contentDocument)
           scope.root.FlowArrows = new FlowArrows()
           scope.root.root = scope.root
+          scope.root.getElement = ()->
+            return contentDocument
           setupHighlighter(contentDocument.querySelector("defs"))
           childElements = getChildElements(contentDocument)
           scope.root.children = []
@@ -68,6 +70,8 @@ do ()->
           parent.children.push parent[id]
           parent[id].children = []
           parent[id].root = scope.root
+          parent[id].getElement = ()->
+            return element
 
           
           childElements = getChildElements(element)

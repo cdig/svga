@@ -4,8 +4,6 @@ do ->
       callbacks: []
       setup: ()->
         svgElement.addEventListener "click", scope.clicked
-      getElement: ()->
-        return svgElement
 
       setCallback: (callback)->
         scope.callbacks.push callback

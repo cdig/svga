@@ -20,8 +20,6 @@ do ()->
         setCallback: (callBackFunction)->
           scope.callback = callBackFunction
 
-        getElement: ()->
-          return svgElement
         getValue: ()->
           return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax)
 
@@ -81,8 +79,8 @@ do ()->
             callback()
 
         mouseDown: (e)->
-          PointerInput.addMove scope.root.getElement(), scope.mouseMove
-          PointerInput.addUp scope.root.getElement(), scope.mouseUp
+          PointerInput.addMove scope.root.getElement, scope.mouseMove
+          PointerInput.addUp scope.root.getElement, scope.mouseUp
           PointerInput.addUp window, scope.mouseUp
 
           scope.begin(e)
@@ -93,7 +91,7 @@ do ()->
           scope.compute(e)
 
         mouseUp: (e)->
-          PointerInput.removeMove scope.root.getElement(), scope.mouseMove
-          PointerInput.removeUp scope.root.getElement(), scope.mouseUp
+          PointerInput.removeMove scope.root.getElement, scope.mouseMove
+          PointerInput.removeUp scope.root.getElement, scope.mouseUp
           PointerInput.removeUp window, scope.mouseUp
 

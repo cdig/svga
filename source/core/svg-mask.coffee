@@ -4,8 +4,8 @@
 #masked instance is the element a mask is applied to
 #mask name is the name of the mask; make sure this is distinct
 Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
-  maskElement = maskInstance.style.getElement()
-  maskedElement = maskedInstance.style.getElement()
+  maskElement = maskInstance.getElement()
+  maskedElement = maskedInstance.getElement()
   rootElement = root.getElement()
   mask = document.createElementNS("http://www.w3.org/2000/svg", "mask")
   mask.setAttribute("id", maskName)

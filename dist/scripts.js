@@ -210,6 +210,9 @@
             scope.root = scope.instances["root"](contentDocument);
             scope.root.FlowArrows = new FlowArrows();
             scope.root.root = scope.root;
+            scope.root.getElement = function() {
+              return contentDocument;
+            };
             setupHighlighter(contentDocument.querySelector("defs"));
             childElements = getChildElements(contentDocument);
             scope.root.children = [];
@@ -237,6 +240,9 @@
             parent.children.push(parent[id]);
             parent[id].children = [];
             parent[id].root = scope.root;
+            parent[id].getElement = function() {
+              return element;
+            };
             childElements = getChildElements(element);
             results = [];
             for (k = 0, len = childElements.length; k < len; k++) {
@@ -353,8 +359,8 @@
 
   Make("SVGMask", SVGMask = function(root, maskInstance, maskedInstance, maskName) {
     var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.style.getElement();
-    maskedElement = maskedInstance.style.getElement();
+    maskElement = maskInstance.getElement();
+    maskedElement = maskedInstance.getElement();
     rootElement = root.getElement();
     mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
     mask.setAttribute("id", maskName);
@@ -645,9 +651,6 @@
         setup: function() {
           return svgElement.addEventListener("click", scope.clicked);
         },
-        getElement: function() {
-          return svgElement;
-        },
         setCallback: function(callback) {
           return scope.callbacks.push(callback);
         },
@@ -687,9 +690,6 @@
           },
           setCallback: function(callBackFunction) {
             return scope.callback = callBackFunction;
-          },
-          getElement: function() {
-            return svgElement;
           },
           getValue: function() {
             return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
@@ -764,8 +764,8 @@
             }
           },
           mouseDown: function(e) {
-            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
-            PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+            PointerInput.addMove(scope.root.getElement, scope.mouseMove);
+            PointerInput.addUp(scope.root.getElement, scope.mouseUp);
             PointerInput.addUp(window, scope.mouseUp);
             scope.begin(e);
             return scope.compute(e);
@@ -774,8 +774,8 @@
             return scope.compute(e);
           },
           mouseUp: function(e) {
-            PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
-            PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
+            PointerInput.removeMove(scope.root.getElement, scope.mouseMove);
+            PointerInput.removeUp(scope.root.getElement, scope.mouseUp);
             return PointerInput.removeUp(window, scope.mouseUp);
           }
         };
@@ -789,9 +789,6 @@
       var scope;
       return scope = {
         setup: function() {},
-        getElement: function() {
-          return svgElement;
-        },
         setText: function(text) {
           var textElement;
           textElement = svgElement.querySelector("text").querySelector("tspan");
@@ -831,13 +828,9 @@
             scope.setTransforms();
             PointerInput.addDown(svgElement, scope.mouseDown);
             PointerInput.addMove(svgElement, scope.mouseMove);
-            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.addMove(scope.root.getElement, scope.mouseMove);
             PointerInput.addUp(svgElement, scope.mouseUp);
-            return PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
-          },
-          getElement: function() {
-            return svgElement;
-            return activity.registerInstance("joystick", "joystick");
+            return PointerInput.addUp(scope.root.getElement, scope.mouseUp);
           },
           setDefault: function(pos) {
             scope["default"] = Ease.linear(pos, scope.rangeMin, scope.rangeMax, 0, 1, true);

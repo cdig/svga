@@ -375,7 +375,6 @@
     mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
     mask.setAttribute("id", maskName);
     mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    mask.setAttribute("height", "100%");
     maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
     maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
     maskedElement.parentNode.insertBefore(maskedParent, maskedElement);

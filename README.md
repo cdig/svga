@@ -12,29 +12,31 @@ A framework for making activities/animations with SVGs. If looking to build an S
   - [Root Element](#root-element)
   - [Registering Symbols](#registering-symbols)
   
+  
 
 - [Instance of a Symbol](#instance-of-a-symbol)
   - [Properties of an instance](#properties-of-an-instance)
+    - [Reserved Words](#reserved-words) 
   - [Transform](#transform)
     - [Scaling](#scaling)
     - [Rotation](#rotation)
     - [Translation](#translation)
-  - [Style] (#style)
-    - [Visibility] (#visibility)
-    - [Fill Colour] (#fill-colour)
-    - [Hydraulic Pressure] (#hydraulic-pressure)
-    - [Gradients] (#gradients)
-    - [Masking] (#masking)
-    - [Text] (#text)
-  - [Animating] (#animating)
-- [Built in Symbols] (#built-in-symbols)
-  -  Joystick (#joystick)  
-  -  Crank (#crank)
-- [Flow Arrows] (#flow-arrows)
-  -[Flow Arrow Properties] (#flow-arrow-properties)   
-  -[Linking with symbol] (#linking-with-symbol)
-  -[Animating arrows] (#animating-lines)
-  -[Styling arrows] (#styling-lines)
+  - [Style](#style)
+    - [Visibility](#visibility)
+    - [Fill Colour](#fill-colour)
+    - [Hydraulic Pressure](#hydraulic-pressure)
+    - [Gradients](#gradients)
+    - [Masking](#masking)
+    - [Text](#text)
+  - [Animating](#animating)
+- [Built in Symbols](#built-in-symbols)
+  -  Joystick(#joystick)  
+  -  Crank(#crank)
+- [Flow Arrows](#flow-arrows)
+  -[Flow Arrow Properties](#flow-arrow-properties)   
+  -[Linking with symbol](#linking-with-symbol)
+  -[Animating arrows](#animating-lines)
+  -[Styling arrows](#styling-lines)
 
 - [Styling with CSS] (#styling-with-css)
 
@@ -59,10 +61,6 @@ An SVG Activity needs to contain an SVG file to animate and interact with. As we
 ```
 
 **Note**: An SVG is embedded using ```<object>```. This allows us to query the DOM to find this SVG and access its contents. 
-
-## Setup Activity
-Discussed after this is specifics to coding an activity, but, to start, for any activity you will need to create a file with the same name as your ```svg-activity``` with ```-activity``` appended. So, in the case of *big-hose* the file name would become ```big-hose-activity.coffee```. Unlike most scripts, this file *has to be compiled* to the *public* directory. Inside of the public directory, compile this to ```big-hose-activity.js```.
-
 
 
 # Making an Activity 
@@ -118,6 +116,8 @@ It is worth noting that a root element will be able to access all elements/insta
 ## Registering Symbols with Instances
 Each SVG has a series of instances, which are element names, and these have to be registered with your symbol definitions. To do this, you need to either use one of the files you've created in your file, or create an additional file where this registration is done. Anywhere in your code, the following code is for registering an instance ```activity.registerInstance("instanceName", "symbolDefinitionName")```. 
 
+
+
 #Instance of a Symbol
 For any one symbol definition, it can have many different instances. An instance of a symbol definition is an object containing the properties and methods defined in that symbol definition, but separate from all other instances. Function calls and property changes on that instance are separate from calls and property changes on other instances. 
 
@@ -141,15 +141,24 @@ Take [], ()->
       setNeedlePos: (value)->
         scope.needlePos = value
       
-      getElement: ()->
-        return svgElement
-      
       getDisplacement: ()->
         return (scope.needlePos - scope.needleDefPos)/360
 ```
 When you are inside of an instance, i.e. local code, you access any property using ```scope.yourProperty``` and call any function by ```scope.yourFunction(...)```. You can see this in the ```setup``` function. A thing to note is that the **svgElement** is passed into a symbol definition when creating an instance. This is **not** declared on scope. To access the **svgElement** inside of an instance, you just need to write ```svgElement```. It is **highly** recommended you create a function called ```getElement``` like in the example above so that you can access the **svgElement** of an instance outside of that instance.
 
 All properties of an instance, or functions, can be accessed without **scope**. For example, say you have an instance of **watch** named *watch1* that is on the *root*. To access the ```getElement``` call: ```element = root.watch1.getElement()```
+
+###Reserved words
+For each instance of a symbol, a few properties are added that are **reserved words** and you cannot declare variables or functions with the same name.
+List of items:
+  -```getElement```
+  -```style```
+  -```transform```
+  -```_children```
+  -```root```
+  -```FlowArrows```
+
+
 
 ###Transform
 When any instance of a symbol is created, a few things happen:
@@ -270,7 +279,7 @@ You can specify the colour of an arrow by setting the colour property. In order 
 
 
 ##Outside Access
-In order to access an SVG Activity from outside of the Activity itself in order to do things like communicate between SVGs, once an SVG Activity has been created it can be accessed from coffeescript anywhere. This is done using Take, and when a particular SVG Activity is taken it returns a copy of the root of that activity. The below example shows printing off the variable ```readOut``` which is declard on the root of an activity
+Once an SVG Activity has been created, it can be accessed from anywhere.  This is done using Take, and when a particular SVG Activity is taken it returns a copy of the root of that activity. The below example shows printing off the variable ```readOut``` which is declared on the root of an activity
 
 ```coffeescript
 Take "your-svg-activity-id", (YourActivity)->

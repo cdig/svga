@@ -1,11 +1,10 @@
 # SVG Activity Components
-A framework for making activities/animations with SVGs. If looking to build an SVG Activity, please look at the [SVG-Activity-Starter](https://github.com/cdig/svg-activity-starter)
+A framework for making activities/animations with SVGs. If looking to build an SVG Activity, please look at the [SVG Activity Starter](https://github.com/cdig/svg-activity-starter)
 
 ### Table of Contents
 - [Overview](#overview)
 - [Getting Started](#getting-started)
   - [Adding in HTML](#adding-in-html)
-
   
 - [Making an Activity](#making-an-activity)
   - [Symbol Definition](#symbol-definition)
@@ -44,7 +43,7 @@ A framework for making activities/animations with SVGs. If looking to build an S
   
   
 # Overview
-Traditionally we have done our animations and activities using ActionScript and Flash. Since we are now targeting the web and mobile devices, we have been forced to move away from Flash. The purpose of an SVG Activity is to provide methods in CoffeeScript to allow for interacting with and animating SVG files.
+The purpose of an SVG Activity is to provide methods in CoffeeScript to allow for the creation of interactive activities using SVGs.
 
 
 # Getting Started
@@ -52,16 +51,15 @@ Please download the [SVG Activity Starter](https://github.com/cdig/svg-activity-
 
 
 ##Adding in HTML
-An SVG Activity needs to contain an SVG file to animate and interact with. As well as containing an SVG, you need to use specific mark up to specify an SVG Activity, with an activity name and a unique ID. Shown below is what it would look like if we wanted to have an `svg-activity` **big-hose** with an id of "big-hose1". We give an id in case we want to have multiple copies of an SVG on a page.
+An SVG Activity needs to contain an SVG file to animate and interact with. As well as containing an SVG, specific mark up is used for an SVG Activity, with an activity name and a unique ID. Shown below is what it would look like if we wanted to have an `svg-activity` named `big-hose` with an id of `big-hose1`. **Note** We give an id in case we want to have multiple copies of an SVG Activity on a page.
 
 ```html
 <svg-activity name="big-hose" id="big-hose1">
-   <object type="image/svg+xml" data="image/big-hose.svg" id="big-hose-svg">Your browser does not support SVG</object>
+   <object type="image/svg+xml" data="image/big-hose.svg" id="big-hose-svg"></object>
 </svg-activity>
 ```
 
 **Note**: An SVG is embedded using ```<object>```. This allows us to query the DOM to find this SVG and access its contents. 
-
 
 # Making an Activity 
 Creating an SVG Activity is different in some ways to creating an activity using Actionscript, though some steps may seem familiar. Essentially, how they work is by creating a series of **symbol definitions**, similar to ActionScript, *registering these* with the activity and to particular **symbol instances**. 

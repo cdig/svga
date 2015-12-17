@@ -37,7 +37,8 @@ A framework for making activities/animations with SVGs. If looking to build an S
   -[Styling arrows] (#styling-lines)
 
 - [Styling with CSS] (#styling-with-css)
-- [HTML and SVG Activity]
+
+- [Outside Access] (#outside-access)
   
   
 # Overview
@@ -266,3 +267,20 @@ In order to start animating a series of arrows, call ```scope.root.FlowArrows.st
 
 ###Styling Arrows
 You can specify the colour of an arrow by setting the colour property. In order to do this, on an arrow, call ```scope.arrows.setColor("red")```
+
+
+##Outside Access
+In order to access an SVG Activity from outside of the Activity itself in order to do things like communicate between SVGs, once an SVG Activity has been created it can be accessed from coffeescript anywhere. This is done using Take, and when a particular SVG Activity is taken it returns a copy of the root of that activity. The below example shows printing off the variable ```readOut``` which is declard on the root of an activity
+
+```coffeescript
+Take "your-svg-activity-id", (YourActivity)->
+  console.log YourActivity.readOut 
+```
+**Note** This is why, for every activity, when it is declared in HTML, you *have to* give it a unique ID, and make sure it will not conflict with anything else declared using Make (good practice, make it lower case, as neither Ivan or Sean will declare activites with lower case).
+
+Here is an example highlighting the ability to have two activities talk to each other:
+```coffeescript
+Take ["activity1", "activity2"], (activity1, activity2)->
+  activity1.propertyValue = activity2.propertyValue #look, communication!
+```
+  

@@ -10,7 +10,7 @@ A framework for making activities/animations with SVGs. If looking to build an S
 - [Making an Activity](#making-an-activity)
   - [Symbol Definition](#symbol-definition)
   - [Root Element](#root-element)
-  - [Registering Symbols](#registering-symbols)
+  - [Registering Symbols](#registering-symbols-with-instnaces)
   
   
 

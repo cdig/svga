@@ -48,11 +48,11 @@ Traditionally we have done our animations and activities using ActionScript and 
 
 
 # Getting Started
-Please download the [SVG Activity Starter](https://github.com/cdig/svg-activity-starter) to get going on making an SVG.
+Please download the [SVG Activity Starter](https://github.com/cdig/svg-activity-starter) to get started making an SVG Activity.
 
 
 ##Adding in HTML
-An SVG Activity needs to contain an SVG file to animate and interact with. As well as containing an SVG, you need to use specific mark up to specify an SVG Activity, with th and a unique ID. . Shown below is what it would look like if we wanted to have an `svg-activity` **big-hose** with an id of "big-hose1". We give an id in case we want to have multiple copies of an SVG on a page.
+An SVG Activity needs to contain an SVG file to animate and interact with. As well as containing an SVG, you need to use specific mark up to specify an SVG Activity, with an activity name and a unique ID. Shown below is what it would look like if we wanted to have an `svg-activity` **big-hose** with an id of "big-hose1". We give an id in case we want to have multiple copies of an SVG on a page.
 
 ```html
 <svg-activity name="big-hose" id="big-hose1">
@@ -64,7 +64,7 @@ An SVG Activity needs to contain an SVG file to animate and interact with. As we
 
 
 # Making an Activity 
-Creating an SVG Activity is different in some ways to creating an activity using Actionscript, though some steps may be the same. Essentially, how they work is by creating a series of **symbol definitions**, similar to ActionScript, *registering these* in an activity and to particular **symbol instances**. You then can apply events
+Creating an SVG Activity is different in some ways to creating an activity using Actionscript, though some steps may seem familiar. Essentially, how they work is by creating a series of **symbol definitions**, similar to ActionScript, *registering these* with the activity and to particular **symbol instances**. 
 An SVG Activity is made up a few different parts:
   *Files that contain symbol definitions
   *Animations and interactions on these symbols
@@ -74,7 +74,7 @@ An SVG Activity is made up a few different parts:
 SVG Activities *heavily* use [Take and Make] (https://github.com/cdig/take-and-make). Before making an SVG Activity, if you are not familiar with Take and Make, or aware of their purpose, please read about them.
 
 ## Symbol Definition
-A symbol definition works very similarly in an SVG Activity to how it works in ActionScript. You create a symbol definition, a piece of code, that will be attached to a symbol instance later. For each instance of a symbol, register with the activity what the symbol definition used with it will be. An example of a symbol definition called ```gauge``` with comments to explain:
+A symbol definition works very similarly in an SVG Activity to how it works in ActionScript. You create a symbol definition that will be attached to a symbol instance later. For each instance of a symbol, register with the activity what the symbol definition used with it will be. An example of a symbol definition called ```gauge``` with comments to explain:
 
 ```coffeescript
 #the do operator allows us to create a function for execution that runs immediately
@@ -91,18 +91,18 @@ Take [], ()->
       
       reading: 0 ##property of an object
       
-      setup : ()-> ##each symbol definiton has to have a set up function. This is called on an 
+      setup: ()-> ##each symbol definiton has to have a set up function. This is called on an 
         scope.reading = 5#set the reading value. Note that you need to use 'scope.reading'' and not 'reading'
         scope.reading += dummyValue ##notice that dummyValue is created above scope and so it does not require 'scope.dummyValue' and is declared with an equal sign
         
       ##example function on a gauge
       setPressureReading: (value)-> 
         scope.reading = value
-  activity.registerInstance("gauge1", "gauge") #register our instance with the
+  activity.registerInstance("gauge1", "gauge") #register our instance with the activity
 ```
 
 ## Root Element
-Each SVG image has a root element and so, for an SVG Activity, declare a root element that exists above all instances of SVG Symbol definitions. Here is a simple example of a root file:
+Each SVG image has a root element and so, for an SVG Activity, make sure to declare a root element (**note**: not optional; this has to be done) that exists above all instances of SVG Symbol definitions. Here is a simple example of a root file:
 ```coffeescript
 Take [], ()->
   activity.root = (svgElement)->
@@ -119,7 +119,7 @@ Each SVG has a series of instances, which are element names, and these have to b
 
 
 #Instance of a Symbol
-For any one symbol definition, it can have many different instances. An instance of a symbol definition is an object containing the properties and methods defined in that symbol definition, but separate from all other instances. Function calls and property changes on that instance are separate from calls and property changes on other instances. 
+For any one symbol definition, it can have many different instances. An instance of a symbol definition is an object containing the properties and methods defined in that symbol definition, but separate from all other instances. Function calls and property changes on that instance are separate from calls and property changes on other instances. Think of this as the relationship between a class and an object; when you declare an instance of a definition, you're saying "I want an object with this name that is of this class"
 
 ##Properties of an instance
 All functions and properties declared on an instance, when inside of an instance, are accessed using `scope`. To illustrate, here is a sample symbol definition.
@@ -144,7 +144,7 @@ Take [], ()->
       getDisplacement: ()->
         return (scope.needlePos - scope.needleDefPos)/360
 ```
-When you are inside of an instance, i.e. local code, you access any property using ```scope.yourProperty``` and call any function by ```scope.yourFunction(...)```. You can see this in the ```setup``` function. A thing to note is that the **svgElement** is passed into a symbol definition when creating an instance. This is **not** declared on scope. To access the **svgElement** inside of an instance, you just need to write ```svgElement```. It is **highly** recommended you create a function called ```getElement``` like in the example above so that you can access the **svgElement** of an instance outside of that instance.
+When you are inside of an instance, you access its properties using ```scope.yourProperty``` and call any function by ```scope.yourFunction(...)```. You can see this in the ```setup``` function. A thing to note is that the **svgElement** is passed into a symbol definition when creating an instance. This is **not** declared on scope. To access the **svgElement** inside of an instance, you just need to write ```svgElement```.
 
 All properties of an instance, or functions, can be accessed without **scope**. For example, say you have an instance of **watch** named *watch1* that is on the *root*. To access the ```getElement``` call: ```element = root.watch1.getElement()```
 
@@ -165,7 +165,7 @@ When any instance of a symbol is created, a few things happen:
   -The **setup** function on that instance is called
   -A style object is added on scope
   -A transform object is added on scope.
-The **transform** of an instance controls its position in the scene. You change this by changing properties on the transform.
+The **transform** of an instance controls its position, scaling, and rotation in the scene. You change this by changing properties on the transform.
 ####Scaling
 To change the scale of an object, you can change the scale in both the x and y directions. To do this, assuming we are in the function of a symbol: ```scope.transform.scaleX = 2.0```. You can also look up this value: ```scaleX = scope.transform.scaleX```. The same applies to **scaleY**
 ####Rotation
@@ -192,7 +192,6 @@ Gradients in SVG Activities are an abstraction on the internal [SVG Gradients](h
 To set a linear gradient on an element, call ```scope.style.linearGradient(stops, x1, y1, x2, y2)```. The last four values are optional. To understand these, look into an explanation of [linear gradients in SVGs] (https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Gradients).
 
 ```stops``` are the stops with a color in an svg and are of the form ```{offset: offsetValueFromCenter, color: colorForStop}```.
-
 ##### Radial Gradients
 To set a radial gradient on an element, call ```scope.style.radialGradient(stops, cx, cy, radius)```. The ```cx, cy``` properties are the center for the radial gradient. This allows you to move the gradient from off center if you would like. The radius is how large the gradient will expand.
 
@@ -235,10 +234,10 @@ To animate an object, you first create an animation function under scope that ta
 
 
 ##Built-in Symbols
-Hey, we've got some symbols built in for you! 
+Hey, some symbols are built in for you!
 
 ###Button 
-Say you have a symbol and you want it to be a button, all you need to do is to register it as a button. For example ```activity.registerInstance("myButton", "button")```. Then, somewhere in your scene, when referencing ```myButton``` to take advantage of when it's pressed, create a callback function and then pass it to the button like ```scope.myButton.setCallback(callbackFunction)```, then, whenever that button is clicked, the callbackFunction will be called.
+If you have a symbol and you want it to be a button, all you need to do is to register it as a button. For example ```activity.registerInstance("myButton", "button")```. Then, somewhere in your scene, when referencing ```myButton``` to take advantage of when it's pressed, create a callback function and then pass it to the button like ```scope.myButton.setCallback(callbackFunction)```, then, whenever that button is clicked, the callbackFunction will be called.
 
 ###Crank
 To register an object as a crank: ```activity.registerInstance("myCrank", "crank")```. Then there are a series of functions on ```myCrank```
@@ -272,10 +271,10 @@ In order to link create a flow arrow, and link it with a line, make the followin
 Once an arrow has been created, it has properties that can be changed. For example, ```scope.arrows.flow = 0.4``` or ```scope.arrows.reverse()``` will reverse the direction of the arrows. You can even specify which segment to animate by calling ```scope.arrows.segment0.reverse()```. You can also change the scale of an arrow by ```scope.arrows.scale = 0.4```
 
 ###Animating Arrows
-In order to start animating a series of arrows, call ```scope.root.FlowArrows.start()```. This will start the scene animation.
+In order to start animating a series of arrows, call ```scope.root.FlowArrows.start()```. This will start the flow arrows animation.
 
 ###Styling Arrows
-You can specify the colour of an arrow by setting the colour property. In order to do this, on an arrow, call ```scope.arrows.setColor("red")```
+You can specify the colour of an arrow by setting the color property. In order to do this, on an arrow, call ```scope.arrows.setColor("red")```
 
 
 ##Outside Access

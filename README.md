@@ -30,17 +30,17 @@ A framework for making activities/animations with SVGs. If looking to build an S
     - [Text](#text)
   - [Animating](#animating)
 - [Built in Symbols](#built-in-symbols)
-  -  Joystick(#joystick)  
-  -  Crank(#crank)
+  -  [Joystick](#joystick)  
+  -  [Crank](#crank)
 - [Flow Arrows](#flow-arrows)
-  -[Flow Arrow Properties](#flow-arrow-properties)   
-  -[Linking with symbol](#linking-with-symbol)
-  -[Animating arrows](#animating-lines)
-  -[Styling arrows](#styling-lines)
+  - [Flow Arrow Properties](#flow-arrow-properties)   
+  - [Linking with symbol](#linking-with-symbol)
+  - [Animating arrows](#animating-lines)
+  - [Styling arrows](#styling-lines)
 
-- [Styling with CSS] (#styling-with-css)
+- [Styling with CSS](#styling-with-css)
 
-- [Outside Access] (#outside-access)
+- [Outside Access](#outside-access)
   
   
 # Overview

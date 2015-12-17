@@ -10,7 +10,7 @@ A framework for making activities/animations with SVGs. If looking to build an S
 - [Making an Activity](#making-an-activity)
   - [Symbol Definition](#symbol-definition)
   - [Root Element](#root-element)
-  - [Registering Symbols](#registering-symbols-with-instnaces)
+  - [Registering Symbols](#registering-symbols)
   
   
 
@@ -113,7 +113,7 @@ Take [], ()->
 ```
 It is worth noting that a root element will be able to access all elements/instances in an SVG, so it works as a very good place to control an SVG Activity and all of its children. By listening for mouse events on a particular element, it can easily then call functions on other instances based on those mouse events. **Note** you must have a "root" element for an SVG Activity 
 
-## Registering Symbols with Instances
+## Registering Symbols
 Each SVG has a series of instances, which are element names, and these have to be registered with your symbol definitions. To do this, you need to either use one of the files you've created in your file, or create an additional file where this registration is done. Anywhere in your code, the following code is for registering an instance ```activity.registerInstance("instanceName", "symbolDefinitionName")```. 
 
 

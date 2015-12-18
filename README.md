@@ -150,10 +150,15 @@ All properties of an instance, or functions, can be accessed without **scope**. 
 For each instance of a symbol, a few properties are added that are **reserved words** and you cannot declare variables or functions with the same name.
 List of items:
   -```getElement```
+  
   -```style```
+  
   -```transform```
+  
   -```_children```
+  
   -```root```
+  
   -```FlowArrows```
 
 

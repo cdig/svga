@@ -32,9 +32,9 @@ do ->
           scope.setTransforms()
           PointerInput.addDown(svgElement, scope.mouseDown)
           PointerInput.addMove(svgElement, scope.mouseMove)
-          PointerInput.addMove(scope.root.getElement, scope.mouseMove)
+          PointerInput.addMove(scope.root.getElement(), scope.mouseMove)
           PointerInput.addUp(svgElement, scope.mouseUp)
-          PointerInput.addUp(scope.root.getElement, scope.mouseUp)
+          PointerInput.addUp(scope.root.getElement(), scope.mouseUp)
         
         setDefault: (pos)->
           scope.default = Ease.linear(pos, scope.rangeMin, scope.rangeMax, 0, 1, true)

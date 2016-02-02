@@ -4,10 +4,11 @@ invert = (matrix)->
   identity = []
   copy = []
   dim = matrix.length
+
   for i in [0..dim - 1]
     identity[i] = []
     copy[i] = []
-    for j in [0..dim - 1]
+    for  j in [0..dim - 1]
       if i is j
         identity[i][j] = 1
       else
@@ -19,8 +20,8 @@ invert = (matrix)->
     temp = copy[i][i]
     if temp is 0
       for ii in [0..dim - 1]
-        for j in [0..dim - 1]
-          if copy[ii][i] isnt 0
+        if copy[ii][i] isnt 0
+          for j in [0..dim - 1]
             temp = copy[i][j]
             copy[i][j] = copy[ii][j]
             copy[ii][j] = temp
@@ -29,7 +30,6 @@ invert = (matrix)->
             identity[ii][j] = temp
           break
       temp = copy[i][i]
-    
     for j in [0..dim-1]
       copy[i][j] = copy[i][j]/temp
       identity[i][j] = identity[i][j]/temp

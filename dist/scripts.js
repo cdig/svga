@@ -26,8 +26,8 @@
       temp = copy[i][i];
       if (temp === 0) {
         for (ii = n = 0, ref3 = dim - 1; 0 <= ref3 ? n <= ref3 : n >= ref3; ii = 0 <= ref3 ? ++n : --n) {
-          for (j = o = 0, ref4 = dim - 1; 0 <= ref4 ? o <= ref4 : o >= ref4; j = 0 <= ref4 ? ++o : --o) {
-            if (copy[ii][i] !== 0) {
+          if (copy[ii][i] !== 0) {
+            for (j = o = 0, ref4 = dim - 1; 0 <= ref4 ? o <= ref4 : o >= ref4; j = 0 <= ref4 ? ++o : --o) {
               temp = copy[i][j];
               copy[i][j] = copy[ii][j];
               copy[ii][j] = temp;

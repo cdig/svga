@@ -39,10 +39,6 @@
           }
         }
         temp = copy[i][i];
-        if (temp === 0) {
-          console.log("not invertible");
-          return;
-        }
       }
       for (j = p = 0, ref5 = dim - 1; 0 <= ref5 ? p <= ref5 : p >= ref5; j = 0 <= ref5 ? ++p : --p) {
         copy[i][j] = copy[i][j] / temp;

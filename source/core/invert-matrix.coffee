@@ -29,9 +29,6 @@ invert = (matrix)->
             identity[ii][j] = temp
           break
       temp = copy[i][i]
-      if temp is 0
-        console.log "not invertible"
-        return
     
     for j in [0..dim-1]
       copy[i][j] = copy[i][j]/temp

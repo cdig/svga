@@ -6,9 +6,10 @@
 getParentInverseTransform = (element, currentTransform)->
   if element.nodeName is "svg"
     return currentTransform
-  inversion = invertSVGMatrix(element.getAttribute("transform"))
-  currentTransform = "#{currentTransform} #{inversion}"
-  getParentInverseTransform(element.parentNode, currentTransform)
+  #inversion = invertSVGMatrix(element.getAttribute("transform"))
+  inv = element.getCTM().inverse()
+  inversion = "matrix(#{inv.a}, #{inv.b}, #{inv.c}, #{inv.d}, #{inv.e}, #{inv.f})" 
+  currentTransform = "#{inversion} #{currentTransform} "
 
 Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   maskElement = maskInstance.getElement()
@@ -28,9 +29,9 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   mask.appendChild(maskElement)
 
   rootElement.querySelector('defs').insertBefore(mask, null)
-
   invertMatrix = getParentInverseTransform(maskedElement.parentNode, "")#invertSVGMatrix(maskedElement.getAttribute("transform"))
   origMatrix = maskElement.getAttribute("transform")
+
   transString = "#{origMatrix} #{invertMatrix} "
   maskElement.setAttribute('transform', transString)
 

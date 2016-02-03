@@ -55,8 +55,8 @@ invertSVGMatrix = (matrixString)->
   matrix[0][0] = parseFloat(matches[0])
   matrix[0][1] = parseFloat(matches[2])
   matrix[0][2] = parseFloat(matches[4])
-  matrix[1][0] = parseFloat(matches[3])
-  matrix[1][1] = parseFloat(matches[1])
+  matrix[1][0] = parseFloat(matches[1])
+  matrix[1][1] = parseFloat(matches[3])
   
   matrix[1][2] = parseFloat(matches[5])
 

@@ -68,8 +68,8 @@
     matrix[0][0] = parseFloat(matches[0]);
     matrix[0][1] = parseFloat(matches[2]);
     matrix[0][2] = parseFloat(matches[4]);
-    matrix[1][0] = parseFloat(matches[3]);
-    matrix[1][1] = parseFloat(matches[1]);
+    matrix[1][0] = parseFloat(matches[1]);
+    matrix[1][1] = parseFloat(matches[3]);
     matrix[1][2] = parseFloat(matches[5]);
     matrix[2][0] = 0;
     matrix[2][1] = 0;
@@ -354,13 +354,13 @@
   })();
 
   getParentInverseTransform = function(element, currentTransform) {
-    var inversion;
+    var inv, inversion;
     if (element.nodeName === "svg") {
       return currentTransform;
     }
-    inversion = invertSVGMatrix(element.getAttribute("transform"));
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(element.parentNode, currentTransform);
+    inv = element.getCTM().inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    return currentTransform = inversion + " " + currentTransform + " ";
   };
 
   Make("SVGMask", SVGMask = function(root, maskInstance, maskedInstance, maskName) {

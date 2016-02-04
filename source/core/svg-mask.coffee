@@ -3,13 +3,22 @@
 #mask insance is what you're using to mask
 #masked instance is the element a mask is applied to
 #mask name is the name of the mask; make sure this is distinct
-getParentInverseTransform = (element, currentTransform)->
+getParentInverseTransform = (root,element, currentTransform)->
   if element.nodeName is "svg"
     return currentTransform
-  #inversion = invertSVGMatrix(element.getAttribute("transform"))
-  inv = element.getCTM().inverse()
+  newMatrix = root.getElement().createSVGMatrix()
+  matrixString = element.getAttribute("transform")
+  matches = matrixString.match(/[+-]?\d+(\.\d+)?/g)
+  newMatrix.a = matches[0]
+  newMatrix.b = matches[1]
+  newMatrix.c = matches[2]
+  newMatrix.d = matches[3]
+  newMatrix.e = matches[4]
+  newMatrix.f = matches[5]
+  inv = newMatrix.inverse()
   inversion = "matrix(#{inv.a}, #{inv.b}, #{inv.c}, #{inv.d}, #{inv.e}, #{inv.f})" 
-  currentTransform = "#{inversion} #{currentTransform} "
+  currentTransform = "#{currentTransform} #{inversion}"
+  getParentInverseTransform(root,element.parentNode, currentTransform)
 
 Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   maskElement = maskInstance.getElement()
@@ -29,10 +38,10 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   mask.appendChild(maskElement)
 
   rootElement.querySelector('defs').insertBefore(mask, null)
-  invertMatrix = getParentInverseTransform(maskedElement.parentNode, "")#invertSVGMatrix(maskedElement.getAttribute("transform"))
+  invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "")#invertSVGMatrix(maskedElement.getAttribute("transform"))
   origMatrix = maskElement.getAttribute("transform")
 
-  transString = "#{origMatrix} #{invertMatrix} "
+  transString = "#{origMatrix} #{invertMatrix}"
   maskElement.setAttribute('transform', transString)
 
   origStyle = maskedElement.getAttribute('style')
@@ -40,7 +49,7 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
     newStyle = origStyle + "; mask: url(##{maskName});"
   else
     newStyle = "mask: url(##{maskName});"
-  maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0 0)")
+  maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)")
   maskedInstance.transform.setBaseTransform()
   maskedParent.setAttribute("style", newStyle)
 

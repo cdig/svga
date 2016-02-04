@@ -353,14 +353,24 @@
     });
   })();
 
-  getParentInverseTransform = function(element, currentTransform) {
-    var inv, inversion;
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
     if (element.nodeName === "svg") {
       return currentTransform;
     }
-    inv = element.getCTM().inverse();
+    newMatrix = root.getElement().createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
     inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    return currentTransform = inversion + " " + currentTransform + " ";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
   };
 
   Make("SVGMask", SVGMask = function(root, maskInstance, maskedInstance, maskName) {
@@ -378,9 +388,9 @@
     maskedParent.appendChild(maskedElement);
     mask.appendChild(maskElement);
     rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(maskedElement.parentNode, "");
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
     origMatrix = maskElement.getAttribute("transform");
-    transString = origMatrix + " " + invertMatrix + " ";
+    transString = origMatrix + " " + invertMatrix;
     maskElement.setAttribute('transform', transString);
     origStyle = maskedElement.getAttribute('style');
     if (origStyle != null) {
@@ -388,7 +398,7 @@
     } else {
       newStyle = "mask: url(#" + maskName + ");";
     }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0 0)");
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
     maskedInstance.transform.setBaseTransform();
     return maskedParent.setAttribute("style", newStyle);
   });

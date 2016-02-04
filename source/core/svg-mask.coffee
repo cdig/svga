@@ -41,7 +41,7 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "")#invertSVGMatrix(maskedElement.getAttribute("transform"))
   origMatrix = maskElement.getAttribute("transform")
 
-  transString = "#{origMatrix} #{invertMatrix}"
+  transString = "#{invertMatrix} #{origMatrix} "
   maskElement.setAttribute('transform', transString)
 
   origStyle = maskedElement.getAttribute('style')

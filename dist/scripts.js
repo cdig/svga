@@ -390,7 +390,7 @@
     rootElement.querySelector('defs').insertBefore(mask, null);
     invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
     origMatrix = maskElement.getAttribute("transform");
-    transString = origMatrix + " " + invertMatrix;
+    transString = invertMatrix + " " + origMatrix + " ";
     maskElement.setAttribute('transform', transString);
     origStyle = maskedElement.getAttribute('style');
     if (origStyle != null) {

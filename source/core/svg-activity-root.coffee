@@ -1,5 +1,5 @@
 do ()-> 
-  Take ["defaultElement", "PureDom","FlowArrows", "SVGTransform", "SVGStyle", "DOMContentLoaded"], (defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle)-> 
+  Take ["defaultElement", "PureDom","FlowArrows", "SVGControl","SVGControlPanel","SVGTransform", "SVGStyle", "load"], (defaultElement, PureDom, FlowArrows,SVGControl, SVGControlPanel, SVGTransform, SVGStyle)-> 
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)
@@ -34,24 +34,33 @@ do ()->
       return scope = 
         functions: {}
         instances: {}
+
         root: null 
 
         registerInstance: (instanceName, instance)->
           scope.instances[instanceName] = instance
+
+        registerControl: (controlName)->
 
         setupDocument: (activityName, contentDocument)->
           scope.registerInstance("default", defaultElement)
           scope.root = scope.instances["root"](contentDocument)
           scope.root.FlowArrows = new FlowArrows()
           scope.root.root = scope.root
+
           scope.root.getElement = ()->
             return contentDocument
+
           setupHighlighter(contentDocument.querySelector("defs"))
           childElements = getChildElements(contentDocument)
           scope.root.children = []
           for child in childElements
             scope.setupElement(scope.root, child)
-           setupInstance(scope.root)
+          setupInstance(scope.root)
+          if scope.root.controlPanel
+            scope.root._controls = new SVGControlPanel()
+            scope.root._controls.setup(scope.root, scope.root.controlPanel)
+
 
         getRootElement: ()->
           return scope.root.getRootElement()
@@ -77,6 +86,10 @@ do ()->
           childElements = getChildElements(element)
           for child in childElements
             scope.setupElement(parent[id], child)
+
+
+
+
 
            
 

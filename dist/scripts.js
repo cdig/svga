@@ -2,8 +2,524 @@
   var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, getParentInverseTransform, invert, invertSVGMatrix,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
+  (function() {
+    return Take(["PointerInput", "PureDom", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, Vector) {
+      var FloatingMenu, addMousePercentage, convertToPercentage, getElementPositionPercentage, getParentRect, styleValToNumWithPrecision, updateMousePos, vecFromEventGlobal;
+      vecFromEventGlobal = function(e) {
+        return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+      };
+      getParentRect = function(element) {
+        var height, parent, rect, width;
+        parent = PureDom.querySelectorParent(element, "svg-activity");
+        rect = parent.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        return rect;
+      };
+      styleValToNumWithPrecision = function(n, p) {
+        return parseFloat(n).toFixed(p).replace(/\0+$/, "").replace(/\.$/, "");
+      };
+      getElementPositionPercentage = function(element) {
+        var left, parent, style, top;
+        parent = getParentRect(element);
+        style = element.style;
+        if (style.left === "") {
+          style = window.getComputedStyle(element);
+        }
+        left = 100 * styleValToNumWithPrecision(style.left, 2) / parent.width;
+        top = 100 * styleValToNumWithPrecision(style.top, 2) / parent.height;
+        return {
+          x: parseFloat(styleValToNumWithPrecision(style.left, 2)),
+          y: parseFloat(styleValToNumWithPrecision(style.top, 2))
+        };
+      };
+      convertToPercentage = function(element, position) {
+        var parent, x, y;
+        parent = getParentRect(element);
+        x = 100 * position.x / parent.width;
+        y = 100 * position.y / parent.height;
+        return {
+          x: x,
+          y: y
+        };
+      };
+      addMousePercentage = function(element, mouse) {
+        var mouseChange, original;
+        original = getElementPositionPercentage(element);
+        mouseChange = convertToPercentage(element, mouse.delta);
+        return {
+          x: original.x + mouseChange.x,
+          y: original.y + mouseChange.y
+        };
+      };
+      updateMousePos = function(e, mouse) {
+        mouse.pos = vecFromEventGlobal(e);
+        mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+        return mouse.last = mouse.pos;
+      };
+      return Make("FloatingMenu", FloatingMenu = function(element) {
+        var scope;
+        return scope = {
+          mouse: null,
+          dragging: false,
+          setup: function(svgActivity) {
+            var posPercent;
+            posPercent = getElementPositionPercentage(element);
+            scope.mouse = {};
+            scope.mouse.pos = {
+              x: 0,
+              y: 0
+            };
+            scope.mouse.delta = {
+              x: 0,
+              y: 0
+            };
+            scope.mouse.last = {
+              x: 0,
+              y: 0
+            };
+            PointerInput.addDown(element, scope.mouseDown);
+            PointerInput.addMove(element, scope.mouseMove);
+            PointerInput.addMove(svgActivity, scope.mouseMove);
+            return PointerInput.addUp(element, scope.mouseUp);
+          },
+          mouseDown: function(e) {
+            updateMousePos(e, scope.mouse);
+            if (e.button === 0) {
+              return scope.dragging = true;
+            }
+          },
+          mouseMove: function(e) {
+            var newPosition;
+            updateMousePos(e, scope.mouse);
+            if (scope.dragging) {
+              newPosition = addMousePercentage(element, scope.mouse);
+              element.style.left = newPosition.x + "%";
+              return element.style.top = newPosition.y + "%";
+            }
+          },
+          mouseUp: function(e) {
+            return scope.dragging = false;
+          }
+        };
+      });
+    });
+  })();
+
+  (function() {
+    var SVGBackground;
+    return Make("SVGBackground", SVGBackground = function(parentElement) {
+      var scope;
+      return scope = {
+        setup: function(activity, control) {
+          return control.getElement().addEventListener("click", function() {
+            return activity.cycleBackground();
+          });
+        }
+      };
+    });
+  })();
+
+  (function() {
+    var SVGBOM;
+    return Make("SVGBOM", SVGBOM = function(parentElement) {
+      var scope;
+      return scope = {
+        callbacks: [],
+        setup: function(activity, control) {
+          return control.getElement().addEventListener("click", function() {
+            var callback, k, len, ref, results;
+            ref = scope.callbacks;
+            results = [];
+            for (k = 0, len = ref.length; k < len; k++) {
+              callback = ref[k];
+              results.push(callback());
+            }
+            return results;
+          });
+        },
+        setCallback: function(callback) {
+          return scope.callbacks.push(callback);
+        }
+      };
+    });
+  })();
+
+  (function() {
+    return Take(["Ease", "PointerInput"], function(Ease, PointerInput) {
+      var SVGCamera, setupElementWithFunction;
+      setupElementWithFunction = function(svgElement, element, behaviourCode, behaviour) {
+        var behaviourId, keyBehaviourId, keyDown;
+        behaviourId = 0;
+        PointerInput.addDown(element, function() {
+          return behaviourId = setInterval(behaviour, 16);
+        });
+        PointerInput.addUp(element, function() {
+          return clearInterval(behaviourId);
+        });
+        PointerInput.addUp(svgElement, function() {
+          return clearInterval(behaviourId);
+        });
+        keyBehaviourId = 0;
+        keyDown = false;
+        svgElement.addEventListener("keydown", function(e) {
+          if (keyDown) {
+            return;
+          }
+          if (e.keyCode === behaviourCode) {
+            keyDown = true;
+            return keyBehaviourId = setInterval(behaviour, 16);
+          }
+        });
+        return svgElement.addEventListener("keyup", function(e) {
+          if (e.keyCode === behaviourCode) {
+            clearInterval(keyBehaviourId);
+            return keyDown = false;
+          }
+        });
+      };
+      return Make("SVGCamera", SVGCamera = function(svgElement) {
+        var scope;
+        return scope = {
+          baseX: 0,
+          baseY: 0,
+          centerX: 0,
+          maxZoom: 8.0,
+          minZoom: 0.75,
+          centerY: 0,
+          transX: 0,
+          transY: 0,
+          baseWidth: 0,
+          baseHeight: 0,
+          zoom: 1,
+          open: false,
+          mainStage: null,
+          transValue: 10,
+          setup: function(mainStage, navOverlay, control) {
+            scope.mainStage = mainStage;
+            navOverlay.style.show(false);
+            control.getElement().addEventListener("click", function() {
+              scope.open = !scope.open;
+              if (scope.open) {
+                return navOverlay.style.show(true);
+              } else {
+                return navOverlay.style.show(false);
+              }
+            });
+            navOverlay.reset.getElement().addEventListener("click", function() {
+              return scope.zoomToPosition(1, 0, 0);
+            });
+            setupElementWithFunction(svgElement, navOverlay.up.getElement(), 38, scope.up);
+            setupElementWithFunction(svgElement, navOverlay.down.getElement(), 40, scope.down);
+            setupElementWithFunction(svgElement, navOverlay.left.getElement(), 37, scope.left);
+            setupElementWithFunction(svgElement, navOverlay.right.getElement(), 39, scope.right);
+            setupElementWithFunction(svgElement, navOverlay.plus.getElement(), 187, scope.zoomIn);
+            return setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut);
+          },
+          left: function() {
+            scope.transX += scope.transValue * 1.0 / scope.zoom;
+            return scope.mainStage.transform.x = scope.transX;
+          },
+          right: function() {
+            scope.transX -= scope.transValue * 1.0 / scope.zoom;
+            return scope.mainStage.transform.x = scope.transX;
+          },
+          up: function() {
+            scope.transY += scope.transValue * 1.0 / scope.zoom;
+            return scope.mainStage.transform.y = scope.transY;
+          },
+          down: function() {
+            scope.transY -= scope.transValue * 1.0 / scope.zoom;
+            return scope.mainStage.transform.y = scope.transY;
+          },
+          zoomIn: function() {
+            scope.zoom += scope.getZoomIncrease();
+            if (scope.zoom > scope.maxZoom) {
+              scope.zoom = scope.maxZoom;
+            }
+            return scope.mainStage.transform.scale = scope.zoom;
+          },
+          zoomOut: function() {
+            scope.zoom -= scope.getZoomIncrease();
+            if (scope.zoom < scope.minZoom) {
+              scope.zoom = scope.minZoom;
+            }
+            return scope.mainStage.transform.scale = scope.zoom;
+          },
+          smoothTransformProperty: function(property, start, end) {
+            var currentTime, timeToTransform, totalTime, transformProperty;
+            timeToTransform = 1;
+            currentTime = null;
+            totalTime = 0;
+            transformProperty = function(time) {
+              var newValue;
+              if (currentTime == null) {
+                currentTime = time;
+              }
+              totalTime += (time - currentTime) / 1000;
+              currentTime = time;
+              newValue = Ease.cubic(totalTime, 0, timeToTransform, start, end);
+              scope[property] = newValue;
+              scope.setViewBox();
+              if (totalTime < timeToTransform) {
+                return requestAnimationFrame(transformProperty);
+              }
+            };
+            return requestAnimationFrame(transformProperty);
+          },
+          getZoomIncrease: function() {
+            var zoomIncrease, zoomSpeed;
+            zoomSpeed = 0.03;
+            zoomIncrease = zoomSpeed * scope.zoom;
+            return zoomIncrease;
+          },
+          setViewBox: function() {
+            var ncX, ncY, ntX, ntY;
+            if (scope.zoom < scope.maxZoom) {
+              scope.zoom = scope.maxZoom;
+            }
+            if (scope.zoom > scope.minZoom) {
+              scope.zoom = scope.minZoom;
+            }
+            ntX = scope.transX * scope.zoom;
+            ntY = scope.transY * scope.zoom;
+            ncX = (scope.centerX + scope.transX) - (scope.centerX + scope.transX) * scope.zoom;
+            ncY = (scope.centerY + scope.transY) - (scope.centerY + scope.transY) * scope.zoom;
+            return svgElement.setAttribute("viewBox", (ncX + ntX) + " " + (ncY + ntY) + " " + (scope.baseWidth * scope.zoom) + " " + (scope.baseHeight * scope.zoom));
+          },
+          zoomToPosition: function(newZoom, newX, newY) {
+            var animateToPosition, currentTime, easeFunction, increaseScale, increaseTransform, scaleDiff, timeElapsed, xDiff, xDone, yDiff, yDone, zoomDone;
+            currentTime = null;
+            increaseScale = 2;
+            increaseTransform = 80;
+            timeElapsed = 0;
+            xDiff = Math.abs(scope.transX - newX);
+            yDiff = Math.abs(scope.transY - newY);
+            scaleDiff = Math.abs(scope.zoom - newZoom);
+            xDone = false;
+            yDone = false;
+            zoomDone = false;
+            easeFunction = Ease.quartic;
+            animateToPosition = function(time) {
+              var delta;
+              if (currentTime === null) {
+                currentTime = time;
+              }
+              delta = (time - currentTime) / 1000;
+              currentTime = time;
+              timeElapsed += delta;
+              scope.mainStage.transform.x = easeFunction(timeElapsed * increaseTransform, 0, xDiff, scope.transX, newX);
+              if (timeElapsed * increaseTransform >= xDiff) {
+                xDone = true;
+                scope.transX = newX;
+                scope.mainStage.transform.x = scope.transX;
+              }
+              scope.mainStage.transform.y = easeFunction(timeElapsed * increaseTransform, 0, yDiff, scope.transY, newY);
+              if (timeElapsed * increaseTransform >= yDiff) {
+                yDone = true;
+                scope.transY = newY;
+                scope.mainStage.transform.y = scope.transY;
+              }
+              scope.mainStage.transform.scale = easeFunction(timeElapsed * increaseScale, 0, scaleDiff, scope.zoom, newZoom);
+              if (timeElapsed * increaseScale > scaleDiff) {
+                zoomDone = true;
+                scope.zoom = newZoom;
+                scope.mainStage.transform.scale = scope.zoom;
+              }
+              if (!(xDone && yDone && zoomDone)) {
+                return requestAnimationFrame(animateToPosition);
+              }
+            };
+            return requestAnimationFrame(animateToPosition);
+          }
+        };
+      });
+    });
+  })();
+
+  (function() {
+    return Take(["SVGBackground", "SVGBOM", "SVGCamera", "SVGControl"], function(SVGBackground, SVGBOM, SVGCamera, SVGControl) {
+      var SVGControlpanel;
+      return Make("SVGControlPanel", SVGControlpanel = function() {
+        var scope;
+        return scope = {
+          camera: null,
+          background: null,
+          bom: null,
+          control: null,
+          setup: function(activity, controlPanel) {
+            var activityElement;
+            activityElement = activity.getElement();
+            scope.camera = new SVGCamera(activityElement);
+            scope.camera.setup(activity.mainStage, activity.navOverlay, controlPanel.nav);
+            scope.bom = new SVGBOM(document);
+            scope.bom.setup(activity, controlPanel.labels);
+            scope.background = new SVGBackground(document);
+            scope.background.setup(activity, controlPanel.background);
+            scope.control = new SVGControl(activity.ctrlPanel, controlPanel.controls);
+            return scope.control.setup(activity);
+          }
+        };
+      });
+    });
+  })();
+
+  (function() {
+    return Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
+      var SVGControl, convertToPercentage, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+      vecFromEventGlobal = function(e) {
+        return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+      };
+      getParentRect = function(element) {
+        var height, parent, rect, width;
+        parent = PureDom.querySelectorParent(element, "svg");
+        rect = parent.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        return rect;
+      };
+      mouseConversion = function(position, svgActivity, width, height) {
+        var x, xDiff, y, yDiff;
+        xDiff = width / svgActivity.getBoundingClientRect().width;
+        yDiff = height / svgActivity.getBoundingClientRect().height;
+        x = position.x * xDiff;
+        y = position.y * yDiff;
+        return {
+          x: x,
+          y: y
+        };
+      };
+      convertToPercentage = function(element, position) {
+        var parent, x, y;
+        parent = getParentRect(element);
+        x = 100 * position.x / parent.width;
+        y = 100 * position.y / parent.height;
+        return {
+          x: x,
+          y: y
+        };
+      };
+      updateMousePos = function(e, mouse) {
+        mouse.pos = vecFromEventGlobal(e);
+        mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+        return mouse.last = mouse.pos;
+      };
+      return Make("SVGControl", SVGControl = function(control, controlButton) {
+        var scope;
+        return scope = {
+          mouse: null,
+          dragging: false,
+          transform: null,
+          activity: null,
+          open: false,
+          setup: function(svgActivity) {
+            var properties;
+            scope.activity = svgActivity;
+            properties = svgActivity.getElement().getAttribute("viewBox").split(" ");
+            scope.viewWidth = parseFloat(properties[2]);
+            scope.viewHeight = parseFloat(properties[3]);
+            scope.mouse = {};
+            scope.mouse.pos = {
+              x: 0,
+              y: 0
+            };
+            scope.mouse.delta = {
+              x: 0,
+              y: 0
+            };
+            scope.mouse.last = {
+              x: 0,
+              y: 0
+            };
+            PointerInput.addDown(control.getElement(), scope.mouseDown);
+            PointerInput.addMove(control.getElement(), scope.mouseMove);
+            PointerInput.addMove(svgActivity.getElement(), scope.mouseMove);
+            PointerInput.addUp(control.getElement(), scope.mouseUp);
+            PointerInput.addUp(svgActivity.getElement(), scope.mouseUp);
+            controlButton.getElement().addEventListener("click", scope.toggle);
+            if (control.closer != null) {
+              if (control.closer) {
+                control.closer.getElement().addEventListener("click", scope.hide);
+              }
+            } else {
+              console.log("Error: Control does not have closer button");
+            }
+            return scope.hide();
+          },
+          toggle: function() {
+            scope.open = !scope.open;
+            if (scope.open) {
+              return scope.show();
+            } else {
+              return scope.hide();
+            }
+          },
+          show: function() {
+            scope.open = true;
+            return control.style.show(true);
+          },
+          hide: function() {
+            scope.open = false;
+            return control.style.show(false);
+          },
+          mouseDown: function(e) {
+            updateMousePos(e, scope.mouse);
+            if (e.button === 0) {
+              return scope.dragging = true;
+            }
+          },
+          mouseMove: function(e) {
+            var newMouse, svgActivity;
+            updateMousePos(e, scope.mouse);
+            if (scope.dragging) {
+              svgActivity = document.querySelector("svg-activity");
+              newMouse = mouseConversion(scope.mouse.delta, scope.activity.getElement(), scope.viewWidth, scope.viewHeight);
+              control.transform.x += newMouse.x;
+              return control.transform.y += newMouse.y;
+            }
+          },
+          mouseUp: function(e) {
+            return scope.dragging = false;
+          }
+        };
+      });
+    });
+  })();
+
+  (function() {
+    var SVGControls;
+    return Make("SVGControls", SVGControls = function(svgElement) {
+      var scope;
+      return scope = {
+        controls: [],
+        open: false,
+        setup: function() {
+          return svgElement.addEventListener("click", scope.click);
+        },
+        addControl: function(control) {
+          return scope.controls.push(control);
+        },
+        click: function() {
+          var control, k, len, ref, results;
+          scope.open = !scope.open;
+          ref = scope.controls;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            control = ref[k];
+            if (scope.open) {
+              results.push(control.show());
+            } else {
+              results.push(control.hide());
+            }
+          }
+          return results;
+        }
+      };
+    });
+  })();
+
   invert = function(matrix) {
-    var copy, dim, i, identity, ii, j, k, l, m, n, o, p, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, temp;
+    var copy, dim, i, identity, ii, j, k, l, m, o, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, s, t, temp;
     if (matrix.length !== matrix[0].length) {
       return;
     }
@@ -25,9 +541,9 @@
     for (i = m = 0, ref2 = dim - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
       temp = copy[i][i];
       if (temp === 0) {
-        for (ii = n = 0, ref3 = dim - 1; 0 <= ref3 ? n <= ref3 : n >= ref3; ii = 0 <= ref3 ? ++n : --n) {
+        for (ii = o = 0, ref3 = dim - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; ii = 0 <= ref3 ? ++o : --o) {
           if (copy[ii][i] !== 0) {
-            for (j = o = 0, ref4 = dim - 1; 0 <= ref4 ? o <= ref4 : o >= ref4; j = 0 <= ref4 ? ++o : --o) {
+            for (j = q = 0, ref4 = dim - 1; 0 <= ref4 ? q <= ref4 : q >= ref4; j = 0 <= ref4 ? ++q : --q) {
               temp = copy[i][j];
               copy[i][j] = copy[ii][j];
               copy[ii][j] = temp;
@@ -40,16 +556,16 @@
         }
         temp = copy[i][i];
       }
-      for (j = p = 0, ref5 = dim - 1; 0 <= ref5 ? p <= ref5 : p >= ref5; j = 0 <= ref5 ? ++p : --p) {
+      for (j = r = 0, ref5 = dim - 1; 0 <= ref5 ? r <= ref5 : r >= ref5; j = 0 <= ref5 ? ++r : --r) {
         copy[i][j] = copy[i][j] / temp;
         identity[i][j] = identity[i][j] / temp;
       }
-      for (ii = q = 0, ref6 = dim - 1; 0 <= ref6 ? q <= ref6 : q >= ref6; ii = 0 <= ref6 ? ++q : --q) {
+      for (ii = s = 0, ref6 = dim - 1; 0 <= ref6 ? s <= ref6 : s >= ref6; ii = 0 <= ref6 ? ++s : --s) {
         if (ii === i) {
           continue;
         }
         temp = copy[ii][i];
-        for (j = r = 0, ref7 = dim - 1; 0 <= ref7 ? r <= ref7 : r >= ref7; j = 0 <= ref7 ? ++r : --r) {
+        for (j = t = 0, ref7 = dim - 1; 0 <= ref7 ? t <= ref7 : t >= ref7; j = 0 <= ref7 ? ++t : --t) {
           copy[ii][j] -= temp * copy[i][j];
           identity[ii][j] -= temp * identity[i][j];
         }
@@ -153,7 +669,7 @@
   })();
 
   (function() {
-    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGTransform", "SVGStyle", "DOMContentLoaded"], function(defaultElement, PureDom, FlowArrows, SVGTransform, SVGStyle) {
+    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGControl", "SVGControlPanel", "SVGTransform", "SVGStyle", "load"], function(defaultElement, PureDom, FlowArrows, SVGControl, SVGControlPanel, SVGTransform, SVGStyle) {
       var SVGActivity, getChildElements, setupHighlighter, setupInstance;
       setupInstance = function(instance) {
         var child, k, len, ref;
@@ -200,6 +716,7 @@
           registerInstance: function(instanceName, instance) {
             return scope.instances[instanceName] = instance;
           },
+          registerControl: function(controlName) {},
           setupDocument: function(activityName, contentDocument) {
             var child, childElements, k, len;
             scope.registerInstance("default", defaultElement);
@@ -216,7 +733,11 @@
               child = childElements[k];
               scope.setupElement(scope.root, child);
             }
-            return setupInstance(scope.root);
+            setupInstance(scope.root);
+            if (scope.root.controlPanel) {
+              scope.root._controls = new SVGControlPanel();
+              return scope.root._controls.setup(scope.root, scope.root.controlPanel);
+            }
           },
           getRootElement: function() {
             return scope.root.getRootElement();
@@ -408,6 +929,7 @@
     return Make("SVGStyle", SVGStyle = function(svgElement) {
       var scope;
       return scope = {
+        pressure: 0,
         visible: function(isVisible) {
           if (isVisible) {
             return svgElement.style.opacity = 1.0;
@@ -415,7 +937,13 @@
             return svgElement.style.opacity = 0.0;
           }
         },
-        pressure: 0,
+        show: function(showElement) {
+          if (showElement) {
+            return svgElement.style.visibility = "visible";
+          } else {
+            return svgElement.style.visibility = "hidden";
+          }
+        },
         setPressure: function(val, alpha) {
           if (alpha == null) {
             alpha = 1.0;
@@ -428,6 +956,24 @@
         },
         getPressureColor: function(pressure) {
           return HydraulicPressure(pressure);
+        },
+        stroke: function(color) {
+          var clone, defs, link, parent, path, use, useParent;
+          path = svgElement.querySelector("path");
+          use = svgElement.querySelector("use");
+          if ((path == null) && (use != null)) {
+            useParent = PureDom.querySelectorParent(use, "g");
+            parent = PureDom.querySelectorParent(svgElement, "svg");
+            defs = parent.querySelector("defs");
+            link = defs.querySelector(use.getAttribute("xlink:href"));
+            clone = link.cloneNode(true);
+            useParent.appendChild(clone);
+            useParent.removeChild(use);
+          }
+          path = svgElement.querySelector("path");
+          if (path != null) {
+            return path.setAttributeNS(null, "stroke", color);
+          }
         },
         fill: function(color) {
           var clone, defs, link, parent, path, use, useParent;

@@ -1,13 +1,20 @@
 Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
   Make "SVGStyle", SVGStyle = (svgElement)->
     scope = 
+      
+      pressure: 0
+
       visible: (isVisible)->
         if isVisible
           svgElement.style.opacity = 1.0
         else
           svgElement.style.opacity = 0.0
 
-      pressure: 0
+      show: (showElement)->
+        if showElement
+          svgElement.style.visibility = "visible"
+        else
+          svgElement.style.visibility = "hidden"
 
       setPressure: (val, alpha=1.0)->
         scope.pressure = val
@@ -19,6 +26,21 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
 
       getPressureColor: (pressure)->
         return HydraulicPressure(pressure)
+      stroke: (color)->
+        path = svgElement.querySelector("path")
+        use = svgElement.querySelector("use")
+        if not path? and use?
+          useParent = PureDom.querySelectorParent(use, "g")
+          parent = PureDom.querySelectorParent(svgElement, "svg")
+          defs = parent.querySelector("defs")
+          link = defs.querySelector(use.getAttribute("xlink:href"))
+          clone = link.cloneNode(true)
+          useParent.appendChild(clone)
+          useParent.removeChild(use)
+
+        path = svgElement.querySelector("path")
+        if path?
+          path.setAttributeNS(null, "stroke", color)        
 
       fill: (color)->
         path = svgElement.querySelector("path")

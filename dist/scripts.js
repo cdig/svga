@@ -669,7 +669,7 @@
   })();
 
   (function() {
-    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGControl", "SVGControlPanel", "SVGTransform", "SVGStyle", "load"], function(defaultElement, PureDom, FlowArrows, SVGControl, SVGControlPanel, SVGTransform, SVGStyle) {
+    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle) {
       var SVGActivity, getChildElements, setupHighlighter, setupInstance;
       setupInstance = function(instance) {
         var child, k, len, ref;

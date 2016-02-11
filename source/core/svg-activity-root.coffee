@@ -1,5 +1,5 @@
-do ()-> 
-  Take ["defaultElement", "PureDom","FlowArrows", "SVGControl","SVGControlPanel","SVGTransform", "SVGStyle", "load"], (defaultElement, PureDom, FlowArrows,SVGControl, SVGControlPanel, SVGTransform, SVGStyle)-> 
+do ()->
+  Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform", "SVGStyle", "load"], (defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle)->
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)
@@ -31,11 +31,11 @@ do ()->
       return childElements
 
     Make "SVGActivity", SVGActivity = ()->
-      return scope = 
+      return scope =
         functions: {}
         instances: {}
 
-        root: null 
+        root: null
 
         registerInstance: (instanceName, instance)->
           scope.instances[instanceName] = instance
@@ -64,14 +64,14 @@ do ()->
 
         getRootElement: ()->
           return scope.root.getRootElement()
-          
+
         setupElement: (parent, element)->
           id = element.getAttribute("id")
           id = id.split("_")[0]
           instance = scope.instances[id]
           if not instance?
             instance = scope.instances["default"]
-            
+
           parent[id] = instance(element)
           parent[id].transform = SVGTransform(element)
           parent[id].transform.setup()
@@ -82,7 +82,7 @@ do ()->
           parent[id].getElement = ()->
             return element
 
-          
+
           childElements = getChildElements(element)
           for child in childElements
             scope.setupElement(parent[id], child)
@@ -91,7 +91,7 @@ do ()->
 
 
 
-           
+
 
 
 

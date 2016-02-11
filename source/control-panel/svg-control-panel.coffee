@@ -1,7 +1,7 @@
 do ->
   Take ["SVGBackground","SVGBOM", "SVGCamera", "SVGControl"], (SVGBackground, SVGBOM, SVGCamera, SVGControl)->
     Make "SVGControlPanel", SVGControlpanel = ()->
-      return scope = 
+      return scope =
         camera: null
         background: null
         bom: null
@@ -14,10 +14,9 @@ do ->
           scope.camera = new SVGCamera(activityElement)
           scope.camera.setup(activity.mainStage, activity.navOverlay, controlPanel.nav)
           scope.bom = new SVGBOM(document)
-          scope.bom.setup(activity,controlPanel.labels )
+          scope.bom.setup(activity,controlPanel.bom )
           scope.background = new SVGBackground(document)
           scope.background.setup(activity, controlPanel.background)
           scope.control = new SVGControl(activity.ctrlPanel, controlPanel.controls)
           scope.control.setup(activity)
 
-  

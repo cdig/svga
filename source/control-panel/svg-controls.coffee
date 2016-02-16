@@ -1,6 +1,6 @@
 do ->
   Make "SVGControls", SVGControls = (svgElement)->
-    return scope = 
+    return scope =
       controls: []
       open: false
       setup: ()->
@@ -12,10 +12,10 @@ do ->
 
       click: ()->
         scope.open = not scope.open
-        for control in scope.controls        
-          if scope.open 
+        for control in scope.controls
+          if scope.open
             control.show()
           else
             control.hide()
 
-      
+

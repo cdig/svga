@@ -1,4 +1,4 @@
-do -> 
+do ->
   Take ["PointerInput","PureDom", "Vector", "DOMContentLoaded"], (PointerInput,PureDom, Vector)->
     vecFromEventGlobal = (e)->
       return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset())
@@ -38,7 +38,7 @@ do ->
       mouse.last = mouse.pos
 
     Make "FloatingMenu", FloatingMenu = (element)->
-      return scope = 
+      return scope =
         mouse: null
         dragging: false
         setup: (svgActivity)->
@@ -53,7 +53,7 @@ do ->
           PointerInput.addMove svgActivity, scope.mouseMove
           PointerInput.addUp element, scope.mouseUp
 
-        
+
         mouseDown: (e)->
           updateMousePos(e, scope.mouse)
           if e.button is 0

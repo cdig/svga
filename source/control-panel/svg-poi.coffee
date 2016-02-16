@@ -1,21 +1,24 @@
 do ->
-  Take ["Draggable", "PointerInput", "DOMContentLoaded"], (Draggable, PointerInput)->
-    Make "SVGControl", SVGControl = (control, controlButton)->
+  Take ["Draggable", "POI", "PointerInput"], (Draggable, POI, PointerInput)->
+    Make "SVGPOI", SVGPOI = (control, controlButton)->
       return scope =
-        activity: null
         open: false
-        draggable: null
-
-        setup: (svgActivity)->
-          scope.activity = svgActivity
+        pois: {}
+        setup: (svgActivity, camera)->
           scope.draggable = new Draggable(control, svgActivity)
           scope.draggable.setup()
           PointerInput.addClick controlButton.getElement(), scope.toggle
           if control.closer?
             PointerInput.addClick control.closer.getElement(), scope.hide
           else
-            console.log "Error: Control does not have closer button"
+            console.log "Error: POI does not have closer button"
           scope.hide()
+          for name, poi of control
+            if name.indexOf("poi") > -1
+              scope.pois[name] = new POI(poi, camera)
+              scope.pois[name].setup()
+
+
         toggle: ()->
           scope.open = not scope.open
           if scope.open then scope.show() else scope.hide()

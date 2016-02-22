@@ -1,8 +1,8 @@
 do ->
-  Make "SVGBOM", SVGBOM = (parentElement)->
-    return scope = 
+  Make "SVGBOM", SVGBOM = (parentElement, activity, control)->
+    return scope =
       callbacks: []
-      setup: (activity, control)->
+      setup: ()->
         control.getElement().addEventListener "click", ()->
           for callback in scope.callbacks
             callback()

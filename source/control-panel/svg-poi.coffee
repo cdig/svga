@@ -1,10 +1,10 @@
 do ->
   Take ["Draggable", "POI", "PointerInput"], (Draggable, POI, PointerInput)->
-    Make "SVGPOI", SVGPOI = (control, controlButton)->
+    Make "SVGPOI", SVGPOI = (control, controlButton, svgActivity, camera)->
       return scope =
         open: false
         pois: {}
-        setup: (svgActivity, camera)->
+        setup: ()->
           scope.draggable = new Draggable(control, svgActivity)
           scope.draggable.setup()
           PointerInput.addClick controlButton.getElement(), scope.toggle
@@ -15,6 +15,9 @@ do ->
           scope.hide()
           for name, poi of control
             if name.indexOf("poi") > -1
+              scope.pois[name] = new POI(poi, camera)
+              scope.pois[name].setup()
+            else if name.indexOf("reset") > -1
               scope.pois[name] = new POI(poi, camera)
               scope.pois[name].setup()
 

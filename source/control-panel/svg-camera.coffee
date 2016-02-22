@@ -8,6 +8,7 @@ do ->
         clearInterval behaviourId
       PointerInput.addUp svgElement, ()->
         clearInterval behaviourId
+
       keyBehaviourId = 0
       keyDown = false
       svgElement.addEventListener "keydown", (e)->
@@ -22,11 +23,7 @@ do ->
           clearInterval keyBehaviourId
           keyDown = false
 
-
-
-
-
-    Make "SVGCamera", SVGCamera = (svgElement)->
+    Make "SVGCamera", SVGCamera = (svgElement, mainStage, navOverlay, control)->
       return scope =
         baseX: 0
         baseY: 0
@@ -42,20 +39,19 @@ do ->
         open: false
         mainStage: null
         transValue : 10
+        navOverlay: null
 
 
-        setup: (mainStage, navOverlay, control)->
+        setup: ()->
           scope.mainStage = mainStage
           navOverlay.style.show(false)
-          control.getElement().addEventListener "click", ()->
-            scope.open = !scope.open
-            if scope.open
-              navOverlay.style.show(true)
-            else
-              navOverlay.style.show(false)
+
+          control.getElement().addEventListener "click", scope.toggle
 
           navOverlay.reset.getElement().addEventListener "click", ()->
             scope.zoomToPosition(1, 0, 0)
+
+          navOverlay.close.getElement().addEventListener "click", scope.toggle
 
           setupElementWithFunction svgElement, navOverlay.up.getElement(), 38, scope.up
 
@@ -72,21 +68,41 @@ do ->
 
           setupElementWithFunction svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut
 
+          svgElement.addEventListener "keydown", (e)-> #this gives an output for positions to later put into POI
+            if e.keyCode is 88
+              console.log "Positions are x: #{scope.transX}, y: #{scope.transY}, zoom: #{scope.zoom}"
+        toggle: ()->
+          scope.open = !scope.open
+          if scope.open
+            navOverlay.style.show(true)
+          else
+            navOverlay.style.show(false)
         left: ()->
           scope.transX += scope.transValue * 1.0 / scope.zoom
+          stop = svgElement.getBoundingClientRect().width / 2
+          scope.transX = stop if scope.transX > stop
+
           scope.mainStage.transform.x = scope.transX
 
         right: ()->
           scope.transX -= scope.transValue * 1.0 / scope.zoom
+          stop = -svgElement.getBoundingClientRect().width / 2
+          scope.transX = stop if scope.transX < stop
+
           scope.mainStage.transform.x = scope.transX
+
 
         up: ()->
           scope.transY += scope.transValue * 1.0 / scope.zoom
+          stop = svgElement.getBoundingClientRect().height / 2
+          scope.transY = stop if scope.transY > stop
           scope.mainStage.transform.y = scope.transY
 
 
         down: ()->
           scope.transY -= scope.transValue * 1.0 / scope.zoom
+          stop = -svgElement.getBoundingClientRect().height / 2
+          scope.transY = stop if scope.transY < stop
           scope.mainStage.transform.y = scope.transY
 
         zoomIn: ()->

@@ -10,15 +10,15 @@ do ->
 
         setup: (activity, controlPanel)->
           activityElement = activity.getElement()
-          scope.camera = new SVGCamera(activityElement)
-          scope.camera.setup(activity.mainStage, activity.navOverlay, controlPanel.nav)
+          scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav)
+          scope.camera.setup()
 
-          scope.bom = new SVGBOM(document)
-          scope.bom.setup(activity,controlPanel.bom )
-          scope.background = new SVGBackground(document)
-          scope.background.setup(activity, controlPanel.background)
-          scope.control = new SVGControl(activity.ctrlPanel, controlPanel.controls)
-          scope.control.setup(activity)
-          scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi)
-          scope.poi.setup(activity, scope.camera)
+          scope.bom = new SVGBOM(document, activity,controlPanel.bom )
+          scope.bom.setup()
+          scope.background = new SVGBackground(document, activity, controlPanel.background)
+          scope.background.setup()
+          scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls )
+          scope.control.setup()
+          scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera)
+          scope.poi.setup()
 

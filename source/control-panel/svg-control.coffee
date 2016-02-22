@@ -1,14 +1,13 @@
 do ->
   Take ["Draggable", "PointerInput", "DOMContentLoaded"], (Draggable, PointerInput)->
-    Make "SVGControl", SVGControl = (control, controlButton)->
+    Make "SVGControl", SVGControl = (activity, control, controlButton)->
       return scope =
         activity: null
         open: false
         draggable: null
 
-        setup: (svgActivity)->
-          scope.activity = svgActivity
-          scope.draggable = new Draggable(control, svgActivity)
+        setup: ()->
+          scope.draggable = new Draggable(control, activity)
           scope.draggable.setup()
           PointerInput.addClick controlButton.getElement(), scope.toggle
           if control.closer?

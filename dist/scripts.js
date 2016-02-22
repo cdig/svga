@@ -2,6 +2,102 @@
   var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, getParentInverseTransform, invert, invertSVGMatrix,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
+  Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
+    var Draggable, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+    vecFromEventGlobal = function(e) {
+      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+    };
+    getParentRect = function(element) {
+      var height, parent, rect, width;
+      parent = PureDom.querySelectorParent(element, "svg");
+      rect = parent.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      return rect;
+    };
+    mouseConversion = function(position, parentElement, width, height) {
+      var x, xDiff, y, yDiff;
+      xDiff = width / parentElement.getBoundingClientRect().width;
+      yDiff = height / parentElement.getBoundingClientRect().height;
+      x = position.x * xDiff;
+      y = position.y * yDiff;
+      return {
+        x: x,
+        y: y
+      };
+    };
+    updateMousePos = function(e, mouse) {
+      mouse.pos = vecFromEventGlobal(e);
+      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+      return mouse.last = mouse.pos;
+    };
+    return Make("Draggable", Draggable = function(instance, parent) {
+      var scope;
+      if (parent == null) {
+        parent = null;
+      }
+      return scope = {
+        mouse: null,
+        dragging: false,
+        setup: function() {
+          var properties;
+          if (parent != null) {
+            properties = parent.getElement().getAttribute("viewBox").split(" ");
+            scope.viewWidth = parseFloat(properties[2]);
+            scope.viewHeight = parseFloat(properties[3]);
+          }
+          scope.mouse = {};
+          scope.mouse.pos = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.delta = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.last = {
+            x: 0,
+            y: 0
+          };
+          PointerInput.addDown(instance.getElement(), scope.mouseDown);
+          PointerInput.addMove(instance.getElement(), scope.mouseMove);
+          if (parent != null) {
+            PointerInput.addMove(parent.getElement(), scope.mouseMove);
+          }
+          PointerInput.addUp(instance.getElement(), scope.mouseUp);
+          if (parent != null) {
+            return PointerInput.addUp(parent.getElement(), scope.mouseUp);
+          }
+        },
+        mouseDown: function(e) {
+          updateMousePos(e, scope.mouse);
+          if (e.button === 0) {
+            return scope.dragging = true;
+          }
+        },
+        mouseMove: function(e) {
+          var newMouse;
+          updateMousePos(e, scope.mouse);
+          if (scope.dragging) {
+            if (parent != null) {
+              newMouse = mouseConversion(scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
+            } else {
+              newMouse = {
+                x: scope.mouse.x,
+                y: scope.mouse.y
+              };
+            }
+            instance.transform.x += newMouse.x;
+            return instance.transform.y += newMouse.y;
+          }
+        },
+        mouseUp: function(e) {
+          return scope.dragging = false;
+        }
+      };
+    });
+  });
+
   (function() {
     return Take(["PointerInput", "PureDom", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, Vector) {
       var FloatingMenu, addMousePercentage, convertToPercentage, getElementPositionPercentage, getParentRect, styleValToNumWithPrecision, updateMousePos, vecFromEventGlobal;
@@ -106,27 +202,80 @@
     });
   })();
 
-  (function() {
-    var SVGBackground;
-    return Make("SVGBackground", SVGBackground = function(parentElement) {
+  Take("PointerInput", function(PointerInput) {
+    var POI;
+    return Make("POI", POI = function(control, camera) {
       var scope;
       return scope = {
-        setup: function(activity, control) {
-          return control.getElement().addEventListener("click", function() {
-            return activity.cycleBackground();
+        scale: 1,
+        x: 0,
+        y: 0,
+        setup: function() {
+          control.getElement().addEventListener("mouseenter", function() {
+            return control.style.fill("white");
           });
+          control.getElement().addEventListener("mouseleave", function() {
+            return control.style.fill("");
+          });
+          return PointerInput.addClick(control.getElement(), scope.transform);
+        },
+        setTransformation: function(x, y, scale) {
+          scope.x = x;
+          scope.y = y;
+          return scope.scale = scale;
+        },
+        transform: function() {
+          return camera.zoomToPosition(scope.scale, scope.x, scope.y);
         }
       };
+    });
+  });
+
+  (function() {
+    return Take("PureDom", function(PureDom) {
+      var SVGBackground;
+      return Make("SVGBackground", SVGBackground = function(parentElement, activity, control) {
+        var scope;
+        return scope = {
+          currentBackground: 0,
+          activity: null,
+          setup: function() {
+            scope.cycleBackground(activity);
+            return control.getElement().addEventListener("click", function() {
+              return scope.cycleBackground(activity);
+            });
+          },
+          cycleBackground: function(activity) {
+            var height, svgElement;
+            scope.currentBackground++;
+            scope.currentBackground %= 3;
+            svgElement = activity.getElement();
+            switch (scope.currentBackground) {
+              case 0:
+                svgElement.style["background-color"] = "#ffffff";
+                break;
+              case 1:
+                svgElement.style["background-color"] = "#666666";
+                break;
+              case 2:
+                svgElement.style["background-color"] = "#bbbbbb";
+            }
+            svgElement.style.webkitTransform = 'scale(1)';
+            height = svgElement.getAttribute("height");
+            return svgElement.setAttribute("height", "701px");
+          }
+        };
+      });
     });
   })();
 
   (function() {
     var SVGBOM;
-    return Make("SVGBOM", SVGBOM = function(parentElement) {
+    return Make("SVGBOM", SVGBOM = function(parentElement, activity, control) {
       var scope;
       return scope = {
         callbacks: [],
-        setup: function(activity, control) {
+        setup: function() {
           return control.getElement().addEventListener("click", function() {
             var callback, k, len, ref, results;
             ref = scope.callbacks;
@@ -178,7 +327,7 @@
           }
         });
       };
-      return Make("SVGCamera", SVGCamera = function(svgElement) {
+      return Make("SVGCamera", SVGCamera = function(svgElement, mainStage, navOverlay, control) {
         var scope;
         return scope = {
           baseX: 0,
@@ -195,41 +344,69 @@
           open: false,
           mainStage: null,
           transValue: 10,
-          setup: function(mainStage, navOverlay, control) {
+          navOverlay: null,
+          setup: function() {
             scope.mainStage = mainStage;
             navOverlay.style.show(false);
-            control.getElement().addEventListener("click", function() {
-              scope.open = !scope.open;
-              if (scope.open) {
-                return navOverlay.style.show(true);
-              } else {
-                return navOverlay.style.show(false);
-              }
-            });
+            control.getElement().addEventListener("click", scope.toggle);
             navOverlay.reset.getElement().addEventListener("click", function() {
               return scope.zoomToPosition(1, 0, 0);
             });
+            navOverlay.close.getElement().addEventListener("click", scope.toggle);
             setupElementWithFunction(svgElement, navOverlay.up.getElement(), 38, scope.up);
             setupElementWithFunction(svgElement, navOverlay.down.getElement(), 40, scope.down);
             setupElementWithFunction(svgElement, navOverlay.left.getElement(), 37, scope.left);
             setupElementWithFunction(svgElement, navOverlay.right.getElement(), 39, scope.right);
             setupElementWithFunction(svgElement, navOverlay.plus.getElement(), 187, scope.zoomIn);
-            return setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut);
+            setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut);
+            return svgElement.addEventListener("keydown", function(e) {
+              if (e.keyCode === 88) {
+                return console.log("Positions are x: " + scope.transX + ", y: " + scope.transY + ", zoom: " + scope.zoom);
+              }
+            });
+          },
+          toggle: function() {
+            scope.open = !scope.open;
+            if (scope.open) {
+              return navOverlay.style.show(true);
+            } else {
+              return navOverlay.style.show(false);
+            }
           },
           left: function() {
+            var stop;
             scope.transX += scope.transValue * 1.0 / scope.zoom;
+            stop = svgElement.getBoundingClientRect().width / 2;
+            if (scope.transX > stop) {
+              scope.transX = stop;
+            }
             return scope.mainStage.transform.x = scope.transX;
           },
           right: function() {
+            var stop;
             scope.transX -= scope.transValue * 1.0 / scope.zoom;
+            stop = -svgElement.getBoundingClientRect().width / 2;
+            if (scope.transX < stop) {
+              scope.transX = stop;
+            }
             return scope.mainStage.transform.x = scope.transX;
           },
           up: function() {
+            var stop;
             scope.transY += scope.transValue * 1.0 / scope.zoom;
+            stop = svgElement.getBoundingClientRect().height / 2;
+            if (scope.transY > stop) {
+              scope.transY = stop;
+            }
             return scope.mainStage.transform.y = scope.transY;
           },
           down: function() {
+            var stop;
             scope.transY -= scope.transValue * 1.0 / scope.zoom;
+            stop = -svgElement.getBoundingClientRect().height / 2;
+            if (scope.transY < stop) {
+              scope.transY = stop;
+            }
             return scope.mainStage.transform.y = scope.transY;
           },
           zoomIn: function() {
@@ -245,6 +422,14 @@
               scope.zoom = scope.minZoom;
             }
             return scope.mainStage.transform.scale = scope.zoom;
+          },
+          transform: function(x, y, scale) {
+            scope.zoom = scale;
+            scope.mainStage.transform.scale = scope.zoom;
+            scope.transX = x;
+            scope.mainStage.transform.x = scope.transX;
+            scope.transY = y;
+            return scope.mainStage.transform.y = scope.transY;
           },
           smoothTransformProperty: function(property, start, end) {
             var currentTime, timeToTransform, totalTime, transformProperty;
@@ -338,7 +523,7 @@
   })();
 
   (function() {
-    return Take(["SVGBackground", "SVGBOM", "SVGCamera", "SVGControl"], function(SVGBackground, SVGBOM, SVGCamera, SVGControl) {
+    return Take(["SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGPOI"], function(SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGPOI) {
       var SVGControlpanel;
       return Make("SVGControlPanel", SVGControlpanel = function() {
         var scope;
@@ -346,18 +531,21 @@
           camera: null,
           background: null,
           bom: null,
+          poi: null,
           control: null,
           setup: function(activity, controlPanel) {
             var activityElement;
             activityElement = activity.getElement();
-            scope.camera = new SVGCamera(activityElement);
-            scope.camera.setup(activity.mainStage, activity.navOverlay, controlPanel.nav);
-            scope.bom = new SVGBOM(document);
-            scope.bom.setup(activity, controlPanel.bom);
-            scope.background = new SVGBackground(document);
-            scope.background.setup(activity, controlPanel.background);
-            scope.control = new SVGControl(activity.ctrlPanel, controlPanel.controls);
-            return scope.control.setup(activity);
+            scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
+            scope.camera.setup();
+            scope.bom = new SVGBOM(document, activity, controlPanel.bom);
+            scope.bom.setup();
+            scope.background = new SVGBackground(document, activity, controlPanel.background);
+            scope.background.setup();
+            scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
+            scope.control.setup();
+            scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
+            return scope.poi.setup();
           }
         };
       });
@@ -365,82 +553,20 @@
   })();
 
   (function() {
-    return Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
-      var SVGControl, convertToPercentage, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
-      vecFromEventGlobal = function(e) {
-        return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
-      };
-      getParentRect = function(element) {
-        var height, parent, rect, width;
-        parent = PureDom.querySelectorParent(element, "svg");
-        rect = parent.getBoundingClientRect();
-        width = rect.width;
-        height = rect.height;
-        return rect;
-      };
-      mouseConversion = function(position, svgActivity, width, height) {
-        var x, xDiff, y, yDiff;
-        xDiff = width / svgActivity.getBoundingClientRect().width;
-        yDiff = height / svgActivity.getBoundingClientRect().height;
-        x = position.x * xDiff;
-        y = position.y * yDiff;
-        return {
-          x: x,
-          y: y
-        };
-      };
-      convertToPercentage = function(element, position) {
-        var parent, x, y;
-        parent = getParentRect(element);
-        x = 100 * position.x / parent.width;
-        y = 100 * position.y / parent.height;
-        return {
-          x: x,
-          y: y
-        };
-      };
-      updateMousePos = function(e, mouse) {
-        mouse.pos = vecFromEventGlobal(e);
-        mouse.delta = Vector.subtract(mouse.pos, mouse.last);
-        return mouse.last = mouse.pos;
-      };
-      return Make("SVGControl", SVGControl = function(control, controlButton) {
+    return Take(["Draggable", "PointerInput", "DOMContentLoaded"], function(Draggable, PointerInput) {
+      var SVGControl;
+      return Make("SVGControl", SVGControl = function(activity, control, controlButton) {
         var scope;
         return scope = {
-          mouse: null,
-          dragging: false,
-          transform: null,
           activity: null,
           open: false,
-          setup: function(svgActivity) {
-            var properties;
-            scope.activity = svgActivity;
-            properties = svgActivity.getElement().getAttribute("viewBox").split(" ");
-            scope.viewWidth = parseFloat(properties[2]);
-            scope.viewHeight = parseFloat(properties[3]);
-            scope.mouse = {};
-            scope.mouse.pos = {
-              x: 0,
-              y: 0
-            };
-            scope.mouse.delta = {
-              x: 0,
-              y: 0
-            };
-            scope.mouse.last = {
-              x: 0,
-              y: 0
-            };
-            PointerInput.addDown(control.getElement(), scope.mouseDown);
-            PointerInput.addMove(control.getElement(), scope.mouseMove);
-            PointerInput.addMove(svgActivity.getElement(), scope.mouseMove);
-            PointerInput.addUp(control.getElement(), scope.mouseUp);
-            PointerInput.addUp(svgActivity.getElement(), scope.mouseUp);
-            controlButton.getElement().addEventListener("click", scope.toggle);
+          draggable: null,
+          setup: function() {
+            scope.draggable = new Draggable(control, activity);
+            scope.draggable.setup();
+            PointerInput.addClick(controlButton.getElement(), scope.toggle);
             if (control.closer != null) {
-              if (control.closer) {
-                control.closer.getElement().addEventListener("click", scope.hide);
-              }
+              PointerInput.addClick(control.closer.getElement(), scope.hide);
             } else {
               console.log("Error: Control does not have closer button");
             }
@@ -461,25 +587,6 @@
           hide: function() {
             scope.open = false;
             return control.style.show(false);
-          },
-          mouseDown: function(e) {
-            updateMousePos(e, scope.mouse);
-            if (e.button === 0) {
-              return scope.dragging = true;
-            }
-          },
-          mouseMove: function(e) {
-            var newMouse, svgActivity;
-            updateMousePos(e, scope.mouse);
-            if (scope.dragging) {
-              svgActivity = document.querySelector("svg-activity");
-              newMouse = mouseConversion(scope.mouse.delta, scope.activity.getElement(), scope.viewWidth, scope.viewHeight);
-              control.transform.x += newMouse.x;
-              return control.transform.y += newMouse.y;
-            }
-          },
-          mouseUp: function(e) {
-            return scope.dragging = false;
           }
         };
       });
@@ -515,6 +622,61 @@
           return results;
         }
       };
+    });
+  })();
+
+  (function() {
+    return Take(["Draggable", "POI", "PointerInput"], function(Draggable, POI, PointerInput) {
+      var SVGPOI;
+      return Make("SVGPOI", SVGPOI = function(control, controlButton, svgActivity, camera) {
+        var scope;
+        return scope = {
+          open: false,
+          pois: {},
+          setup: function() {
+            var name, poi, results;
+            scope.draggable = new Draggable(control, svgActivity);
+            scope.draggable.setup();
+            PointerInput.addClick(controlButton.getElement(), scope.toggle);
+            if (control.closer != null) {
+              PointerInput.addClick(control.closer.getElement(), scope.hide);
+            } else {
+              console.log("Error: POI does not have closer button");
+            }
+            scope.hide();
+            results = [];
+            for (name in control) {
+              poi = control[name];
+              if (name.indexOf("poi") > -1) {
+                scope.pois[name] = new POI(poi, camera);
+                results.push(scope.pois[name].setup());
+              } else if (name.indexOf("reset") > -1) {
+                scope.pois[name] = new POI(poi, camera);
+                results.push(scope.pois[name].setup());
+              } else {
+                results.push(void 0);
+              }
+            }
+            return results;
+          },
+          toggle: function() {
+            scope.open = !scope.open;
+            if (scope.open) {
+              return scope.show();
+            } else {
+              return scope.hide();
+            }
+          },
+          show: function() {
+            scope.open = true;
+            return control.style.show(true);
+          },
+          hide: function() {
+            scope.open = false;
+            return control.style.show(false);
+          }
+        };
+      });
     });
   })();
 

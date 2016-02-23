@@ -361,7 +361,7 @@
             setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut);
             return svgElement.addEventListener("keydown", function(e) {
               if (e.keyCode === 88) {
-                return console.log("Positions are x: " + scope.transX + ", y: " + scope.transY + ", zoom: " + scope.zoom);
+                return console.log("setTransformation(" + scope.transX + ", " + scope.transY + ", " + scope.zoom + ")");
               }
             });
           },
@@ -523,7 +523,7 @@
   })();
 
   (function() {
-    return Take(["SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGPOI"], function(SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGPOI) {
+    return Take(["SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGPOI"], function(SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI) {
       var SVGControlpanel;
       return Make("SVGControlPanel", SVGControlpanel = function() {
         var scope;
@@ -533,19 +533,34 @@
           bom: null,
           poi: null,
           control: null,
+          labels: null,
           setup: function(activity, controlPanel) {
             var activityElement;
             activityElement = activity.getElement();
-            scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
-            scope.camera.setup();
-            scope.bom = new SVGBOM(document, activity, controlPanel.bom);
-            scope.bom.setup();
-            scope.background = new SVGBackground(document, activity, controlPanel.background);
-            scope.background.setup();
-            scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
-            scope.control.setup();
-            scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
-            return scope.poi.setup();
+            if (controlPanel.nav != null) {
+              scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
+              scope.camera.setup();
+              if ((controlPanel.poi != null) && (activity.poiPanel != null)) {
+                scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
+                scope.poi.setup();
+              }
+            }
+            if (controlPanel.bom != null) {
+              scope.bom = new SVGBOM(document, activity, controlPanel.bom);
+              scope.bom.setup();
+            }
+            if (controlPanel.background != null) {
+              scope.background = new SVGBackground(document, activity, controlPanel.background);
+              scope.background.setup();
+            }
+            if ((activity.ctrlPanel != null) && controlPanel.controls) {
+              scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
+              scope.control.setup();
+            }
+            if (controlPanel.labels != null) {
+              scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels);
+              return scope.labels.setup();
+            }
           }
         };
       });
@@ -622,6 +637,37 @@
           return results;
         }
       };
+    });
+  })();
+
+  (function() {
+    return Take(["PointerInput", "DOMContentLoaded"], function(PointerInput) {
+      var SVGLabels;
+      return Make("SVGLabels", SVGLabels = function(activity, labels, controlButton) {
+        var scope;
+        return scope = {
+          open: true,
+          setup: function() {
+            return PointerInput.addClick(controlButton.getElement(), scope.toggle);
+          },
+          toggle: function() {
+            scope.open = !scope.open;
+            if (scope.open) {
+              return scope.show();
+            } else {
+              return scope.hide();
+            }
+          },
+          show: function() {
+            scope.open = true;
+            return labels.style.show(true);
+          },
+          hide: function() {
+            scope.open = false;
+            return labels.style.show(false);
+          }
+        };
+      });
     });
   })();
 
@@ -895,11 +941,11 @@
               child = childElements[k];
               scope.setupElement(scope.root, child);
             }
-            setupInstance(scope.root);
             if (scope.root.controlPanel) {
               scope.root._controls = new SVGControlPanel();
-              return scope.root._controls.setup(scope.root, scope.root.controlPanel);
+              scope.root._controls.setup(scope.root, scope.root.controlPanel);
             }
+            return setupInstance(scope.root);
           },
           getRootElement: function() {
             return scope.root.getRootElement();

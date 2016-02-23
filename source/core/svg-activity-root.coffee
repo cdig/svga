@@ -56,10 +56,12 @@ do ()->
           scope.root.children = []
           for child in childElements
             scope.setupElement(scope.root, child)
-          setupInstance(scope.root)
+
           if scope.root.controlPanel
             scope.root._controls = new SVGControlPanel()
             scope.root._controls.setup(scope.root, scope.root.controlPanel)
+          setupInstance(scope.root)
+
 
 
         getRootElement: ()->
@@ -86,6 +88,8 @@ do ()->
           childElements = getChildElements(element)
           for child in childElements
             scope.setupElement(parent[id], child)
+
+
 
 
 

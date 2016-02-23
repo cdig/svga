@@ -70,7 +70,7 @@ do ->
 
           svgElement.addEventListener "keydown", (e)-> #this gives an output for positions to later put into POI
             if e.keyCode is 88
-              console.log "Positions are x: #{scope.transX}, y: #{scope.transY}, zoom: #{scope.zoom}"
+              console.log "setTransformation(#{scope.transX}, #{scope.transY}, #{scope.zoom})"
         toggle: ()->
           scope.open = !scope.open
           if scope.open

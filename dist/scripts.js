@@ -252,11 +252,11 @@
             svgElement = activity.getElement();
             switch (scope.currentBackground) {
               case 0:
-                return svgElement.style["background-color"] = "#ffffff";
-              case 1:
                 return svgElement.style["background-color"] = "#666666";
-              case 2:
+              case 1:
                 return svgElement.style["background-color"] = "#bbbbbb";
+              case 2:
+                return svgElement.style["background-color"] = "#ffffff";
             }
           }
         };

@@ -20,8 +20,3 @@ do ->
               svgElement.style["background-color"] = "#666666"
             when 2
               svgElement.style["background-color"] = "#bbbbbb"
-
-          svgElement.style.webkitTransform = 'scale(1)';
-
-          height = svgElement.getAttribute("height")
-          svgElement.setAttribute("height", "701px")

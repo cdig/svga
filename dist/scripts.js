@@ -246,23 +246,18 @@
             });
           },
           cycleBackground: function(activity) {
-            var height, svgElement;
+            var svgElement;
             scope.currentBackground++;
             scope.currentBackground %= 3;
             svgElement = activity.getElement();
             switch (scope.currentBackground) {
               case 0:
-                svgElement.style["background-color"] = "#ffffff";
-                break;
+                return svgElement.style["background-color"] = "#ffffff";
               case 1:
-                svgElement.style["background-color"] = "#666666";
-                break;
+                return svgElement.style["background-color"] = "#666666";
               case 2:
-                svgElement.style["background-color"] = "#bbbbbb";
+                return svgElement.style["background-color"] = "#bbbbbb";
             }
-            svgElement.style.webkitTransform = 'scale(1)';
-            height = svgElement.getAttribute("height");
-            return svgElement.setAttribute("height", "701px");
           }
         };
       });

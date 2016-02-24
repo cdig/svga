@@ -10,10 +10,10 @@ Take ["PointerInput","PureDom","SVGTransform", "Vector", "DOMContentLoaded"], (P
 
     return rect
 
-  mouseConversion = (position, parentElement, width, height)->
+  mouseConversion = (instance, position, parentElement, width, height)->
     parentRect = getParentRect(parentElement)
-    xDiff = width / parentElement.getBoundingClientRect().width
-    yDiff = height / parentElement.getBoundingClientRect().height
+    xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale
+    yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale
     diff = Math.max(xDiff, yDiff)
     #console.log "x diff is #{xDiff} with #{width}"
     #console.log "y diff is #{yDiff} with #{height}"
@@ -57,7 +57,7 @@ Take ["PointerInput","PureDom","SVGTransform", "Vector", "DOMContentLoaded"], (P
         updateMousePos(e, scope.mouse)
         if scope.dragging
           if parent?
-            newMouse = mouseConversion(scope.mouse.delta,parent.getElement(), scope.viewWidth, scope.viewHeight )
+            newMouse = mouseConversion(instance, scope.mouse.delta,parent.getElement(), scope.viewWidth, scope.viewHeight )
           else
             newMouse = {x: scope.mouse.x, y: scope.mouse.y}
 

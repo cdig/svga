@@ -1,6 +1,6 @@
 do ->
   Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGPOI"], (SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI)->
-    Make "SVGControlPanel", SVGControlpanel = ()->
+    Make "SVGControlPanel", SVGControlpanel = (activity, controlPanel)->
       return scope =
         camera: null
         background: null
@@ -9,7 +9,7 @@ do ->
         control: null
         labels: null
 
-        setup: (activity, controlPanel)->
+        setup: ()->
           activityElement = activity.getElement()
           if controlPanel.nav?
             scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav)
@@ -33,7 +33,22 @@ do ->
 
             scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows)
             scope.arrows.setup()
+          scope.handleScaling()
 
-          #compute proper position
+        handleScaling: ()->
+          onResize = ()->
+            controlPanelBox = controlPanel.getElement().getBoundingClientRect()
+            scaleAmount = 50 / (controlPanelBox.height / controlPanel.transform.scale)
+            controlPanel.transform.scale = scaleAmount
+            activity.ctrlPanel.transform.scale = scaleAmount
+            controlPanelBox = controlPanel.getElement().getBoundingClientRect()
+            activityBox = activity.getElement().getBoundingClientRect()
+
+            console.log
+            controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50
+
+
+          onResize()
+          window.addEventListener "resize", onResize
 
 

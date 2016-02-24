@@ -44,6 +44,7 @@ do ->
 
         setup: ()->
           scope.mainStage = mainStage
+          scope.handleScaling()
           navOverlay.style.show(false)
 
           control.getElement().addEventListener "click", scope.toggle
@@ -200,6 +201,15 @@ do ->
 
           requestAnimationFrame animateToPosition
 
-
+        handleScaling: ()->
+          navOverlay.transform.y -= 100
+          onResize = ()->
+            navBox = navOverlay.getElement().getBoundingClientRect()
+            navScaleX = window.innerWidth / 2 / navBox.width
+            navScaleY = window.innerHeight / 2 / navBox.height
+            navScale = Math.min(navScaleX, navScaleY)
+            navOverlay.transform.scale *= navScale
+          onResize()
+          window.addEventListener "resize", onResize
 
 

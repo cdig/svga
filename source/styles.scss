@@ -3,9 +3,9 @@ svg-activity {
   display: block;
   position: relative;
   width: 100%;
-  max-height: 100%;
+  height: 100%;
   object {
-    max-height: 100%;
+    height: 100%;
     width: 100%;
   }
 
@@ -18,7 +18,6 @@ svg-activity {
     width: 500px;
     border: 2px solid black;
     border-radius: 5px;
-    // opacity: 0.9;
     visibility: hidden;
     text-align: center;
     .title {

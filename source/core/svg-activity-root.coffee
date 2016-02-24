@@ -58,8 +58,8 @@ do ()->
             scope.setupElement(scope.root, child)
 
           if scope.root.controlPanel
-            scope.root._controls = new SVGControlPanel()
-            scope.root._controls.setup(scope.root, scope.root.controlPanel)
+            scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel)
+            scope.root._controls.setup()
           setupInstance(scope.root)
 
 

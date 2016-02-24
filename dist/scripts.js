@@ -15,11 +15,11 @@
       height = rect.height;
       return rect;
     };
-    mouseConversion = function(position, parentElement, width, height) {
+    mouseConversion = function(instance, position, parentElement, width, height) {
       var diff, parentRect, x, xDiff, y, yDiff;
       parentRect = getParentRect(parentElement);
-      xDiff = width / parentElement.getBoundingClientRect().width;
-      yDiff = height / parentElement.getBoundingClientRect().height;
+      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
+      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
       diff = Math.max(xDiff, yDiff);
       x = position.x * diff;
       y = position.y * diff;
@@ -82,7 +82,7 @@
           updateMousePos(e, scope.mouse);
           if (scope.dragging) {
             if (parent != null) {
-              newMouse = mouseConversion(scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
+              newMouse = mouseConversion(instance, scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
             } else {
               newMouse = {
                 x: scope.mouse.x,
@@ -375,6 +375,7 @@
           navOverlay: null,
           setup: function() {
             scope.mainStage = mainStage;
+            scope.handleScaling();
             navOverlay.style.show(false);
             control.getElement().addEventListener("click", scope.toggle);
             navOverlay.reset.getElement().addEventListener("click", function() {
@@ -544,6 +545,20 @@
               }
             };
             return requestAnimationFrame(animateToPosition);
+          },
+          handleScaling: function() {
+            var onResize;
+            navOverlay.transform.y -= 100;
+            onResize = function() {
+              var navBox, navScale, navScaleX, navScaleY;
+              navBox = navOverlay.getElement().getBoundingClientRect();
+              navScaleX = window.innerWidth / 2 / navBox.width;
+              navScaleY = window.innerHeight / 2 / navBox.height;
+              navScale = Math.min(navScaleX, navScaleY);
+              return navOverlay.transform.scale *= navScale;
+            };
+            onResize();
+            return window.addEventListener("resize", onResize);
           }
         };
       });
@@ -553,7 +568,7 @@
   (function() {
     return Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGPOI"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI) {
       var SVGControlpanel;
-      return Make("SVGControlPanel", SVGControlpanel = function() {
+      return Make("SVGControlPanel", SVGControlpanel = function(activity, controlPanel) {
         var scope;
         return scope = {
           camera: null,
@@ -562,7 +577,7 @@
           poi: null,
           control: null,
           labels: null,
-          setup: function(activity, controlPanel) {
+          setup: function() {
             var activityElement;
             activityElement = activity.getElement();
             if (controlPanel.nav != null) {
@@ -591,8 +606,25 @@
             }
             if (controlPanel.arrows != null) {
               scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows);
-              return scope.arrows.setup();
+              scope.arrows.setup();
             }
+            return scope.handleScaling();
+          },
+          handleScaling: function() {
+            var onResize;
+            onResize = function() {
+              var activityBox, controlPanelBox, scaleAmount;
+              controlPanelBox = controlPanel.getElement().getBoundingClientRect();
+              scaleAmount = 50 / (controlPanelBox.height / controlPanel.transform.scale);
+              controlPanel.transform.scale = scaleAmount;
+              activity.ctrlPanel.transform.scale = scaleAmount;
+              controlPanelBox = controlPanel.getElement().getBoundingClientRect();
+              activityBox = activity.getElement().getBoundingClientRect();
+              console.log;
+              return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
+            };
+            onResize();
+            return window.addEventListener("resize", onResize);
           }
         };
       });
@@ -974,8 +1006,8 @@
               scope.setupElement(scope.root, child);
             }
             if (scope.root.controlPanel) {
-              scope.root._controls = new SVGControlPanel();
-              scope.root._controls.setup(scope.root, scope.root.controlPanel);
+              scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel);
+              scope.root._controls.setup();
             }
             return setupInstance(scope.root);
           },

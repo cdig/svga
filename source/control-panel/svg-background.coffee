@@ -12,7 +12,7 @@ do ->
         cycleBackground: (activity)->
           scope.currentBackground++
           scope.currentBackground %= 3
-          svgElement = activity.getElement()
+          svgElement = activity.getElement()#PureDom.querySelectorParent(activity.getElement(), "svg-activity")
           switch scope.currentBackground
             when 0
               svgElement.style["background-color"] = "#666666"

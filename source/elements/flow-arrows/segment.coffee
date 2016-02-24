@@ -3,7 +3,7 @@ class Segment
   direction: 1
   flow: null
   name: ""
-  visible: true
+
   scale: 1.0
   fillColor: "white"
   constructor: (@parent, @edges, @arrowsContainer, @segmentLength, @flowArrows)->
@@ -13,7 +13,7 @@ class Segment
     self = @
 
     segmentArrows = Math.max(1, Math.round(self.segmentLength / @flowArrows.SPACING))
-    segmentSpacing = self.segmentLength/segmentArrows;  
+    segmentSpacing = self.segmentLength/segmentArrows;
     position = 0
     edgeIndex = 0
     edge = self.edges[edgeIndex]
@@ -27,8 +27,10 @@ class Segment
       self[arrow.name] = arrow
       self.arrows.push(arrow)
       position += segmentSpacing
-    
 
+  visible: (isVisible)=>
+    for arrow in @arrows
+      arrow.visible = isVisible
   reverse: ()=>
     @direction *= -1
 
@@ -42,8 +44,8 @@ class Segment
 
     for arrow in @arrows
       arrow.setColor(@fillColor)
-      arrow.update(arrowFlow)    
+      arrow.update(arrowFlow)
 
-        
+
 
 

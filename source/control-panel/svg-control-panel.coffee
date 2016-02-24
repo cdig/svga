@@ -1,5 +1,5 @@
 do ->
-  Take ["SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGPOI"], (SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI)->
+  Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGPOI"], (SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI)->
     Make "SVGControlPanel", SVGControlpanel = ()->
       return scope =
         camera: null
@@ -29,4 +29,11 @@ do ->
           if controlPanel.labels?
             scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels)
             scope.labels.setup()
+          if controlPanel.arrows?
+
+            scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows)
+            scope.arrows.setup()
+
+          #compute proper position
+
 

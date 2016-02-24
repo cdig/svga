@@ -11,11 +11,14 @@ Take ["PointerInput","PureDom","SVGTransform", "Vector", "DOMContentLoaded"], (P
     return rect
 
   mouseConversion = (position, parentElement, width, height)->
+    parentRect = getParentRect(parentElement)
     xDiff = width / parentElement.getBoundingClientRect().width
     yDiff = height / parentElement.getBoundingClientRect().height
-
-    x = position.x * xDiff
-    y = position.y * yDiff
+    diff = Math.max(xDiff, yDiff)
+    #console.log "x diff is #{xDiff} with #{width}"
+    #console.log "y diff is #{yDiff} with #{height}"
+    x = position.x * diff
+    y = position.y * diff
     return {x: x, y: y}
 
   updateMousePos = (e, mouse)->
@@ -32,6 +35,8 @@ Take ["PointerInput","PureDom","SVGTransform", "Vector", "DOMContentLoaded"], (P
           properties = parent.getElement().getAttribute("viewBox").split(" ")
           scope.viewWidth = parseFloat(properties[2])
           scope.viewHeight = parseFloat(properties[3])
+       # scope.viewWidth = instance.root.getElement().getBoundingClientRect().width
+       # scope.viewHeight = instance.root.getElement().getBoundingClientRect().height
         scope.mouse = {}
         scope.mouse.pos = {x: 0, y:0}
         scope.mouse.delta = {x: 0, y:0}

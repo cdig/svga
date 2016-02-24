@@ -12,8 +12,10 @@ class ArrowsContainer
   addSegment: (segment)=>
     @segments.push segment
     @[segment.name] = segment
-  
 
+  visible: (isVisible)=>
+    for segment in @segments
+      segment.visible(isVisible)
   reverse: ()=>
     @direction *= -1
 

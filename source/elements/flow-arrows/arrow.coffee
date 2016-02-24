@@ -17,7 +17,7 @@ class Arrow
     line.setAttributeNS(null, "points", "0, 0, -23, 0")
     line.setAttributeNS(null,"fill", "#fff")
     line.setAttributeNS(null, "stroke-width", "11")
-    
+
     @element.appendChild(triangle)
     @element.appendChild(line)
     @target.appendChild(@element)
@@ -29,7 +29,7 @@ class Arrow
     @element.setAttributeNS(null, "stroke", fillColor)
 
   update: (deltaFlow)=>
-    if deltaFlow is 0
+    if deltaFlow is 0 or not @visible
       @element.style.visibility = "hidden"
     else
       @element.style.visibility = "visible"
@@ -40,7 +40,7 @@ class Arrow
         @edgeIndex = 0
 
       @position -= @edge.length
-    
+
       @edge = @segment.edges[@edgeIndex]
 
     while @position < 0
@@ -49,11 +49,11 @@ class Arrow
         @edgeIndex = @segment.edges.length - 1
       @edge = @segment.edges[@edgeIndex]
       @position += @edge.length
-    
+
     scaleFactor = 0
     fadeLength = if @flowArrows then @flowArrows.FADE_LENGTH else 50
     scaleFactor = getScaleFactor(@position, @segment.edges, @edgeIndex, fadeLength)
-    scalingFactor = @segment.scale * @segment.arrowsContainer.scale 
+    scalingFactor = @segment.scale * @segment.arrowsContainer.scale
     scalingFactor *= @flowArrows.scale if @flowArrows
     scaleFactor = scaleFactor * scalingFactor
 

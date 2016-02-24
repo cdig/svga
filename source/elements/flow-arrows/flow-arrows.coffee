@@ -3,7 +3,7 @@ do->
     removeOriginalArrow = (selectedSymbol)->
       children = []
       for child in selectedSymbol.childNodes
-        children.push child 
+        children.push child
       for child in children
         selectedSymbol.removeChild(child)
 
@@ -14,14 +14,14 @@ do->
         currentTime = time if not currentTime?
         dT = (time - currentTime)/1000
         currentTime = time
-        elapsedTime += dT 
+        elapsedTime += dT
         for arrowsContainer in arrowsContainers
           arrowsContainer.update(dT)
         requestAnimationFrame(update)
       requestAnimationFrame(update)
 
     Make "FlowArrows", FlowArrows = ()->
-      return scope =    
+      return scope =
         #constants please don't change
         SPEED: 200
         MIN_EDGE_LENGTH: 8
@@ -45,11 +45,11 @@ do->
 
         show: ()->
           for arrowsContainer in scope.arrowsContainers
-            arrowsContainer.visible = true
+            arrowsContainer.visible(true)
 
         hide: ()->
           for arrowsContainer in scope.arrowsContainers
-            arrowsContainer.visible = false
+            arrowsContainer.visible(false)
 
         start: ()->
           startAnimation(scope.arrowsContainers)

@@ -16,11 +16,13 @@
       return rect;
     };
     mouseConversion = function(position, parentElement, width, height) {
-      var x, xDiff, y, yDiff;
+      var diff, parentRect, x, xDiff, y, yDiff;
+      parentRect = getParentRect(parentElement);
       xDiff = width / parentElement.getBoundingClientRect().width;
       yDiff = height / parentElement.getBoundingClientRect().height;
-      x = position.x * xDiff;
-      y = position.y * yDiff;
+      diff = Math.max(xDiff, yDiff);
+      x = position.x * diff;
+      y = position.y * diff;
       return {
         x: x,
         y: y
@@ -230,6 +232,37 @@
       };
     });
   });
+
+  (function() {
+    return Take(["PointerInput", "DOMContentLoaded"], function(PointerInput) {
+      var SVGArrows;
+      return Make("SVGArrows", SVGArrows = function(activity, arrows, controlButton) {
+        var scope;
+        return scope = {
+          open: true,
+          setup: function() {
+            return PointerInput.addClick(controlButton.getElement(), scope.toggle);
+          },
+          toggle: function() {
+            scope.open = !scope.open;
+            if (scope.open) {
+              return scope.show();
+            } else {
+              return scope.hide();
+            }
+          },
+          show: function() {
+            scope.open = true;
+            return arrows.show();
+          },
+          hide: function() {
+            scope.open = false;
+            return arrows.hide();
+          }
+        };
+      });
+    });
+  })();
 
   (function() {
     return Take("PureDom", function(PureDom) {
@@ -518,7 +551,7 @@
   })();
 
   (function() {
-    return Take(["SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGPOI"], function(SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI) {
+    return Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGPOI"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI) {
       var SVGControlpanel;
       return Make("SVGControlPanel", SVGControlpanel = function() {
         var scope;
@@ -554,7 +587,11 @@
             }
             if (controlPanel.labels != null) {
               scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels);
-              return scope.labels.setup();
+              scope.labels.setup();
+            }
+            if (controlPanel.arrows != null) {
+              scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows);
+              return scope.arrows.setup();
             }
           }
         };
@@ -1721,7 +1758,7 @@
 
     Arrow.prototype.update = function(deltaFlow) {
       var angle, currentPosition, fadeLength, scaleFactor, scalingFactor, transString;
-      if (deltaFlow === 0) {
+      if (deltaFlow === 0 || !this.visible) {
         this.element.style.visibility = "hidden";
       } else {
         this.element.style.visibility = "visible";
@@ -1801,6 +1838,7 @@
       this.update = bind(this.update, this);
       this.setColor = bind(this.setColor, this);
       this.reverse = bind(this.reverse, this);
+      this.visible = bind(this.visible, this);
       this.addSegment = bind(this.addSegment, this);
       this.segments = [];
     }
@@ -1808,6 +1846,17 @@
     ArrowsContainer.prototype.addSegment = function(segment) {
       this.segments.push(segment);
       return this[segment.name] = segment;
+    };
+
+    ArrowsContainer.prototype.visible = function(isVisible) {
+      var k, len, ref, results, segment;
+      ref = this.segments;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        segment = ref[k];
+        results.push(segment.visible(isVisible));
+      }
+      return results;
     };
 
     ArrowsContainer.prototype.reverse = function() {
@@ -1927,7 +1976,7 @@
             results = [];
             for (k = 0, len = ref.length; k < len; k++) {
               arrowsContainer = ref[k];
-              results.push(arrowsContainer.visible = true);
+              results.push(arrowsContainer.visible(true));
             }
             return results;
           },
@@ -1937,7 +1986,7 @@
             results = [];
             for (k = 0, len = ref.length; k < len; k++) {
               arrowsContainer = ref[k];
-              results.push(arrowsContainer.visible = false);
+              results.push(arrowsContainer.visible(false));
             }
             return results;
           },
@@ -2167,8 +2216,6 @@
 
     Segment.prototype.name = "";
 
-    Segment.prototype.visible = true;
-
     Segment.prototype.scale = 1.0;
 
     Segment.prototype.fillColor = "white";
@@ -2183,6 +2230,7 @@
       this.update = bind(this.update, this);
       this.setColor = bind(this.setColor, this);
       this.reverse = bind(this.reverse, this);
+      this.visible = bind(this.visible, this);
       this.arrows = [];
       this.name = "segment" + this.arrowsContainer.segments.length;
       this.arrowsContainer.addSegment(this);
@@ -2204,6 +2252,17 @@
         position += segmentSpacing;
       }
     }
+
+    Segment.prototype.visible = function(isVisible) {
+      var arrow, k, len, ref, results;
+      ref = this.arrows;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        arrow = ref[k];
+        results.push(arrow.visible = isVisible);
+      }
+      return results;
+    };
 
     Segment.prototype.reverse = function() {
       return this.direction *= -1;

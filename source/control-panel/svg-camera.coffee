@@ -1,12 +1,14 @@
 do ->
   Take ["Ease", "PointerInput"], (Ease, PointerInput)->
-    setupElementWithFunction = (svgElement, element, behaviourCode, behaviour)->
+    setupElementWithFunction = (svgElement, element, behaviourCode, addBehaviour, releaseBehaviour)->
       behaviourId = 0
       PointerInput.addDown element, ()->
-        behaviourId = setInterval behaviour, 16
+        behaviourId = setInterval addBehaviour, 16
       PointerInput.addUp element, ()->
+        releaseBehaviour()
         clearInterval behaviourId
       PointerInput.addUp svgElement, ()->
+        releaseBehaviour()
         clearInterval behaviourId
 
       keyBehaviourId = 0
@@ -16,10 +18,11 @@ do ->
           return
         if e.keyCode is behaviourCode
           keyDown = true
-          keyBehaviourId = setInterval behaviour, 16
+          keyBehaviourId = setInterval addBehaviour, 16
 
       svgElement.addEventListener "keyup", (e)->
         if e.keyCode is behaviourCode
+          releaseBehaviour()
           clearInterval keyBehaviourId
           keyDown = false
 
@@ -30,6 +33,7 @@ do ->
         centerX: 0
         maxZoom: 8.0
         minZoom: 0.75
+        acceleration: 0.025
         centerY: 0
         transX: 0
         transY: 0
@@ -40,9 +44,11 @@ do ->
         mainStage: null
         transValue : 10
         navOverlay: null
+        velocity: null
 
 
         setup: ()->
+          scope.velocity = {x:0, y: 0}
           scope.mainStage = mainStage
           scope.handleScaling()
           navOverlay.style.show(false)
@@ -54,20 +60,20 @@ do ->
 
           navOverlay.close.getElement().addEventListener "click", scope.toggle
 
-          setupElementWithFunction svgElement, navOverlay.up.getElement(), 38, scope.up
+          setupElementWithFunction svgElement, navOverlay.up.getElement(), 38, scope.up, scope.releaseY
 
-          setupElementWithFunction svgElement, navOverlay.down.getElement(), 40, scope.down
+          setupElementWithFunction svgElement, navOverlay.down.getElement(), 40, scope.down, scope.releaseY
 
-          setupElementWithFunction svgElement, navOverlay.left.getElement(), 37, scope.left
-
-
-          setupElementWithFunction svgElement, navOverlay.right.getElement(), 39, scope.right
+          setupElementWithFunction svgElement, navOverlay.left.getElement(), 37, scope.left, scope.releaseX
 
 
-          setupElementWithFunction svgElement, navOverlay.plus.getElement(),187, scope.zoomIn
+          setupElementWithFunction svgElement, navOverlay.right.getElement(), 39, scope.right, scope.releaseX
 
 
-          setupElementWithFunction svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut
+          setupElementWithFunction svgElement, navOverlay.plus.getElement(),187, scope.zoomIn, ()->
+
+
+          setupElementWithFunction svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut, ()->
 
           svgElement.addEventListener "keydown", (e)-> #this gives an output for positions to later put into POI
             if e.keyCode is 88
@@ -79,36 +85,78 @@ do ->
           else
             navOverlay.style.show(false)
         left: ()->
-          scope.transX += scope.transValue * 1.0 / scope.zoom
-          stop = svgElement.getBoundingClientRect().width / 2
-          scope.transX = stop if scope.transX > stop
-
-          scope.mainStage.transform.x = scope.transX
+          scope.velocity.x += scope.acceleration if Math.abs(scope.velocity.x) < 1.0
+          scope.updateX()
 
         right: ()->
-          scope.transX -= scope.transValue * 1.0 / scope.zoom
-          stop = -svgElement.getBoundingClientRect().width / 2
-          scope.transX = stop if scope.transX < stop
-
-          scope.mainStage.transform.x = scope.transX
+          scope.velocity.x -= scope.acceleration if Math.abs(scope.velocity.x) < 1.0
+          scope.updateX()
 
 
         up: ()->
-          scope.transY += scope.transValue * 1.0 / scope.zoom
-          stop = svgElement.getBoundingClientRect().height / 2
-          scope.transY = stop if scope.transY > stop
-          scope.mainStage.transform.y = scope.transY
+          scope.velocity.y += scope.acceleration if Math.abs(scope.velocity.y) < 1.0
+          scope.updateY()
 
 
         down: ()->
-          scope.transY -= scope.transValue * 1.0 / scope.zoom
-          stop = -svgElement.getBoundingClientRect().height / 2
-          scope.transY = stop if scope.transY < stop
+          scope.velocity.y -= scope.acceleration if Math.abs(scope.velocity.y) < 1.0
+          scope.updateY()
+
+        updateX: ()->
+
+          rightStop = svgElement.getBoundingClientRect().width / 2
+          leftStop = -svgElement.getBoundingClientRect().width / 2
+          length = Math.sqrt(scope.velocity.x * scope.velocity.x + scope.velocity.y * scope.velocity.y)
+          length = 1 if scope.velocity.x is 0 and scope.velocity.y is 0
+          vX = scope.velocity.x
+          vX /= length if length > 1
+          scope.transX += (vX * scope.transValue) / scope.zoom
+          scope.transX = leftStop if scope.transX < leftStop
+          scope.transX = rightStop if scope.transX > rightStop
+          scope.mainStage.transform.x = scope.transX
+
+        updateY: ()->
+          upStop = svgElement.getBoundingClientRect().height / 2
+          downStop = -svgElement.getBoundingClientRect().height / 2
+          length = Math.sqrt(scope.velocity.x * scope.velocity.x + scope.velocity.y * scope.velocity.y)
+          length = 1 if scope.velocity.x is 0 and scope.velocity.y is 0
+          vY = scope.velocity.y
+          vY /= length if length > 1
+          scope.transY += (vY * scope.transValue) / scope.zoom
+          scope.transY = downStop if scope.transY < downStop
+          scope.transY = upStop if scope.transY > upStop
           scope.mainStage.transform.y = scope.transY
+
+        releaseX: ()->
+          reduceVelocity = (time)->
+            if scope.velocity.x < 0
+              scope.velocity.x += scope.acceleration
+              scope.updateX()
+              if scope.velocity.x < 0
+                requestAnimationFrame(reduceVelocity)
+            else if scope.velocity.x > 0
+              scope.velocity.x -= scope.acceleration
+              scope.updateX()
+              if scope.velocity.x > 0
+                requestAnimationFrame(reduceVelocity)
+          requestAnimationFrame(reduceVelocity)
+        releaseY: ()->
+          reduceVelocity = (time)->
+            if scope.velocity.y < 0
+              scope.velocity.y += scope.acceleration
+              scope.updateY()
+              if scope.velocity.y < 0
+                requestAnimationFrame(reduceVelocity)
+            else if scope.velocity.y > 0
+              scope.velocity.y -= scope.acceleration
+              scope.updateY()
+              if scope.velocity.y > 0
+                requestAnimationFrame(reduceVelocity)
+          requestAnimationFrame(reduceVelocity)
+
 
         zoomIn: ()->
           scope.zoom += scope.getZoomIncrease()
-
           if scope.zoom > scope.maxZoom
             scope.zoom = scope.maxZoom
 

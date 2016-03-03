@@ -945,7 +945,7 @@
   };
 
   (function() {
-    return Take(['crank', 'defaultElement', 'button', 'Joystick', 'SVGActivity', 'DOMContentLoaded'], function(crank, defaultElement, button, Joystick, SVGActivity) {
+    return Take(['crank', 'defaultElement', 'button', 'slider', 'Joystick', 'SVGActivity', 'DOMContentLoaded'], function(crank, defaultElement, button, slider, Joystick, SVGActivity) {
       var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
       activityDefinitions = [];
       activities = [];
@@ -998,6 +998,7 @@
           activityName = activity._name;
           activity.crank = crank;
           activity.button = button;
+          activity.slider = slider;
           activity.defaultElement = defaultElement;
           activity.joystick = Joystick;
           svgActivity = SVGActivity();
@@ -1816,6 +1817,153 @@
       });
     });
   })();
+
+  Take(["Ease", "PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(Ease, PointerInput, PureDom, SVGTransform, Vector) {
+    var Slider, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+    vecFromEventGlobal = function(e) {
+      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+    };
+    getParentRect = function(element) {
+      var height, parent, rect, width;
+      parent = PureDom.querySelectorParent(element, "svg");
+      rect = parent.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      return rect;
+    };
+    mouseConversion = function(instance, position, parentElement, width, height) {
+      var diff, parentRect, x, xDiff, y, yDiff;
+      parentRect = getParentRect(parentElement);
+      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
+      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
+      diff = Math.max(xDiff, yDiff);
+      x = position.x * diff;
+      y = position.y * diff;
+      return {
+        x: x,
+        y: y
+      };
+    };
+    updateMousePos = function(e, mouse) {
+      mouse.pos = vecFromEventGlobal(e);
+      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+      return mouse.last = mouse.pos;
+    };
+    return Make("slider", Slider = function(svgElement) {
+      var scope;
+      return scope = {
+        mouse: null,
+        horizontalSlider: true,
+        domainMin: 0,
+        domainMax: 359,
+        transformX: 0,
+        transformY: 0,
+        rangeMin: 0,
+        rangeMax: 1,
+        progress: 0,
+        dragging: false,
+        callback: function() {},
+        setup: function() {
+          var properties;
+          scope.mouse = {};
+          scope.mouse.pos = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.delta = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.last = {
+            x: 0,
+            y: 0
+          };
+          properties = scope.root.getElement().getAttribute("viewBox").split(" ");
+          scope.viewWidth = parseFloat(properties[2]);
+          scope.viewHeight = parseFloat(properties[3]);
+          return PointerInput.addDown(svgElement, scope.mouseDown);
+        },
+        setVertical: function() {
+          return scope.horizontalSlider = false;
+        },
+        setHorizontal: function() {
+          return scope.horizontalSlider = true;
+        },
+        setCallback: function(callBackFunction) {
+          return scope.callback = callBackFunction;
+        },
+        getValue: function() {
+          return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+        },
+        setValue: function(input) {
+          return scope.unmapped = Ease.linear(input, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+        },
+        setDomain: function(min, max) {
+          scope.domainMin = min;
+          return scope.domainMax = max;
+        },
+        setRange: function(min, max) {
+          scope.rangeMin = min;
+          return scope.rangeMax = max;
+        },
+        update: function() {
+          if (typeof callback !== "undefined" && callback !== null) {
+            return callback();
+          }
+        },
+        mouseDown: function(e) {
+          PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+          PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+          PointerInput.addUp(window, scope.mouseUp);
+          scope.dragging = true;
+          return updateMousePos(e, scope.mouse);
+        },
+        mouseMove: function(e) {
+          var callbackValue, newMouse;
+          updateMousePos(e, scope.mouse);
+          if (scope.dragging) {
+            if (typeof parent !== "undefined" && parent !== null) {
+              newMouse = mouseConversion(scope, scope.mouse.delta, scope.root.getElement(), scope.viewWidth, scope.viewHeight);
+            } else {
+              newMouse = {
+                x: scope.mouse.pos.x,
+                y: scope.mouse.y
+              };
+            }
+            callbackValue = 0;
+            if (scope.horizontalSlider) {
+              scope.transformX += newMouse.x;
+              scope.transform.x = scope.transformX;
+              if (scope.transform.x < scope.domainMin) {
+                scope.transform.x = scope.domainMin;
+              }
+              if (scope.transform.x > scope.domainMax) {
+                scope.transform.x = scope.domainMax;
+              }
+              callbackValue = Ease.linear(scope.transform.x, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+            } else {
+              scope.transformY += newMouse.y;
+              scope.transform.y = scope.transformY;
+              if (scope.transform.y < scope.domainMin) {
+                scope.transform.y = scope.domainMin;
+              }
+              if (scope.transform.y > scope.domainMax) {
+                scope.transform.y = scope.domainMax;
+              }
+              callbackValue = Ease.linear(scope.transform.y, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+            }
+            return scope.callback(callbackValue);
+          }
+        },
+        mouseUp: function(e) {
+          scope.dragging = true;
+          PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
+          PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
+          return PointerInput.removeUp(window, scope.mouseUp);
+        }
+      };
+    });
+  });
 
   Arrow = (function() {
     var getScaleFactor;

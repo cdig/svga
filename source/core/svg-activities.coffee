@@ -1,5 +1,5 @@
 do ()->
-  Take ['crank', 'defaultElement', 'button','Joystick', 'SVGActivity', 'DOMContentLoaded'], (crank, defaultElement, button, Joystick, SVGActivity)->
+  Take ['crank', 'defaultElement','button','slider','Joystick', 'SVGActivity', 'DOMContentLoaded'], (crank, defaultElement, button,slider, Joystick, SVGActivity)->
     activityDefinitions = []
     activities = []
     waitingActivities = []
@@ -8,7 +8,7 @@ do ()->
       registerActivityDefinition: (activity)->
         activityDefinitions[activity._name] = activity
         toRemove = []
-        for waitingActivity in waitingActivities 
+        for waitingActivity in waitingActivities
           if waitingActivity.name is activity._name
             setTimeout ()->
               SVGActivities.runActivity(waitingActivity.name, waitingActivity.id, waitingActivity.svg)
@@ -17,7 +17,7 @@ do ()->
           waitingActivities.splice(waitingActivities.indexOf(remove), 1)
 
 
-        
+
       getActivity: (activityID)->
         return activities[activityName]
 
@@ -36,6 +36,7 @@ do ()->
         activityName = activity._name
         activity.crank = crank
         activity.button = button
+        activity.slider = slider
         activity.defaultElement = defaultElement
         activity.joystick = Joystick
         svgActivity = SVGActivity()

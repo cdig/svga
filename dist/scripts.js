@@ -299,7 +299,7 @@
 
   (function() {
     var SVGBOM;
-    return Make("SVGBOM", SVGBOM = function(parentElement, activity, control) {
+    Make("SVGBOM", SVGBOM = function(parentElement, activity, control) {
       var scope;
       return scope = {
         callbacks: [],
@@ -320,24 +320,21 @@
         }
       };
     });
-  })();
-
-  (function() {
     return Take(["Ease", "PointerInput"], function(Ease, PointerInput) {
       var SVGCamera, setupElementWithFunction;
       setupElementWithFunction = function(svgElement, element, behaviourCode, addBehaviour, releaseBehaviour) {
-        var behaviourId, keyBehaviourId, keyDown;
+        var behaviourId, keyBehaviourId, keyDown, onUp;
         behaviourId = 0;
-        PointerInput.addDown(element, function() {
-          return behaviourId = setInterval(addBehaviour, 16);
-        });
-        PointerInput.addUp(element, function() {
+        onUp = function(e) {
           releaseBehaviour();
-          return clearInterval(behaviourId);
-        });
-        PointerInput.addUp(svgElement, function() {
-          releaseBehaviour();
-          return clearInterval(behaviourId);
+          clearInterval(behaviourId);
+          PointerInput.removeUp(element, onUp);
+          return PointerInput.removeUp(svgElement, onUp);
+        };
+        PointerInput.addDown(element, function(e) {
+          behaviourId = setInterval(addBehaviour, 16);
+          PointerInput.addUp(element, onUp);
+          return PointerInput.addUp(svgElement, onUp);
         });
         keyBehaviourId = 0;
         keyDown = false;
@@ -346,12 +343,14 @@
             return;
           }
           if (e.keyCode === behaviourCode) {
+            e.preventDefault();
             keyDown = true;
             return keyBehaviourId = setInterval(addBehaviour, 16);
           }
         });
         return svgElement.addEventListener("keyup", function(e) {
           if (e.keyCode === behaviourCode) {
+            e.preventDefault();
             releaseBehaviour();
             clearInterval(keyBehaviourId);
             return keyDown = false;
@@ -365,43 +364,93 @@
           baseY: 0,
           centerX: 0,
           maxZoom: 8.0,
-          minZoom: 0.75,
-          acceleration: 0.025,
+          minZoom: 1.0,
+          acceleration: 0.125,
           centerY: 0,
           transX: 0,
           transY: 0,
+          scaleAdjustY: 0,
           baseWidth: 0,
           baseHeight: 0,
           zoom: 1,
           open: false,
+          currentTime: null,
           mainStage: null,
-          transValue: 10,
+          transValue: 800,
           navOverlay: null,
           velocity: null,
+          upKey: false,
+          downKey: false,
+          leftKey: false,
+          rightKey: false,
+          releaseInY: false,
+          releaseInX: false,
+          releaseInZ: false,
           setup: function() {
+            var parent, properties;
+            parent = mainStage.root;
+            properties = parent.getElement().getAttribute("viewBox").split(" ");
+            scope.viewWidth = parseFloat(properties[2]);
+            scope.viewHeight = parseFloat(properties[3]);
             scope.velocity = {
               x: 0,
-              y: 0
+              y: 0,
+              z: 0
             };
             scope.mainStage = mainStage;
-            scope.handleScaling();
             navOverlay.style.show(false);
             control.getElement().addEventListener("click", scope.toggle);
             navOverlay.reset.getElement().addEventListener("click", function() {
               return scope.zoomToPosition(1, 0, 0);
             });
             navOverlay.close.getElement().addEventListener("click", scope.toggle);
-            setupElementWithFunction(svgElement, navOverlay.up.getElement(), 38, scope.up, scope.releaseY);
-            setupElementWithFunction(svgElement, navOverlay.down.getElement(), 40, scope.down, scope.releaseY);
-            setupElementWithFunction(svgElement, navOverlay.left.getElement(), 37, scope.left, scope.releaseX);
-            setupElementWithFunction(svgElement, navOverlay.right.getElement(), 39, scope.right, scope.releaseX);
-            setupElementWithFunction(svgElement, navOverlay.plus.getElement(), 187, scope.zoomIn, function() {});
-            setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.zoomOut, function() {});
-            return svgElement.addEventListener("keydown", function(e) {
+            setupElementWithFunction(svgElement, navOverlay.up.getElement(), 38, scope.up, function() {
+              scope.velocity.y = 1.0;
+              scope.upKey = false;
+              if (!(scope.downKey || scope.upKey)) {
+                return scope.releaseInY = true;
+              }
+            });
+            setupElementWithFunction(svgElement, navOverlay.down.getElement(), 40, scope.down, function() {
+              scope.velocity.y = -1.0;
+              scope.downKey = false;
+              if (!(scope.downKey || scope.upKey)) {
+                return scope.releaseInY = true;
+              }
+            });
+            setupElementWithFunction(svgElement, navOverlay.left.getElement(), 37, scope.left, function() {
+              scope.velocity.x = 1.0;
+              scope.leftKey = false;
+              if (!(scope.leftKey || scope.rightKey)) {
+                return scope.releaseInX = true;
+              }
+            });
+            setupElementWithFunction(svgElement, navOverlay.right.getElement(), 39, scope.right, function() {
+              scope.velocity.x = -1.0;
+              scope.rightKey = false;
+              if (!(scope.leftKey || scope.rightKey)) {
+                return scope.releaseInX = true;
+              }
+            });
+            setupElementWithFunction(svgElement, navOverlay.plus.getElement(), 187, scope.plus, function() {
+              scope.plusKey = false;
+              if (!(scope.plusKey || scope.minusKey)) {
+                return scope.releaseInZ = true;
+              }
+            });
+            setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.minus, function() {
+              scope.minusKey = false;
+              if (!(scope.plusKey || scope.minusKey)) {
+                return scope.releaseInZ = true;
+              }
+            });
+            svgElement.addEventListener("keydown", function(e) {
               if (e.keyCode === 88) {
                 return console.log("setTransformation(" + scope.transX + ", " + scope.transY + ", " + scope.zoom + ")");
               }
             });
+            scope.handleScaling();
+            return requestAnimationFrame(scope.updateAnimation);
           },
           toggle: function() {
             scope.open = !scope.open;
@@ -412,33 +461,93 @@
             }
           },
           left: function() {
-            if (Math.abs(scope.velocity.x) < 1.0) {
-              scope.velocity.x += scope.acceleration;
-            }
-            return scope.updateX();
+            return scope.leftKey = true;
           },
           right: function() {
-            if (Math.abs(scope.velocity.x) < 1.0) {
-              scope.velocity.x -= scope.acceleration;
-            }
-            return scope.updateX();
+            return scope.rightKey = true;
           },
           up: function() {
-            if (Math.abs(scope.velocity.y) < 1.0) {
-              scope.velocity.y += scope.acceleration;
-            }
-            return scope.updateY();
+            return scope.upKey = true;
           },
           down: function() {
-            if (Math.abs(scope.velocity.y) < 1.0) {
-              scope.velocity.y -= scope.acceleration;
-            }
-            return scope.updateY();
+            return scope.downKey = true;
           },
-          updateX: function() {
-            var leftStop, length, rightStop, vX;
+          updateAnimation: function(time) {
+            var dT;
+            if (scope.currentTime === null) {
+              scope.currentTime = time;
+            }
+            dT = (time - scope.currentTime) / 1000;
+            scope.currentTime = time;
+            if (scope.downKey) {
+              if (scope.velocity.y > 0) {
+                scope.velocity.y = 0;
+              }
+              if (Math.abs(scope.velocity.y) <= 1.0) {
+                scope.velocity.y -= scope.acceleration;
+              }
+            }
+            if (scope.upKey) {
+              if (scope.velocity.y < 0) {
+                scope.velocity.y = 0;
+              }
+              if (Math.abs(scope.velocity.y) <= 1.0) {
+                scope.velocity.y += scope.acceleration;
+              }
+            }
+            if (scope.rightKey) {
+              if (scope.velocity.x > 0) {
+                scope.velocity.x = 0;
+              }
+              if (Math.abs(scope.velocity.x) <= 1.0) {
+                scope.velocity.x -= scope.acceleration;
+              }
+            }
+            if (scope.leftKey) {
+              if (scope.velocity.x < 0) {
+                scope.velocity.x = 0;
+              }
+              if (Math.abs(scope.velocity.x) <= 1.0) {
+                scope.velocity.x += scope.acceleration;
+              }
+            }
+            if (scope.plusKey) {
+              if (scope.velocity.x < 0) {
+                scope.velocity.z = 0;
+              }
+              if (Math.abs(scope.velocity.z) <= 1.0) {
+                scope.velocity.z += scope.acceleration;
+              }
+            }
+            if (scope.minusKey) {
+              if (scope.velocity.z > 0) {
+                scope.velocity.z = 1;
+              }
+              if (Math.abs(scope.velocity.z) <= 1.0) {
+                scope.velocity.z -= scope.acceleration;
+              }
+            }
+            if ((scope.leftKey && scope.rightKey) || (scope.upKey && scope.downKey) || (scope.plusKey && scope.minusKey)) {
+              scope.velocity.x = 0;
+              scope.velocity.y = 0;
+              scope.velocity.z = 0;
+            }
+            scope.updatePosition(dT);
+            return requestAnimationFrame(scope.updateAnimation);
+          },
+          updatePosition: function(dT) {
+            var leftStop, length, rightStop, vX, vY, vZ;
             rightStop = svgElement.getBoundingClientRect().width / 2;
             leftStop = -svgElement.getBoundingClientRect().width / 2;
+            if (scope.releaseInX) {
+              scope.releaseX(dT);
+            }
+            if (scope.releaseInY) {
+              scope.releaseY(dT);
+            }
+            if (scope.releaseInZ) {
+              scope.releaseZ(dT);
+            }
             length = Math.sqrt(scope.velocity.x * scope.velocity.x + scope.velocity.y * scope.velocity.y);
             if (scope.velocity.x === 0 && scope.velocity.y === 0) {
               length = 1;
@@ -447,7 +556,22 @@
             if (length > 1) {
               vX /= length;
             }
-            scope.transX += (vX * scope.transValue) / scope.zoom;
+            scope.transX += (vX * scope.transValue * dT) / scope.zoom;
+            vY = scope.velocity.y;
+            if (length > 1) {
+              vY /= length;
+            }
+            scope.transY += (vY * scope.transValue * dT) / scope.zoom;
+            vZ = scope.velocity.z;
+            scope.zoom += (vZ * scope.getZoomIncrease() * 75 * dT) / scope.zoom;
+            scope.boundX();
+            scope.boundY();
+            return scope.boundZ();
+          },
+          boundX: function() {
+            var leftStop, rightStop;
+            rightStop = svgElement.getBoundingClientRect().width / 2;
+            leftStop = -svgElement.getBoundingClientRect().width / 2;
             if (scope.transX < leftStop) {
               scope.transX = leftStop;
             }
@@ -456,78 +580,83 @@
             }
             return scope.mainStage.transform.x = scope.transX;
           },
-          updateY: function() {
-            var downStop, length, upStop, vY;
-            upStop = svgElement.getBoundingClientRect().height / 2;
-            downStop = -svgElement.getBoundingClientRect().height / 2;
-            length = Math.sqrt(scope.velocity.x * scope.velocity.x + scope.velocity.y * scope.velocity.y);
-            if (scope.velocity.x === 0 && scope.velocity.y === 0) {
-              length = 1;
-            }
-            vY = scope.velocity.y;
-            if (length > 1) {
-              vY /= length;
-            }
-            scope.transY += (vY * scope.transValue) / scope.zoom;
-            if (scope.transY < downStop) {
-              scope.transY = downStop;
-            }
-            if (scope.transY > upStop) {
-              scope.transY = upStop;
-            }
+          boundY: function() {
             return scope.mainStage.transform.y = scope.transY;
           },
-          releaseX: function() {
-            var reduceVelocity;
-            reduceVelocity = function(time) {
-              if (scope.velocity.x < 0) {
-                scope.velocity.x += scope.acceleration;
-                scope.updateX();
-                if (scope.velocity.x < 0) {
-                  return requestAnimationFrame(reduceVelocity);
-                }
-              } else if (scope.velocity.x > 0) {
-                scope.velocity.x -= scope.acceleration;
-                scope.updateX();
-                if (scope.velocity.x > 0) {
-                  return requestAnimationFrame(reduceVelocity);
-                }
-              }
-            };
-            return requestAnimationFrame(reduceVelocity);
-          },
-          releaseY: function() {
-            var reduceVelocity;
-            reduceVelocity = function(time) {
-              if (scope.velocity.y < 0) {
-                scope.velocity.y += scope.acceleration;
-                scope.updateY();
-                if (scope.velocity.y < 0) {
-                  return requestAnimationFrame(reduceVelocity);
-                }
-              } else if (scope.velocity.y > 0) {
-                scope.velocity.y -= scope.acceleration;
-                scope.updateY();
-                if (scope.velocity.y > 0) {
-                  return requestAnimationFrame(reduceVelocity);
-                }
-              }
-            };
-            return requestAnimationFrame(reduceVelocity);
-          },
-          zoomIn: function() {
-            scope.zoom += scope.getZoomIncrease();
+          boundZ: function() {
+            if (scope.zoom < scope.minZoom) {
+              scope.zoom = scope.minZoom;
+            }
             if (scope.zoom > scope.maxZoom) {
               scope.zoom = scope.maxZoom;
             }
             return scope.mainStage.transform.scale = scope.zoom;
           },
-          zoomOut: function() {
-            scope.zoom -= scope.getZoomIncrease();
-            if (scope.zoom < scope.minZoom) {
-              scope.zoom = scope.minZoom;
+          releaseX: function(dT) {
+            if (scope.downKey || scope.upKey || scope.rightKey || scope.downKey) {
+              scope.releaseInX = false;
+              scope.velocity.x = 0;
+              return;
             }
-            return scope.mainStage.transform.scale = scope.zoom;
+            if (scope.velocity.x < 0) {
+              scope.velocity.x += scope.acceleration;
+              if (scope.velocity.x >= 0) {
+                scope.velocity.x = 0;
+                return scope.releaseInX = false;
+              }
+            } else if (scope.velocity.x > 0) {
+              scope.velocity.x -= scope.acceleration;
+              if (scope.velocity.x <= 0) {
+                scope.velocity.x = 0;
+                return scope.releaseInX = false;
+              }
+            }
+          },
+          releaseY: function(dT) {
+            if (scope.downKey || scope.upKey || scope.rightKey || scope.downKey) {
+              scope.releaseInY = false;
+              scope.velocity.y = 0;
+              return;
+            }
+            if (scope.velocity.y < 0) {
+              scope.velocity.y += scope.acceleration;
+              if (scope.velocity.y >= 0) {
+                scope.velocity.y = 0;
+                return scope.releaseInY = false;
+              }
+            } else if (scope.velocity.y > 0) {
+              scope.velocity.y -= scope.acceleration;
+              if (scope.velocity.y <= 0) {
+                scope.velocity.y = 0;
+                return scope.releaseInY = false;
+              }
+            }
+          },
+          releaseZ: function(dT) {
+            if (scope.plusKey || scope.minusKey) {
+              scope.releaseInZ = false;
+              scope.velocity.z = 0;
+              return;
+            }
+            if (scope.velocity.z < 0) {
+              scope.velocity.z += scope.acceleration;
+              if (scope.velocity.z >= 0) {
+                scope.velocity.z = 0;
+                return scope.releaseInZ = false;
+              }
+            } else if (scope.velocity.z > 0) {
+              scope.velocity.z -= scope.acceleration;
+              if (scope.velocity.z <= 0) {
+                scope.velocity.z = 0;
+                return scope.releaseInZ = false;
+              }
+            }
+          },
+          plus: function() {
+            return scope.plusKey = true;
+          },
+          minus: function() {
+            return scope.minusKey = true;
           },
           transform: function(x, y, scale) {
             scope.zoom = scale;
@@ -625,14 +754,27 @@
           },
           handleScaling: function() {
             var onResize;
-            navOverlay.transform.y -= 100;
             onResize = function() {
-              var navBox, navScale, navScaleX, navScaleY;
+              var boundingRect, navBox, navScale, navScaleX, navScaleY, newMinZoom, rectHeight, transAmount;
+              boundingRect = mainStage.root.getElement().getBoundingClientRect();
+              rectHeight = boundingRect.height;
               navBox = navOverlay.getElement().getBoundingClientRect();
               navScaleX = window.innerWidth / 2 / navBox.width;
               navScaleY = window.innerHeight / 2 / navBox.height;
               navScale = Math.min(navScaleX, navScaleY);
-              return navOverlay.transform.scale *= navScale;
+              navOverlay.transform.scale *= navScale;
+              newMinZoom = (rectHeight - mainStage.root._controls.panelHeight - 10) / rectHeight;
+              newMinZoom = Math.abs(newMinZoom);
+              if (scope.zoom === scope.minZoom) {
+                scope.zoom = newMinZoom;
+              }
+              transAmount = (1.0 - newMinZoom) * scope.viewHeight / 2;
+              scope.transY -= scope.scaleAdjustY;
+              navOverlay.transform.y -= scope.scaleAdjustY;
+              scope.scaleAdjustY = -transAmount;
+              scope.transY += scope.scaleAdjustY;
+              navOverlay.transform.y += scope.scaleAdjustY;
+              return scope.minZoom = newMinZoom;
             };
             onResize();
             return window.addEventListener("resize", onResize);
@@ -654,6 +796,7 @@
           poi: null,
           control: null,
           labels: null,
+          panelHeight: 50,
           setup: function() {
             var activityElement;
             activityElement = activity.getElement();
@@ -692,12 +835,11 @@
             onResize = function() {
               var activityBox, controlPanelBox, scaleAmount;
               controlPanelBox = controlPanel.getElement().getBoundingClientRect();
-              scaleAmount = 50 / (controlPanelBox.height / controlPanel.transform.scale);
+              scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale);
               controlPanel.transform.scale = scaleAmount;
               activity.ctrlPanel.transform.scale = scaleAmount;
               controlPanelBox = controlPanel.getElement().getBoundingClientRect();
               activityBox = activity.getElement().getBoundingClientRect();
-              console.log;
               return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
             };
             onResize();

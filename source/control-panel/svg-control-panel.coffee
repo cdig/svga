@@ -8,6 +8,7 @@ do ->
         poi: null
         control: null
         labels: null
+        panelHeight: 50 #this is the default panel height
 
         setup: ()->
           activityElement = activity.getElement()
@@ -30,7 +31,6 @@ do ->
             scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels)
             scope.labels.setup()
           if controlPanel.arrows?
-
             scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows)
             scope.arrows.setup()
           scope.handleScaling()
@@ -38,13 +38,13 @@ do ->
         handleScaling: ()->
           onResize = ()->
             controlPanelBox = controlPanel.getElement().getBoundingClientRect()
-            scaleAmount = 50 / (controlPanelBox.height / controlPanel.transform.scale)
+            scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale)
             controlPanel.transform.scale = scaleAmount
             activity.ctrlPanel.transform.scale = scaleAmount
             controlPanelBox = controlPanel.getElement().getBoundingClientRect()
             activityBox = activity.getElement().getBoundingClientRect()
 
-            console.log
+
             controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50
 
 

@@ -4,7 +4,7 @@
 #masked instance is the element a mask is applied to
 #mask name is the name of the mask; make sure this is distinct
 getParentInverseTransform = (root,element, currentTransform)->
-  if element.nodeName is "svg"
+  if element.nodeName is "svg" or element.getAttribute("id") is "mainStage"
     return currentTransform
   newMatrix = root.getElement().createSVGMatrix()
   matrixString = element.getAttribute("transform")
@@ -16,7 +16,7 @@ getParentInverseTransform = (root,element, currentTransform)->
   newMatrix.e = matches[4]
   newMatrix.f = matches[5]
   inv = newMatrix.inverse()
-  inversion = "matrix(#{inv.a}, #{inv.b}, #{inv.c}, #{inv.d}, #{inv.e}, #{inv.f})" 
+  inversion = "matrix(#{inv.a}, #{inv.b}, #{inv.c}, #{inv.d}, #{inv.e}, #{inv.f})"
   currentTransform = "#{currentTransform} #{inversion}"
   getParentInverseTransform(root,element.parentNode, currentTransform)
 
@@ -33,7 +33,7 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   maskedElement.parentNode.insertBefore(maskedParent, maskedElement)
   maskedElement.parentNode.removeChild(maskedElement)
   maskedParent.appendChild(maskedElement)
-  
+
 
   mask.appendChild(maskElement)
 

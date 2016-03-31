@@ -1538,7 +1538,7 @@
 
   getParentInverseTransform = function(root, element, currentTransform) {
     var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg") {
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
       return currentTransform;
     }
     newMatrix = root.getElement().createSVGMatrix();

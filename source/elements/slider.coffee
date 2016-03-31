@@ -33,7 +33,7 @@ Take ["Ease", "PointerInput","PureDom","SVGTransform", "Vector", "DOMContentLoad
       domainMax: 359
       transformX: 0
       transformY: 0
-      rangeMin: 0
+      rangeMin: -1
       rangeMax: 1
       progress: 0
       dragging: false

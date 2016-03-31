@@ -61,7 +61,7 @@
             x: 0,
             y: 0
           };
-          PointerInput.addDown(instance.getElement(), scope.mouseDown);
+          PointerInput.addDown(instance.grabber.getElement(), scope.mouseDown);
           PointerInput.addMove(instance.getElement(), scope.mouseMove);
           if (parent != null) {
             PointerInput.addMove(parent.getElement(), scope.mouseMove);
@@ -233,73 +233,69 @@
     });
   });
 
-  (function() {
-    return Take(["PointerInput", "DOMContentLoaded"], function(PointerInput) {
-      var SVGArrows;
-      return Make("SVGArrows", SVGArrows = function(activity, arrows, controlButton) {
-        var scope;
-        return scope = {
-          open: true,
-          setup: function() {
-            return PointerInput.addClick(controlButton.getElement(), scope.toggle);
-          },
-          toggle: function() {
-            scope.open = !scope.open;
-            if (scope.open) {
-              return scope.show();
-            } else {
-              return scope.hide();
-            }
-          },
-          show: function() {
-            scope.open = true;
-            return arrows.show();
-          },
-          hide: function() {
-            scope.open = false;
-            return arrows.hide();
+  Take(["PointerInput", "DOMContentLoaded"], function(PointerInput) {
+    var SVGArrows;
+    return Make("SVGArrows", SVGArrows = function(activity, arrows, controlButton) {
+      var scope;
+      return scope = {
+        open: true,
+        setup: function() {
+          return PointerInput.addClick(controlButton.getElement(), scope.toggle);
+        },
+        toggle: function() {
+          scope.open = !scope.open;
+          if (scope.open) {
+            return scope.show();
+          } else {
+            return scope.hide();
           }
-        };
-      });
+        },
+        show: function() {
+          scope.open = true;
+          return arrows.show();
+        },
+        hide: function() {
+          scope.open = false;
+          return arrows.hide();
+        }
+      };
     });
-  })();
+  });
 
-  (function() {
-    return Take("PureDom", function(PureDom) {
-      var SVGBackground;
-      return Make("SVGBackground", SVGBackground = function(parentElement, activity, control) {
-        var scope;
-        return scope = {
-          currentBackground: 0,
-          activity: null,
-          setup: function() {
-            scope.cycleBackground(activity);
-            return control.getElement().addEventListener("click", function() {
-              return scope.cycleBackground(activity);
-            });
-          },
-          cycleBackground: function(activity) {
-            var svgElement;
-            scope.currentBackground++;
-            scope.currentBackground %= 3;
-            svgElement = activity.getElement();
-            switch (scope.currentBackground) {
-              case 0:
-                return svgElement.style["background-color"] = "#666666";
-              case 1:
-                return svgElement.style["background-color"] = "#bbbbbb";
-              case 2:
-                return svgElement.style["background-color"] = "#ffffff";
-            }
+  Take("PureDom", function(PureDom) {
+    var SVGBackground;
+    return Make("SVGBackground", SVGBackground = function(parentElement, activity, control) {
+      var scope;
+      return scope = {
+        currentBackground: 0,
+        activity: null,
+        setup: function() {
+          scope.cycleBackground(activity);
+          return control.getElement().addEventListener("click", function() {
+            return scope.cycleBackground(activity);
+          });
+        },
+        cycleBackground: function(activity) {
+          var svgElement;
+          scope.currentBackground++;
+          scope.currentBackground %= 3;
+          svgElement = activity.getElement();
+          switch (scope.currentBackground) {
+            case 0:
+              return svgElement.style["background-color"] = "#666666";
+            case 1:
+              return svgElement.style["background-color"] = "#bbbbbb";
+            case 2:
+              return svgElement.style["background-color"] = "#ffffff";
           }
-        };
-      });
+        }
+      };
     });
-  })();
+  });
 
-  (function() {
+  Take([], function() {
     var SVGBOM;
-    Make("SVGBOM", SVGBOM = function(parentElement, activity, control) {
+    return Make("SVGBOM", SVGBOM = function(parentElement, activity, control) {
       var scope;
       return scope = {
         callbacks: [],
@@ -320,578 +316,579 @@
         }
       };
     });
-    return Take(["Ease", "PointerInput"], function(Ease, PointerInput) {
-      var SVGCamera, setupElementWithFunction;
-      setupElementWithFunction = function(svgElement, element, behaviourCode, addBehaviour, releaseBehaviour) {
-        var behaviourId, keyBehaviourId, keyDown, onUp;
-        behaviourId = 0;
-        onUp = function(e) {
+  });
+
+  Take(["Ease", "PointerInput"], function(Ease, PointerInput) {
+    var SVGCamera, setupElementWithFunction;
+    setupElementWithFunction = function(svgElement, element, behaviourCode, addBehaviour, releaseBehaviour) {
+      var behaviourId, keyBehaviourId, keyDown, onUp;
+      behaviourId = 0;
+      onUp = function(e) {
+        releaseBehaviour();
+        clearInterval(behaviourId);
+        PointerInput.removeUp(element, onUp);
+        return PointerInput.removeUp(svgElement, onUp);
+      };
+      PointerInput.addDown(element, function(e) {
+        behaviourId = setInterval(addBehaviour, 16);
+        PointerInput.addUp(element, onUp);
+        return PointerInput.addUp(svgElement, onUp);
+      });
+      keyBehaviourId = 0;
+      keyDown = false;
+      svgElement.addEventListener("keydown", function(e) {
+        if (keyDown) {
+          return;
+        }
+        if (e.keyCode === behaviourCode) {
+          e.preventDefault();
+          keyDown = true;
+          return keyBehaviourId = setInterval(addBehaviour, 16);
+        }
+      });
+      return svgElement.addEventListener("keyup", function(e) {
+        if (e.keyCode === behaviourCode) {
+          e.preventDefault();
           releaseBehaviour();
-          clearInterval(behaviourId);
-          PointerInput.removeUp(element, onUp);
-          return PointerInput.removeUp(svgElement, onUp);
-        };
-        PointerInput.addDown(element, function(e) {
-          behaviourId = setInterval(addBehaviour, 16);
-          PointerInput.addUp(element, onUp);
-          return PointerInput.addUp(svgElement, onUp);
-        });
-        keyBehaviourId = 0;
-        keyDown = false;
-        svgElement.addEventListener("keydown", function(e) {
-          if (keyDown) {
+          clearInterval(keyBehaviourId);
+          return keyDown = false;
+        }
+      });
+    };
+    return Make("SVGCamera", SVGCamera = function(svgElement, mainStage, navOverlay, control) {
+      var scope;
+      return scope = {
+        baseX: 0,
+        baseY: 0,
+        centerX: 0,
+        maxZoom: 8.0,
+        minZoom: 1.0,
+        acceleration: 0.125,
+        centerY: 0,
+        transX: 0,
+        transY: 0,
+        scaleAdjustY: 0,
+        baseWidth: 0,
+        baseHeight: 0,
+        zoom: 1,
+        open: false,
+        currentTime: null,
+        mainStage: null,
+        transValue: 800,
+        navOverlay: null,
+        velocity: null,
+        upKey: false,
+        downKey: false,
+        leftKey: false,
+        rightKey: false,
+        releaseInY: false,
+        releaseInX: false,
+        releaseInZ: false,
+        setup: function() {
+          var parent, properties;
+          parent = mainStage.root;
+          properties = parent.getElement().getAttribute("viewBox").split(" ");
+          scope.viewWidth = parseFloat(properties[2]);
+          scope.viewHeight = parseFloat(properties[3]);
+          scope.velocity = {
+            x: 0,
+            y: 0,
+            z: 0
+          };
+          scope.mainStage = mainStage;
+          navOverlay.style.show(false);
+          control.getElement().addEventListener("click", scope.toggle);
+          navOverlay.reset.getElement().addEventListener("click", function() {
+            return scope.zoomToPosition(1, 0, 0);
+          });
+          navOverlay.close.getElement().addEventListener("click", scope.toggle);
+          setupElementWithFunction(svgElement, navOverlay.up.getElement(), 38, scope.up, function() {
+            scope.velocity.y = 1.0;
+            scope.upKey = false;
+            if (!(scope.downKey || scope.upKey)) {
+              return scope.releaseInY = true;
+            }
+          });
+          setupElementWithFunction(svgElement, navOverlay.down.getElement(), 40, scope.down, function() {
+            scope.velocity.y = -1.0;
+            scope.downKey = false;
+            if (!(scope.downKey || scope.upKey)) {
+              return scope.releaseInY = true;
+            }
+          });
+          setupElementWithFunction(svgElement, navOverlay.left.getElement(), 37, scope.left, function() {
+            scope.velocity.x = 1.0;
+            scope.leftKey = false;
+            if (!(scope.leftKey || scope.rightKey)) {
+              return scope.releaseInX = true;
+            }
+          });
+          setupElementWithFunction(svgElement, navOverlay.right.getElement(), 39, scope.right, function() {
+            scope.velocity.x = -1.0;
+            scope.rightKey = false;
+            if (!(scope.leftKey || scope.rightKey)) {
+              return scope.releaseInX = true;
+            }
+          });
+          setupElementWithFunction(svgElement, navOverlay.plus.getElement(), 187, scope.plus, function() {
+            scope.plusKey = false;
+            if (!(scope.plusKey || scope.minusKey)) {
+              return scope.releaseInZ = true;
+            }
+          });
+          setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.minus, function() {
+            scope.minusKey = false;
+            if (!(scope.plusKey || scope.minusKey)) {
+              return scope.releaseInZ = true;
+            }
+          });
+          svgElement.addEventListener("keydown", function(e) {
+            if (e.keyCode === 88) {
+              return console.log("setTransformation(" + scope.transX + ", " + scope.transY + ", " + scope.zoom + ")");
+            }
+          });
+          scope.handleScaling();
+          return requestAnimationFrame(scope.updateAnimation);
+        },
+        toggle: function() {
+          scope.open = !scope.open;
+          if (scope.open) {
+            return navOverlay.style.show(true);
+          } else {
+            return navOverlay.style.show(false);
+          }
+        },
+        left: function() {
+          return scope.leftKey = true;
+        },
+        right: function() {
+          return scope.rightKey = true;
+        },
+        up: function() {
+          return scope.upKey = true;
+        },
+        down: function() {
+          return scope.downKey = true;
+        },
+        updateAnimation: function(time) {
+          var dT;
+          if (scope.currentTime === null) {
+            scope.currentTime = time;
+          }
+          dT = (time - scope.currentTime) / 1000;
+          scope.currentTime = time;
+          if (scope.downKey) {
+            if (scope.velocity.y > 0) {
+              scope.velocity.y = 0;
+            }
+            if (Math.abs(scope.velocity.y) <= 1.0) {
+              scope.velocity.y -= scope.acceleration;
+            }
+          }
+          if (scope.upKey) {
+            if (scope.velocity.y < 0) {
+              scope.velocity.y = 0;
+            }
+            if (Math.abs(scope.velocity.y) <= 1.0) {
+              scope.velocity.y += scope.acceleration;
+            }
+          }
+          if (scope.rightKey) {
+            if (scope.velocity.x > 0) {
+              scope.velocity.x = 0;
+            }
+            if (Math.abs(scope.velocity.x) <= 1.0) {
+              scope.velocity.x -= scope.acceleration;
+            }
+          }
+          if (scope.leftKey) {
+            if (scope.velocity.x < 0) {
+              scope.velocity.x = 0;
+            }
+            if (Math.abs(scope.velocity.x) <= 1.0) {
+              scope.velocity.x += scope.acceleration;
+            }
+          }
+          if (scope.plusKey) {
+            if (scope.velocity.x < 0) {
+              scope.velocity.z = 0;
+            }
+            if (Math.abs(scope.velocity.z) <= 1.0) {
+              scope.velocity.z += scope.acceleration;
+            }
+          }
+          if (scope.minusKey) {
+            if (scope.velocity.z > 0) {
+              scope.velocity.z = 1;
+            }
+            if (Math.abs(scope.velocity.z) <= 1.0) {
+              scope.velocity.z -= scope.acceleration;
+            }
+          }
+          if ((scope.leftKey && scope.rightKey) || (scope.upKey && scope.downKey) || (scope.plusKey && scope.minusKey)) {
+            scope.velocity.x = 0;
+            scope.velocity.y = 0;
+            scope.velocity.z = 0;
+          }
+          scope.updatePosition(dT);
+          return requestAnimationFrame(scope.updateAnimation);
+        },
+        updatePosition: function(dT) {
+          var leftStop, length, rightStop, vX, vY, vZ;
+          rightStop = svgElement.getBoundingClientRect().width / 2;
+          leftStop = -svgElement.getBoundingClientRect().width / 2;
+          if (scope.releaseInX) {
+            scope.releaseX(dT);
+          }
+          if (scope.releaseInY) {
+            scope.releaseY(dT);
+          }
+          if (scope.releaseInZ) {
+            scope.releaseZ(dT);
+          }
+          length = Math.sqrt(scope.velocity.x * scope.velocity.x + scope.velocity.y * scope.velocity.y);
+          if (scope.velocity.x === 0 && scope.velocity.y === 0) {
+            length = 1;
+          }
+          vX = scope.velocity.x;
+          if (length > 1) {
+            vX /= length;
+          }
+          scope.transX += (vX * scope.transValue * dT) / scope.zoom;
+          vY = scope.velocity.y;
+          if (length > 1) {
+            vY /= length;
+          }
+          scope.transY += (vY * scope.transValue * dT) / scope.zoom;
+          vZ = scope.velocity.z;
+          scope.zoom += (vZ * scope.getZoomIncrease() * 75 * dT) / scope.zoom;
+          scope.boundX();
+          scope.boundY();
+          return scope.boundZ();
+        },
+        boundX: function() {
+          var leftStop, rightStop;
+          rightStop = svgElement.getBoundingClientRect().width / 2;
+          leftStop = -svgElement.getBoundingClientRect().width / 2;
+          if (scope.transX < leftStop) {
+            scope.transX = leftStop;
+          }
+          if (scope.transX > rightStop) {
+            scope.transX = rightStop;
+          }
+          return scope.mainStage.transform.x = scope.transX;
+        },
+        boundY: function() {
+          return scope.mainStage.transform.y = scope.transY;
+        },
+        boundZ: function() {
+          if (scope.zoom < scope.minZoom) {
+            scope.zoom = scope.minZoom;
+          }
+          if (scope.zoom > scope.maxZoom) {
+            scope.zoom = scope.maxZoom;
+          }
+          return scope.mainStage.transform.scale = scope.zoom;
+        },
+        releaseX: function(dT) {
+          if (scope.downKey || scope.upKey || scope.rightKey || scope.downKey) {
+            scope.releaseInX = false;
+            scope.velocity.x = 0;
             return;
           }
-          if (e.keyCode === behaviourCode) {
-            e.preventDefault();
-            keyDown = true;
-            return keyBehaviourId = setInterval(addBehaviour, 16);
+          if (scope.velocity.x < 0) {
+            scope.velocity.x += scope.acceleration;
+            if (scope.velocity.x >= 0) {
+              scope.velocity.x = 0;
+              return scope.releaseInX = false;
+            }
+          } else if (scope.velocity.x > 0) {
+            scope.velocity.x -= scope.acceleration;
+            if (scope.velocity.x <= 0) {
+              scope.velocity.x = 0;
+              return scope.releaseInX = false;
+            }
           }
-        });
-        return svgElement.addEventListener("keyup", function(e) {
-          if (e.keyCode === behaviourCode) {
-            e.preventDefault();
-            releaseBehaviour();
-            clearInterval(keyBehaviourId);
-            return keyDown = false;
+        },
+        releaseY: function(dT) {
+          if (scope.downKey || scope.upKey || scope.rightKey || scope.downKey) {
+            scope.releaseInY = false;
+            scope.velocity.y = 0;
+            return;
           }
-        });
+          if (scope.velocity.y < 0) {
+            scope.velocity.y += scope.acceleration;
+            if (scope.velocity.y >= 0) {
+              scope.velocity.y = 0;
+              return scope.releaseInY = false;
+            }
+          } else if (scope.velocity.y > 0) {
+            scope.velocity.y -= scope.acceleration;
+            if (scope.velocity.y <= 0) {
+              scope.velocity.y = 0;
+              return scope.releaseInY = false;
+            }
+          }
+        },
+        releaseZ: function(dT) {
+          if (scope.plusKey || scope.minusKey) {
+            scope.releaseInZ = false;
+            scope.velocity.z = 0;
+            return;
+          }
+          if (scope.velocity.z < 0) {
+            scope.velocity.z += scope.acceleration;
+            if (scope.velocity.z >= 0) {
+              scope.velocity.z = 0;
+              return scope.releaseInZ = false;
+            }
+          } else if (scope.velocity.z > 0) {
+            scope.velocity.z -= scope.acceleration;
+            if (scope.velocity.z <= 0) {
+              scope.velocity.z = 0;
+              return scope.releaseInZ = false;
+            }
+          }
+        },
+        plus: function() {
+          return scope.plusKey = true;
+        },
+        minus: function() {
+          return scope.minusKey = true;
+        },
+        transform: function(x, y, scale) {
+          scope.zoom = scale;
+          scope.mainStage.transform.scale = scope.zoom;
+          scope.transX = x;
+          scope.mainStage.transform.x = scope.transX;
+          scope.transY = y;
+          return scope.mainStage.transform.y = scope.transY;
+        },
+        smoothTransformProperty: function(property, start, end) {
+          var currentTime, timeToTransform, totalTime, transformProperty;
+          timeToTransform = 1;
+          currentTime = null;
+          totalTime = 0;
+          transformProperty = function(time) {
+            var newValue;
+            if (currentTime == null) {
+              currentTime = time;
+            }
+            totalTime += (time - currentTime) / 1000;
+            currentTime = time;
+            newValue = Ease.cubic(totalTime, 0, timeToTransform, start, end);
+            scope[property] = newValue;
+            scope.setViewBox();
+            if (totalTime < timeToTransform) {
+              return requestAnimationFrame(transformProperty);
+            }
+          };
+          return requestAnimationFrame(transformProperty);
+        },
+        getZoomIncrease: function() {
+          var zoomIncrease, zoomSpeed;
+          zoomSpeed = 0.03;
+          zoomIncrease = zoomSpeed * scope.zoom;
+          return zoomIncrease;
+        },
+        setViewBox: function() {
+          var ncX, ncY, ntX, ntY;
+          if (scope.zoom < scope.maxZoom) {
+            scope.zoom = scope.maxZoom;
+          }
+          if (scope.zoom > scope.minZoom) {
+            scope.zoom = scope.minZoom;
+          }
+          ntX = scope.transX * scope.zoom;
+          ntY = scope.transY * scope.zoom;
+          ncX = (scope.centerX + scope.transX) - (scope.centerX + scope.transX) * scope.zoom;
+          ncY = (scope.centerY + scope.transY) - (scope.centerY + scope.transY) * scope.zoom;
+          return svgElement.setAttribute("viewBox", (ncX + ntX) + " " + (ncY + ntY) + " " + (scope.baseWidth * scope.zoom) + " " + (scope.baseHeight * scope.zoom));
+        },
+        zoomToPosition: function(newZoom, newX, newY) {
+          var animateToPosition, currentTime, easeFunction, increaseScale, increaseTransform, scaleDiff, timeElapsed, xDiff, xDone, yDiff, yDone, zoomDone;
+          currentTime = null;
+          increaseScale = 2;
+          increaseTransform = 80;
+          timeElapsed = 0;
+          xDiff = Math.abs(scope.transX - newX);
+          yDiff = Math.abs(scope.transY - newY);
+          scaleDiff = Math.abs(scope.zoom - newZoom);
+          xDone = false;
+          yDone = false;
+          zoomDone = false;
+          easeFunction = Ease.quartic;
+          animateToPosition = function(time) {
+            var delta;
+            if (currentTime === null) {
+              currentTime = time;
+            }
+            delta = (time - currentTime) / 1000;
+            currentTime = time;
+            timeElapsed += delta;
+            scope.mainStage.transform.x = easeFunction(timeElapsed * increaseTransform, 0, xDiff, scope.transX, newX);
+            if (timeElapsed * increaseTransform >= xDiff) {
+              xDone = true;
+              scope.transX = newX;
+              scope.mainStage.transform.x = scope.transX;
+            }
+            scope.mainStage.transform.y = easeFunction(timeElapsed * increaseTransform, 0, yDiff, scope.transY, newY);
+            if (timeElapsed * increaseTransform >= yDiff) {
+              yDone = true;
+              scope.transY = newY;
+              scope.mainStage.transform.y = scope.transY;
+            }
+            scope.mainStage.transform.scale = easeFunction(timeElapsed * increaseScale, 0, scaleDiff, scope.zoom, newZoom);
+            if (timeElapsed * increaseScale > scaleDiff) {
+              zoomDone = true;
+              scope.zoom = newZoom;
+              scope.mainStage.transform.scale = scope.zoom;
+            }
+            if (!(xDone && yDone && zoomDone)) {
+              return requestAnimationFrame(animateToPosition);
+            }
+          };
+          return requestAnimationFrame(animateToPosition);
+        },
+        handleScaling: function() {
+          var onResize;
+          onResize = function() {
+            var boundingRect, navBox, navScale, navScaleX, navScaleY, newMinZoom, rectHeight, transAmount;
+            boundingRect = mainStage.root.getElement().getBoundingClientRect();
+            rectHeight = boundingRect.height;
+            navBox = navOverlay.getElement().getBoundingClientRect();
+            navScaleX = window.innerWidth / 2 / navBox.width;
+            navScaleY = window.innerHeight / 2 / navBox.height;
+            navScale = Math.min(navScaleX, navScaleY);
+            navOverlay.transform.scale *= navScale;
+            newMinZoom = (rectHeight - mainStage.root._controls.panelHeight - 10) / rectHeight;
+            newMinZoom = Math.abs(newMinZoom);
+            if (scope.zoom === scope.minZoom) {
+              scope.zoom = newMinZoom;
+            }
+            transAmount = (1.0 - newMinZoom) * scope.viewHeight / 2;
+            scope.transY -= scope.scaleAdjustY;
+            navOverlay.transform.y -= scope.scaleAdjustY;
+            scope.scaleAdjustY = -transAmount;
+            scope.transY += scope.scaleAdjustY;
+            navOverlay.transform.y += scope.scaleAdjustY;
+            return scope.minZoom = newMinZoom;
+          };
+          onResize();
+          return window.addEventListener("resize", onResize);
+        }
       };
-      return Make("SVGCamera", SVGCamera = function(svgElement, mainStage, navOverlay, control) {
-        var scope;
-        return scope = {
-          baseX: 0,
-          baseY: 0,
-          centerX: 0,
-          maxZoom: 8.0,
-          minZoom: 1.0,
-          acceleration: 0.125,
-          centerY: 0,
-          transX: 0,
-          transY: 0,
-          scaleAdjustY: 0,
-          baseWidth: 0,
-          baseHeight: 0,
-          zoom: 1,
-          open: false,
-          currentTime: null,
-          mainStage: null,
-          transValue: 800,
-          navOverlay: null,
-          velocity: null,
-          upKey: false,
-          downKey: false,
-          leftKey: false,
-          rightKey: false,
-          releaseInY: false,
-          releaseInX: false,
-          releaseInZ: false,
-          setup: function() {
-            var parent, properties;
-            parent = mainStage.root;
-            properties = parent.getElement().getAttribute("viewBox").split(" ");
-            scope.viewWidth = parseFloat(properties[2]);
-            scope.viewHeight = parseFloat(properties[3]);
-            scope.velocity = {
-              x: 0,
-              y: 0,
-              z: 0
-            };
-            scope.mainStage = mainStage;
-            navOverlay.style.show(false);
-            control.getElement().addEventListener("click", scope.toggle);
-            navOverlay.reset.getElement().addEventListener("click", function() {
-              return scope.zoomToPosition(1, 0, 0);
-            });
-            navOverlay.close.getElement().addEventListener("click", scope.toggle);
-            setupElementWithFunction(svgElement, navOverlay.up.getElement(), 38, scope.up, function() {
-              scope.velocity.y = 1.0;
-              scope.upKey = false;
-              if (!(scope.downKey || scope.upKey)) {
-                return scope.releaseInY = true;
-              }
-            });
-            setupElementWithFunction(svgElement, navOverlay.down.getElement(), 40, scope.down, function() {
-              scope.velocity.y = -1.0;
-              scope.downKey = false;
-              if (!(scope.downKey || scope.upKey)) {
-                return scope.releaseInY = true;
-              }
-            });
-            setupElementWithFunction(svgElement, navOverlay.left.getElement(), 37, scope.left, function() {
-              scope.velocity.x = 1.0;
-              scope.leftKey = false;
-              if (!(scope.leftKey || scope.rightKey)) {
-                return scope.releaseInX = true;
-              }
-            });
-            setupElementWithFunction(svgElement, navOverlay.right.getElement(), 39, scope.right, function() {
-              scope.velocity.x = -1.0;
-              scope.rightKey = false;
-              if (!(scope.leftKey || scope.rightKey)) {
-                return scope.releaseInX = true;
-              }
-            });
-            setupElementWithFunction(svgElement, navOverlay.plus.getElement(), 187, scope.plus, function() {
-              scope.plusKey = false;
-              if (!(scope.plusKey || scope.minusKey)) {
-                return scope.releaseInZ = true;
-              }
-            });
-            setupElementWithFunction(svgElement, navOverlay.minus.getElement(), 189, scope.minus, function() {
-              scope.minusKey = false;
-              if (!(scope.plusKey || scope.minusKey)) {
-                return scope.releaseInZ = true;
-              }
-            });
-            svgElement.addEventListener("keydown", function(e) {
-              if (e.keyCode === 88) {
-                return console.log("setTransformation(" + scope.transX + ", " + scope.transY + ", " + scope.zoom + ")");
-              }
-            });
-            scope.handleScaling();
-            return requestAnimationFrame(scope.updateAnimation);
-          },
-          toggle: function() {
-            scope.open = !scope.open;
-            if (scope.open) {
-              return navOverlay.style.show(true);
-            } else {
-              return navOverlay.style.show(false);
-            }
-          },
-          left: function() {
-            return scope.leftKey = true;
-          },
-          right: function() {
-            return scope.rightKey = true;
-          },
-          up: function() {
-            return scope.upKey = true;
-          },
-          down: function() {
-            return scope.downKey = true;
-          },
-          updateAnimation: function(time) {
-            var dT;
-            if (scope.currentTime === null) {
-              scope.currentTime = time;
-            }
-            dT = (time - scope.currentTime) / 1000;
-            scope.currentTime = time;
-            if (scope.downKey) {
-              if (scope.velocity.y > 0) {
-                scope.velocity.y = 0;
-              }
-              if (Math.abs(scope.velocity.y) <= 1.0) {
-                scope.velocity.y -= scope.acceleration;
-              }
-            }
-            if (scope.upKey) {
-              if (scope.velocity.y < 0) {
-                scope.velocity.y = 0;
-              }
-              if (Math.abs(scope.velocity.y) <= 1.0) {
-                scope.velocity.y += scope.acceleration;
-              }
-            }
-            if (scope.rightKey) {
-              if (scope.velocity.x > 0) {
-                scope.velocity.x = 0;
-              }
-              if (Math.abs(scope.velocity.x) <= 1.0) {
-                scope.velocity.x -= scope.acceleration;
-              }
-            }
-            if (scope.leftKey) {
-              if (scope.velocity.x < 0) {
-                scope.velocity.x = 0;
-              }
-              if (Math.abs(scope.velocity.x) <= 1.0) {
-                scope.velocity.x += scope.acceleration;
-              }
-            }
-            if (scope.plusKey) {
-              if (scope.velocity.x < 0) {
-                scope.velocity.z = 0;
-              }
-              if (Math.abs(scope.velocity.z) <= 1.0) {
-                scope.velocity.z += scope.acceleration;
-              }
-            }
-            if (scope.minusKey) {
-              if (scope.velocity.z > 0) {
-                scope.velocity.z = 1;
-              }
-              if (Math.abs(scope.velocity.z) <= 1.0) {
-                scope.velocity.z -= scope.acceleration;
-              }
-            }
-            if ((scope.leftKey && scope.rightKey) || (scope.upKey && scope.downKey) || (scope.plusKey && scope.minusKey)) {
-              scope.velocity.x = 0;
-              scope.velocity.y = 0;
-              scope.velocity.z = 0;
-            }
-            scope.updatePosition(dT);
-            return requestAnimationFrame(scope.updateAnimation);
-          },
-          updatePosition: function(dT) {
-            var leftStop, length, rightStop, vX, vY, vZ;
-            rightStop = svgElement.getBoundingClientRect().width / 2;
-            leftStop = -svgElement.getBoundingClientRect().width / 2;
-            if (scope.releaseInX) {
-              scope.releaseX(dT);
-            }
-            if (scope.releaseInY) {
-              scope.releaseY(dT);
-            }
-            if (scope.releaseInZ) {
-              scope.releaseZ(dT);
-            }
-            length = Math.sqrt(scope.velocity.x * scope.velocity.x + scope.velocity.y * scope.velocity.y);
-            if (scope.velocity.x === 0 && scope.velocity.y === 0) {
-              length = 1;
-            }
-            vX = scope.velocity.x;
-            if (length > 1) {
-              vX /= length;
-            }
-            scope.transX += (vX * scope.transValue * dT) / scope.zoom;
-            vY = scope.velocity.y;
-            if (length > 1) {
-              vY /= length;
-            }
-            scope.transY += (vY * scope.transValue * dT) / scope.zoom;
-            vZ = scope.velocity.z;
-            scope.zoom += (vZ * scope.getZoomIncrease() * 75 * dT) / scope.zoom;
-            scope.boundX();
-            scope.boundY();
-            return scope.boundZ();
-          },
-          boundX: function() {
-            var leftStop, rightStop;
-            rightStop = svgElement.getBoundingClientRect().width / 2;
-            leftStop = -svgElement.getBoundingClientRect().width / 2;
-            if (scope.transX < leftStop) {
-              scope.transX = leftStop;
-            }
-            if (scope.transX > rightStop) {
-              scope.transX = rightStop;
-            }
-            return scope.mainStage.transform.x = scope.transX;
-          },
-          boundY: function() {
-            return scope.mainStage.transform.y = scope.transY;
-          },
-          boundZ: function() {
-            if (scope.zoom < scope.minZoom) {
-              scope.zoom = scope.minZoom;
-            }
-            if (scope.zoom > scope.maxZoom) {
-              scope.zoom = scope.maxZoom;
-            }
-            return scope.mainStage.transform.scale = scope.zoom;
-          },
-          releaseX: function(dT) {
-            if (scope.downKey || scope.upKey || scope.rightKey || scope.downKey) {
-              scope.releaseInX = false;
-              scope.velocity.x = 0;
-              return;
-            }
-            if (scope.velocity.x < 0) {
-              scope.velocity.x += scope.acceleration;
-              if (scope.velocity.x >= 0) {
-                scope.velocity.x = 0;
-                return scope.releaseInX = false;
-              }
-            } else if (scope.velocity.x > 0) {
-              scope.velocity.x -= scope.acceleration;
-              if (scope.velocity.x <= 0) {
-                scope.velocity.x = 0;
-                return scope.releaseInX = false;
-              }
-            }
-          },
-          releaseY: function(dT) {
-            if (scope.downKey || scope.upKey || scope.rightKey || scope.downKey) {
-              scope.releaseInY = false;
-              scope.velocity.y = 0;
-              return;
-            }
-            if (scope.velocity.y < 0) {
-              scope.velocity.y += scope.acceleration;
-              if (scope.velocity.y >= 0) {
-                scope.velocity.y = 0;
-                return scope.releaseInY = false;
-              }
-            } else if (scope.velocity.y > 0) {
-              scope.velocity.y -= scope.acceleration;
-              if (scope.velocity.y <= 0) {
-                scope.velocity.y = 0;
-                return scope.releaseInY = false;
-              }
-            }
-          },
-          releaseZ: function(dT) {
-            if (scope.plusKey || scope.minusKey) {
-              scope.releaseInZ = false;
-              scope.velocity.z = 0;
-              return;
-            }
-            if (scope.velocity.z < 0) {
-              scope.velocity.z += scope.acceleration;
-              if (scope.velocity.z >= 0) {
-                scope.velocity.z = 0;
-                return scope.releaseInZ = false;
-              }
-            } else if (scope.velocity.z > 0) {
-              scope.velocity.z -= scope.acceleration;
-              if (scope.velocity.z <= 0) {
-                scope.velocity.z = 0;
-                return scope.releaseInZ = false;
-              }
-            }
-          },
-          plus: function() {
-            return scope.plusKey = true;
-          },
-          minus: function() {
-            return scope.minusKey = true;
-          },
-          transform: function(x, y, scale) {
-            scope.zoom = scale;
-            scope.mainStage.transform.scale = scope.zoom;
-            scope.transX = x;
-            scope.mainStage.transform.x = scope.transX;
-            scope.transY = y;
-            return scope.mainStage.transform.y = scope.transY;
-          },
-          smoothTransformProperty: function(property, start, end) {
-            var currentTime, timeToTransform, totalTime, transformProperty;
-            timeToTransform = 1;
-            currentTime = null;
-            totalTime = 0;
-            transformProperty = function(time) {
-              var newValue;
-              if (currentTime == null) {
-                currentTime = time;
-              }
-              totalTime += (time - currentTime) / 1000;
-              currentTime = time;
-              newValue = Ease.cubic(totalTime, 0, timeToTransform, start, end);
-              scope[property] = newValue;
-              scope.setViewBox();
-              if (totalTime < timeToTransform) {
-                return requestAnimationFrame(transformProperty);
-              }
-            };
-            return requestAnimationFrame(transformProperty);
-          },
-          getZoomIncrease: function() {
-            var zoomIncrease, zoomSpeed;
-            zoomSpeed = 0.03;
-            zoomIncrease = zoomSpeed * scope.zoom;
-            return zoomIncrease;
-          },
-          setViewBox: function() {
-            var ncX, ncY, ntX, ntY;
-            if (scope.zoom < scope.maxZoom) {
-              scope.zoom = scope.maxZoom;
-            }
-            if (scope.zoom > scope.minZoom) {
-              scope.zoom = scope.minZoom;
-            }
-            ntX = scope.transX * scope.zoom;
-            ntY = scope.transY * scope.zoom;
-            ncX = (scope.centerX + scope.transX) - (scope.centerX + scope.transX) * scope.zoom;
-            ncY = (scope.centerY + scope.transY) - (scope.centerY + scope.transY) * scope.zoom;
-            return svgElement.setAttribute("viewBox", (ncX + ntX) + " " + (ncY + ntY) + " " + (scope.baseWidth * scope.zoom) + " " + (scope.baseHeight * scope.zoom));
-          },
-          zoomToPosition: function(newZoom, newX, newY) {
-            var animateToPosition, currentTime, easeFunction, increaseScale, increaseTransform, scaleDiff, timeElapsed, xDiff, xDone, yDiff, yDone, zoomDone;
-            currentTime = null;
-            increaseScale = 2;
-            increaseTransform = 80;
-            timeElapsed = 0;
-            xDiff = Math.abs(scope.transX - newX);
-            yDiff = Math.abs(scope.transY - newY);
-            scaleDiff = Math.abs(scope.zoom - newZoom);
-            xDone = false;
-            yDone = false;
-            zoomDone = false;
-            easeFunction = Ease.quartic;
-            animateToPosition = function(time) {
-              var delta;
-              if (currentTime === null) {
-                currentTime = time;
-              }
-              delta = (time - currentTime) / 1000;
-              currentTime = time;
-              timeElapsed += delta;
-              scope.mainStage.transform.x = easeFunction(timeElapsed * increaseTransform, 0, xDiff, scope.transX, newX);
-              if (timeElapsed * increaseTransform >= xDiff) {
-                xDone = true;
-                scope.transX = newX;
-                scope.mainStage.transform.x = scope.transX;
-              }
-              scope.mainStage.transform.y = easeFunction(timeElapsed * increaseTransform, 0, yDiff, scope.transY, newY);
-              if (timeElapsed * increaseTransform >= yDiff) {
-                yDone = true;
-                scope.transY = newY;
-                scope.mainStage.transform.y = scope.transY;
-              }
-              scope.mainStage.transform.scale = easeFunction(timeElapsed * increaseScale, 0, scaleDiff, scope.zoom, newZoom);
-              if (timeElapsed * increaseScale > scaleDiff) {
-                zoomDone = true;
-                scope.zoom = newZoom;
-                scope.mainStage.transform.scale = scope.zoom;
-              }
-              if (!(xDone && yDone && zoomDone)) {
-                return requestAnimationFrame(animateToPosition);
-              }
-            };
-            return requestAnimationFrame(animateToPosition);
-          },
-          handleScaling: function() {
-            var onResize;
-            onResize = function() {
-              var boundingRect, navBox, navScale, navScaleX, navScaleY, newMinZoom, rectHeight, transAmount;
-              boundingRect = mainStage.root.getElement().getBoundingClientRect();
-              rectHeight = boundingRect.height;
-              navBox = navOverlay.getElement().getBoundingClientRect();
-              navScaleX = window.innerWidth / 2 / navBox.width;
-              navScaleY = window.innerHeight / 2 / navBox.height;
-              navScale = Math.min(navScaleX, navScaleY);
-              navOverlay.transform.scale *= navScale;
-              newMinZoom = (rectHeight - mainStage.root._controls.panelHeight - 10) / rectHeight;
-              newMinZoom = Math.abs(newMinZoom);
-              if (scope.zoom === scope.minZoom) {
-                scope.zoom = newMinZoom;
-              }
-              transAmount = (1.0 - newMinZoom) * scope.viewHeight / 2;
-              scope.transY -= scope.scaleAdjustY;
-              navOverlay.transform.y -= scope.scaleAdjustY;
-              scope.scaleAdjustY = -transAmount;
-              scope.transY += scope.scaleAdjustY;
-              navOverlay.transform.y += scope.scaleAdjustY;
-              return scope.minZoom = newMinZoom;
-            };
-            onResize();
-            return window.addEventListener("resize", onResize);
-          }
-        };
-      });
     });
-  })();
+  });
 
-  (function() {
-    return Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGPOI"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI) {
-      var SVGControlpanel;
-      return Make("SVGControlPanel", SVGControlpanel = function(activity, controlPanel) {
-        var scope;
-        return scope = {
-          camera: null,
-          background: null,
-          bom: null,
-          poi: null,
-          control: null,
-          labels: null,
-          panelHeight: 50,
-          setup: function() {
-            var activityElement;
-            activityElement = activity.getElement();
-            if (controlPanel.nav != null) {
-              scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
-              scope.camera.setup();
-              if ((controlPanel.poi != null) && (activity.poiPanel != null)) {
-                scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
-                scope.poi.setup();
-              }
+  Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGPOI", "SVGSchematic"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI, SVGSchematic) {
+    var SVGControlpanel;
+    return Make("SVGControlPanel", SVGControlpanel = function(activity, controlPanel) {
+      var scope;
+      return scope = {
+        camera: null,
+        background: null,
+        bom: null,
+        poi: null,
+        control: null,
+        labels: null,
+        panelHeight: 50,
+        setup: function() {
+          var activityElement;
+          activityElement = activity.getElement();
+          if (controlPanel.nav != null) {
+            scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
+            scope.camera.setup();
+            if ((controlPanel.poi != null) && (activity.poiPanel != null)) {
+              scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
+              scope.poi.setup();
             }
-            if (controlPanel.bom != null) {
-              scope.bom = new SVGBOM(document, activity, controlPanel.bom);
-              scope.bom.setup();
-            }
-            if (controlPanel.background != null) {
-              scope.background = new SVGBackground(document, activity, controlPanel.background);
-              scope.background.setup();
-            }
-            if ((activity.ctrlPanel != null) && controlPanel.controls) {
-              scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
-              scope.control.setup();
-            }
-            if (controlPanel.labels != null) {
-              scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels);
-              scope.labels.setup();
-            }
-            if (controlPanel.arrows != null) {
-              scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows);
-              scope.arrows.setup();
-            }
-            return scope.handleScaling();
-          },
-          handleScaling: function() {
-            var onResize;
-            onResize = function() {
-              var activityBox, controlPanelBox, scaleAmount;
-              controlPanelBox = controlPanel.getElement().getBoundingClientRect();
-              scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale);
-              controlPanel.transform.scale = scaleAmount;
-              activity.ctrlPanel.transform.scale = scaleAmount;
-              controlPanelBox = controlPanel.getElement().getBoundingClientRect();
-              activityBox = activity.getElement().getBoundingClientRect();
-              return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
-            };
-            onResize();
-            return window.addEventListener("resize", onResize);
           }
-        };
-      });
+          if (controlPanel.bom != null) {
+            scope.bom = new SVGBOM(document, activity, controlPanel.bom);
+            scope.bom.setup();
+          }
+          if (controlPanel.background != null) {
+            scope.background = new SVGBackground(document, activity, controlPanel.background);
+            scope.background.setup();
+          }
+          if ((activity.ctrlPanel != null) && controlPanel.controls) {
+            scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
+            scope.control.setup();
+          }
+          if (controlPanel.labels != null) {
+            scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels);
+            scope.labels.setup();
+          }
+          if (controlPanel.arrows != null) {
+            scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows);
+            scope.arrows.setup();
+          }
+          if (controlPanel.toggle != null) {
+            scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage);
+            scope.schematicToggle.setup();
+          }
+          return scope.handleScaling();
+        },
+        handleScaling: function() {
+          var onResize;
+          onResize = function() {
+            var activityBox, controlPanelBox, scaleAmount;
+            controlPanelBox = controlPanel.getElement().getBoundingClientRect();
+            scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale);
+            controlPanel.transform.scale = scaleAmount;
+            activity.ctrlPanel.transform.scale = scaleAmount;
+            controlPanelBox = controlPanel.getElement().getBoundingClientRect();
+            activityBox = activity.getElement().getBoundingClientRect();
+            return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
+          };
+          onResize();
+          return window.addEventListener("resize", onResize);
+        }
+      };
     });
-  })();
+  });
 
-  (function() {
-    return Take(["Draggable", "PointerInput", "DOMContentLoaded"], function(Draggable, PointerInput) {
-      var SVGControl;
-      return Make("SVGControl", SVGControl = function(activity, control, controlButton) {
-        var scope;
-        return scope = {
-          activity: null,
-          open: false,
-          draggable: null,
-          setup: function() {
-            scope.draggable = new Draggable(control, activity);
-            scope.draggable.setup();
-            PointerInput.addClick(controlButton.getElement(), scope.toggle);
-            if (control.closer != null) {
-              PointerInput.addClick(control.closer.getElement(), scope.hide);
-            } else {
-              console.log("Error: Control does not have closer button");
-            }
+  Take(["Draggable", "PointerInput", "DOMContentLoaded"], function(Draggable, PointerInput) {
+    var SVGControl;
+    return Make("SVGControl", SVGControl = function(activity, control, controlButton) {
+      var scope;
+      return scope = {
+        activity: null,
+        open: false,
+        draggable: null,
+        setup: function() {
+          scope.draggable = new Draggable(control, activity);
+          scope.draggable.setup();
+          PointerInput.addClick(controlButton.getElement(), scope.toggle);
+          if (control.closer != null) {
+            PointerInput.addClick(control.closer.getElement(), scope.hide);
+          } else {
+            console.log("Error: Control does not have closer button");
+          }
+          return scope.hide();
+        },
+        toggle: function() {
+          scope.open = !scope.open;
+          if (scope.open) {
+            return scope.show();
+          } else {
             return scope.hide();
-          },
-          toggle: function() {
-            scope.open = !scope.open;
-            if (scope.open) {
-              return scope.show();
-            } else {
-              return scope.hide();
-            }
-          },
-          show: function() {
-            scope.open = true;
-            return control.style.show(true);
-          },
-          hide: function() {
-            scope.open = false;
-            return control.style.show(false);
           }
-        };
-      });
+        },
+        show: function() {
+          scope.open = true;
+          return control.style.show(true);
+        },
+        hide: function() {
+          scope.open = false;
+          return control.style.show(false);
+        }
+      };
     });
-  })();
+  });
 
-  (function() {
+  Take([], function() {
     var SVGControls;
     return Make("SVGControls", SVGControls = function(svgElement) {
       var scope;
@@ -921,93 +918,220 @@
         }
       };
     });
-  })();
+  });
 
-  (function() {
-    return Take(["PointerInput", "DOMContentLoaded"], function(PointerInput) {
-      var SVGLabels;
-      return Make("SVGLabels", SVGLabels = function(activity, labels, controlButton) {
-        var scope;
-        return scope = {
-          open: true,
-          setup: function() {
-            return PointerInput.addClick(controlButton.getElement(), scope.toggle);
-          },
-          toggle: function() {
-            scope.open = !scope.open;
-            if (scope.open) {
-              return scope.show();
-            } else {
-              return scope.hide();
-            }
-          },
-          show: function() {
-            scope.open = true;
-            return labels.style.show(true);
-          },
-          hide: function() {
-            scope.open = false;
-            return labels.style.show(false);
+  Take(["PointerInput", "DOMContentLoaded"], function(PointerInput) {
+    var SVGLabels;
+    return Make("SVGLabels", SVGLabels = function(activity, labels, controlButton) {
+      var scope;
+      return scope = {
+        open: true,
+        setup: function() {
+          return PointerInput.addClick(controlButton.getElement(), scope.toggle);
+        },
+        toggle: function() {
+          scope.open = !scope.open;
+          if (scope.open) {
+            return scope.show();
+          } else {
+            return scope.hide();
           }
-        };
-      });
+        },
+        show: function() {
+          scope.open = true;
+          return labels.style.show(true);
+        },
+        hide: function() {
+          scope.open = false;
+          return labels.style.show(false);
+        }
+      };
     });
-  })();
+  });
 
-  (function() {
-    return Take(["Draggable", "POI", "PointerInput"], function(Draggable, POI, PointerInput) {
-      var SVGPOI;
-      return Make("SVGPOI", SVGPOI = function(control, controlButton, svgActivity, camera) {
-        var scope;
-        return scope = {
-          open: false,
-          pois: {},
-          setup: function() {
-            var name, poi, results;
-            scope.draggable = new Draggable(control, svgActivity);
-            scope.draggable.setup();
-            PointerInput.addClick(controlButton.getElement(), scope.toggle);
-            if (control.closer != null) {
-              PointerInput.addClick(control.closer.getElement(), scope.hide);
-            } else {
-              console.log("Error: POI does not have closer button");
-            }
-            scope.hide();
-            results = [];
-            for (name in control) {
-              poi = control[name];
-              if (name.indexOf("poi") > -1) {
-                scope.pois[name] = new POI(poi, camera);
-                results.push(scope.pois[name].setup());
-              } else if (name.indexOf("reset") > -1) {
-                scope.pois[name] = new POI(poi, camera);
-                results.push(scope.pois[name].setup());
-              } else {
-                results.push(void 0);
-              }
-            }
-            return results;
-          },
-          toggle: function() {
-            scope.open = !scope.open;
-            if (scope.open) {
-              return scope.show();
-            } else {
-              return scope.hide();
-            }
-          },
-          show: function() {
-            scope.open = true;
-            return control.style.show(true);
-          },
-          hide: function() {
-            scope.open = false;
-            return control.style.show(false);
+  Take(["Draggable", "POI", "PointerInput"], function(Draggable, POI, PointerInput) {
+    var SVGPOI;
+    return Make("SVGPOI", SVGPOI = function(control, controlButton, svgActivity, camera) {
+      var scope;
+      return scope = {
+        open: false,
+        pois: {},
+        setup: function() {
+          var name, poi, results;
+          scope.draggable = new Draggable(control, svgActivity);
+          scope.draggable.setup();
+          PointerInput.addClick(controlButton.getElement(), scope.toggle);
+          if (control.closer != null) {
+            PointerInput.addClick(control.closer.getElement(), scope.hide);
+          } else {
+            console.log("Error: POI does not have closer button");
           }
-        };
-      });
+          scope.hide();
+          results = [];
+          for (name in control) {
+            poi = control[name];
+            if (name.indexOf("poi") > -1) {
+              scope.pois[name] = new POI(poi, camera);
+              results.push(scope.pois[name].setup());
+            } else if (name.indexOf("reset") > -1) {
+              scope.pois[name] = new POI(poi, camera);
+              results.push(scope.pois[name].setup());
+            } else {
+              results.push(void 0);
+            }
+          }
+          return results;
+        },
+        toggle: function() {
+          scope.open = !scope.open;
+          if (scope.open) {
+            return scope.show();
+          } else {
+            return scope.hide();
+          }
+        },
+        show: function() {
+          scope.open = true;
+          return control.style.show(true);
+        },
+        hide: function() {
+          scope.open = false;
+          return control.style.show(false);
+        }
+      };
     });
-  })();
+  });
+
+  Take(["PointerInput"], function(PointerInput) {
+    var SVGSchematic;
+    return Make("SVGSchematic", SVGSchematic = function(toggle, svgControlPanel, mainStage) {
+      var scope;
+      return scope = {
+        modeToggle: false,
+        setup: function() {
+          if ((toggle.schematicSelected == null) || (toggle.animateSelected == null)) {
+            return;
+          }
+          PointerInput.addClick(toggle.schematicSelected.getElement(), function() {
+            if (!scope.modeToggle) {
+              scope.animateMode();
+            }
+            return scope.modeToggle = true;
+          });
+          return PointerInput.addClick(toggle.animateSelected.getElement(), function() {
+            if (scope.modeToggle) {
+              scope.schematicMode();
+            }
+            return scope.modeToggle = false;
+          });
+        },
+        schematicMode: function() {
+          var child, k, len, ref, results;
+          toggle.schematicSelected.style.show(true);
+          toggle.animateSelected.style.show(false);
+          ref = mainStage.children;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            scope.turnLinesBlack(child);
+            results.push(scope.callSchematicMode(child));
+          }
+          return results;
+        },
+        callSchematicMode: function(instance) {
+          var child, k, len, ref;
+          ref = instance.children;
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            scope.callSchematicMode(child);
+          }
+          if (instance.schematicMode != null) {
+            instance.schematicMode();
+          }
+          if (svgControlPanel.arrows != null) {
+            svgControlPanel.arrows.getElement().setAttribute("filter", "url(#greyscaleMatrix");
+          }
+          if (svgControlPanel.controls != null) {
+            svgControlPanel.controls.getElement().setAttribute("filter", "url(#greyscaleMatrix");
+          }
+          if (svgControlPanel.poi != null) {
+            return svgControlPanel.poi.getElement().setAttribute("filter", "url(#greyscaleMatrix");
+          }
+        },
+        turnLinesBlack: function(instance) {
+          var child, element, id, k, len, ref, results;
+          element = instance.getElement();
+          id = element.getAttribute("id");
+          if (id != null) {
+            if (id.indexOf("Line") > -1) {
+              instance.getElement().setAttribute("filter", "url(#allblackMatrix)");
+            }
+          }
+          if (instance.children == null) {
+            return;
+          }
+          ref = instance.children;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            results.push(scope.turnLinesBlack(child));
+          }
+          return results;
+        },
+        animateMode: function() {
+          var child, k, len, ref;
+          toggle.schematicSelected.style.show(false);
+          toggle.animateSelected.style.show(true);
+          ref = mainStage.children;
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            scope.turnLinesBack(child);
+            scope.callAnimateMode(child);
+          }
+          if (svgControlPanel.arrows != null) {
+            svgControlPanel.arrows.getElement().removeAttribute("filter");
+          }
+          if (svgControlPanel.controls != null) {
+            svgControlPanel.controls.getElement().removeAttribute("filter");
+          }
+          if (svgControlPanel.poi != null) {
+            return svgControlPanel.poi.getElement().removeAttribute("filter");
+          }
+        },
+        callAnimateMode: function(instance) {
+          var child, k, len, ref;
+          ref = instance.children;
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            scope.callAnimateMode(child);
+          }
+          if (instance.animateMode != null) {
+            return instance.animateMode();
+          }
+        },
+        turnLinesBack: function(instance) {
+          var child, element, id, k, len, ref, results;
+          element = instance.getElement();
+          id = element.getAttribute("id");
+          if (id != null) {
+            if (id.indexOf("Line") > -1) {
+              instance.getElement().removeAttribute("filter");
+            }
+          }
+          if (instance.children == null) {
+            return;
+          }
+          ref = instance.children;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            results.push(scope.turnLinesBlack(child));
+          }
+          return results;
+        }
+      };
+    });
+  });
 
   invert = function(matrix) {
     var copy, dim, i, identity, ii, j, k, l, m, o, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, s, t, temp;
@@ -1162,7 +1286,7 @@
 
   (function() {
     return Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle) {
-      var SVGActivity, getChildElements, setupHighlighter, setupInstance;
+      var SVGActivity, getChildElements, setupColorMatrix, setupInstance;
       setupInstance = function(instance) {
         var child, k, len, ref;
         ref = instance.children;
@@ -1172,16 +1296,16 @@
         }
         return instance.setup();
       };
-      setupHighlighter = function(defs) {
-        var colorMatrix, highlighter;
-        highlighter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-        highlighter.setAttribute("id", "highlightMatrix");
+      setupColorMatrix = function(defs, name, matrixValue) {
+        var colorMatrix, filter;
+        filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+        filter.setAttribute("id", name);
         colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
         colorMatrix.setAttribute("in", "SourceGraphic");
         colorMatrix.setAttribute("type", "matrix");
-        colorMatrix.setAttribute("values", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
-        highlighter.appendChild(colorMatrix);
-        return defs.appendChild(highlighter);
+        colorMatrix.setAttribute("values", matrixValue);
+        filter.appendChild(colorMatrix);
+        return defs.appendChild(filter);
       };
       getChildElements = function(element) {
         var child, childElements, childNum, childRef, children, k, len;
@@ -1210,7 +1334,7 @@
           },
           registerControl: function(controlName) {},
           setupDocument: function(activityName, contentDocument) {
-            var child, childElements, k, len;
+            var child, childElements, defs, k, len;
             scope.registerInstance("default", defaultElement);
             scope.root = scope.instances["root"](contentDocument);
             scope.root.FlowArrows = new FlowArrows();
@@ -1218,7 +1342,10 @@
             scope.root.getElement = function() {
               return contentDocument;
             };
-            setupHighlighter(contentDocument.querySelector("defs"));
+            defs = contentDocument.querySelector("defs");
+            setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
+            setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.0 0.0 0.0 1.0 0");
+            setupColorMatrix(defs, "allblackMatrix", "0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 1.0 0");
             childElements = getChildElements(contentDocument);
             scope.root.children = [];
             for (k = 0, len = childElements.length; k < len; k++) {
@@ -2000,7 +2127,7 @@
         domainMax: 359,
         transformX: 0,
         transformY: 0,
-        rangeMin: 0,
+        rangeMin: -1,
         rangeMax: 1,
         progress: 0,
         dragging: false,

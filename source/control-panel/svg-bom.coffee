@@ -1,4 +1,4 @@
-do ->
+Take [], ()->
   Make "SVGBOM", SVGBOM = (parentElement, activity, control)->
     return scope =
       callbacks: []

@@ -4,18 +4,17 @@ do ()->
       for child in instance.children
         setupInstance(child)
       instance.setup()
-    setupHighlighter = (defs)->
-      highlighter = document.createElementNS("http://www.w3.org/2000/svg", "filter")
-      highlighter.setAttribute("id", "highlightMatrix")
+    setupColorMatrix = (defs, name, matrixValue)->
+      filter = document.createElementNS("http://www.w3.org/2000/svg", "filter")
+      filter.setAttribute("id", name)
       colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix")
       colorMatrix.setAttribute("in", "SourceGraphic")
       colorMatrix.setAttribute("type", "matrix")
-      colorMatrix.setAttribute("values","0.5 0.0 0.0 0.0 00
-               0.5 1.0 0.5 0.0 20
-               0.0 0.0 0.5 0.0 00
-               0.0 0.0 0.0 1.0 00" )
-      highlighter.appendChild(colorMatrix)
-      defs.appendChild(highlighter)
+      colorMatrix.setAttribute("values", matrixValue)
+
+      filter.appendChild(colorMatrix)
+      defs.appendChild(filter)
+
 
     getChildElements = (element)->
       children = PureDom.querySelectorAllChildren(element, "g")
@@ -50,8 +49,19 @@ do ()->
 
           scope.root.getElement = ()->
             return contentDocument
-
-          setupHighlighter(contentDocument.querySelector("defs"))
+          defs = contentDocument.querySelector("defs")
+          setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00
+               0.5 1.0 0.5 0.0 20
+               0.0 0.0 0.5 0.0 00
+               0.0 0.0 0.0 1.0 00" )
+          setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0
+             0.33 0.33 0.33 0.0 0
+             0.33 0.33 0.33 0.0 0
+             0.0 0.0 0.0 1.0 0")
+          setupColorMatrix(defs, "allblackMatrix", "0 0.0 0.0 0.0 0
+             0.0 0.0 0.0 0.0 0
+             0.0 0.0 0.0 0.0 0
+             0.0 0.0 0.0 1.0 0" )
           childElements = getChildElements(contentDocument)
           scope.root.children = []
           for child in childElements

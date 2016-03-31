@@ -1,4 +1,4 @@
-do ->
+Take [], ()->
   Make "SVGControls", SVGControls = (svgElement)->
     return scope =
       controls: []

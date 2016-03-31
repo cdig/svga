@@ -15,6 +15,8 @@ Take ["PointerInput","PureDom","SVGTransform", "Vector", "DOMContentLoaded"], (P
     xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale
     yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale
     diff = Math.max(xDiff, yDiff)
+    #console.log "x diff is #{xDiff} with #{width}"
+    #console.log "y diff is #{yDiff} with #{height}"
     x = position.x * diff
     y = position.y * diff
     return {x: x, y: y}

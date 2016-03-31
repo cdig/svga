@@ -1,4 +1,4 @@
-Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGPOI", "SVGSchematic"], (SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI, SVGSchematic)->
+Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic"], (SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic)->
   Make "SVGControlPanel", SVGControlpanel = (activity, controlPanel)->
     return scope =
       camera: null
@@ -25,6 +25,9 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
           scope.background.setup()
         if activity.ctrlPanel? and controlPanel.controls
           scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls )
+          scope.control.setup()
+        if activity.mimicPanel? and controlPanel.mimic
+          scope.control = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic )
           scope.control.setup()
         if controlPanel.labels?
           scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels)

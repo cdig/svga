@@ -781,7 +781,7 @@
     });
   });
 
-  Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGPOI", "SVGSchematic"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGPOI, SVGSchematic) {
+  Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic) {
     var SVGControlpanel;
     return Make("SVGControlPanel", SVGControlpanel = function(activity, controlPanel) {
       var scope;
@@ -814,6 +814,10 @@
           }
           if ((activity.ctrlPanel != null) && controlPanel.controls) {
             scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
+            scope.control.setup();
+          }
+          if ((activity.mimicPanel != null) && controlPanel.mimic) {
+            scope.control = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic);
             scope.control.setup();
           }
           if (controlPanel.labels != null) {
@@ -944,6 +948,45 @@
         hide: function() {
           scope.open = false;
           return labels.style.show(false);
+        }
+      };
+    });
+  });
+
+  Take(["Draggable", "PointerInput", "DOMContentLoaded"], function(Draggable, PointerInput) {
+    var SVGMimic;
+    return Make("SVGMimic", SVGMimic = function(activity, control, controlButton) {
+      var scope;
+      return scope = {
+        activity: null,
+        open: false,
+        draggable: null,
+        setup: function() {
+          scope.draggable = new Draggable(control, activity);
+          scope.draggable.setup();
+          PointerInput.addClick(controlButton.getElement(), scope.toggle);
+          if (control.closer != null) {
+            PointerInput.addClick(control.closer.getElement(), scope.hide);
+          } else {
+            console.log("Error: Control does not have closer button");
+          }
+          return scope.hide();
+        },
+        toggle: function() {
+          scope.open = !scope.open;
+          if (scope.open) {
+            return scope.show();
+          } else {
+            return scope.hide();
+          }
+        },
+        show: function() {
+          scope.open = true;
+          return control.style.show(true);
+        },
+        hide: function() {
+          scope.open = false;
+          return control.style.show(false);
         }
       };
     });

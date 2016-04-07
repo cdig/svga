@@ -828,7 +828,7 @@
             scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows);
             scope.arrows.setup();
           }
-          if (controlPanel.toggle != null) {
+          if (controlPanel.toggle && (controlPanel.toggle.schematicSelected != null) && (controlPanel.toggle.animateSelected != null)) {
             scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage);
             scope.schematicToggle.setup();
           }
@@ -846,8 +846,12 @@
             activityBox = activity.getElement().getBoundingClientRect();
             return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
           };
+          window.addEventListener("resize", function() {
+            onResize();
+            return onResize();
+          });
           onResize();
-          return window.addEventListener("resize", onResize);
+          return onResize();
         }
       };
     });

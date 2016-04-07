@@ -35,7 +35,8 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
         if controlPanel.arrows?
           scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows)
           scope.arrows.setup()
-        if controlPanel.toggle?
+
+        if controlPanel.toggle and controlPanel.toggle.schematicSelected? and controlPanel.toggle.animateSelected?
           scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage)
           scope.schematicToggle.setup()
         scope.handleScaling()
@@ -49,11 +50,13 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
           controlPanelBox = controlPanel.getElement().getBoundingClientRect()
           activityBox = activity.getElement().getBoundingClientRect()
 
-
           controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50
 
-
+        #hack temporary solution to call onResize twice
+        window.addEventListener "resize", ()->
+          onResize()
+          onResize()
         onResize()
-        window.addEventListener "resize", onResize
+        onResize()
 
 

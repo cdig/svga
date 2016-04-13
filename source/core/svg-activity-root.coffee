@@ -67,10 +67,12 @@ do ()->
           for child in childElements
             scope.setupElement(scope.root, child)
 
-          if scope.root.controlPanel
+          if scope.root.controlPanel?
             scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel)
             scope.root._controls.setup()
           setupInstance(scope.root)
+          if scope.root.controlPanel?
+            scope.root._controls.schematicToggle.schematicMode()
 
 
 

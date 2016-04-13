@@ -1399,11 +1399,14 @@
               child = childElements[k];
               scope.setupElement(scope.root, child);
             }
-            if (scope.root.controlPanel) {
+            if (scope.root.controlPanel != null) {
               scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel);
               scope.root._controls.setup();
             }
-            return setupInstance(scope.root);
+            setupInstance(scope.root);
+            if (scope.root.controlPanel != null) {
+              return scope.root._controls.schematicToggle.schematicMode();
+            }
           },
           getRootElement: function() {
             return scope.root.getRootElement();

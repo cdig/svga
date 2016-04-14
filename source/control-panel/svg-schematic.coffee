@@ -17,7 +17,7 @@ Take ["PointerInput"], (PointerInput)->
       schematicMode: ()->
         toggle.schematicSelected.style.show(true)
         toggle.animateSelected.style.show(false)
-        for child in mainStage.children
+        for child in mainStage.root.children
           scope.turnLinesBlack(child)
           scope.callSchematicMode(child)
 
@@ -50,7 +50,7 @@ Take ["PointerInput"], (PointerInput)->
       animateMode: ()->
         toggle.schematicSelected.style.show(false)
         toggle.animateSelected.style.show(true)
-        for child in mainStage.children
+        for child in mainStage.root.children
           scope.turnLinesBack(child)
           scope.callAnimateMode(child)
         if svgControlPanel.arrows?

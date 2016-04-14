@@ -100,6 +100,698 @@
     });
   });
 
+  invert = function(matrix) {
+    var copy, dim, i, identity, ii, j, k, l, m, o, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, s, t, temp;
+    if (matrix.length !== matrix[0].length) {
+      return;
+    }
+    identity = [];
+    copy = [];
+    dim = matrix.length;
+    for (i = k = 0, ref = dim - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+      identity[i] = [];
+      copy[i] = [];
+      for (j = l = 0, ref1 = dim - 1; 0 <= ref1 ? l <= ref1 : l >= ref1; j = 0 <= ref1 ? ++l : --l) {
+        if (i === j) {
+          identity[i][j] = 1;
+        } else {
+          identity[i][j] = 0;
+        }
+        copy[i][j] = matrix[i][j];
+      }
+    }
+    for (i = m = 0, ref2 = dim - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
+      temp = copy[i][i];
+      if (temp === 0) {
+        for (ii = o = 0, ref3 = dim - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; ii = 0 <= ref3 ? ++o : --o) {
+          if (copy[ii][i] !== 0) {
+            for (j = q = 0, ref4 = dim - 1; 0 <= ref4 ? q <= ref4 : q >= ref4; j = 0 <= ref4 ? ++q : --q) {
+              temp = copy[i][j];
+              copy[i][j] = copy[ii][j];
+              copy[ii][j] = temp;
+              temp = identity[i][j];
+              identity[i][j] = identity[ii][j];
+              identity[ii][j] = temp;
+            }
+            break;
+          }
+        }
+        temp = copy[i][i];
+      }
+      for (j = r = 0, ref5 = dim - 1; 0 <= ref5 ? r <= ref5 : r >= ref5; j = 0 <= ref5 ? ++r : --r) {
+        copy[i][j] = copy[i][j] / temp;
+        identity[i][j] = identity[i][j] / temp;
+      }
+      for (ii = s = 0, ref6 = dim - 1; 0 <= ref6 ? s <= ref6 : s >= ref6; ii = 0 <= ref6 ? ++s : --s) {
+        if (ii === i) {
+          continue;
+        }
+        temp = copy[ii][i];
+        for (j = t = 0, ref7 = dim - 1; 0 <= ref7 ? t <= ref7 : t >= ref7; j = 0 <= ref7 ? ++t : --t) {
+          copy[ii][j] -= temp * copy[i][j];
+          identity[ii][j] -= temp * identity[i][j];
+        }
+      }
+    }
+    return identity;
+  };
+
+  invertSVGMatrix = function(matrixString) {
+    var i, k, matches, matrix, newMatrix;
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    matrix = [];
+    for (i = k = 0; k <= 2; i = ++k) {
+      matrix.push([0, 0, 0]);
+    }
+    matrix[0][0] = parseFloat(matches[0]);
+    matrix[0][1] = parseFloat(matches[2]);
+    matrix[0][2] = parseFloat(matches[4]);
+    matrix[1][0] = parseFloat(matches[1]);
+    matrix[1][1] = parseFloat(matches[3]);
+    matrix[1][2] = parseFloat(matches[5]);
+    matrix[2][0] = 0;
+    matrix[2][1] = 0;
+    matrix[2][2] = 1;
+    newMatrix = invert(matrix);
+    matrixString = "matrix(" + newMatrix[0][0] + ", " + newMatrix[0][1] + ", " + newMatrix[1][0] + ", " + newMatrix[1][1] + ", " + newMatrix[0][2] + ", " + newMatrix[1][2] + ")";
+    return matrixString;
+  };
+
+  (function() {
+    return Take(['crank', 'defaultElement', 'button', 'slider', 'Joystick', 'SVGActivity', 'DOMContentLoaded'], function(crank, defaultElement, button, slider, Joystick, SVGActivity) {
+      var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
+      activityDefinitions = [];
+      activities = [];
+      waitingActivities = [];
+      waitingForRunningActivity = [];
+      return Make("SVGActivities", SVGActivities = {
+        registerActivityDefinition: function(activity) {
+          var k, l, len, len1, remove, results, toRemove, waitingActivity;
+          activityDefinitions[activity._name] = activity;
+          toRemove = [];
+          for (k = 0, len = waitingActivities.length; k < len; k++) {
+            waitingActivity = waitingActivities[k];
+            if (waitingActivity.name === activity._name) {
+              setTimeout(function() {
+                return SVGActivities.runActivity(waitingActivity.name, waitingActivity.id, waitingActivity.svg);
+              });
+              toRemove.push(waitingActivity);
+            }
+          }
+          results = [];
+          for (l = 0, len1 = toRemove.length; l < len1; l++) {
+            remove = toRemove[l];
+            results.push(waitingActivities.splice(waitingActivities.indexOf(remove), 1));
+          }
+          return results;
+        },
+        getActivity: function(activityID) {
+          return activities[activityName];
+        },
+        startActivity: function(activityName, activityId, svgElement) {
+          if (activities[activityId] != null) {
+            return;
+          }
+          if (!activityDefinitions[activityName]) {
+            return waitingActivities.push({
+              name: activityName,
+              id: activityId,
+              svg: svgElement
+            });
+          } else {
+            return setTimeout(function() {
+              return SVGActivities.runActivity(activityName, activityId, svgElement);
+            });
+          }
+        },
+        runActivity: function(activityName, id, svgElement, waitingActivity) {
+          var activity, k, len, pair, ref, svg, svgActivity;
+          activity = activityDefinitions[activityName];
+          activity.registerInstance('joystick', 'joystick');
+          activityName = activity._name;
+          activity.crank = crank;
+          activity.button = button;
+          activity.slider = slider;
+          activity.defaultElement = defaultElement;
+          activity.joystick = Joystick;
+          svgActivity = SVGActivity();
+          ref = activity._instances;
+          for (k = 0, len = ref.length; k < len; k++) {
+            pair = ref[k];
+            svgActivity.registerInstance(pair.name, activity[pair.instance]);
+          }
+          svgActivity.registerInstance('default', activity.defaultElement);
+          svg = svgElement.contentDocument.querySelector('svg');
+          svgActivity.setupDocument(activityName, svg);
+          svgElement.style.opacity = 1.0;
+          activities[id] = svgActivity;
+          return Make(id, activities[id].root);
+        }
+      });
+    });
+  })();
+
+  (function() {
+    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle) {
+      var SVGActivity, getChildElements, setupColorMatrix, setupInstance;
+      setupInstance = function(instance) {
+        var child, k, len, ref;
+        ref = instance.children;
+        for (k = 0, len = ref.length; k < len; k++) {
+          child = ref[k];
+          setupInstance(child);
+        }
+        return instance.setup();
+      };
+      setupColorMatrix = function(defs, name, matrixValue) {
+        var colorMatrix, filter;
+        filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+        filter.setAttribute("id", name);
+        colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+        colorMatrix.setAttribute("in", "SourceGraphic");
+        colorMatrix.setAttribute("type", "matrix");
+        colorMatrix.setAttribute("values", matrixValue);
+        filter.appendChild(colorMatrix);
+        return defs.appendChild(filter);
+      };
+      getChildElements = function(element) {
+        var child, childElements, childNum, childRef, children, k, len;
+        children = PureDom.querySelectorAllChildren(element, "g");
+        childElements = [];
+        childNum = 0;
+        for (k = 0, len = children.length; k < len; k++) {
+          child = children[k];
+          if (child.getAttribute("id") == null) {
+            childNum++;
+            childRef = "child" + childNum;
+            child.setAttribute("id", childRef);
+          }
+          childElements.push(child);
+        }
+        return childElements;
+      };
+      return Make("SVGActivity", SVGActivity = function() {
+        var scope;
+        return scope = {
+          functions: {},
+          instances: {},
+          root: null,
+          registerInstance: function(instanceName, instance) {
+            return scope.instances[instanceName] = instance;
+          },
+          registerControl: function(controlName) {},
+          setupDocument: function(activityName, contentDocument) {
+            var child, childElements, defs, k, len;
+            scope.registerInstance("default", defaultElement);
+            scope.root = scope.instances["root"](contentDocument);
+            scope.root.FlowArrows = new FlowArrows();
+            scope.root.root = scope.root;
+            scope.root.getElement = function() {
+              return contentDocument;
+            };
+            defs = contentDocument.querySelector("defs");
+            setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
+            setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.0 0.0 0.0 1.0 0");
+            setupColorMatrix(defs, "allblackMatrix", "0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 1.0 0");
+            childElements = getChildElements(contentDocument);
+            scope.root.children = [];
+            for (k = 0, len = childElements.length; k < len; k++) {
+              child = childElements[k];
+              scope.setupElement(scope.root, child);
+            }
+            if (scope.root.controlPanel != null) {
+              scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel);
+              scope.root._controls.setup();
+            }
+            setupInstance(scope.root);
+            if (scope.root.controlPanel != null) {
+              return scope.root._controls.schematicToggle.schematicMode();
+            }
+          },
+          getRootElement: function() {
+            return scope.root.getRootElement();
+          },
+          setupElement: function(parent, element) {
+            var child, childElements, id, instance, k, len, results;
+            id = element.getAttribute("id");
+            id = id.split("_")[0];
+            instance = scope.instances[id];
+            if (instance == null) {
+              instance = scope.instances["default"];
+            }
+            parent[id] = instance(element);
+            parent[id].transform = SVGTransform(element);
+            parent[id].transform.setup();
+            parent[id].style = SVGStyle(element);
+            parent.children.push(parent[id]);
+            parent[id].children = [];
+            parent[id].root = scope.root;
+            parent[id].getElement = function() {
+              return element;
+            };
+            childElements = getChildElements(element);
+            results = [];
+            for (k = 0, len = childElements.length; k < len; k++) {
+              child = childElements[k];
+              results.push(scope.setupElement(parent[id], child));
+            }
+            return results;
+          }
+        };
+      });
+    });
+  })();
+
+  Make("SVGAnimation", SVGAnimation = function(callback) {
+    var scope;
+    return scope = {
+      running: false,
+      restart: false,
+      time: 0,
+      startTime: 0,
+      dT: 0,
+      runAnimation: function(currTime) {
+        var dT, newTime;
+        if (scope.restart) {
+          scope.startTime = currTime;
+          scope.time = 0;
+          scope.restart = false;
+        } else {
+          newTime = currTime - scope.startTime;
+          dT = (newTime - scope.time) / 1000;
+          scope.time = newTime;
+          callback(dT, scope.time);
+        }
+        if (scope.running) {
+          return requestAnimationFrame(scope.runAnimation);
+        }
+      },
+      start: function() {
+        var startAnimation;
+        if (scope.running) {
+          scope.restart = true;
+          return;
+        }
+        scope.running = true;
+        startAnimation = function(currTime) {
+          scope.startTime = currTime;
+          scope.time = 0;
+          return requestAnimationFrame(scope.runAnimation);
+        };
+        return requestAnimationFrame(startAnimation);
+      },
+      stop: function() {
+        return scope.running = false;
+      }
+    };
+  });
+
+  Take("DOMContentLoaded", function() {
+    var k, len, results, svgActivities, svgActivity;
+    svgActivities = document.querySelectorAll("svg-activity");
+    results = [];
+    for (k = 0, len = svgActivities.length; k < len; k++) {
+      svgActivity = svgActivities[k];
+      results.push(svgActivity.querySelector("object").style.opacity = 0);
+    }
+    return results;
+  });
+
+  (function() {
+    var Highlighter, enabled;
+    enabled = true;
+    return Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, k, len, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, k, len, results;
+          if (enabled) {
+            results = [];
+            for (k = 0, len = highlighted.length; k < len; k++) {
+              highlight = highlighted[k];
+              results.push(highlight.setAttribute("filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, k, len, results;
+          results = [];
+          for (k = 0, len = highlighted.length; k < len; k++) {
+            highlight = highlighted[k];
+            results.push(highlight.removeAttribute("filter"));
+          }
+          return results;
+        };
+        results = [];
+        for (k = 0, len = highlighted.length; k < len; k++) {
+          highlight = highlighted[k];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
+    });
+  })();
+
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.getElement().createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("SVGMask", SVGMask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.getElement();
+    maskedElement = maskedInstance.getElement();
+    rootElement = root.getElement();
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
+    } else {
+      newStyle = "mask: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    maskedInstance.transform.setBaseTransform();
+    return maskedParent.setAttribute("style", newStyle);
+  });
+
+  Take(["PureDom", "HydraulicPressure"], function(PureDom, HydraulicPressure) {
+    var SVGStyle;
+    return Make("SVGStyle", SVGStyle = function(svgElement) {
+      var scope;
+      return scope = {
+        pressure: 0,
+        visible: function(isVisible) {
+          if (isVisible) {
+            return svgElement.style.opacity = 1.0;
+          } else {
+            return svgElement.style.opacity = 0.0;
+          }
+        },
+        show: function(showElement) {
+          if (showElement) {
+            return svgElement.style.visibility = "visible";
+          } else {
+            return svgElement.style.visibility = "hidden";
+          }
+        },
+        setPressure: function(val, alpha) {
+          if (alpha == null) {
+            alpha = 1.0;
+          }
+          scope.pressure = val;
+          return scope.fill(HydraulicPressure(scope.pressure, alpha));
+        },
+        getPressure: function() {
+          return scope.pressure;
+        },
+        getPressureColor: function(pressure) {
+          return HydraulicPressure(pressure);
+        },
+        stroke: function(color) {
+          var clone, defs, link, parent, path, use, useParent;
+          path = svgElement.querySelector("path");
+          use = svgElement.querySelector("use");
+          if ((path == null) && (use != null)) {
+            useParent = PureDom.querySelectorParent(use, "g");
+            parent = PureDom.querySelectorParent(svgElement, "svg");
+            defs = parent.querySelector("defs");
+            link = defs.querySelector(use.getAttribute("xlink:href"));
+            clone = link.cloneNode(true);
+            useParent.appendChild(clone);
+            useParent.removeChild(use);
+          }
+          path = svgElement.querySelector("path");
+          if (path != null) {
+            return path.setAttributeNS(null, "stroke", color);
+          }
+        },
+        fill: function(color) {
+          var clone, defs, link, parent, path, use, useParent;
+          path = svgElement.querySelector("path");
+          use = svgElement.querySelector("use");
+          if ((path == null) && (use != null)) {
+            useParent = PureDom.querySelectorParent(use, "g");
+            parent = PureDom.querySelectorParent(svgElement, "svg");
+            defs = parent.querySelector("defs");
+            link = defs.querySelector(use.getAttribute("xlink:href"));
+            clone = link.cloneNode(true);
+            useParent.appendChild(clone);
+            useParent.removeChild(use);
+          }
+          path = svgElement.querySelector("path");
+          if (path != null) {
+            return path.setAttributeNS(null, "fill", color);
+          }
+        },
+        linearGradient: function(stops, x1, y1, x2, y2) {
+          var fillUrl, gradient, gradientName, gradientStop, k, len, stop, useParent;
+          if (x1 == null) {
+            x1 = 0;
+          }
+          if (y1 == null) {
+            y1 = 0;
+          }
+          if (x2 == null) {
+            x2 = 1;
+          }
+          if (y2 == null) {
+            y2 = 0;
+          }
+          useParent = PureDom.querySelectorParent(svgElement, "svg");
+          gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
+          gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+          useParent.querySelector("defs").appendChild(gradient);
+          gradient.setAttribute("id", gradientName);
+          gradient.setAttributeNS(null, "x1", x1);
+          gradient.setAttributeNS(null, "y1", y1);
+          gradient.setAttributeNS(null, "x2", x2);
+          gradient.setAttributeNS(null, "y2", y2);
+          for (k = 0, len = stops.length; k < len; k++) {
+            stop = stops[k];
+            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+            gradientStop.setAttribute("offset", stop.offset);
+            gradientStop.setAttribute("stop-color", stop.color);
+            gradient.appendChild(gradientStop);
+          }
+          fillUrl = "url(#" + gradientName + ")";
+          return scope.fill(fillUrl);
+        },
+        radialGradient: function(stops, cx, cy, radius) {
+          var fillUrl, gradient, gradientName, gradientStop, k, len, oldGradient, stop, useParent;
+          useParent = PureDom.querySelectorParent(svgElement, "svg");
+          gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
+          oldGradient = useParent.querySelector("defs").querySelector("#" + gradientName);
+          if (oldGradient) {
+            useParent.querySelector("defs").removeChild(oldGradient);
+          }
+          gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
+          useParent.querySelector("defs").appendChild(gradient);
+          gradient.setAttribute("id", gradientName);
+          if (cx != null) {
+            gradient.setAttributeNS(null, "cx", cx);
+          }
+          if (cy != null) {
+            gradient.setAttributeNS(null, "cy", cy);
+          }
+          if (radius != null) {
+            gradient.setAttributeNS(null, "r", radius);
+          }
+          for (k = 0, len = stops.length; k < len; k++) {
+            stop = stops[k];
+            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+            gradientStop.setAttribute("offset", stop.offset);
+            gradientStop.setAttribute("stop-color", stop.color);
+            gradient.appendChild(gradientStop);
+          }
+          fillUrl = "url(#" + gradientName + ")";
+          return scope.fill(fillUrl);
+        },
+        setText: function(text) {
+          var textElement;
+          textElement = svgElement.querySelector("text").querySelector("tspan");
+          if (textElement != null) {
+            return textElement.textContent = text;
+          }
+        },
+        setProperty: function(propertyName, propertyValue) {
+          return svgElement.style[propertyName] = propertyValue;
+        },
+        getElement: function() {
+          return svgElement;
+        }
+      };
+    });
+  });
+
+  Make("SVGTransform", SVGTransform = function(svgElement) {
+    var scope;
+    return scope = {
+      angleVal: 0,
+      xVal: 0,
+      yVal: 0,
+      cxVal: 0,
+      cyVal: 0,
+      scaleVal: 1,
+      scaleXVal: 1,
+      scaleYVal: 1,
+      turnsVal: 0,
+      scaleString: "",
+      translateString: "",
+      rotationString: "",
+      baseTransform: svgElement.getAttribute("transform"),
+      setup: function() {
+        Object.defineProperty(scope, 'angle', {
+          get: function() {
+            return scope.angleVal;
+          },
+          set: function(val) {
+            scope.angleVal = val;
+            scope.turnsVal = scope.angleVal / 360;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          }
+        });
+        Object.defineProperty(scope, 'x', {
+          get: function() {
+            return scope.xVal;
+          },
+          set: function(val) {
+            scope.xVal = val;
+            return scope.translate(val, scope.y);
+          }
+        });
+        Object.defineProperty(scope, 'y', {
+          get: function() {
+            return scope.yVal;
+          },
+          set: function(val) {
+            scope.yVal = val;
+            return scope.translate(scope.x, val);
+          }
+        });
+        Object.defineProperty(scope, 'scale', {
+          get: function() {
+            return scope.scaleVal;
+          },
+          set: function(val) {
+            scope.scaleVal = val;
+            return scope.scaling(val);
+          }
+        });
+        Object.defineProperty(scope, 'scaleX', {
+          get: function() {
+            return scope.scaleXVal;
+          },
+          set: function(val) {
+            scope.scaleXVal = val;
+            return scope.scaling(scope.scaleXVal, scope.scaleYVal);
+          }
+        });
+        Object.defineProperty(scope, 'scaleY', {
+          get: function() {
+            return scope.scaleYVal;
+          },
+          set: function(val) {
+            scope.scaleYVal = val;
+            return scope.scaling(scope.scaleXVal, scope.scaleYVal);
+          }
+        });
+        Object.defineProperty(scope, 'turns', {
+          get: function() {
+            return scope.turnsVal;
+          },
+          set: function(val) {
+            scope.turnsVal = val;
+            scope.angleVal = scope.turnsVal * 360;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          }
+        });
+        Object.defineProperty(scope, 'cx', {
+          get: function() {
+            return scope.cxVal;
+          },
+          set: function(val) {
+            scope.cxVal = val;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          }
+        });
+        return Object.defineProperty(scope, 'cy', {
+          get: function() {
+            return scope.cyVal;
+          },
+          set: function(val) {
+            scope.cyVal = val;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          }
+        });
+      },
+      rotate: function(angle, cx, cy) {
+        scope.rotationString = "rotate(" + angle + ", " + cx + ", " + cy + ")";
+        return scope.setTransform();
+      },
+      translate: function(x, y) {
+        scope.translateString = "translate(" + x + ", " + y + ")";
+        return scope.setTransform();
+      },
+      scaling: function(scaleX, scaleY) {
+        if (scaleY == null) {
+          scaleY = scaleX;
+        }
+        scope.scaleString = "scale(" + scaleX + ", " + scaleY + ")";
+        return scope.setTransform();
+      },
+      setBaseTransform: function() {
+        return scope.baseTransform = svgElement.getAttribute("transform");
+      },
+      setBaseIdentity: function() {
+        return scope.baseTransform = "matrix(1,0,0,1,0,0)";
+      },
+      setTransform: function() {
+        var newTransform;
+        newTransform = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
+        return svgElement.setAttribute('transform', newTransform);
+      }
+    };
+  });
+
   (function() {
     return Take(["PointerInput", "PureDom", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, Vector) {
       var FloatingMenu, addMousePercentage, convertToPercentage, getElementPositionPercentage, getParentRect, styleValToNumWithPrecision, updateMousePos, vecFromEventGlobal;
@@ -1076,7 +1768,7 @@
           var child, k, len, ref, results;
           toggle.schematicSelected.style.show(true);
           toggle.animateSelected.style.show(false);
-          ref = mainStage.children;
+          ref = mainStage.root.children;
           results = [];
           for (k = 0, len = ref.length; k < len; k++) {
             child = ref[k];
@@ -1129,7 +1821,7 @@
           var child, k, len, ref;
           toggle.schematicSelected.style.show(false);
           toggle.animateSelected.style.show(true);
-          ref = mainStage.children;
+          ref = mainStage.root.children;
           for (k = 0, len = ref.length; k < len; k++) {
             child = ref[k];
             scope.turnLinesBack(child);
@@ -1178,698 +1870,6 @@
         }
       };
     });
-  });
-
-  invert = function(matrix) {
-    var copy, dim, i, identity, ii, j, k, l, m, o, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, s, t, temp;
-    if (matrix.length !== matrix[0].length) {
-      return;
-    }
-    identity = [];
-    copy = [];
-    dim = matrix.length;
-    for (i = k = 0, ref = dim - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
-      identity[i] = [];
-      copy[i] = [];
-      for (j = l = 0, ref1 = dim - 1; 0 <= ref1 ? l <= ref1 : l >= ref1; j = 0 <= ref1 ? ++l : --l) {
-        if (i === j) {
-          identity[i][j] = 1;
-        } else {
-          identity[i][j] = 0;
-        }
-        copy[i][j] = matrix[i][j];
-      }
-    }
-    for (i = m = 0, ref2 = dim - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
-      temp = copy[i][i];
-      if (temp === 0) {
-        for (ii = o = 0, ref3 = dim - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; ii = 0 <= ref3 ? ++o : --o) {
-          if (copy[ii][i] !== 0) {
-            for (j = q = 0, ref4 = dim - 1; 0 <= ref4 ? q <= ref4 : q >= ref4; j = 0 <= ref4 ? ++q : --q) {
-              temp = copy[i][j];
-              copy[i][j] = copy[ii][j];
-              copy[ii][j] = temp;
-              temp = identity[i][j];
-              identity[i][j] = identity[ii][j];
-              identity[ii][j] = temp;
-            }
-            break;
-          }
-        }
-        temp = copy[i][i];
-      }
-      for (j = r = 0, ref5 = dim - 1; 0 <= ref5 ? r <= ref5 : r >= ref5; j = 0 <= ref5 ? ++r : --r) {
-        copy[i][j] = copy[i][j] / temp;
-        identity[i][j] = identity[i][j] / temp;
-      }
-      for (ii = s = 0, ref6 = dim - 1; 0 <= ref6 ? s <= ref6 : s >= ref6; ii = 0 <= ref6 ? ++s : --s) {
-        if (ii === i) {
-          continue;
-        }
-        temp = copy[ii][i];
-        for (j = t = 0, ref7 = dim - 1; 0 <= ref7 ? t <= ref7 : t >= ref7; j = 0 <= ref7 ? ++t : --t) {
-          copy[ii][j] -= temp * copy[i][j];
-          identity[ii][j] -= temp * identity[i][j];
-        }
-      }
-    }
-    return identity;
-  };
-
-  invertSVGMatrix = function(matrixString) {
-    var i, k, matches, matrix, newMatrix;
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    matrix = [];
-    for (i = k = 0; k <= 2; i = ++k) {
-      matrix.push([0, 0, 0]);
-    }
-    matrix[0][0] = parseFloat(matches[0]);
-    matrix[0][1] = parseFloat(matches[2]);
-    matrix[0][2] = parseFloat(matches[4]);
-    matrix[1][0] = parseFloat(matches[1]);
-    matrix[1][1] = parseFloat(matches[3]);
-    matrix[1][2] = parseFloat(matches[5]);
-    matrix[2][0] = 0;
-    matrix[2][1] = 0;
-    matrix[2][2] = 1;
-    newMatrix = invert(matrix);
-    matrixString = "matrix(" + newMatrix[0][0] + ", " + newMatrix[0][1] + ", " + newMatrix[1][0] + ", " + newMatrix[1][1] + ", " + newMatrix[0][2] + ", " + newMatrix[1][2] + ")";
-    return matrixString;
-  };
-
-  (function() {
-    return Take(['crank', 'defaultElement', 'button', 'slider', 'Joystick', 'SVGActivity', 'DOMContentLoaded'], function(crank, defaultElement, button, slider, Joystick, SVGActivity) {
-      var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
-      activityDefinitions = [];
-      activities = [];
-      waitingActivities = [];
-      waitingForRunningActivity = [];
-      return Make("SVGActivities", SVGActivities = {
-        registerActivityDefinition: function(activity) {
-          var k, l, len, len1, remove, results, toRemove, waitingActivity;
-          activityDefinitions[activity._name] = activity;
-          toRemove = [];
-          for (k = 0, len = waitingActivities.length; k < len; k++) {
-            waitingActivity = waitingActivities[k];
-            if (waitingActivity.name === activity._name) {
-              setTimeout(function() {
-                return SVGActivities.runActivity(waitingActivity.name, waitingActivity.id, waitingActivity.svg);
-              });
-              toRemove.push(waitingActivity);
-            }
-          }
-          results = [];
-          for (l = 0, len1 = toRemove.length; l < len1; l++) {
-            remove = toRemove[l];
-            results.push(waitingActivities.splice(waitingActivities.indexOf(remove), 1));
-          }
-          return results;
-        },
-        getActivity: function(activityID) {
-          return activities[activityName];
-        },
-        startActivity: function(activityName, activityId, svgElement) {
-          if (activities[activityId] != null) {
-            return;
-          }
-          if (!activityDefinitions[activityName]) {
-            return waitingActivities.push({
-              name: activityName,
-              id: activityId,
-              svg: svgElement
-            });
-          } else {
-            return setTimeout(function() {
-              return SVGActivities.runActivity(activityName, activityId, svgElement);
-            });
-          }
-        },
-        runActivity: function(activityName, id, svgElement, waitingActivity) {
-          var activity, k, len, pair, ref, svg, svgActivity;
-          activity = activityDefinitions[activityName];
-          activity.registerInstance('joystick', 'joystick');
-          activityName = activity._name;
-          activity.crank = crank;
-          activity.button = button;
-          activity.slider = slider;
-          activity.defaultElement = defaultElement;
-          activity.joystick = Joystick;
-          svgActivity = SVGActivity();
-          ref = activity._instances;
-          for (k = 0, len = ref.length; k < len; k++) {
-            pair = ref[k];
-            svgActivity.registerInstance(pair.name, activity[pair.instance]);
-          }
-          svgActivity.registerInstance('default', activity.defaultElement);
-          svg = svgElement.contentDocument.querySelector('svg');
-          svgActivity.setupDocument(activityName, svg);
-          svgElement.style.opacity = 1.0;
-          activities[id] = svgActivity;
-          return Make(id, activities[id].root);
-        }
-      });
-    });
-  })();
-
-  (function() {
-    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle) {
-      var SVGActivity, getChildElements, setupColorMatrix, setupInstance;
-      setupInstance = function(instance) {
-        var child, k, len, ref;
-        ref = instance.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          child = ref[k];
-          setupInstance(child);
-        }
-        return instance.setup();
-      };
-      setupColorMatrix = function(defs, name, matrixValue) {
-        var colorMatrix, filter;
-        filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-        filter.setAttribute("id", name);
-        colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
-        colorMatrix.setAttribute("in", "SourceGraphic");
-        colorMatrix.setAttribute("type", "matrix");
-        colorMatrix.setAttribute("values", matrixValue);
-        filter.appendChild(colorMatrix);
-        return defs.appendChild(filter);
-      };
-      getChildElements = function(element) {
-        var child, childElements, childNum, childRef, children, k, len;
-        children = PureDom.querySelectorAllChildren(element, "g");
-        childElements = [];
-        childNum = 0;
-        for (k = 0, len = children.length; k < len; k++) {
-          child = children[k];
-          if (child.getAttribute("id") == null) {
-            childNum++;
-            childRef = "child" + childNum;
-            child.setAttribute("id", childRef);
-          }
-          childElements.push(child);
-        }
-        return childElements;
-      };
-      return Make("SVGActivity", SVGActivity = function() {
-        var scope;
-        return scope = {
-          functions: {},
-          instances: {},
-          root: null,
-          registerInstance: function(instanceName, instance) {
-            return scope.instances[instanceName] = instance;
-          },
-          registerControl: function(controlName) {},
-          setupDocument: function(activityName, contentDocument) {
-            var child, childElements, defs, k, len;
-            scope.registerInstance("default", defaultElement);
-            scope.root = scope.instances["root"](contentDocument);
-            scope.root.FlowArrows = new FlowArrows();
-            scope.root.root = scope.root;
-            scope.root.getElement = function() {
-              return contentDocument;
-            };
-            defs = contentDocument.querySelector("defs");
-            setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
-            setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.0 0.0 0.0 1.0 0");
-            setupColorMatrix(defs, "allblackMatrix", "0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 1.0 0");
-            childElements = getChildElements(contentDocument);
-            scope.root.children = [];
-            for (k = 0, len = childElements.length; k < len; k++) {
-              child = childElements[k];
-              scope.setupElement(scope.root, child);
-            }
-            if (scope.root.controlPanel != null) {
-              scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel);
-              scope.root._controls.setup();
-            }
-            setupInstance(scope.root);
-            if (scope.root.controlPanel != null) {
-              return scope.root._controls.schematicToggle.schematicMode();
-            }
-          },
-          getRootElement: function() {
-            return scope.root.getRootElement();
-          },
-          setupElement: function(parent, element) {
-            var child, childElements, id, instance, k, len, results;
-            id = element.getAttribute("id");
-            id = id.split("_")[0];
-            instance = scope.instances[id];
-            if (instance == null) {
-              instance = scope.instances["default"];
-            }
-            parent[id] = instance(element);
-            parent[id].transform = SVGTransform(element);
-            parent[id].transform.setup();
-            parent[id].style = SVGStyle(element);
-            parent.children.push(parent[id]);
-            parent[id].children = [];
-            parent[id].root = scope.root;
-            parent[id].getElement = function() {
-              return element;
-            };
-            childElements = getChildElements(element);
-            results = [];
-            for (k = 0, len = childElements.length; k < len; k++) {
-              child = childElements[k];
-              results.push(scope.setupElement(parent[id], child));
-            }
-            return results;
-          }
-        };
-      });
-    });
-  })();
-
-  Make("SVGAnimation", SVGAnimation = function(callback) {
-    var scope;
-    return scope = {
-      running: false,
-      restart: false,
-      time: 0,
-      startTime: 0,
-      dT: 0,
-      runAnimation: function(currTime) {
-        var dT, newTime;
-        if (scope.restart) {
-          scope.startTime = currTime;
-          scope.time = 0;
-          scope.restart = false;
-        } else {
-          newTime = currTime - scope.startTime;
-          dT = (newTime - scope.time) / 1000;
-          scope.time = newTime;
-          callback(dT, scope.time);
-        }
-        if (scope.running) {
-          return requestAnimationFrame(scope.runAnimation);
-        }
-      },
-      start: function() {
-        var startAnimation;
-        if (scope.running) {
-          scope.restart = true;
-          return;
-        }
-        scope.running = true;
-        startAnimation = function(currTime) {
-          scope.startTime = currTime;
-          scope.time = 0;
-          return requestAnimationFrame(scope.runAnimation);
-        };
-        return requestAnimationFrame(startAnimation);
-      },
-      stop: function() {
-        return scope.running = false;
-      }
-    };
-  });
-
-  Take("DOMContentLoaded", function() {
-    var k, len, results, svgActivities, svgActivity;
-    svgActivities = document.querySelectorAll("svg-activity");
-    results = [];
-    for (k = 0, len = svgActivities.length; k < len; k++) {
-      svgActivity = svgActivities[k];
-      results.push(svgActivity.querySelector("object").style.opacity = 0);
-    }
-    return results;
-  });
-
-  (function() {
-    var Highlighter, enabled;
-    enabled = true;
-    return Make("Highlighter", Highlighter = {
-      setup: function(highlighted) {
-        var highlight, k, len, mouseLeave, mouseOver, results;
-        if (highlighted == null) {
-          highlighted = [];
-        }
-        mouseOver = function(e) {
-          var highlight, k, len, results;
-          if (enabled) {
-            results = [];
-            for (k = 0, len = highlighted.length; k < len; k++) {
-              highlight = highlighted[k];
-              results.push(highlight.setAttribute("filter", "url(#highlightMatrix)"));
-            }
-            return results;
-          }
-        };
-        mouseLeave = function(e) {
-          var highlight, k, len, results;
-          results = [];
-          for (k = 0, len = highlighted.length; k < len; k++) {
-            highlight = highlighted[k];
-            results.push(highlight.removeAttribute("filter"));
-          }
-          return results;
-        };
-        results = [];
-        for (k = 0, len = highlighted.length; k < len; k++) {
-          highlight = highlighted[k];
-          highlight.addEventListener("mouseover", mouseOver);
-          results.push(highlight.addEventListener("mouseleave", mouseLeave));
-        }
-        return results;
-      },
-      enable: function() {
-        return enabled = true;
-      },
-      disable: function() {
-        return enabled = true;
-      }
-    });
-  })();
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.getElement().createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("SVGMask", SVGMask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.getElement();
-    maskedElement = maskedInstance.getElement();
-    rootElement = root.getElement();
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    maskedInstance.transform.setBaseTransform();
-    return maskedParent.setAttribute("style", newStyle);
-  });
-
-  Take(["PureDom", "HydraulicPressure"], function(PureDom, HydraulicPressure) {
-    var SVGStyle;
-    return Make("SVGStyle", SVGStyle = function(svgElement) {
-      var scope;
-      return scope = {
-        pressure: 0,
-        visible: function(isVisible) {
-          if (isVisible) {
-            return svgElement.style.opacity = 1.0;
-          } else {
-            return svgElement.style.opacity = 0.0;
-          }
-        },
-        show: function(showElement) {
-          if (showElement) {
-            return svgElement.style.visibility = "visible";
-          } else {
-            return svgElement.style.visibility = "hidden";
-          }
-        },
-        setPressure: function(val, alpha) {
-          if (alpha == null) {
-            alpha = 1.0;
-          }
-          scope.pressure = val;
-          return scope.fill(HydraulicPressure(scope.pressure, alpha));
-        },
-        getPressure: function() {
-          return scope.pressure;
-        },
-        getPressureColor: function(pressure) {
-          return HydraulicPressure(pressure);
-        },
-        stroke: function(color) {
-          var clone, defs, link, parent, path, use, useParent;
-          path = svgElement.querySelector("path");
-          use = svgElement.querySelector("use");
-          if ((path == null) && (use != null)) {
-            useParent = PureDom.querySelectorParent(use, "g");
-            parent = PureDom.querySelectorParent(svgElement, "svg");
-            defs = parent.querySelector("defs");
-            link = defs.querySelector(use.getAttribute("xlink:href"));
-            clone = link.cloneNode(true);
-            useParent.appendChild(clone);
-            useParent.removeChild(use);
-          }
-          path = svgElement.querySelector("path");
-          if (path != null) {
-            return path.setAttributeNS(null, "stroke", color);
-          }
-        },
-        fill: function(color) {
-          var clone, defs, link, parent, path, use, useParent;
-          path = svgElement.querySelector("path");
-          use = svgElement.querySelector("use");
-          if ((path == null) && (use != null)) {
-            useParent = PureDom.querySelectorParent(use, "g");
-            parent = PureDom.querySelectorParent(svgElement, "svg");
-            defs = parent.querySelector("defs");
-            link = defs.querySelector(use.getAttribute("xlink:href"));
-            clone = link.cloneNode(true);
-            useParent.appendChild(clone);
-            useParent.removeChild(use);
-          }
-          path = svgElement.querySelector("path");
-          if (path != null) {
-            return path.setAttributeNS(null, "fill", color);
-          }
-        },
-        linearGradient: function(stops, x1, y1, x2, y2) {
-          var fillUrl, gradient, gradientName, gradientStop, k, len, stop, useParent;
-          if (x1 == null) {
-            x1 = 0;
-          }
-          if (y1 == null) {
-            y1 = 0;
-          }
-          if (x2 == null) {
-            x2 = 1;
-          }
-          if (y2 == null) {
-            y2 = 0;
-          }
-          useParent = PureDom.querySelectorParent(svgElement, "svg");
-          gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
-          gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-          useParent.querySelector("defs").appendChild(gradient);
-          gradient.setAttribute("id", gradientName);
-          gradient.setAttributeNS(null, "x1", x1);
-          gradient.setAttributeNS(null, "y1", y1);
-          gradient.setAttributeNS(null, "x2", x2);
-          gradient.setAttributeNS(null, "y2", y2);
-          for (k = 0, len = stops.length; k < len; k++) {
-            stop = stops[k];
-            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-            gradientStop.setAttribute("offset", stop.offset);
-            gradientStop.setAttribute("stop-color", stop.color);
-            gradient.appendChild(gradientStop);
-          }
-          fillUrl = "url(#" + gradientName + ")";
-          return scope.fill(fillUrl);
-        },
-        radialGradient: function(stops, cx, cy, radius) {
-          var fillUrl, gradient, gradientName, gradientStop, k, len, oldGradient, stop, useParent;
-          useParent = PureDom.querySelectorParent(svgElement, "svg");
-          gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
-          oldGradient = useParent.querySelector("defs").querySelector("#" + gradientName);
-          if (oldGradient) {
-            useParent.querySelector("defs").removeChild(oldGradient);
-          }
-          gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
-          useParent.querySelector("defs").appendChild(gradient);
-          gradient.setAttribute("id", gradientName);
-          if (cx != null) {
-            gradient.setAttributeNS(null, "cx", cx);
-          }
-          if (cy != null) {
-            gradient.setAttributeNS(null, "cy", cy);
-          }
-          if (radius != null) {
-            gradient.setAttributeNS(null, "r", radius);
-          }
-          for (k = 0, len = stops.length; k < len; k++) {
-            stop = stops[k];
-            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-            gradientStop.setAttribute("offset", stop.offset);
-            gradientStop.setAttribute("stop-color", stop.color);
-            gradient.appendChild(gradientStop);
-          }
-          fillUrl = "url(#" + gradientName + ")";
-          return scope.fill(fillUrl);
-        },
-        setText: function(text) {
-          var textElement;
-          textElement = svgElement.querySelector("text").querySelector("tspan");
-          if (textElement != null) {
-            return textElement.textContent = text;
-          }
-        },
-        setProperty: function(propertyName, propertyValue) {
-          return svgElement.style[propertyName] = propertyValue;
-        },
-        getElement: function() {
-          return svgElement;
-        }
-      };
-    });
-  });
-
-  Make("SVGTransform", SVGTransform = function(svgElement) {
-    var scope;
-    return scope = {
-      angleVal: 0,
-      xVal: 0,
-      yVal: 0,
-      cxVal: 0,
-      cyVal: 0,
-      scaleVal: 1,
-      scaleXVal: 1,
-      scaleYVal: 1,
-      turnsVal: 0,
-      scaleString: "",
-      translateString: "",
-      rotationString: "",
-      baseTransform: svgElement.getAttribute("transform"),
-      setup: function() {
-        Object.defineProperty(scope, 'angle', {
-          get: function() {
-            return scope.angleVal;
-          },
-          set: function(val) {
-            scope.angleVal = val;
-            scope.turnsVal = scope.angleVal / 360;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        Object.defineProperty(scope, 'x', {
-          get: function() {
-            return scope.xVal;
-          },
-          set: function(val) {
-            scope.xVal = val;
-            return scope.translate(val, scope.y);
-          }
-        });
-        Object.defineProperty(scope, 'y', {
-          get: function() {
-            return scope.yVal;
-          },
-          set: function(val) {
-            scope.yVal = val;
-            return scope.translate(scope.x, val);
-          }
-        });
-        Object.defineProperty(scope, 'scale', {
-          get: function() {
-            return scope.scaleVal;
-          },
-          set: function(val) {
-            scope.scaleVal = val;
-            return scope.scaling(val);
-          }
-        });
-        Object.defineProperty(scope, 'scaleX', {
-          get: function() {
-            return scope.scaleXVal;
-          },
-          set: function(val) {
-            scope.scaleXVal = val;
-            return scope.scaling(scope.scaleXVal, scope.scaleYVal);
-          }
-        });
-        Object.defineProperty(scope, 'scaleY', {
-          get: function() {
-            return scope.scaleYVal;
-          },
-          set: function(val) {
-            scope.scaleYVal = val;
-            return scope.scaling(scope.scaleXVal, scope.scaleYVal);
-          }
-        });
-        Object.defineProperty(scope, 'turns', {
-          get: function() {
-            return scope.turnsVal;
-          },
-          set: function(val) {
-            scope.turnsVal = val;
-            scope.angleVal = scope.turnsVal * 360;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        Object.defineProperty(scope, 'cx', {
-          get: function() {
-            return scope.cxVal;
-          },
-          set: function(val) {
-            scope.cxVal = val;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        return Object.defineProperty(scope, 'cy', {
-          get: function() {
-            return scope.cyVal;
-          },
-          set: function(val) {
-            scope.cyVal = val;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-      },
-      rotate: function(angle, cx, cy) {
-        scope.rotationString = "rotate(" + angle + ", " + cx + ", " + cy + ")";
-        return scope.setTransform();
-      },
-      translate: function(x, y) {
-        scope.translateString = "translate(" + x + ", " + y + ")";
-        return scope.setTransform();
-      },
-      scaling: function(scaleX, scaleY) {
-        if (scaleY == null) {
-          scaleY = scaleX;
-        }
-        scope.scaleString = "scale(" + scaleX + ", " + scaleY + ")";
-        return scope.setTransform();
-      },
-      setBaseTransform: function() {
-        return scope.baseTransform = svgElement.getAttribute("transform");
-      },
-      setBaseIdentity: function() {
-        return scope.baseTransform = "matrix(1,0,0,1,0,0)";
-      },
-      setTransform: function() {
-        var newTransform;
-        newTransform = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
-        return svgElement.setAttribute('transform', newTransform);
-      }
-    };
   });
 
   (function() {

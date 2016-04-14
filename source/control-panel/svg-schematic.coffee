@@ -17,7 +17,7 @@ Take ["PointerInput"], (PointerInput)->
       schematicMode: ()->
         toggle.schematicSelected.style.show(true)
         toggle.animateSelected.style.show(false)
-        scope.callSchematicMode(scope.root)
+        scope.callSchematicMode(mainStage.root)
         for child in mainStage.root.children
           scope.turnLinesBlack(child)
           scope.callSchematicMode(child)
@@ -52,7 +52,7 @@ Take ["PointerInput"], (PointerInput)->
       animateMode: ()->
         toggle.schematicSelected.style.show(false)
         toggle.animateSelected.style.show(true)
-        scope.callAnimateMode(scope.root)
+        scope.callAnimateMode(mainStage.root)
         for child in mainStage.root.children
           scope.turnLinesBack(child)
           scope.callAnimateMode(child)

@@ -1076,7 +1076,7 @@
           var child, k, len, ref, results;
           toggle.schematicSelected.style.show(true);
           toggle.animateSelected.style.show(false);
-          scope.callSchematicMode(scope.root);
+          scope.callSchematicMode(mainStage.root);
           ref = mainStage.root.children;
           results = [];
           for (k = 0, len = ref.length; k < len; k++) {
@@ -1130,7 +1130,7 @@
           var child, k, len, ref;
           toggle.schematicSelected.style.show(false);
           toggle.animateSelected.style.show(true);
-          scope.callAnimateMode(scope.root);
+          scope.callAnimateMode(mainStage.root);
           ref = mainStage.root.children;
           for (k = 0, len = ref.length; k < len; k++) {
             child = ref[k];

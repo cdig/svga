@@ -1103,7 +1103,10 @@
             svgControlPanel.controls.getElement().setAttribute("filter", "url(#greyscaleMatrix");
           }
           if (svgControlPanel.poi != null) {
-            return svgControlPanel.poi.getElement().setAttribute("filter", "url(#greyscaleMatrix");
+            svgControlPanel.poi.getElement().setAttribute("filter", "url(#greyscaleMatrix");
+          }
+          if (svgControlPanel.mimic != null) {
+            return svgControlPanel.mimic.getElement().setAttribute("filter", "url(#greyscaleMatrix");
           }
         },
         turnLinesBlack: function(instance) {
@@ -1144,7 +1147,10 @@
             svgControlPanel.controls.getElement().removeAttribute("filter");
           }
           if (svgControlPanel.poi != null) {
-            return svgControlPanel.poi.getElement().removeAttribute("filter");
+            svgControlPanel.poi.getElement().removeAttribute("filter");
+          }
+          if (svgControlPanel.mimic != null) {
+            return svgControlPanel.mimic.getElement().removeAttribute("filter");
           }
         },
         callAnimateMode: function(instance) {

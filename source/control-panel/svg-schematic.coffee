@@ -34,8 +34,8 @@ Take ["PointerInput"], (PointerInput)->
           svgControlPanel.controls.getElement().setAttribute("filter", "url(#greyscaleMatrix")
         if svgControlPanel.poi?
           svgControlPanel.poi.getElement().setAttribute("filter", "url(#greyscaleMatrix")
-
-
+        if svgControlPanel.mimic?
+          svgControlPanel.mimic.getElement().setAttribute("filter", "url(#greyscaleMatrix")
 
 
       turnLinesBlack: (instance)->
@@ -62,6 +62,8 @@ Take ["PointerInput"], (PointerInput)->
           svgControlPanel.controls.getElement().removeAttribute("filter")
         if svgControlPanel.poi?
           svgControlPanel.poi.getElement().removeAttribute("filter")
+        if svgControlPanel.mimic?
+          svgControlPanel.mimic.getElement().removeAttribute("filter")
 
       callAnimateMode: (instance)->
         for child in instance.children

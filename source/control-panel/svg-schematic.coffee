@@ -53,6 +53,7 @@ Take ["PointerInput"], (PointerInput)->
         toggle.schematicSelected.style.show(false)
         toggle.animateSelected.style.show(true)
         scope.callAnimateMode(mainStage.root)
+
         for child in mainStage.root.children
           scope.turnLinesBack(child)
           scope.callAnimateMode(child)
@@ -73,12 +74,13 @@ Take ["PointerInput"], (PointerInput)->
       turnLinesBack: (instance)->
         element = instance.getElement()
         id = element.getAttribute("id")
+        console.log id
         if id?
           if id.indexOf("Line") > -1
             instance.getElement().removeAttribute("filter")
         if not instance.children?
           return
         for child in instance.children
-         scope.turnLinesBlack(child)
+         scope.turnLinesBack(child)
 
 

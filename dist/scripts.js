@@ -1168,6 +1168,7 @@
           var child, element, id, k, len, ref, results;
           element = instance.getElement();
           id = element.getAttribute("id");
+          console.log(id);
           if (id != null) {
             if (id.indexOf("Line") > -1) {
               instance.getElement().removeAttribute("filter");
@@ -1180,7 +1181,7 @@
           results = [];
           for (k = 0, len = ref.length; k < len; k++) {
             child = ref[k];
-            results.push(scope.turnLinesBlack(child));
+            results.push(scope.turnLinesBack(child));
           }
           return results;
         }

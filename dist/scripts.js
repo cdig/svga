@@ -1461,6 +1461,9 @@
       dT: 0,
       runAnimation: function(currTime) {
         var dT, newTime;
+        if (!scope.running) {
+          return;
+        }
         if (scope.restart) {
           scope.startTime = currTime;
           scope.time = 0;

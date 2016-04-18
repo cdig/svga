@@ -1,5 +1,5 @@
 Make "SVGAnimation", SVGAnimation = (callback)->
-  return scope = 
+  return scope =
     running: false
     restart: false
     time: 0
@@ -7,6 +7,8 @@ Make "SVGAnimation", SVGAnimation = (callback)->
     dT: 0
 
     runAnimation: (currTime)->
+      if not scope.running
+        return
       if scope.restart
         scope.startTime = currTime
         scope.time =  0
@@ -16,9 +18,9 @@ Make "SVGAnimation", SVGAnimation = (callback)->
         dT = (newTime - scope.time)/1000
         scope.time = newTime
         callback(dT, scope.time)
-      
 
-        
+
+
       if scope.running
         requestAnimationFrame(scope.runAnimation)
 
@@ -40,6 +42,6 @@ Make "SVGAnimation", SVGAnimation = (callback)->
       requestAnimationFrame(startAnimation)
 
     stop: ()->
-      scope.running = false      
+      scope.running = false
 
 

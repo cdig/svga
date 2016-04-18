@@ -46,13 +46,14 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
           controlPanelBox = controlPanel.getElement().getBoundingClientRect()
           scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale)
           controlPanel.transform.scale = scaleAmount
-          activity.ctrlPanel.transform.scale = scaleAmount
+          activity.ctrlPanel.transform.scale = scaleAmount if activity.ctrlPanel?
+          activity.mimicPanel.transform.scale = scaleAmount if activity.mimicPanel?
+          activity.poiPanel.transform.scale = scaleAmount if activity.poiPanel?
           controlPanelBox = controlPanel.getElement().getBoundingClientRect()
           activityBox = activity.getElement().getBoundingClientRect()
 
           controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50
 
-        #hack temporary solution to call onResize twice
         window.addEventListener "resize", ()->
           onResize()
           onResize()

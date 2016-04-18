@@ -841,7 +841,15 @@
             controlPanelBox = controlPanel.getElement().getBoundingClientRect();
             scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale);
             controlPanel.transform.scale = scaleAmount;
-            activity.ctrlPanel.transform.scale = scaleAmount;
+            if (activity.ctrlPanel != null) {
+              activity.ctrlPanel.transform.scale = scaleAmount;
+            }
+            if (activity.mimicPanel != null) {
+              activity.mimicPanel.transform.scale = scaleAmount;
+            }
+            if (activity.poiPanel != null) {
+              activity.poiPanel.transform.scale = scaleAmount;
+            }
             controlPanelBox = controlPanel.getElement().getBoundingClientRect();
             activityBox = activity.getElement().getBoundingClientRect();
             return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;

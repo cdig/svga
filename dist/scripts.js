@@ -1176,7 +1176,6 @@
           var child, element, id, k, len, ref, results;
           element = instance.getElement();
           id = element.getAttribute("id");
-          console.log(id);
           if (id != null) {
             if (id.indexOf("Line") > -1) {
               instance.getElement().removeAttribute("filter");

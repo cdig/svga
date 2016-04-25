@@ -74,7 +74,6 @@ Take ["PointerInput"], (PointerInput)->
       turnLinesBack: (instance)->
         element = instance.getElement()
         id = element.getAttribute("id")
-        console.log id
         if id?
           if id.indexOf("Line") > -1
             instance.getElement().removeAttribute("filter")

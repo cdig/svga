@@ -2072,6 +2072,7 @@
           callbacks: [],
           rangeMin: 0,
           rangeMax: 1,
+          enabled: true,
           sticky: true,
           setup: function() {
             scope.setTransforms();
@@ -2080,6 +2081,12 @@
             PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
             PointerInput.addUp(svgElement, scope.mouseUp);
             return PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+          },
+          schematicMode: function() {
+            return scope.enabled = false;
+          },
+          animateMode: function() {
+            return scope.enabled = true;
           },
           setDefault: function(pos) {
             scope["default"] = Ease.linear(pos, scope.rangeMin, scope.rangeMax, 0, 1, true);
@@ -2105,12 +2112,14 @@
             return scope.setTransforms();
           },
           mouseDown: function(e) {
-            scope.down = true;
-            return scope.mousePos = Vector.fromEventClient(e);
+            if (scope.enabled) {
+              scope.down = true;
+              return scope.mousePos = Vector.fromEventClient(e);
+            }
           },
           mouseMove: function(e) {
             var callback, distance, k, len, newPos, ref, results;
-            if (scope.down) {
+            if (scope.down && scope.enabled) {
               scope.moved = true;
               newPos = Vector.fromEventClient(e);
               distance = (newPos.y - scope.mousePos.y) / 100;

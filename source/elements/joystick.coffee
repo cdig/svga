@@ -6,7 +6,7 @@ do ->
     #child2 = midde of the base
     # all values taken from the flash elements
     # scope.knob.child5.transform.y += (-37.7 - -14.8 - 7.2) (-30.1)
-    # scope.knob.child5.transform.scaleY = 0.84 
+    # scope.knob.child5.transform.scaleY = 0.84
     # scope.knob.child4.transform.y += (-9.05 - -1.35) (-7.1)
     # scope.knob.child3.transform.y += (-2.55 - 5.45) (-8)
     # scope.knob.child2.transform.y += (1.45 - 5.45 ) (-4)
@@ -15,19 +15,20 @@ do ->
     stemMaxY = -7.1
     topMaxY = -8
     middleMaxY = -4
-    
+
     Make "Joystick", joystick = (svgElement)->
-      return scope = 
+      return scope =
         movement: 0.0
         default: 0.0
         down: false
         mousePos: {x: 0, y: 0}
         moved: false
-        callbacks: []    
+        callbacks: []
         rangeMin: 0
         rangeMax: 1
+        enabled: true
         sticky: true
-        
+
         setup: ()->
           scope.setTransforms()
           PointerInput.addDown(svgElement, scope.mouseDown)
@@ -35,7 +36,10 @@ do ->
           PointerInput.addMove(scope.root.getElement(), scope.mouseMove)
           PointerInput.addUp(svgElement, scope.mouseUp)
           PointerInput.addUp(scope.root.getElement(), scope.mouseUp)
-        
+        schematicMode: ()->
+          scope.enabled = false
+        animateMode: ()->
+          scope.enabled = true
         setDefault: (pos)->
           scope.default = Ease.linear(pos, scope.rangeMin, scope.rangeMax, 0, 1, true)
           scope.movement = scope.default
@@ -60,12 +64,13 @@ do ->
           scope.setTransforms()
 
         mouseDown: (e)->
-          scope.down = true
-          scope.mousePos = Vector.fromEventClient(e)
+          if scope.enabled
+            scope.down = true
+            scope.mousePos = Vector.fromEventClient(e)
 
 
         mouseMove: (e)->
-          if scope.down 
+          if scope.down and scope.enabled
             scope.moved = true
             newPos = Vector.fromEventClient(e)
             distance = (newPos.y - scope.mousePos.y)/100

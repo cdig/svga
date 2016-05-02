@@ -796,7 +796,9 @@
         setup: function() {
           var activityElement;
           activityElement = activity.getElement();
+          activityElement.appendChild(controlPanel.getElement());
           if (controlPanel.nav != null) {
+            activityElement.appendChild(activity.navOverlay.getElement());
             scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
             scope.camera.setup();
             if ((controlPanel.poi != null) && (activity.poiPanel != null)) {
@@ -813,10 +815,12 @@
             scope.background.setup();
           }
           if ((activity.ctrlPanel != null) && controlPanel.controls) {
+            activityElement.appendChild(activity.ctrlPanel.getElement());
             scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
             scope.control.setup();
           }
           if ((activity.mimicPanel != null) && controlPanel.mimic) {
+            activityElement.appendChild(activity.mimicPanel.getElement());
             scope.control = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic);
             scope.control.setup();
           }

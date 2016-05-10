@@ -59,17 +59,22 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
           path.setAttributeNS(null, "fill", color)
 
       linearGradient: (stops, x1=0, y1=0, x2=1, y2=0)->
+
         useParent = PureDom.querySelectorParent(svgElement, "svg")
         gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id")
-        gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient")
-        useParent.querySelector("defs").appendChild(gradient)
-        gradient.setAttribute("id", gradientName)
+        gradient = useParent.querySelector("defs").querySelector("##{gradientName}")
+        if not gradient?
+          console.log "yeah, that gradient is not there"
+          gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient")
+          useParent.querySelector("defs").appendChild(gradient)
 
+        gradient.setAttribute("id", gradientName)
         gradient.setAttributeNS(null,"x1", x1)
         gradient.setAttributeNS(null,"y1", y1)
         gradient.setAttributeNS(null,"x2", x2)
         gradient.setAttributeNS(null,"y2", y2)
-
+        while gradient.hasChildNodes()
+          gradient.removeChild(gradient.firstChild)
         for stop in stops
           gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop")
           gradientStop.setAttribute("offset", stop.offset)
@@ -82,10 +87,10 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
       radialGradient: (stops, cx, cy, radius)->
         useParent = PureDom.querySelectorParent(svgElement, "svg")
         gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id")
-        oldGradient = useParent.querySelector("defs").querySelector("##{gradientName}")
-        useParent.querySelector("defs").removeChild(oldGradient) if oldGradient
-        gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient")
-        useParent.querySelector("defs").appendChild(gradient)
+        gradient = useParent.querySelector("defs").querySelector("##{gradientName}")
+        if not gradient?
+          gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient")
+          useParent.querySelector("defs").appendChild(gradient)
         gradient.setAttribute("id", gradientName)
 
         gradient.setAttributeNS(null,"cx", cx) if cx?

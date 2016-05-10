@@ -1701,13 +1701,20 @@
           }
           useParent = PureDom.querySelectorParent(svgElement, "svg");
           gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
-          gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-          useParent.querySelector("defs").appendChild(gradient);
+          gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
+          if (gradient == null) {
+            console.log("yeah, that gradient is not there");
+            gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+            useParent.querySelector("defs").appendChild(gradient);
+          }
           gradient.setAttribute("id", gradientName);
           gradient.setAttributeNS(null, "x1", x1);
           gradient.setAttributeNS(null, "y1", y1);
           gradient.setAttributeNS(null, "x2", x2);
           gradient.setAttributeNS(null, "y2", y2);
+          while (gradient.hasChildNodes()) {
+            gradient.removeChild(gradient.firstChild);
+          }
           for (k = 0, len = stops.length; k < len; k++) {
             stop = stops[k];
             gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
@@ -1719,15 +1726,14 @@
           return scope.fill(fillUrl);
         },
         radialGradient: function(stops, cx, cy, radius) {
-          var fillUrl, gradient, gradientName, gradientStop, k, len, oldGradient, stop, useParent;
+          var fillUrl, gradient, gradientName, gradientStop, k, len, stop, useParent;
           useParent = PureDom.querySelectorParent(svgElement, "svg");
           gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
-          oldGradient = useParent.querySelector("defs").querySelector("#" + gradientName);
-          if (oldGradient) {
-            useParent.querySelector("defs").removeChild(oldGradient);
+          gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
+          if (gradient == null) {
+            gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
+            useParent.querySelector("defs").appendChild(gradient);
           }
-          gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
-          useParent.querySelector("defs").appendChild(gradient);
           gradient.setAttribute("id", gradientName);
           if (cx != null) {
             gradient.setAttributeNS(null, "cx", cx);

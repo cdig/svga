@@ -1703,7 +1703,6 @@
           gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
           gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
           if (gradient == null) {
-            console.log("yeah, that gradient is not there");
             gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
             useParent.querySelector("defs").appendChild(gradient);
           }
@@ -1743,6 +1742,9 @@
           }
           if (radius != null) {
             gradient.setAttributeNS(null, "r", radius);
+          }
+          while (gradient.hasChildNodes()) {
+            gradient.removeChild(gradient.firstChild);
           }
           for (k = 0, len = stops.length; k < len; k++) {
             stop = stops[k];

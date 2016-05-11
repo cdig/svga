@@ -64,7 +64,6 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
         gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id")
         gradient = useParent.querySelector("defs").querySelector("##{gradientName}")
         if not gradient?
-          console.log "yeah, that gradient is not there"
           gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient")
           useParent.querySelector("defs").appendChild(gradient)
 
@@ -96,7 +95,8 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
         gradient.setAttributeNS(null,"cx", cx) if cx?
         gradient.setAttributeNS(null,"cy", cy) if cy?
         gradient.setAttributeNS(null,"r", radius) if radius?
-
+        while gradient.hasChildNodes()
+          gradient.removeChild(gradient.firstChild)
         for stop in stops
           gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop")
           gradientStop.setAttribute("offset", stop.offset)

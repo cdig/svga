@@ -1,9 +1,10 @@
-do ()->
-  Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform", "SVGStyle", "load"], (defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle)->
+Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform", "SVGStyle", "SVGGlobalState", "load"],
+  (defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle, SVGGlobalState)->
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)
       instance.setup()
+
     setupColorMatrix = (defs, name, matrixValue)->
       filter = document.createElementNS("http://www.w3.org/2000/svg", "filter")
       filter.setAttribute("id", name)
@@ -11,10 +12,8 @@ do ()->
       colorMatrix.setAttribute("in", "SourceGraphic")
       colorMatrix.setAttribute("type", "matrix")
       colorMatrix.setAttribute("values", matrixValue)
-
       filter.appendChild(colorMatrix)
       defs.appendChild(filter)
-
 
     getChildElements = (element)->
       children = PureDom.querySelectorAllChildren(element, "g")
@@ -26,27 +25,23 @@ do ()->
           childRef = "child" + childNum
           child.setAttribute("id", childRef)
         childElements.push child
-
       return childElements
-
+    
     Make "SVGActivity", SVGActivity = ()->
       return scope =
         functions: {}
         instances: {}
-
+        global: SVGGlobalState()
         root: null
 
         registerInstance: (instanceName, instance)->
           scope.instances[instanceName] = instance
-
-        registerControl: (controlName)->
 
         setupDocument: (activityName, contentDocument)->
           scope.registerInstance("default", defaultElement)
           scope.root = scope.instances["root"](contentDocument)
           scope.root.FlowArrows = new FlowArrows()
           scope.root.root = scope.root
-
           scope.root.getElement = ()->
             return contentDocument
           defs = contentDocument.querySelector("defs")
@@ -66,15 +61,12 @@ do ()->
           scope.root.children = []
           for child in childElements
             scope.setupElement(scope.root, child)
-
           if scope.root.controlPanel?
             scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel)
             scope.root._controls.setup()
           setupInstance(scope.root)
           if scope.root.controlPanel?
             scope.root._controls.schematicToggle.schematicMode()
-
-
 
         getRootElement: ()->
           return scope.root.getRootElement()
@@ -85,7 +77,6 @@ do ()->
           instance = scope.instances[id]
           if not instance?
             instance = scope.instances["default"]
-
           parent[id] = instance(element)
           parent[id].transform = SVGTransform(element)
           parent[id].transform.setup()
@@ -95,19 +86,6 @@ do ()->
           parent[id].root = scope.root
           parent[id].getElement = ()->
             return element
-
-
           childElements = getChildElements(element)
           for child in childElements
             scope.setupElement(parent[id], child)
-
-
-
-
-
-
-
-
-
-
-

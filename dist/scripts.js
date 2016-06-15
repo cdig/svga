@@ -1258,190 +1258,186 @@
     });
   })();
 
-  (function() {
-    return Take(['crank', 'defaultElement', 'button', 'slider', 'Joystick', 'SVGActivity', 'DOMContentLoaded'], function(crank, defaultElement, button, slider, Joystick, SVGActivity) {
-      var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
-      activityDefinitions = [];
-      activities = [];
-      waitingActivities = [];
-      waitingForRunningActivity = [];
-      return Make("SVGActivities", SVGActivities = {
-        registerActivityDefinition: function(activity) {
-          var k, l, len, len1, remove, results, toRemove, waitingActivity;
-          activityDefinitions[activity._name] = activity;
-          toRemove = [];
-          for (k = 0, len = waitingActivities.length; k < len; k++) {
-            waitingActivity = waitingActivities[k];
-            if (waitingActivity.name === activity._name) {
-              setTimeout(function() {
-                return SVGActivities.runActivity(waitingActivity.name, waitingActivity.id, waitingActivity.svg);
-              });
-              toRemove.push(waitingActivity);
-            }
+  Take(["crank", "defaultElement", "button", "slider", "Joystick", "SVGActivity", "DOMContentLoaded"], function(crank, defaultElement, button, slider, Joystick, SVGActivity) {
+    var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
+    activityDefinitions = [];
+    activities = [];
+    waitingActivities = [];
+    waitingForRunningActivity = [];
+    return Make("SVGActivities", SVGActivities = {
+      registerActivityDefinition: function(activity) {
+        var k, l, len, len1, remove, results, toRemove, waitingActivity;
+        activityDefinitions[activity._name] = activity;
+        toRemove = [];
+        for (k = 0, len = waitingActivities.length; k < len; k++) {
+          waitingActivity = waitingActivities[k];
+          if (waitingActivity.name === activity._name) {
+            setTimeout(function() {
+              return SVGActivities.runActivity(waitingActivity.name, waitingActivity.id, waitingActivity.svg);
+            });
+            toRemove.push(waitingActivity);
           }
+        }
+        results = [];
+        for (l = 0, len1 = toRemove.length; l < len1; l++) {
+          remove = toRemove[l];
+          results.push(waitingActivities.splice(waitingActivities.indexOf(remove), 1));
+        }
+        return results;
+      },
+      getActivity: function(activityID) {
+        return activities[activityName];
+      },
+      startActivity: function(activityName, activityId, svgElement) {
+        if (activities[activityId] != null) {
+          return;
+        }
+        if (!activityDefinitions[activityName]) {
+          return waitingActivities.push({
+            name: activityName,
+            id: activityId,
+            svg: svgElement
+          });
+        } else {
+          return setTimeout(function() {
+            return SVGActivities.runActivity(activityName, activityId, svgElement);
+          });
+        }
+      },
+      runActivity: function(activityName, id, svgElement, waitingActivity) {
+        var activity, k, len, pair, ref, svg, svgActivity;
+        activity = activityDefinitions[activityName];
+        activity.registerInstance("joystick", "joystick");
+        activityName = activity._name;
+        activity.crank = crank;
+        activity.button = button;
+        activity.slider = slider;
+        activity.defaultElement = defaultElement;
+        activity.joystick = Joystick;
+        svgActivity = SVGActivity();
+        ref = activity._instances;
+        for (k = 0, len = ref.length; k < len; k++) {
+          pair = ref[k];
+          svgActivity.registerInstance(pair.name, activity[pair.instance]);
+        }
+        svgActivity.registerInstance("default", activity.defaultElement);
+        svg = svgElement.contentDocument.querySelector("svg");
+        svgActivity.setupDocument(activityName, svg);
+        svgElement.style.opacity = 1.0;
+        activities[id] = svgActivity;
+        return Make(id, activities[id].root);
+      }
+    });
+  });
+
+  Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "SVGGlobalState", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle, SVGGlobalState) {
+    var SVGActivity, getChildElements, setupColorMatrix, setupInstance;
+    setupInstance = function(instance) {
+      var child, k, len, ref;
+      ref = instance.children;
+      for (k = 0, len = ref.length; k < len; k++) {
+        child = ref[k];
+        setupInstance(child);
+      }
+      return instance.setup();
+    };
+    setupColorMatrix = function(defs, name, matrixValue) {
+      var colorMatrix, filter;
+      filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+      filter.setAttribute("id", name);
+      colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+      colorMatrix.setAttribute("in", "SourceGraphic");
+      colorMatrix.setAttribute("type", "matrix");
+      colorMatrix.setAttribute("values", matrixValue);
+      filter.appendChild(colorMatrix);
+      return defs.appendChild(filter);
+    };
+    getChildElements = function(element) {
+      var child, childElements, childNum, childRef, children, k, len;
+      children = PureDom.querySelectorAllChildren(element, "g");
+      childElements = [];
+      childNum = 0;
+      for (k = 0, len = children.length; k < len; k++) {
+        child = children[k];
+        if (child.getAttribute("id") == null) {
+          childNum++;
+          childRef = "child" + childNum;
+          child.setAttribute("id", childRef);
+        }
+        childElements.push(child);
+      }
+      return childElements;
+    };
+    return Make("SVGActivity", SVGActivity = function() {
+      var scope;
+      return scope = {
+        functions: {},
+        instances: {},
+        global: SVGGlobalState(),
+        root: null,
+        registerInstance: function(instanceName, instance) {
+          return scope.instances[instanceName] = instance;
+        },
+        setupDocument: function(activityName, contentDocument) {
+          var child, childElements, defs, k, len;
+          scope.registerInstance("default", defaultElement);
+          scope.root = scope.instances["root"](contentDocument);
+          scope.root.FlowArrows = new FlowArrows();
+          scope.root.root = scope.root;
+          scope.root.getElement = function() {
+            return contentDocument;
+          };
+          defs = contentDocument.querySelector("defs");
+          setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
+          setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.0 0.0 0.0 1.0 0");
+          setupColorMatrix(defs, "allblackMatrix", "0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 1.0 0");
+          childElements = getChildElements(contentDocument);
+          scope.root.children = [];
+          for (k = 0, len = childElements.length; k < len; k++) {
+            child = childElements[k];
+            scope.setupElement(scope.root, child);
+          }
+          if (scope.root.controlPanel != null) {
+            scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel);
+            scope.root._controls.setup();
+          }
+          setupInstance(scope.root);
+          if (scope.root.controlPanel != null) {
+            return scope.root._controls.schematicToggle.schematicMode();
+          }
+        },
+        getRootElement: function() {
+          return scope.root.getRootElement();
+        },
+        setupElement: function(parent, element) {
+          var child, childElements, id, instance, k, len, results;
+          id = element.getAttribute("id");
+          id = id.split("_")[0];
+          instance = scope.instances[id];
+          if (instance == null) {
+            instance = scope.instances["default"];
+          }
+          parent[id] = instance(element);
+          parent[id].transform = SVGTransform(element);
+          parent[id].transform.setup();
+          parent[id].style = SVGStyle(element);
+          parent.children.push(parent[id]);
+          parent[id].children = [];
+          parent[id].root = scope.root;
+          parent[id].getElement = function() {
+            return element;
+          };
+          childElements = getChildElements(element);
           results = [];
-          for (l = 0, len1 = toRemove.length; l < len1; l++) {
-            remove = toRemove[l];
-            results.push(waitingActivities.splice(waitingActivities.indexOf(remove), 1));
+          for (k = 0, len = childElements.length; k < len; k++) {
+            child = childElements[k];
+            results.push(scope.setupElement(parent[id], child));
           }
           return results;
-        },
-        getActivity: function(activityID) {
-          return activities[activityName];
-        },
-        startActivity: function(activityName, activityId, svgElement) {
-          if (activities[activityId] != null) {
-            return;
-          }
-          if (!activityDefinitions[activityName]) {
-            return waitingActivities.push({
-              name: activityName,
-              id: activityId,
-              svg: svgElement
-            });
-          } else {
-            return setTimeout(function() {
-              return SVGActivities.runActivity(activityName, activityId, svgElement);
-            });
-          }
-        },
-        runActivity: function(activityName, id, svgElement, waitingActivity) {
-          var activity, k, len, pair, ref, svg, svgActivity;
-          activity = activityDefinitions[activityName];
-          activity.registerInstance('joystick', 'joystick');
-          activityName = activity._name;
-          activity.crank = crank;
-          activity.button = button;
-          activity.slider = slider;
-          activity.defaultElement = defaultElement;
-          activity.joystick = Joystick;
-          svgActivity = SVGActivity();
-          ref = activity._instances;
-          for (k = 0, len = ref.length; k < len; k++) {
-            pair = ref[k];
-            svgActivity.registerInstance(pair.name, activity[pair.instance]);
-          }
-          svgActivity.registerInstance('default', activity.defaultElement);
-          svg = svgElement.contentDocument.querySelector('svg');
-          svgActivity.setupDocument(activityName, svg);
-          svgElement.style.opacity = 1.0;
-          activities[id] = svgActivity;
-          return Make(id, activities[id].root);
         }
-      });
+      };
     });
-  })();
-
-  (function() {
-    return Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle) {
-      var SVGActivity, getChildElements, setupColorMatrix, setupInstance;
-      setupInstance = function(instance) {
-        var child, k, len, ref;
-        ref = instance.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          child = ref[k];
-          setupInstance(child);
-        }
-        return instance.setup();
-      };
-      setupColorMatrix = function(defs, name, matrixValue) {
-        var colorMatrix, filter;
-        filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-        filter.setAttribute("id", name);
-        colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
-        colorMatrix.setAttribute("in", "SourceGraphic");
-        colorMatrix.setAttribute("type", "matrix");
-        colorMatrix.setAttribute("values", matrixValue);
-        filter.appendChild(colorMatrix);
-        return defs.appendChild(filter);
-      };
-      getChildElements = function(element) {
-        var child, childElements, childNum, childRef, children, k, len;
-        children = PureDom.querySelectorAllChildren(element, "g");
-        childElements = [];
-        childNum = 0;
-        for (k = 0, len = children.length; k < len; k++) {
-          child = children[k];
-          if (child.getAttribute("id") == null) {
-            childNum++;
-            childRef = "child" + childNum;
-            child.setAttribute("id", childRef);
-          }
-          childElements.push(child);
-        }
-        return childElements;
-      };
-      return Make("SVGActivity", SVGActivity = function() {
-        var scope;
-        return scope = {
-          functions: {},
-          instances: {},
-          root: null,
-          registerInstance: function(instanceName, instance) {
-            return scope.instances[instanceName] = instance;
-          },
-          registerControl: function(controlName) {},
-          setupDocument: function(activityName, contentDocument) {
-            var child, childElements, defs, k, len;
-            scope.registerInstance("default", defaultElement);
-            scope.root = scope.instances["root"](contentDocument);
-            scope.root.FlowArrows = new FlowArrows();
-            scope.root.root = scope.root;
-            scope.root.getElement = function() {
-              return contentDocument;
-            };
-            defs = contentDocument.querySelector("defs");
-            setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
-            setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.0 0.0 0.0 1.0 0");
-            setupColorMatrix(defs, "allblackMatrix", "0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 1.0 0");
-            childElements = getChildElements(contentDocument);
-            scope.root.children = [];
-            for (k = 0, len = childElements.length; k < len; k++) {
-              child = childElements[k];
-              scope.setupElement(scope.root, child);
-            }
-            if (scope.root.controlPanel != null) {
-              scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel);
-              scope.root._controls.setup();
-            }
-            setupInstance(scope.root);
-            if (scope.root.controlPanel != null) {
-              return scope.root._controls.schematicToggle.schematicMode();
-            }
-          },
-          getRootElement: function() {
-            return scope.root.getRootElement();
-          },
-          setupElement: function(parent, element) {
-            var child, childElements, id, instance, k, len, results;
-            id = element.getAttribute("id");
-            id = id.split("_")[0];
-            instance = scope.instances[id];
-            if (instance == null) {
-              instance = scope.instances["default"];
-            }
-            parent[id] = instance(element);
-            parent[id].transform = SVGTransform(element);
-            parent[id].transform.setup();
-            parent[id].style = SVGStyle(element);
-            parent.children.push(parent[id]);
-            parent[id].children = [];
-            parent[id].root = scope.root;
-            parent[id].getElement = function() {
-              return element;
-            };
-            childElements = getChildElements(element);
-            results = [];
-            for (k = 0, len = childElements.length; k < len; k++) {
-              child = childElements[k];
-              results.push(scope.setupElement(parent[id], child));
-            }
-            return results;
-          }
-        };
-      });
-    });
-  })();
+  });
 
   Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
     var SVGAnimation;
@@ -1490,6 +1486,30 @@
           return scope.running = false;
         }
       };
+    });
+  });
+
+  Take("", function() {
+    var global;
+    global = {};
+    Make("SVGGlobalState", function() {
+      return global;
+    });
+    Object.defineProperty(global, "animateMode", {
+      get: function() {
+        return global.animateMode;
+      },
+      set: function(val) {
+        return global.animateMode = val;
+      }
+    });
+    return Object.defineProperty(global, "schematicMode", {
+      get: function() {
+        return !global.animateMode;
+      },
+      set: function(val) {
+        return global.animateMode = !val;
+      }
     });
   });
 

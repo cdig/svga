@@ -38,7 +38,7 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   mask.appendChild(maskElement)
 
   rootElement.querySelector('defs').insertBefore(mask, null)
-  invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "")#invertSVGMatrix(maskedElement.getAttribute("transform"))
+  invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "")
   origMatrix = maskElement.getAttribute("transform")
 
   transString = "#{invertMatrix} #{origMatrix} "
@@ -52,5 +52,3 @@ Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
   maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)")
   maskedInstance.transform.setBaseTransform()
   maskedParent.setAttribute("style", newStyle)
-
-

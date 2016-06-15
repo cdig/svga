@@ -1,5 +1,5 @@
 (function() {
-  var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, getParentInverseTransform, invert, invertSVGMatrix,
+  var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, getParentInverseTransform,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
@@ -1199,83 +1199,6 @@
       };
     });
   });
-
-  invert = function(matrix) {
-    var copy, dim, i, identity, ii, j, k, l, m, o, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, s, t, temp;
-    if (matrix.length !== matrix[0].length) {
-      return;
-    }
-    identity = [];
-    copy = [];
-    dim = matrix.length;
-    for (i = k = 0, ref = dim - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
-      identity[i] = [];
-      copy[i] = [];
-      for (j = l = 0, ref1 = dim - 1; 0 <= ref1 ? l <= ref1 : l >= ref1; j = 0 <= ref1 ? ++l : --l) {
-        if (i === j) {
-          identity[i][j] = 1;
-        } else {
-          identity[i][j] = 0;
-        }
-        copy[i][j] = matrix[i][j];
-      }
-    }
-    for (i = m = 0, ref2 = dim - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
-      temp = copy[i][i];
-      if (temp === 0) {
-        for (ii = o = 0, ref3 = dim - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; ii = 0 <= ref3 ? ++o : --o) {
-          if (copy[ii][i] !== 0) {
-            for (j = q = 0, ref4 = dim - 1; 0 <= ref4 ? q <= ref4 : q >= ref4; j = 0 <= ref4 ? ++q : --q) {
-              temp = copy[i][j];
-              copy[i][j] = copy[ii][j];
-              copy[ii][j] = temp;
-              temp = identity[i][j];
-              identity[i][j] = identity[ii][j];
-              identity[ii][j] = temp;
-            }
-            break;
-          }
-        }
-        temp = copy[i][i];
-      }
-      for (j = r = 0, ref5 = dim - 1; 0 <= ref5 ? r <= ref5 : r >= ref5; j = 0 <= ref5 ? ++r : --r) {
-        copy[i][j] = copy[i][j] / temp;
-        identity[i][j] = identity[i][j] / temp;
-      }
-      for (ii = s = 0, ref6 = dim - 1; 0 <= ref6 ? s <= ref6 : s >= ref6; ii = 0 <= ref6 ? ++s : --s) {
-        if (ii === i) {
-          continue;
-        }
-        temp = copy[ii][i];
-        for (j = t = 0, ref7 = dim - 1; 0 <= ref7 ? t <= ref7 : t >= ref7; j = 0 <= ref7 ? ++t : --t) {
-          copy[ii][j] -= temp * copy[i][j];
-          identity[ii][j] -= temp * identity[i][j];
-        }
-      }
-    }
-    return identity;
-  };
-
-  invertSVGMatrix = function(matrixString) {
-    var i, k, matches, matrix, newMatrix;
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    matrix = [];
-    for (i = k = 0; k <= 2; i = ++k) {
-      matrix.push([0, 0, 0]);
-    }
-    matrix[0][0] = parseFloat(matches[0]);
-    matrix[0][1] = parseFloat(matches[2]);
-    matrix[0][2] = parseFloat(matches[4]);
-    matrix[1][0] = parseFloat(matches[1]);
-    matrix[1][1] = parseFloat(matches[3]);
-    matrix[1][2] = parseFloat(matches[5]);
-    matrix[2][0] = 0;
-    matrix[2][1] = 0;
-    matrix[2][2] = 1;
-    newMatrix = invert(matrix);
-    matrixString = "matrix(" + newMatrix[0][0] + ", " + newMatrix[0][1] + ", " + newMatrix[1][0] + ", " + newMatrix[1][1] + ", " + newMatrix[0][2] + ", " + newMatrix[1][2] + ")";
-    return matrixString;
-  };
 
   (function() {
     return Take(['crank', 'defaultElement', 'button', 'slider', 'Joystick', 'SVGActivity', 'DOMContentLoaded'], function(crank, defaultElement, button, slider, Joystick, SVGActivity) {

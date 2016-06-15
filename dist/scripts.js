@@ -775,27 +775,34 @@
     });
   });
 
-  Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic) {
+  Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic", "RequestUniqueAnimation"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic, RequestUniqueAnimation) {
     var SVGControlpanel;
     return Make("SVGControlPanel", SVGControlpanel = function(activity, controlPanel) {
       var onResize, scope;
       onResize = function() {
-        var activityBox, controlPanelBox, scaleAmount;
-        controlPanelBox = controlPanel.getElement().getBoundingClientRect();
-        scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale);
-        controlPanel.transform.scale = scaleAmount;
+        var hScale, innerRect, outerRect, scale, svgRect, wScale;
+        svgRect = activity.getElement().viewBox.baseVal;
+        outerRect = activity.getElement().getBoundingClientRect();
+        wScale = outerRect.width / svgRect.width;
+        hScale = outerRect.height / svgRect.height;
+        scale = Math.min(wScale, hScale);
+        innerRect = {
+          width: svgRect.width * scale,
+          height: svgRect.height * scale
+        };
+        innerRect.left = (outerRect.width - innerRect.width) / 2;
+        innerRect.top = (outerRect.height - innerRect.height) / 2;
+        controlPanel.transform.scale = 1 / scale;
         if (activity.ctrlPanel != null) {
-          activity.ctrlPanel.transform.scale = scaleAmount;
+          activity.ctrlPanel.transform.scale = 1 / scale;
         }
         if (activity.mimicPanel != null) {
-          activity.mimicPanel.transform.scale = scaleAmount;
+          activity.mimicPanel.transform.scale = 1 / scale;
         }
         if (activity.poiPanel != null) {
-          activity.poiPanel.transform.scale = scaleAmount;
+          activity.poiPanel.transform.scale = 1 / scale;
         }
-        controlPanelBox = controlPanel.getElement().getBoundingClientRect();
-        activityBox = activity.getElement().getBoundingClientRect();
-        return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
+        return controlPanel.transform.y = innerRect.top + (scope.panelHeight * scale - scope.panelHeight);
       };
       return scope = {
         camera: null,
@@ -848,7 +855,9 @@
             scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage);
             scope.schematicToggle.setup();
           }
-          window.addEventListener("resize", onResize);
+          window.addEventListener("resize", function() {
+            return RequestUniqueAnimation(onResize, true);
+          });
           return onResize();
         }
       };
@@ -1228,7 +1237,11 @@
         this.RDRDuplicate = cb;
         return console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
       }
-      return deferredCallbacks.push(cb);
+      deferredCallbacks.push(cb);
+      if (!requested) {
+        requested = true;
+        return requestAnimationFrame(run);
+      }
     });
     return Make("RequestUniqueAnimation", function(cb, ignoreDuplicates) {
       var c, k, len;

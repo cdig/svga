@@ -1232,8 +1232,8 @@
         if (!(c === cb)) {
           continue;
         }
-        console.log("Warning: RequestDeferredRender was called with the same function more than once:");
-        return console.log(cb);
+        this.RDRDuplicate = cb;
+        console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
       }
       return deferredCallbacks.push(cb);
     });
@@ -1247,8 +1247,8 @@
         if (!(c === cb)) {
           continue;
         }
-        console.log("Warning: RequestUniqueAnimation was called with the same function more than once:");
-        return console.log(cb);
+        this.RUADuplicate = cb;
+        console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.");
       }
       rafCallbacks.push(cb);
       if (!requested) {

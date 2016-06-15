@@ -22,16 +22,15 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
       innerRect.left = (outerRect.width - innerRect.width)/2
       innerRect.top = (outerRect.height - innerRect.height)/2
       
+      # This works fine, assuming the controlPanel is placed at the bottom of the SVG viewBox and is unscaled
+      # This is disabled because we're doing the LEGACY stuff below
+      # controlPanel.transform.y = innerRect.top / scale
+      
       # LEGACY:
       controlPanel.transform.scale = 1/scale
       activity.ctrlPanel.transform.scale = 1/scale if activity.ctrlPanel?
       activity.mimicPanel.transform.scale = 1/scale if activity.mimicPanel?
       activity.poiPanel.transform.scale = 1/scale if activity.poiPanel?
-      
-      # This works fine, assuming the controlPanel is placed at the bottom of the SVG viewBox and is unscaled
-      # controlPanel.transform.y = innerRect.top / scale
-      
-      # Since we're scaling, let's try this
       controlPanel.transform.y = innerRect.top + (scope.panelHeight*scale - scope.panelHeight)
     
     return scope =

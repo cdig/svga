@@ -337,7 +337,7 @@ Take ["Ease", "PointerInput", "RequestUniqueAnimation"],
             navScaleY = window.innerHeight / 2 / navBox.height
             navScale = Math.min(navScaleX, navScaleY)
             navOverlay.transform.scale *= navScale
-            newMinZoom = (rectHeight - mainStage.root._controls.panelHeight - 10) / rectHeight
+            newMinZoom = (rectHeight - mainStage.root._controlPanel.panelHeight - 10) / rectHeight
             newMinZoom = Math.abs(newMinZoom)
             if scope.zoom is scope.minZoom
               scope.zoom = newMinZoom

@@ -1,85 +1,56 @@
-Take ["PointerInput"], (PointerInput)->
-  Make "SVGSchematic", SVGSchematic = (toggle, svgControlPanel, mainStage)->
+Take ["PointerInput", "Global"], (PointerInput, Global)->
+  Make "SVGSchematic", (toggle, svgControlPanel, mainStage)->
     return scope =
-      modeToggle: false
+      
       setup: ()->
-        if not toggle.schematicSelected? or not toggle.animateSelected?
-          return
-
-        PointerInput.addClick toggle.schematicSelected.getElement(), ()->
-          scope.animateMode() if not scope.modeToggle
-          scope.modeToggle = true
-        PointerInput.addClick toggle.animateSelected.getElement(), ()->
-          scope.schematicMode() if scope.modeToggle
-          scope.modeToggle = false
-
-
+        PointerInput.addClick toggle.animateSelected.getElement(), ()-> scope.setMode false
+        PointerInput.addClick toggle.schematicSelected.getElement(), ()-> scope.setMode true
+      
+      setMode: (animate)->
+        if Global.animateMode isnt animate
+          Global.animateMode = animate
+          toggle.animateSelected.style.show animate
+          toggle.schematicSelected.style.show !animate
+          if animate then scope.animateMode() else scope.schematicMode()
+      
+      
       schematicMode: ()->
-        toggle.schematicSelected.style.show(true)
-        toggle.animateSelected.style.show(false)
-        scope.callSchematicMode(mainStage.root)
-        for child in mainStage.root.children
-          scope.turnLinesBlack(child)
-          scope.callSchematicMode(child)
-
-      callSchematicMode: (instance)->
-        for child in instance.children
-          scope.callSchematicMode(child)
-
-        instance.schematicMode() if instance.schematicMode?
-
-        if svgControlPanel.arrows?
-          svgControlPanel.arrows.getElement().setAttribute("filter", "url(#greyscaleMatrix")
-        if svgControlPanel.controls?
-          svgControlPanel.controls.getElement().setAttribute("filter", "url(#greyscaleMatrix")
-        if svgControlPanel.poi?
-          svgControlPanel.poi.getElement().setAttribute("filter", "url(#greyscaleMatrix")
-        if svgControlPanel.mimic?
-          svgControlPanel.mimic.getElement().setAttribute("filter", "url(#greyscaleMatrix")
-
-
-      turnLinesBlack: (instance)->
-        element = instance.getElement()
-        id = element.getAttribute("id")
-        if id?
-          if id.indexOf("Line") > -1
-            instance.getElement().setAttribute("filter", "url(#allblackMatrix)")
-        if not instance.children?
-          return
-        for child in instance.children
-         scope.turnLinesBlack(child)
-
+        scope.disableControlPanelButtons()
+        scope.dispatchSchematicMode mainStage.root
+      
       animateMode: ()->
-        toggle.schematicSelected.style.show(false)
-        toggle.animateSelected.style.show(true)
-        scope.callAnimateMode(mainStage.root)
+        scope.enableControlPanelButtons()
+        scope.dispatchAnimateMode(mainStage.root)
+      
 
-        for child in mainStage.root.children
-          scope.turnLinesBack(child)
-          scope.callAnimateMode(child)
-        if svgControlPanel.arrows?
-          svgControlPanel.arrows.getElement().removeAttribute("filter")
-        if svgControlPanel.controls?
-          svgControlPanel.controls.getElement().removeAttribute("filter")
-        if svgControlPanel.poi?
-          svgControlPanel.poi.getElement().removeAttribute("filter")
-        if svgControlPanel.mimic?
-          svgControlPanel.mimic.getElement().removeAttribute("filter")
-
-      callAnimateMode: (instance)->
-        for child in instance.children
-          scope.callAnimateMode(child)
-        instance.animateMode() if instance.animateMode?
-
-      turnLinesBack: (instance)->
+      dispatchSchematicMode: (instance)->
+        instance.schematicMode?()
+        scope.setLinesBlack instance
+        scope.dispatchSchematicMode child for child in instance.children
+      
+      dispatchAnimateMode: (instance)->
+        instance.animateMode?()
+        scope.removeLinesBlack instance
+        scope.dispatchAnimateMode child for child in instance.children
+      
+        
+      setLinesBlack: (instance)->
         element = instance.getElement()
-        id = element.getAttribute("id")
-        if id?
-          if id.indexOf("Line") > -1
-            instance.getElement().removeAttribute("filter")
-        if not instance.children?
-          return
-        for child in instance.children
-         scope.turnLinesBack(child)
-
-
+        if element.getAttribute("id")?.indexOf("Line") > -1
+          element.setAttribute "filter", "url(#allblackMatrix)"
+      
+      removeLinesBlack: (instance)->
+        element = instance.getElement()
+        if element.getAttribute("id")?.indexOf("Line") > -1
+          element.removeAttribute "filter"
+      
+      
+      disableControlPanelButtons: ()->
+        for name in ["arrows", "controls", "poi", "mimic"]
+          mainStage.root._controlPanel[name]?.disable()
+          svgControlPanel[name]?.getElement().setAttribute "filter", "url(#greyscaleMatrix)"
+      
+      enableControlPanelButtons: ()->
+        for name in ["arrows", "controls", "poi", "mimic"]
+          mainStage.root._controlPanel[name]?.enable()
+          svgControlPanel[name]?.getElement().removeAttribute "filter"

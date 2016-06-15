@@ -66,13 +66,13 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
 
         if activity.ctrlPanel? and controlPanel.controls
           activityElement.appendChild(activity.ctrlPanel.getElement())
-          scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls )
-          scope.control.setup()
-
+          scope.controls = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls)
+          scope.controls.setup()
+        
         if activity.mimicPanel? and controlPanel.mimic
           activityElement.appendChild(activity.mimicPanel.getElement())
-          scope.control = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic )
-          scope.control.setup()
+          scope.mimic = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic)
+          scope.mimic.setup()
 
         if controlPanel.labels?
           scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels)
@@ -81,7 +81,7 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
         if controlPanel.arrows?
           scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows)
           scope.arrows.setup()
-
+        
         if controlPanel.toggle and controlPanel.toggle.schematicSelected? and controlPanel.toggle.animateSelected?
           scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage)
           scope.schematicToggle.setup()

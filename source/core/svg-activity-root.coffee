@@ -1,5 +1,5 @@
-Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform", "SVGStyle", "SVGGlobalState", "load"],
-  (defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle, SVGGlobalState)->
+Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform", "SVGStyle", "Global", "load"],
+  (defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle, Global)->
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)
@@ -31,7 +31,7 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
       return scope =
         functions: {}
         instances: {}
-        global: SVGGlobalState()
+        global: Global
         root: null
 
         registerInstance: (instanceName, instance)->
@@ -41,6 +41,7 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
           scope.registerInstance("default", defaultElement)
           scope.root = scope.instances["root"](contentDocument)
           scope.root.FlowArrows = new FlowArrows()
+          scope.root.global = scope.global
           scope.root.root = scope.root
           scope.root.getElement = ()->
             return contentDocument
@@ -62,11 +63,11 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
           for child in childElements
             scope.setupElement(scope.root, child)
           if scope.root.controlPanel?
-            scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel)
-            scope.root._controls.setup()
+            scope.root._controlPanel = new SVGControlPanel(scope.root, scope.root.controlPanel)
+            scope.root._controlPanel.setup()
           setupInstance(scope.root)
           if scope.root.controlPanel?
-            scope.root._controls.schematicToggle.schematicMode()
+            scope.root._controlPanel.schematicToggle.schematicMode()
 
         getRootElement: ()->
           return scope.root.getRootElement()
@@ -74,15 +75,14 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
         setupElement: (parent, element)->
           id = element.getAttribute("id")
           id = id.split("_")[0]
-          instance = scope.instances[id]
-          if not instance?
-            instance = scope.instances["default"]
+          instance = scope.instances[id] or scope.instances["default"]
           parent[id] = instance(element)
           parent[id].transform = SVGTransform(element)
           parent[id].transform.setup()
           parent[id].style = SVGStyle(element)
           parent.children.push parent[id]
           parent[id].children = []
+          parent[id].global = scope.global
           parent[id].root = scope.root
           parent[id].getElement = ()->
             return element

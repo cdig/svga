@@ -239,6 +239,7 @@
       var scope;
       return scope = {
         showing: true,
+        disabled: false,
         setup: function() {
           return PointerInput.addClick(controlButton.getElement(), scope.toggle);
         },
@@ -250,12 +251,22 @@
           }
         },
         show: function() {
+          if (scope.disabled) {
+            return;
+          }
           scope.showing = true;
           return arrows.show();
         },
         hide: function() {
           scope.showing = false;
           return arrows.hide();
+        },
+        disable: function() {
+          scope.hide();
+          return scope.disabled = true;
+        },
+        enable: function() {
+          return scope.disabled = false;
         }
       };
     });
@@ -755,7 +766,7 @@
             navScaleY = window.innerHeight / 2 / navBox.height;
             navScale = Math.min(navScaleX, navScaleY);
             navOverlay.transform.scale *= navScale;
-            newMinZoom = (rectHeight - mainStage.root._controls.panelHeight - 10) / rectHeight;
+            newMinZoom = (rectHeight - mainStage.root._controlPanel.panelHeight - 10) / rectHeight;
             newMinZoom = Math.abs(newMinZoom);
             if (scope.zoom === scope.minZoom) {
               scope.zoom = newMinZoom;
@@ -835,13 +846,13 @@
           }
           if ((activity.ctrlPanel != null) && controlPanel.controls) {
             activityElement.appendChild(activity.ctrlPanel.getElement());
-            scope.control = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
-            scope.control.setup();
+            scope.controls = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
+            scope.controls.setup();
           }
           if ((activity.mimicPanel != null) && controlPanel.mimic) {
             activityElement.appendChild(activity.mimicPanel.getElement());
-            scope.control = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic);
-            scope.control.setup();
+            scope.mimic = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic);
+            scope.mimic.setup();
           }
           if (controlPanel.labels != null) {
             scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels);
@@ -884,20 +895,29 @@
           return scope.hide();
         },
         toggle: function() {
-          scope.open = !scope.open;
           if (scope.open) {
-            return scope.show();
-          } else {
             return scope.hide();
+          } else {
+            return scope.show();
           }
         },
         show: function() {
+          if (scope.disabled) {
+            return;
+          }
           scope.open = true;
           return control.style.show(true);
         },
         hide: function() {
           scope.open = false;
           return control.style.show(false);
+        },
+        disable: function() {
+          scope.hide();
+          return scope.disabled = true;
+        },
+        enable: function() {
+          return scope.disabled = false;
         }
       };
     });
@@ -909,27 +929,52 @@
       var scope;
       return scope = {
         controls: [],
+        disabled: false,
         open: false,
         setup: function() {
-          return svgElement.addEventListener("click", scope.click);
+          return svgElement.addEventListener("click", scope.toggle);
         },
         addControl: function(control) {
           return scope.controls.push(control);
         },
-        click: function() {
+        toggle: function() {
+          if (scope.open) {
+            return scope.hide();
+          } else {
+            return scope.show();
+          }
+        },
+        show: function() {
           var control, k, len, ref, results;
-          scope.open = !scope.open;
+          if (scope.disabled) {
+            return;
+          }
+          scope.open = true;
           ref = scope.controls;
           results = [];
           for (k = 0, len = ref.length; k < len; k++) {
             control = ref[k];
-            if (scope.open) {
-              results.push(control.show());
-            } else {
-              results.push(control.hide());
-            }
+            results.push(control.show());
           }
           return results;
+        },
+        hide: function() {
+          var control, k, len, ref, results;
+          scope.open = false;
+          ref = scope.controls;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            control = ref[k];
+            results.push(control.hide());
+          }
+          return results;
+        },
+        disable: function() {
+          scope.hide();
+          return scope.disabled = true;
+        },
+        enable: function() {
+          return scope.disabled = false;
         }
       };
     });
@@ -971,6 +1016,7 @@
       return scope = {
         activity: null,
         open: false,
+        disabled: false,
         draggable: null,
         setup: function() {
           scope.draggable = new Draggable(control, activity);
@@ -984,20 +1030,29 @@
           return scope.hide();
         },
         toggle: function() {
-          scope.open = !scope.open;
           if (scope.open) {
-            return scope.show();
-          } else {
             return scope.hide();
+          } else {
+            return scope.show();
           }
         },
         show: function() {
+          if (scope.disabled) {
+            return;
+          }
           scope.open = true;
           return control.style.show(true);
         },
         hide: function() {
           scope.open = false;
           return control.style.show(false);
+        },
+        disable: function() {
+          scope.hide();
+          return scope.disabled = true;
+        },
+        enable: function() {
+          return scope.disabled = false;
         }
       };
     });
@@ -1009,6 +1064,7 @@
       var scope;
       return scope = {
         open: false,
+        disabled: false,
         pois: {},
         setup: function() {
           var name, poi, results;
@@ -1018,7 +1074,7 @@
           if (control.closer != null) {
             PointerInput.addClick(control.closer.getElement(), scope.hide);
           } else {
-            console.log("Error: POI does not have closer button");
+            console.log("Warning: POI panel does not have closer button");
           }
           scope.hide();
           results = [];
@@ -1037,161 +1093,159 @@
           return results;
         },
         toggle: function() {
-          scope.open = !scope.open;
           if (scope.open) {
-            return scope.show();
-          } else {
             return scope.hide();
+          } else {
+            return scope.show();
           }
         },
         show: function() {
+          if (scope.disabled) {
+            return;
+          }
           scope.open = true;
           return control.style.show(true);
         },
         hide: function() {
           scope.open = false;
           return control.style.show(false);
+        },
+        disable: function() {
+          scope.hide();
+          return scope.disabled = true;
+        },
+        enable: function() {
+          return scope.disabled = false;
         }
       };
     });
   });
 
-  Take(["PointerInput"], function(PointerInput) {
-    var SVGSchematic;
-    return Make("SVGSchematic", SVGSchematic = function(toggle, svgControlPanel, mainStage) {
+  Take(["PointerInput", "Global"], function(PointerInput, Global) {
+    return Make("SVGSchematic", function(toggle, svgControlPanel, mainStage) {
       var scope;
       return scope = {
-        modeToggle: false,
         setup: function() {
-          if ((toggle.schematicSelected == null) || (toggle.animateSelected == null)) {
-            return;
+          PointerInput.addClick(toggle.animateSelected.getElement(), function() {
+            return scope.setMode(false);
+          });
+          return PointerInput.addClick(toggle.schematicSelected.getElement(), function() {
+            return scope.setMode(true);
+          });
+        },
+        setMode: function(animate) {
+          if (Global.animateMode !== animate) {
+            Global.animateMode = animate;
+            toggle.animateSelected.style.show(animate);
+            toggle.schematicSelected.style.show(!animate);
+            if (animate) {
+              return scope.animateMode();
+            } else {
+              return scope.schematicMode();
+            }
           }
-          PointerInput.addClick(toggle.schematicSelected.getElement(), function() {
-            if (!scope.modeToggle) {
-              scope.animateMode();
-            }
-            return scope.modeToggle = true;
-          });
-          return PointerInput.addClick(toggle.animateSelected.getElement(), function() {
-            if (scope.modeToggle) {
-              scope.schematicMode();
-            }
-            return scope.modeToggle = false;
-          });
         },
         schematicMode: function() {
-          var child, k, len, ref, results;
-          toggle.schematicSelected.style.show(true);
-          toggle.animateSelected.style.show(false);
-          scope.callSchematicMode(mainStage.root);
-          ref = mainStage.root.children;
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            child = ref[k];
-            scope.turnLinesBlack(child);
-            results.push(scope.callSchematicMode(child));
-          }
-          return results;
-        },
-        callSchematicMode: function(instance) {
-          var child, k, len, ref;
-          ref = instance.children;
-          for (k = 0, len = ref.length; k < len; k++) {
-            child = ref[k];
-            scope.callSchematicMode(child);
-          }
-          if (instance.schematicMode != null) {
-            instance.schematicMode();
-          }
-          if (svgControlPanel.arrows != null) {
-            svgControlPanel.arrows.getElement().setAttribute("filter", "url(#greyscaleMatrix");
-          }
-          if (svgControlPanel.controls != null) {
-            svgControlPanel.controls.getElement().setAttribute("filter", "url(#greyscaleMatrix");
-          }
-          if (svgControlPanel.poi != null) {
-            svgControlPanel.poi.getElement().setAttribute("filter", "url(#greyscaleMatrix");
-          }
-          if (svgControlPanel.mimic != null) {
-            return svgControlPanel.mimic.getElement().setAttribute("filter", "url(#greyscaleMatrix");
-          }
-        },
-        turnLinesBlack: function(instance) {
-          var child, element, id, k, len, ref, results;
-          element = instance.getElement();
-          id = element.getAttribute("id");
-          if (id != null) {
-            if (id.indexOf("Line") > -1) {
-              instance.getElement().setAttribute("filter", "url(#allblackMatrix)");
-            }
-          }
-          if (instance.children == null) {
-            return;
-          }
-          ref = instance.children;
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            child = ref[k];
-            results.push(scope.turnLinesBlack(child));
-          }
-          return results;
+          scope.disableControlPanelButtons();
+          return scope.dispatchSchematicMode(mainStage.root);
         },
         animateMode: function() {
-          var child, k, len, ref;
-          toggle.schematicSelected.style.show(false);
-          toggle.animateSelected.style.show(true);
-          scope.callAnimateMode(mainStage.root);
-          ref = mainStage.root.children;
-          for (k = 0, len = ref.length; k < len; k++) {
-            child = ref[k];
-            scope.turnLinesBack(child);
-            scope.callAnimateMode(child);
-          }
-          if (svgControlPanel.arrows != null) {
-            svgControlPanel.arrows.getElement().removeAttribute("filter");
-          }
-          if (svgControlPanel.controls != null) {
-            svgControlPanel.controls.getElement().removeAttribute("filter");
-          }
-          if (svgControlPanel.poi != null) {
-            svgControlPanel.poi.getElement().removeAttribute("filter");
-          }
-          if (svgControlPanel.mimic != null) {
-            return svgControlPanel.mimic.getElement().removeAttribute("filter");
-          }
+          scope.enableControlPanelButtons();
+          return scope.dispatchAnimateMode(mainStage.root);
         },
-        callAnimateMode: function(instance) {
-          var child, k, len, ref;
-          ref = instance.children;
-          for (k = 0, len = ref.length; k < len; k++) {
-            child = ref[k];
-            scope.callAnimateMode(child);
+        dispatchSchematicMode: function(instance) {
+          var child, k, len, ref, results;
+          if (typeof instance.schematicMode === "function") {
+            instance.schematicMode();
           }
-          if (instance.animateMode != null) {
-            return instance.animateMode();
-          }
-        },
-        turnLinesBack: function(instance) {
-          var child, element, id, k, len, ref, results;
-          element = instance.getElement();
-          id = element.getAttribute("id");
-          if (id != null) {
-            if (id.indexOf("Line") > -1) {
-              instance.getElement().removeAttribute("filter");
-            }
-          }
-          if (instance.children == null) {
-            return;
-          }
+          scope.setLinesBlack(instance);
           ref = instance.children;
           results = [];
           for (k = 0, len = ref.length; k < len; k++) {
             child = ref[k];
-            results.push(scope.turnLinesBack(child));
+            results.push(scope.dispatchSchematicMode(child));
+          }
+          return results;
+        },
+        dispatchAnimateMode: function(instance) {
+          var child, k, len, ref, results;
+          if (typeof instance.animateMode === "function") {
+            instance.animateMode();
+          }
+          scope.removeLinesBlack(instance);
+          ref = instance.children;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            results.push(scope.dispatchAnimateMode(child));
+          }
+          return results;
+        },
+        setLinesBlack: function(instance) {
+          var element, ref;
+          element = instance.getElement();
+          if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
+            return element.setAttribute("filter", "url(#allblackMatrix)");
+          }
+        },
+        removeLinesBlack: function(instance) {
+          var element, ref;
+          element = instance.getElement();
+          if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
+            return element.removeAttribute("filter");
+          }
+        },
+        disableControlPanelButtons: function() {
+          var k, len, name, ref, ref1, ref2, results;
+          ref = ["arrows", "controls", "poi", "mimic"];
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            name = ref[k];
+            if ((ref1 = mainStage.root._controlPanel[name]) != null) {
+              ref1.disable();
+            }
+            results.push((ref2 = svgControlPanel[name]) != null ? ref2.getElement().setAttribute("filter", "url(#greyscaleMatrix)") : void 0);
+          }
+          return results;
+        },
+        enableControlPanelButtons: function() {
+          var k, len, name, ref, ref1, ref2, results;
+          ref = ["arrows", "controls", "poi", "mimic"];
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            name = ref[k];
+            if ((ref1 = mainStage.root._controlPanel[name]) != null) {
+              ref1.enable();
+            }
+            results.push((ref2 = svgControlPanel[name]) != null ? ref2.getElement().removeAttribute("filter") : void 0);
           }
           return results;
         }
       };
+    });
+  });
+
+  Take([], function() {
+    var global, internal;
+    Make("Global", global = {});
+    internal = {
+      animateMode: false
+    };
+    Object.defineProperty(global, "animateMode", {
+      get: function() {
+        return internal.animateMode;
+      },
+      set: function(val) {
+        return internal.animateMode = val;
+      }
+    });
+    return Object.defineProperty(global, "schematicMode", {
+      get: function() {
+        return !internal.animateMode;
+      },
+      set: function(val) {
+        return internal.animateMode = !val;
+      }
     });
   });
 
@@ -1342,7 +1396,7 @@
     });
   });
 
-  Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "SVGGlobalState", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle, SVGGlobalState) {
+  Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "Global", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle, Global) {
     var SVGActivity, getChildElements, setupColorMatrix, setupInstance;
     setupInstance = function(instance) {
       var child, k, len, ref;
@@ -1385,7 +1439,7 @@
       return scope = {
         functions: {},
         instances: {},
-        global: SVGGlobalState(),
+        global: Global,
         root: null,
         registerInstance: function(instanceName, instance) {
           return scope.instances[instanceName] = instance;
@@ -1395,6 +1449,7 @@
           scope.registerInstance("default", defaultElement);
           scope.root = scope.instances["root"](contentDocument);
           scope.root.FlowArrows = new FlowArrows();
+          scope.root.global = scope.global;
           scope.root.root = scope.root;
           scope.root.getElement = function() {
             return contentDocument;
@@ -1410,12 +1465,12 @@
             scope.setupElement(scope.root, child);
           }
           if (scope.root.controlPanel != null) {
-            scope.root._controls = new SVGControlPanel(scope.root, scope.root.controlPanel);
-            scope.root._controls.setup();
+            scope.root._controlPanel = new SVGControlPanel(scope.root, scope.root.controlPanel);
+            scope.root._controlPanel.setup();
           }
           setupInstance(scope.root);
           if (scope.root.controlPanel != null) {
-            return scope.root._controls.schematicToggle.schematicMode();
+            return scope.root._controlPanel.schematicToggle.schematicMode();
           }
         },
         getRootElement: function() {
@@ -1425,16 +1480,14 @@
           var child, childElements, id, instance, k, len, results;
           id = element.getAttribute("id");
           id = id.split("_")[0];
-          instance = scope.instances[id];
-          if (instance == null) {
-            instance = scope.instances["default"];
-          }
+          instance = scope.instances[id] || scope.instances["default"];
           parent[id] = instance(element);
           parent[id].transform = SVGTransform(element);
           parent[id].transform.setup();
           parent[id].style = SVGStyle(element);
           parent.children.push(parent[id]);
           parent[id].children = [];
+          parent[id].global = scope.global;
           parent[id].root = scope.root;
           parent[id].getElement = function() {
             return element;
@@ -1498,30 +1551,6 @@
           return scope.running = false;
         }
       };
-    });
-  });
-
-  Take([], function() {
-    var global;
-    global = {};
-    Make("SVGGlobalState", function() {
-      return global;
-    });
-    Object.defineProperty(global, "animateMode", {
-      get: function() {
-        return global.animateMode;
-      },
-      set: function(val) {
-        return global.animateMode = val;
-      }
-    });
-    return Object.defineProperty(global, "schematicMode", {
-      get: function() {
-        return !global.animateMode;
-      },
-      set: function(val) {
-        return global.animateMode = !val;
-      }
     });
   });
 

@@ -3,6 +3,7 @@ Take ["Draggable", "PointerInput", "DOMContentLoaded"], (Draggable, PointerInput
     return scope =
       activity: null
       open: false
+      disabled: false
       draggable: null
 
       setup: ()->
@@ -14,14 +15,23 @@ Take ["Draggable", "PointerInput", "DOMContentLoaded"], (Draggable, PointerInput
         else
           console.log "Error: Control does not have closer button"
         scope.hide()
+      
+      
       toggle: ()->
-        scope.open = not scope.open
-        if scope.open then scope.show() else scope.hide()
-
+        if scope.open then scope.hide() else scope.show()
+      
       show: ()->
+        return if scope.disabled
         scope.open = true
         control.style.show(true)
 
       hide: ()->
         scope.open = false
         control.style.show(false)
+
+      disable: ()->
+        scope.hide()
+        scope.disabled = true
+      
+      enable: ()->
+        scope.disabled = false

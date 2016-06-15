@@ -9,8 +9,8 @@ Make "SVGTransform", SVGTransform = (svgElement)->
       scaleXVal: 1
       scaleYVal: 1
       turnsVal: 0
-
-      ##do not ever set these properties
+      
+      # Do not ever set these properties
       scaleString: ""
       translateString: ""
       rotationString: ""

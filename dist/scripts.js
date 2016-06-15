@@ -457,17 +457,17 @@
             return navOverlay.style.show(false);
           }
         },
-        left: function() {
-          return scope.leftKey = true;
-        },
-        right: function() {
-          return scope.rightKey = true;
-        },
         up: function() {
           return scope.upKey = true;
         },
         down: function() {
           return scope.downKey = true;
+        },
+        left: function() {
+          return scope.leftKey = true;
+        },
+        right: function() {
+          return scope.rightKey = true;
         },
         updateAnimation: function(time) {
           var dT;
@@ -476,58 +476,53 @@
           }
           dT = (time - scope.currentTime) / 1000;
           scope.currentTime = time;
-          if (scope.downKey) {
+          if (scope.downKey && !scope.upKey) {
             if (scope.velocity.y > 0) {
               scope.velocity.y = 0;
             }
-            if (Math.abs(scope.velocity.y) <= 1.0) {
+            if (Math.abs(scope.velocity.y) <= 1) {
               scope.velocity.y -= scope.acceleration;
             }
           }
-          if (scope.upKey) {
+          if (scope.upKey && !scope.downKey) {
             if (scope.velocity.y < 0) {
               scope.velocity.y = 0;
             }
-            if (Math.abs(scope.velocity.y) <= 1.0) {
+            if (Math.abs(scope.velocity.y) <= 1) {
               scope.velocity.y += scope.acceleration;
             }
           }
-          if (scope.rightKey) {
+          if (scope.rightKey && !scope.leftKey) {
             if (scope.velocity.x > 0) {
               scope.velocity.x = 0;
             }
-            if (Math.abs(scope.velocity.x) <= 1.0) {
+            if (Math.abs(scope.velocity.x) <= 1) {
               scope.velocity.x -= scope.acceleration;
             }
           }
-          if (scope.leftKey) {
+          if (scope.leftKey && !scope.rightKey) {
             if (scope.velocity.x < 0) {
               scope.velocity.x = 0;
             }
-            if (Math.abs(scope.velocity.x) <= 1.0) {
+            if (Math.abs(scope.velocity.x) <= 1) {
               scope.velocity.x += scope.acceleration;
             }
           }
-          if (scope.plusKey) {
+          if (scope.plusKey && !scope.minusKey) {
             if (scope.velocity.x < 0) {
               scope.velocity.z = 0;
             }
-            if (Math.abs(scope.velocity.z) <= 1.0) {
+            if (Math.abs(scope.velocity.z) <= 1) {
               scope.velocity.z += scope.acceleration;
             }
           }
-          if (scope.minusKey) {
+          if (scope.minusKey && !scope.plusKey) {
             if (scope.velocity.z > 0) {
               scope.velocity.z = 1;
             }
-            if (Math.abs(scope.velocity.z) <= 1.0) {
+            if (Math.abs(scope.velocity.z) <= 1) {
               scope.velocity.z -= scope.acceleration;
             }
-          }
-          if ((scope.leftKey && scope.rightKey) || (scope.upKey && scope.downKey) || (scope.plusKey && scope.minusKey)) {
-            scope.velocity.x = 0;
-            scope.velocity.y = 0;
-            scope.velocity.z = 0;
           }
           scope.updatePosition(dT);
           return RequestUniqueAnimation(scope.updateAnimation);
@@ -1214,23 +1209,32 @@
       }
       return results;
     };
-    Make("RequestDeferredRender", function(cb) {
+    Make("RequestDeferredRender", function(cb, ignoreDuplicates) {
       var c, k, len;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
       if (cb == null) {
         return console.log("Warning: RequestDeferredRender(null)");
       }
-      for (k = 0, len = rafCallbacks.length; k < len; k++) {
-        c = rafCallbacks[k];
+      for (k = 0, len = deferredCallbacks.length; k < len; k++) {
+        c = deferredCallbacks[k];
         if (!(c === cb)) {
           continue;
         }
+        if (ignoreDuplicates) {
+          return;
+        }
         this.RDRDuplicate = cb;
-        console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
+        return console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
       }
       return deferredCallbacks.push(cb);
     });
-    return Make("RequestUniqueAnimation", function(cb) {
+    return Make("RequestUniqueAnimation", function(cb, ignoreDuplicates) {
       var c, k, len;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
       if (cb == null) {
         return console.log("Warning: RequestUniqueAnimation(null)");
       }
@@ -1239,8 +1243,11 @@
         if (!(c === cb)) {
           continue;
         }
+        if (ignoreDuplicates) {
+          return;
+        }
         this.RUADuplicate = cb;
-        console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.");
+        return console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.");
       }
       rafCallbacks.push(cb);
       if (!requested) {
@@ -1776,10 +1783,9 @@
   Take("RequestDeferredRender", function(RequestDeferredRender) {
     var SVGTransform;
     return Make("SVGTransform", SVGTransform = function(svgElement) {
-      var currentTransformString, didRequest, newTransformString, scope;
+      var currentTransformString, newTransformString, scope;
       currentTransformString = null;
       newTransformString = null;
-      didRequest = false;
       return scope = {
         angleVal: 0,
         xVal: 0,
@@ -1901,24 +1907,14 @@
           return scope.baseTransform = "matrix(1,0,0,1,0,0)";
         },
         setTransform: function() {
-          var newTransform;
-          newTransform = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
-          return svgElement.setAttribute('transform', newTransform);
-        },
-        setTransform: function() {
           newTransformString = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
-          if (didRequest) {
-            return;
-          }
-          didRequest = true;
-          return RequestDeferredRender(scope.applyTransform);
+          return RequestDeferredRender(scope.applyTransform, true);
         },
         applyTransform: function() {
           if (currentTransformString === newTransformString) {
             return;
           }
           currentTransformString = newTransformString;
-          didRequest = false;
           return svgElement.setAttribute("transform", currentTransformString);
         }
       };

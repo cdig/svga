@@ -15,22 +15,24 @@ do ()->
     cb() for cb in _cbs
   
   
-  Make "RequestDeferredRender", (cb)->
+  Make "RequestDeferredRender", (cb, ignoreDuplicates = false)->
     return console.log "Warning: RequestDeferredRender(null)" unless cb?
     
-    for c in rafCallbacks when c is cb
+    for c in deferredCallbacks when c is cb
+      return if ignoreDuplicates
       @RDRDuplicate = cb
-      console.log "Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console."
-      
+      return console.log "Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console."
+    
     deferredCallbacks.push cb
   
   
-  Make "RequestUniqueAnimation", (cb)->
+  Make "RequestUniqueAnimation", (cb, ignoreDuplicates = false)->
     return console.log "Warning: RequestUniqueAnimation(null)" unless cb?
     
     for c in rafCallbacks when c is cb
+      return if ignoreDuplicates
       @RUADuplicate = cb
-      console.log "Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console."
+      return console.log "Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console."
     
     rafCallbacks.push cb
     

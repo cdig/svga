@@ -783,7 +783,25 @@
   Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic) {
     var SVGControlpanel;
     return Make("SVGControlPanel", SVGControlpanel = function(activity, controlPanel) {
-      var scope;
+      var onResize, scope;
+      onResize = function() {
+        var activityBox, controlPanelBox, scaleAmount;
+        controlPanelBox = controlPanel.getElement().getBoundingClientRect();
+        scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale);
+        controlPanel.transform.scale = scaleAmount;
+        if (activity.ctrlPanel != null) {
+          activity.ctrlPanel.transform.scale = scaleAmount;
+        }
+        if (activity.mimicPanel != null) {
+          activity.mimicPanel.transform.scale = scaleAmount;
+        }
+        if (activity.poiPanel != null) {
+          activity.poiPanel.transform.scale = scaleAmount;
+        }
+        controlPanelBox = controlPanel.getElement().getBoundingClientRect();
+        activityBox = activity.getElement().getBoundingClientRect();
+        return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
+      };
       return scope = {
         camera: null,
         background: null,
@@ -800,10 +818,10 @@
             activityElement.appendChild(activity.navOverlay.getElement());
             scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
             scope.camera.setup();
-            if ((controlPanel.poi != null) && (activity.poiPanel != null)) {
-              scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
-              scope.poi.setup();
-            }
+          }
+          if ((controlPanel.poi != null) && (activity.poiPanel != null)) {
+            scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
+            scope.poi.setup();
           }
           if (controlPanel.bom != null) {
             scope.bom = new SVGBOM(document, activity, controlPanel.bom);
@@ -835,33 +853,7 @@
             scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage);
             scope.schematicToggle.setup();
           }
-          return scope.handleScaling();
-        },
-        handleScaling: function() {
-          var onResize;
-          onResize = function() {
-            var activityBox, controlPanelBox, scaleAmount;
-            controlPanelBox = controlPanel.getElement().getBoundingClientRect();
-            scaleAmount = scope.panelHeight / (controlPanelBox.height / controlPanel.transform.scale);
-            controlPanel.transform.scale = scaleAmount;
-            if (activity.ctrlPanel != null) {
-              activity.ctrlPanel.transform.scale = scaleAmount;
-            }
-            if (activity.mimicPanel != null) {
-              activity.mimicPanel.transform.scale = scaleAmount;
-            }
-            if (activity.poiPanel != null) {
-              activity.poiPanel.transform.scale = scaleAmount;
-            }
-            controlPanelBox = controlPanel.getElement().getBoundingClientRect();
-            activityBox = activity.getElement().getBoundingClientRect();
-            return controlPanel.transform.y += activityBox.height - controlPanelBox.top - 50;
-          };
-          window.addEventListener("resize", function() {
-            onResize();
-            return onResize();
-          });
-          onResize();
+          window.addEventListener("resize", onResize);
           return onResize();
         }
       };

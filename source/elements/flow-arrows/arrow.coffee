@@ -1,7 +1,8 @@
 class Arrow
   edge: null
   element: null
-  visible: true
+  visible: false
+  deltaFlow: 0
   vector: null
   constructor: (@parent, @target, @segment, @position, @edgeIndex, @flowArrows)->
     @createArrow()
@@ -27,12 +28,21 @@ class Arrow
   setColor: (fillColor)=>
     @element.setAttributeNS(null, "fill", fillColor)
     @element.setAttributeNS(null, "stroke", fillColor)
-
-  update: (deltaFlow)=>
-    if deltaFlow is 0 or not @visible
-      @element.style.visibility = "hidden"
+  
+  updateVisibility: ()=>
+    if @visible and @deltaFlow isnt 0
+      @element.style.visibility = "visible" if @element.style.visibility isnt "visible"
     else
-      @element.style.visibility = "visible"
+      @element.style.visibility = "hidden" if @element.style.visibility isnt "hidden"
+  
+  setVisibility: (isVisible)=>
+    @visible = isVisible
+    @updateVisibility()
+  
+  update: (deltaFlow)=>
+    @deltaFlow = deltaFlow
+    @updateVisibility()
+    
     @position += deltaFlow
     while @position > @edge.length
       @edgeIndex++

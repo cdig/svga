@@ -1,5 +1,5 @@
 (function() {
-  var Arrow, ArrowsContainer, Edge, SVGAnimation, SVGMask, SVGTransform, Segment, getParentInverseTransform,
+  var Arrow, ArrowsContainer, Edge, SVGMask, Segment, getParentInverseTransform,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
@@ -238,24 +238,23 @@
     return Make("SVGArrows", SVGArrows = function(activity, arrows, controlButton) {
       var scope;
       return scope = {
-        open: true,
+        showing: true,
         setup: function() {
           return PointerInput.addClick(controlButton.getElement(), scope.toggle);
         },
         toggle: function() {
-          scope.open = !scope.open;
-          if (scope.open) {
-            return scope.show();
-          } else {
+          if (scope.showing) {
             return scope.hide();
+          } else {
+            return scope.show();
           }
         },
         show: function() {
-          scope.open = true;
+          scope.showing = true;
           return arrows.show();
         },
         hide: function() {
-          scope.open = false;
+          scope.showing = false;
           return arrows.hide();
         }
       };
@@ -318,7 +317,7 @@
     });
   });
 
-  Take(["Ease", "PointerInput"], function(Ease, PointerInput) {
+  Take(["Ease", "PointerInput", "RequestUniqueAnimation"], function(Ease, PointerInput, RequestUniqueAnimation) {
     var SVGCamera, setupElementWithFunction;
     setupElementWithFunction = function(svgElement, element, behaviourCode, addBehaviour, releaseBehaviour) {
       var behaviourId, keyBehaviourId, keyDown, onUp;
@@ -448,7 +447,7 @@
             }
           });
           scope.handleScaling();
-          return requestAnimationFrame(scope.updateAnimation);
+          return RequestUniqueAnimation(scope.updateAnimation);
         },
         toggle: function() {
           scope.open = !scope.open;
@@ -531,7 +530,7 @@
             scope.velocity.z = 0;
           }
           scope.updatePosition(dT);
-          return requestAnimationFrame(scope.updateAnimation);
+          return RequestUniqueAnimation(scope.updateAnimation);
         },
         updatePosition: function(dT) {
           var leftStop, length, rightStop, vX, vY, vZ;
@@ -680,10 +679,10 @@
             scope[property] = newValue;
             scope.setViewBox();
             if (totalTime < timeToTransform) {
-              return requestAnimationFrame(transformProperty);
+              return RequestUniqueAnimation(transformProperty);
             }
           };
-          return requestAnimationFrame(transformProperty);
+          return RequestUniqueAnimation(transformProperty);
         },
         getZoomIncrease: function() {
           var zoomIncrease, zoomSpeed;
@@ -745,10 +744,10 @@
               scope.mainStage.transform.scale = scope.zoom;
             }
             if (!(xDone && yDone && zoomDone)) {
-              return requestAnimationFrame(animateToPosition);
+              return RequestUniqueAnimation(animateToPosition);
             }
           };
-          return requestAnimationFrame(animateToPosition);
+          return RequestUniqueAnimation(animateToPosition);
         },
         handleScaling: function() {
           var onResize;
@@ -1444,51 +1443,54 @@
     });
   })();
 
-  Make("SVGAnimation", SVGAnimation = function(callback) {
-    var scope;
-    return scope = {
-      running: false,
-      restart: false,
-      time: 0,
-      startTime: 0,
-      dT: 0,
-      runAnimation: function(currTime) {
-        var dT, newTime;
-        if (!scope.running) {
-          return;
+  Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
+    var SVGAnimation;
+    return Make("SVGAnimation", SVGAnimation = function(callback) {
+      var scope;
+      return scope = {
+        running: false,
+        restart: false,
+        time: 0,
+        startTime: 0,
+        dT: 0,
+        runAnimation: function(currTime) {
+          var dT, newTime;
+          if (!scope.running) {
+            return;
+          }
+          if (scope.restart) {
+            scope.startTime = currTime;
+            scope.time = 0;
+            scope.restart = false;
+          } else {
+            newTime = currTime - scope.startTime;
+            dT = (newTime - scope.time) / 1000;
+            scope.time = newTime;
+            callback(dT, scope.time);
+          }
+          if (scope.running) {
+            return RequestUniqueAnimation(scope.runAnimation);
+          }
+        },
+        start: function() {
+          var startAnimation;
+          if (scope.running) {
+            scope.restart = true;
+            return;
+          }
+          scope.running = true;
+          startAnimation = function(currTime) {
+            scope.startTime = currTime;
+            scope.time = 0;
+            return RequestUniqueAnimation(scope.runAnimation);
+          };
+          return RequestUniqueAnimation(startAnimation);
+        },
+        stop: function() {
+          return scope.running = false;
         }
-        if (scope.restart) {
-          scope.startTime = currTime;
-          scope.time = 0;
-          scope.restart = false;
-        } else {
-          newTime = currTime - scope.startTime;
-          dT = (newTime - scope.time) / 1000;
-          scope.time = newTime;
-          callback(dT, scope.time);
-        }
-        if (scope.running) {
-          return requestAnimationFrame(scope.runAnimation);
-        }
-      },
-      start: function() {
-        var startAnimation;
-        if (scope.running) {
-          scope.restart = true;
-          return;
-        }
-        scope.running = true;
-        startAnimation = function(currTime) {
-          scope.startTime = currTime;
-          scope.time = 0;
-          return requestAnimationFrame(scope.runAnimation);
-        };
-        return requestAnimationFrame(startAnimation);
-      },
-      stop: function() {
-        return scope.running = false;
-      }
-    };
+      };
+    });
   });
 
   Take("DOMContentLoaded", function() {
@@ -1601,7 +1603,8 @@
   Take(["PureDom", "HydraulicPressure"], function(PureDom, HydraulicPressure) {
     var SVGStyle;
     return Make("SVGStyle", SVGStyle = function(svgElement) {
-      var scope;
+      var scope, styleCache;
+      styleCache = {};
       return scope = {
         pressure: 0,
         visible: function(isVisible) {
@@ -1745,8 +1748,11 @@
             return textElement.textContent = text;
           }
         },
-        setProperty: function(propertyName, propertyValue) {
-          return svgElement.style[propertyName] = propertyValue;
+        setProperty: function(key, val) {
+          if (styleCache[key] !== val) {
+            styleCache[key] = val;
+            return svgElement.style[key] = val;
+          }
         },
         getElement: function() {
           return svgElement;
@@ -1755,134 +1761,156 @@
     });
   });
 
-  Make("SVGTransform", SVGTransform = function(svgElement) {
-    var scope;
-    return scope = {
-      angleVal: 0,
-      xVal: 0,
-      yVal: 0,
-      cxVal: 0,
-      cyVal: 0,
-      scaleVal: 1,
-      scaleXVal: 1,
-      scaleYVal: 1,
-      turnsVal: 0,
-      scaleString: "",
-      translateString: "",
-      rotationString: "",
-      baseTransform: svgElement.getAttribute("transform"),
-      setup: function() {
-        Object.defineProperty(scope, 'x', {
-          get: function() {
-            return scope.xVal;
-          },
-          set: function(val) {
-            scope.xVal = val;
-            return scope.translate(val, scope.y);
+  Take("RequestDeferredRender", function(RequestDeferredRender) {
+    var SVGTransform;
+    return Make("SVGTransform", SVGTransform = function(svgElement) {
+      var currentTransformString, didRequest, newTransformString, scope;
+      currentTransformString = null;
+      newTransformString = null;
+      didRequest = false;
+      return scope = {
+        angleVal: 0,
+        xVal: 0,
+        yVal: 0,
+        cxVal: 0,
+        cyVal: 0,
+        scaleVal: 1,
+        scaleXVal: 1,
+        scaleYVal: 1,
+        turnsVal: 0,
+        scaleString: "",
+        translateString: "",
+        rotationString: "",
+        baseTransform: svgElement.getAttribute("transform"),
+        setup: function() {
+          Object.defineProperty(scope, 'x', {
+            get: function() {
+              return scope.xVal;
+            },
+            set: function(val) {
+              scope.xVal = val;
+              return scope.translate(val, scope.y);
+            }
+          });
+          Object.defineProperty(scope, 'y', {
+            get: function() {
+              return scope.yVal;
+            },
+            set: function(val) {
+              scope.yVal = val;
+              return scope.translate(scope.x, val);
+            }
+          });
+          Object.defineProperty(scope, 'cx', {
+            get: function() {
+              return scope.cxVal;
+            },
+            set: function(val) {
+              scope.cxVal = val;
+              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+            }
+          });
+          Object.defineProperty(scope, 'cy', {
+            get: function() {
+              return scope.cyVal;
+            },
+            set: function(val) {
+              scope.cyVal = val;
+              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+            }
+          });
+          Object.defineProperty(scope, 'turns', {
+            get: function() {
+              return scope.turnsVal;
+            },
+            set: function(val) {
+              scope.turnsVal = val;
+              scope.angleVal = scope.turnsVal * 360;
+              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+            }
+          });
+          Object.defineProperty(scope, 'angle', {
+            get: function() {
+              return scope.angleVal;
+            },
+            set: function(val) {
+              scope.angleVal = val;
+              scope.turnsVal = scope.angleVal / 360;
+              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+            }
+          });
+          Object.defineProperty(scope, 'scale', {
+            get: function() {
+              return scope.scaleVal;
+            },
+            set: function(val) {
+              scope.scaleVal = val;
+              return scope.scaling(val);
+            }
+          });
+          Object.defineProperty(scope, 'scaleX', {
+            get: function() {
+              return scope.scaleXVal;
+            },
+            set: function(val) {
+              scope.scaleXVal = val;
+              return scope.scaling(scope.scaleXVal, scope.scaleYVal);
+            }
+          });
+          return Object.defineProperty(scope, 'scaleY', {
+            get: function() {
+              return scope.scaleYVal;
+            },
+            set: function(val) {
+              scope.scaleYVal = val;
+              return scope.scaling(scope.scaleXVal, scope.scaleYVal);
+            }
+          });
+        },
+        rotate: function(angle, cx, cy) {
+          scope.rotationString = "rotate(" + angle + ", " + cx + ", " + cy + ")";
+          return scope.setTransform();
+        },
+        translate: function(x, y) {
+          scope.translateString = "translate(" + x + ", " + y + ")";
+          return scope.setTransform();
+        },
+        scaling: function(scaleX, scaleY) {
+          if (scaleY == null) {
+            scaleY = scaleX;
           }
-        });
-        Object.defineProperty(scope, 'y', {
-          get: function() {
-            return scope.yVal;
-          },
-          set: function(val) {
-            scope.yVal = val;
-            return scope.translate(scope.x, val);
+          scope.scaleString = "scale(" + scaleX + ", " + scaleY + ")";
+          return scope.setTransform();
+        },
+        setBaseTransform: function() {
+          return scope.baseTransform = svgElement.getAttribute("transform");
+        },
+        setBaseIdentity: function() {
+          return scope.baseTransform = "matrix(1,0,0,1,0,0)";
+        },
+        setTransform: function() {
+          var newTransform;
+          newTransform = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
+          return svgElement.setAttribute('transform', newTransform);
+        },
+        setTransform: function() {
+          newTransformString = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
+          if (didRequest) {
+            return;
           }
-        });
-        Object.defineProperty(scope, 'cx', {
-          get: function() {
-            return scope.cxVal;
-          },
-          set: function(val) {
-            scope.cxVal = val;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          didRequest = true;
+          return RequestDeferredRender(scope.applyTransform);
+        },
+        applyTransform: function() {
+          if (currentTransformString === newTransformString) {
+            return;
           }
-        });
-        Object.defineProperty(scope, 'cy', {
-          get: function() {
-            return scope.cyVal;
-          },
-          set: function(val) {
-            scope.cyVal = val;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        Object.defineProperty(scope, 'turns', {
-          get: function() {
-            return scope.turnsVal;
-          },
-          set: function(val) {
-            scope.turnsVal = val;
-            scope.angleVal = scope.turnsVal * 360;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        Object.defineProperty(scope, 'angle', {
-          get: function() {
-            return scope.angleVal;
-          },
-          set: function(val) {
-            scope.angleVal = val;
-            scope.turnsVal = scope.angleVal / 360;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        Object.defineProperty(scope, 'scale', {
-          get: function() {
-            return scope.scaleVal;
-          },
-          set: function(val) {
-            scope.scaleVal = val;
-            return scope.scaling(val);
-          }
-        });
-        Object.defineProperty(scope, 'scaleX', {
-          get: function() {
-            return scope.scaleXVal;
-          },
-          set: function(val) {
-            scope.scaleXVal = val;
-            return scope.scaling(scope.scaleXVal, scope.scaleYVal);
-          }
-        });
-        return Object.defineProperty(scope, 'scaleY', {
-          get: function() {
-            return scope.scaleYVal;
-          },
-          set: function(val) {
-            scope.scaleYVal = val;
-            return scope.scaling(scope.scaleXVal, scope.scaleYVal);
-          }
-        });
-      },
-      rotate: function(angle, cx, cy) {
-        scope.rotationString = "rotate(" + angle + ", " + cx + ", " + cy + ")";
-        return scope.setTransform();
-      },
-      translate: function(x, y) {
-        scope.translateString = "translate(" + x + ", " + y + ")";
-        return scope.setTransform();
-      },
-      scaling: function(scaleX, scaleY) {
-        if (scaleY == null) {
-          scaleY = scaleX;
+          currentTransformString = newTransformString;
+          didRequest = false;
+          return svgElement.setAttribute("transform", currentTransformString);
         }
-        scope.scaleString = "scale(" + scaleX + ", " + scaleY + ")";
-        return scope.setTransform();
-      },
-      setBaseTransform: function() {
-        return scope.baseTransform = svgElement.getAttribute("transform");
-      },
-      setBaseIdentity: function() {
-        return scope.baseTransform = "matrix(1,0,0,1,0,0)";
-      },
-      setTransform: function() {
-        var newTransform;
-        newTransform = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
-        return svgElement.setAttribute('transform', newTransform);
-      }
-    };
+      };
+    });
   });
 
   (function() {
@@ -2313,7 +2341,9 @@
 
     Arrow.prototype.element = null;
 
-    Arrow.prototype.visible = true;
+    Arrow.prototype.visible = false;
+
+    Arrow.prototype.deltaFlow = 0;
 
     Arrow.prototype.vector = null;
 
@@ -2326,6 +2356,8 @@
       this.edgeIndex = edgeIndex1;
       this.flowArrows = flowArrows1;
       this.update = bind(this.update, this);
+      this.setVisibility = bind(this.setVisibility, this);
+      this.updateVisibility = bind(this.updateVisibility, this);
       this.setColor = bind(this.setColor, this);
       this.createArrow = bind(this.createArrow, this);
       this.createArrow();
@@ -2354,13 +2386,27 @@
       return this.element.setAttributeNS(null, "stroke", fillColor);
     };
 
+    Arrow.prototype.updateVisibility = function() {
+      if (this.visible && this.deltaFlow !== 0) {
+        if (this.element.style.visibility !== "visible") {
+          return this.element.style.visibility = "visible";
+        }
+      } else {
+        if (this.element.style.visibility !== "hidden") {
+          return this.element.style.visibility = "hidden";
+        }
+      }
+    };
+
+    Arrow.prototype.setVisibility = function(isVisible) {
+      this.visible = isVisible;
+      return this.updateVisibility();
+    };
+
     Arrow.prototype.update = function(deltaFlow) {
       var angle, currentPosition, fadeLength, scaleFactor, scalingFactor, transString;
-      if (deltaFlow === 0 || !this.visible) {
-        this.element.style.visibility = "hidden";
-      } else {
-        this.element.style.visibility = "visible";
-      }
+      this.deltaFlow = deltaFlow;
+      this.updateVisibility();
       this.position += deltaFlow;
       while (this.position > this.edge.length) {
         this.edgeIndex++;
@@ -2507,9 +2553,13 @@
 
   })();
 
-  (function() {
-    return Take("Organizer", function(Organizer) {
-      var FlowArrows, removeOriginalArrow, startAnimation;
+  Take(["Organizer", "RequestUniqueAnimation"], function(Organizer, RequestUniqueAnimation) {
+    var FlowArrows;
+    return Make("FlowArrows", FlowArrows = function() {
+      var currentTime, elapsedTime, removeOriginalArrow, requested, scope, update;
+      currentTime = null;
+      elapsedTime = 0;
+      requested = false;
       removeOriginalArrow = function(selectedSymbol) {
         var child, children, k, l, len, len1, ref, results;
         children = [];
@@ -2525,76 +2575,80 @@
         }
         return results;
       };
-      startAnimation = function(arrowsContainers) {
-        var currentTime, elapsedTime, update;
-        currentTime = null;
-        elapsedTime = 0;
-        update = function(time) {
-          var arrowsContainer, dT, k, len;
-          if (currentTime == null) {
-            currentTime = time;
-          }
-          dT = (time - currentTime) / 1000;
+      update = function(time) {
+        var arrowsContainer, dT, k, len, ref, results;
+        RequestUniqueAnimation(update);
+        if (currentTime == null) {
           currentTime = time;
-          elapsedTime += dT;
-          for (k = 0, len = arrowsContainers.length; k < len; k++) {
-            arrowsContainer = arrowsContainers[k];
-            arrowsContainer.update(dT);
-          }
-          return requestAnimationFrame(update);
-        };
-        return requestAnimationFrame(update);
+        }
+        dT = (time - currentTime) / 1000;
+        currentTime = time;
+        elapsedTime += dT;
+        if (!scope.isVisible) {
+          return;
+        }
+        ref = scope.arrowsContainers;
+        results = [];
+        for (k = 0, len = ref.length; k < len; k++) {
+          arrowsContainer = ref[k];
+          results.push(arrowsContainer.update(dT));
+        }
+        return results;
       };
-      return Make("FlowArrows", FlowArrows = function() {
-        var scope;
-        return scope = {
-          SPEED: 200,
-          MIN_EDGE_LENGTH: 8,
-          MIN_SEGMENT_LENGTH: 1,
-          CONNECTED_DISTANCE: 1,
-          ARROWS_PROPERTY: "arrows",
-          scale: 0.75,
-          SPACING: 600,
-          FADE_LENGTH: 50,
-          arrowsContainers: [],
-          setup: function(parent, selectedSymbol, linesData) {
-            var arrowsContainer, k, len, lineData;
-            removeOriginalArrow(selectedSymbol);
-            arrowsContainer = new ArrowsContainer(selectedSymbol);
-            scope.arrowsContainers.push(arrowsContainer);
-            for (k = 0, len = linesData.length; k < len; k++) {
-              lineData = linesData[k];
-              Organizer.build(parent, lineData.edges, arrowsContainer, this);
-            }
-            return arrowsContainer;
-          },
-          show: function() {
-            var arrowsContainer, k, len, ref, results;
-            ref = scope.arrowsContainers;
-            results = [];
-            for (k = 0, len = ref.length; k < len; k++) {
-              arrowsContainer = ref[k];
-              results.push(arrowsContainer.visible(true));
-            }
-            return results;
-          },
-          hide: function() {
-            var arrowsContainer, k, len, ref, results;
-            ref = scope.arrowsContainers;
-            results = [];
-            for (k = 0, len = ref.length; k < len; k++) {
-              arrowsContainer = ref[k];
-              results.push(arrowsContainer.visible(false));
-            }
-            return results;
-          },
-          start: function() {
-            return startAnimation(scope.arrowsContainers);
+      return scope = {
+        isVisible: false,
+        SPEED: 200,
+        MIN_EDGE_LENGTH: 8,
+        MIN_SEGMENT_LENGTH: 1,
+        CONNECTED_DISTANCE: 1,
+        ARROWS_PROPERTY: "arrows",
+        scale: 0.75,
+        SPACING: 600,
+        FADE_LENGTH: 50,
+        arrowsContainers: [],
+        setup: function(parent, selectedSymbol, linesData) {
+          var arrowsContainer, k, len, lineData;
+          removeOriginalArrow(selectedSymbol);
+          arrowsContainer = new ArrowsContainer(selectedSymbol);
+          scope.arrowsContainers.push(arrowsContainer);
+          for (k = 0, len = linesData.length; k < len; k++) {
+            lineData = linesData[k];
+            Organizer.build(parent, lineData.edges, arrowsContainer, this);
           }
-        };
-      });
+          if (!requested) {
+            requested = true;
+            RequestUniqueAnimation(update);
+          }
+          return arrowsContainer;
+        },
+        show: function() {
+          var arrowsContainer, k, len, ref, results;
+          scope.isVisible = true;
+          ref = scope.arrowsContainers;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            arrowsContainer = ref[k];
+            results.push(arrowsContainer.visible(true));
+          }
+          return results;
+        },
+        hide: function() {
+          var arrowsContainer, k, len, ref, results;
+          scope.isVisible = false;
+          ref = scope.arrowsContainers;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            arrowsContainer = ref[k];
+            results.push(arrowsContainer.visible(false));
+          }
+          return results;
+        },
+        start: function() {
+          return console.log("FlowArrows.start() is deprecated. Please remove it from your animation.");
+        }
+      };
     });
-  })();
+  });
 
   (function() {
     var Organizer, angle, cullShortEdges, cullShortSegments, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
@@ -2857,7 +2911,7 @@
       results = [];
       for (k = 0, len = ref.length; k < len; k++) {
         arrow = ref[k];
-        results.push(arrow.visible = isVisible);
+        results.push(arrow.setVisibility(isVisible));
       }
       return results;
     };

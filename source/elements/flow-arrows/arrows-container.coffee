@@ -16,6 +16,7 @@ class ArrowsContainer
   visible: (isVisible)=>
     for segment in @segments
       segment.visible(isVisible)
+
   reverse: ()=>
     @direction *= -1
 

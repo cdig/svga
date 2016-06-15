@@ -1,4 +1,4 @@
-Take ["Ease", "PointerInput"], (Ease, PointerInput)->
+Take ["Ease", "PointerInput", "RequestUniqueAnimation"], (Ease, PointerInput, RequestUniqueAnimation)->
   setupElementWithFunction = (svgElement, element, behaviourCode, addBehaviour, releaseBehaviour)->
     behaviourId = 0
 
@@ -113,7 +113,7 @@ Take ["Ease", "PointerInput"], (Ease, PointerInput)->
           if e.keyCode is 88
             console.log "setTransformation(#{scope.transX}, #{scope.transY}, #{scope.zoom})"
         scope.handleScaling()
-        requestAnimationFrame(scope.updateAnimation)
+        RequestUniqueAnimation(scope.updateAnimation)
 
       toggle: ()->
         scope.open = !scope.open
@@ -165,7 +165,7 @@ Take ["Ease", "PointerInput"], (Ease, PointerInput)->
 
 
         scope.updatePosition(dT)
-        requestAnimationFrame(scope.updateAnimation)
+        RequestUniqueAnimation(scope.updateAnimation)
 
       updatePosition: (dT)->
         rightStop = svgElement.getBoundingClientRect().width / 2
@@ -282,8 +282,8 @@ Take ["Ease", "PointerInput"], (Ease, PointerInput)->
           scope.setViewBox()
 
           if totalTime < timeToTransform
-            requestAnimationFrame(transformProperty)
-        requestAnimationFrame(transformProperty)
+            RequestUniqueAnimation(transformProperty)
+        RequestUniqueAnimation(transformProperty)
 
 
       getZoomIncrease: ()->
@@ -339,9 +339,9 @@ Take ["Ease", "PointerInput"], (Ease, PointerInput)->
             scope.mainStage.transform.scale = scope.zoom
 
           if not (xDone and yDone and zoomDone)
-            requestAnimationFrame animateToPosition
+            RequestUniqueAnimation animateToPosition
 
-        requestAnimationFrame animateToPosition
+        RequestUniqueAnimation animateToPosition
 
       handleScaling: ()->
         onResize = ()->
@@ -366,5 +366,3 @@ Take ["Ease", "PointerInput"], (Ease, PointerInput)->
 
         onResize()
         window.addEventListener "resize", onResize
-
-

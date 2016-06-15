@@ -30,7 +30,8 @@ class Segment
 
   visible: (isVisible)=>
     for arrow in @arrows
-      arrow.visible = isVisible
+      arrow.setVisibility(isVisible)
+  
   reverse: ()=>
     @direction *= -1
 
@@ -45,7 +46,3 @@ class Segment
     for arrow in @arrows
       arrow.setColor(@fillColor)
       arrow.update(arrowFlow)
-
-
-
-

@@ -24,6 +24,10 @@ do ()->
       return console.log "Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console."
     
     deferredCallbacks.push cb
+
+    if not requested
+      requested = true
+      requestAnimationFrame run
   
   
   Make "RequestUniqueAnimation", (cb, ignoreDuplicates = false)->

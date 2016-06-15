@@ -1489,7 +1489,7 @@
     });
   });
 
-  Take("", function() {
+  Take([], function() {
     var global;
     global = {};
     Make("SVGGlobalState", function() {

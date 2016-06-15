@@ -1,4 +1,4 @@
-Take "", ()->
+Take [], ()->
   global = {}
   Make "SVGGlobalState", ()-> global
   

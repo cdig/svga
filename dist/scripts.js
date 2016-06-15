@@ -1713,16 +1713,6 @@
       rotationString: "",
       baseTransform: svgElement.getAttribute("transform"),
       setup: function() {
-        Object.defineProperty(scope, 'angle', {
-          get: function() {
-            return scope.angleVal;
-          },
-          set: function(val) {
-            scope.angleVal = val;
-            scope.turnsVal = scope.angleVal / 360;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
         Object.defineProperty(scope, 'x', {
           get: function() {
             return scope.xVal;
@@ -1739,6 +1729,44 @@
           set: function(val) {
             scope.yVal = val;
             return scope.translate(scope.x, val);
+          }
+        });
+        Object.defineProperty(scope, 'cx', {
+          get: function() {
+            return scope.cxVal;
+          },
+          set: function(val) {
+            scope.cxVal = val;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          }
+        });
+        Object.defineProperty(scope, 'cy', {
+          get: function() {
+            return scope.cyVal;
+          },
+          set: function(val) {
+            scope.cyVal = val;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          }
+        });
+        Object.defineProperty(scope, 'turns', {
+          get: function() {
+            return scope.turnsVal;
+          },
+          set: function(val) {
+            scope.turnsVal = val;
+            scope.angleVal = scope.turnsVal * 360;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
+          }
+        });
+        Object.defineProperty(scope, 'angle', {
+          get: function() {
+            return scope.angleVal;
+          },
+          set: function(val) {
+            scope.angleVal = val;
+            scope.turnsVal = scope.angleVal / 360;
+            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
           }
         });
         Object.defineProperty(scope, 'scale', {
@@ -1759,41 +1787,13 @@
             return scope.scaling(scope.scaleXVal, scope.scaleYVal);
           }
         });
-        Object.defineProperty(scope, 'scaleY', {
+        return Object.defineProperty(scope, 'scaleY', {
           get: function() {
             return scope.scaleYVal;
           },
           set: function(val) {
             scope.scaleYVal = val;
             return scope.scaling(scope.scaleXVal, scope.scaleYVal);
-          }
-        });
-        Object.defineProperty(scope, 'turns', {
-          get: function() {
-            return scope.turnsVal;
-          },
-          set: function(val) {
-            scope.turnsVal = val;
-            scope.angleVal = scope.turnsVal * 360;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        Object.defineProperty(scope, 'cx', {
-          get: function() {
-            return scope.cxVal;
-          },
-          set: function(val) {
-            scope.cxVal = val;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-          }
-        });
-        return Object.defineProperty(scope, 'cy', {
-          get: function() {
-            return scope.cyVal;
-          },
-          set: function(val) {
-            scope.cyVal = val;
-            return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
           }
         });
       },

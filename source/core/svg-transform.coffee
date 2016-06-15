@@ -1,5 +1,5 @@
 Make "SVGTransform", SVGTransform = (svgElement)->
-  scope = 
+  scope =
       angleVal: 0
       xVal: 0
       yVal: 0
@@ -17,13 +17,6 @@ Make "SVGTransform", SVGTransform = (svgElement)->
       baseTransform: svgElement.getAttribute("transform")
 
       setup: ()->
-        Object.defineProperty scope, 'angle',
-          get: -> return scope.angleVal
-          set: (val)->
-            scope.angleVal = val
-            scope.turnsVal = scope.angleVal / 360
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-            
         Object.defineProperty scope, 'x',
           get: -> return scope.xVal
           set: (val)->
@@ -35,7 +28,33 @@ Make "SVGTransform", SVGTransform = (svgElement)->
           set: (val)->
             scope.yVal = val
             scope.translate(scope.x, val)
-
+        
+        Object.defineProperty scope, 'cx',
+          get: -> return scope.cxVal
+          set: (val)->
+            scope.cxVal = val
+            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
+        
+        Object.defineProperty scope, 'cy',
+          get: -> return scope.cyVal
+          set: (val)->
+            scope.cyVal = val
+            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
+      
+        Object.defineProperty scope, 'turns',
+          get: -> return scope.turnsVal
+          set: (val)->
+            scope.turnsVal = val
+            scope.angleVal = scope.turnsVal * 360
+            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
+              
+        Object.defineProperty scope, 'angle',
+          get: -> return scope.angleVal
+          set: (val)->
+            scope.angleVal = val
+            scope.turnsVal = scope.angleVal / 360
+            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
+            
         Object.defineProperty scope, 'scale',
           get: -> return scope.scaleVal
           set: (val)->
@@ -54,26 +73,8 @@ Make "SVGTransform", SVGTransform = (svgElement)->
             scope.scaleYVal = val
             scope.scaling(scope.scaleXVal, scope.scaleYVal)
 
-
-        Object.defineProperty scope, 'turns',
-          get: -> return scope.turnsVal
-          set: (val)->
-            scope.turnsVal = val
-            scope.angleVal = scope.turnsVal * 360
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-            
-        Object.defineProperty scope, 'cx',
-          get: -> return scope.cxVal
-          set: (val)->
-            scope.cxVal = val
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-        
-        Object.defineProperty scope, 'cy',
-          get: -> return scope.cyVal
-          set: (val)->
-            scope.cyVal = val
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-      #do not use these functions publicly 
+      # Private Functions
+      
       rotate: (angle, cx, cy)->
         scope.rotationString = "rotate(#{angle}, #{cx}, #{cy})"
         scope.setTransform()

@@ -1,5 +1,5 @@
 (function() {
-  var Arrow, ArrowsContainer, Edge, SVGMask, Segment, getParentInverseTransform,
+  var Arrow, ArrowsContainer, Dispatch, Edge, SVGMask, Segment, getParentInverseTransform,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
@@ -1174,6 +1174,23 @@
     });
   });
 
+  Make("Dispatch", Dispatch = function(node, name, childrenProp) {
+    var child, k, len, ref, results;
+    if (childrenProp == null) {
+      childrenProp = "children";
+    }
+    if (typeof node[name] === "function") {
+      node[name]();
+    }
+    ref = node[childrenProp];
+    results = [];
+    for (k = 0, len = ref.length; k < len; k++) {
+      child = ref[k];
+      results.push(Dispatch(child, name, childrenProp));
+    }
+    return results;
+  });
+
   Take([], function() {
     var Features;
     return Make("SVGA:Features", Features = {});
@@ -1281,89 +1298,8 @@
     });
   })();
 
-  Take(["crank", "defaultElement", "button", "slider", "Joystick", "SVGActivity", "DOMContentLoaded"], function(crank, defaultElement, button, slider, Joystick, SVGActivity) {
-    var SVGActivities, activities, activityDefinitions, waitingActivities, waitingForRunningActivity;
-    activityDefinitions = [];
-    activities = [];
-    waitingActivities = [];
-    waitingForRunningActivity = [];
-    return Make("SVGActivities", SVGActivities = {
-      registerActivityDefinition: function(activity) {
-        var k, l, len, len1, remove, results, toRemove, waitingActivity;
-        activityDefinitions[activity._name] = activity;
-        toRemove = [];
-        for (k = 0, len = waitingActivities.length; k < len; k++) {
-          waitingActivity = waitingActivities[k];
-          if (waitingActivity.name === activity._name) {
-            setTimeout(function() {
-              return SVGActivities.runActivity(waitingActivity.name, waitingActivity.id, waitingActivity.svg);
-            });
-            toRemove.push(waitingActivity);
-          }
-        }
-        results = [];
-        for (l = 0, len1 = toRemove.length; l < len1; l++) {
-          remove = toRemove[l];
-          results.push(waitingActivities.splice(waitingActivities.indexOf(remove), 1));
-        }
-        return results;
-      },
-      getActivity: function(activityID) {
-        return activities[activityName];
-      },
-      startActivity: function(activityName, activityId, svgElement) {
-        if (activities[activityId] != null) {
-          return;
-        }
-        if (!activityDefinitions[activityName]) {
-          return waitingActivities.push({
-            name: activityName,
-            id: activityId,
-            svg: svgElement
-          });
-        } else {
-          return setTimeout(function() {
-            return SVGActivities.runActivity(activityName, activityId, svgElement);
-          });
-        }
-      },
-      runActivity: function(activityName, id, svgElement, waitingActivity) {
-        var activity, k, len, pair, ref, svg, svgActivity;
-        activity = activityDefinitions[activityName];
-        activity.registerInstance("joystick", "joystick");
-        activityName = activity._name;
-        activity.crank = crank;
-        activity.button = button;
-        activity.slider = slider;
-        activity.defaultElement = defaultElement;
-        activity.joystick = Joystick;
-        svgActivity = SVGActivity();
-        ref = activity._instances;
-        for (k = 0, len = ref.length; k < len; k++) {
-          pair = ref[k];
-          svgActivity.registerInstance(pair.name, activity[pair.instance]);
-        }
-        svgActivity.registerInstance("default", activity.defaultElement);
-        svg = svgElement.contentDocument.querySelector("svg");
-        svgActivity.setupDocument(activityName, svg);
-        svgElement.style.opacity = 1.0;
-        activities[id] = svgActivity;
-        return Make(id, activities[id].root);
-      }
-    });
-  });
-
-  Take(["defaultElement", "PureDom", "FlowArrows", "SVGControlPanel", "SVGTransform", "SVGStyle", "Global", "load"], function(defaultElement, PureDom, FlowArrows, SVGControlPanel, SVGTransform, SVGStyle, Global) {
-    var SVGActivity, getChildElements, setupColorMatrix, setupInstance;
-    setupInstance = function(instance) {
-      var child, k, len, ref;
-      ref = instance.children;
-      for (k = 0, len = ref.length; k < len; k++) {
-        child = ref[k];
-        setupInstance(child);
-      }
-      return typeof instance.setup === "function" ? instance.setup() : void 0;
-    };
+  Take([], function() {
+    var setupColorMatrix;
     setupColorMatrix = function(defs, name, matrixValue) {
       var colorMatrix, filter;
       filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
@@ -1375,92 +1311,159 @@
       filter.appendChild(colorMatrix);
       return defs.appendChild(filter);
     };
-    getChildElements = function(element) {
-      var child, childElements, childNum, childRef, children, k, len;
-      children = PureDom.querySelectorAllChildren(element, "g");
-      childElements = [];
-      childNum = 0;
-      for (k = 0, len = children.length; k < len; k++) {
-        child = children[k];
-        if (child.getAttribute("id") == null) {
-          childNum++;
-          childRef = "child" + childNum;
-          child.setAttribute("id", childRef);
+    return Make("SetupGraphic", function(svg) {
+      var defs;
+      defs = svg.querySelector("defs");
+      setupColorMatrix(defs, "highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
+      setupColorMatrix(defs, "greyscaleMatrix", ".33 .33 .33  0   0 .33 .33 .33  0   0 .33 .33 .33  0   0 0   0   0    1   0");
+      setupColorMatrix(defs, "allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
+      return svg;
+    });
+  });
+
+  Take(["button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "SVGActivity", "DOMContentLoaded"], function(button, crank, defaultElement, Joystick, SetupGraphic, slider, SVGActivity) {
+    var SVGActivities, activities, activityDefinitions, runActivity, waitingActivities, waitingForRunningActivity;
+    activityDefinitions = [];
+    activities = [];
+    waitingActivities = [];
+    waitingForRunningActivity = [];
+    runActivity = function(data) {
+      return setTimeout(function() {
+        var activityDefinition, k, len, pair, ref, svg, svgActivity;
+        activityDefinition = activityDefinitions[data.name];
+        activityDefinition.registerInstance("joystick", "joystick");
+        activityDefinition.crank = crank;
+        activityDefinition.button = button;
+        activityDefinition.slider = slider;
+        activityDefinition.defaultElement = defaultElement;
+        activityDefinition.joystick = Joystick;
+        svg = SetupGraphic(data.svg.contentDocument.querySelector("svg"));
+        svgActivity = SVGActivity();
+        activities[data.id] = svgActivity;
+        ref = activityDefinition._instances;
+        for (k = 0, len = ref.length; k < len; k++) {
+          pair = ref[k];
+          svgActivity.registerInstance(pair.name, activityDefinition[pair.instance]);
         }
-        childElements.push(child);
-      }
-      return childElements;
+        svgActivity.registerInstance("default", activityDefinition.defaultElement);
+        svgActivity.setupSvg(svg);
+        Make(data.id, svgActivity.root);
+        return data.svg.style.opacity = 1;
+      });
     };
-    return Make("SVGActivity", SVGActivity = function() {
-      var scope;
-      return scope = {
-        functions: {},
-        instances: {},
-        global: Global,
-        root: null,
-        registerInstance: function(instanceName, instance) {
-          return scope.instances[instanceName] = instance;
+    return Make("SVGActivities", SVGActivities = {
+      registerActivityDefinition: function(activityDefinition) {
+        var k, l, len, len1, remove, results, toRemove, waitingActivity;
+        activityDefinitions[activityDefinition._name] = activityDefinition;
+        toRemove = [];
+        for (k = 0, len = waitingActivities.length; k < len; k++) {
+          waitingActivity = waitingActivities[k];
+          if (waitingActivity.name === activityDefinition._name) {
+            runActivity(waitingActivity);
+            toRemove.push(waitingActivity);
+          }
+        }
+        results = [];
+        for (l = 0, len1 = toRemove.length; l < len1; l++) {
+          remove = toRemove[l];
+          results.push(waitingActivities.splice(waitingActivities.indexOf(remove), 1));
+        }
+        return results;
+      },
+      getActivity: function(activityID) {
+        console.log("DEPRECATED: getActivity");
+        return activities[activityName];
+      },
+      startActivity: function(activityName, activityId, svgElement) {
+        var data;
+        if (activities[activityId] != null) {
+          return;
+        }
+        data = {
+          name: activityName,
+          id: activityId,
+          svg: svgElement
+        };
+        if (!activityDefinitions[activityName]) {
+          return waitingActivities.push(data);
+        } else {
+          return runActivity(data);
+        }
+      }
+    });
+  });
+
+  Take(["defaultElement", "Dispatch", "FlowArrows", "Global", "PureDom", "SVGStyle", "SVGTransform", "load"], function(defaultElement, Dispatch, FlowArrows, Global, PureDom, SVGStyle, SVGTransform) {
+    return Make("SVGActivity", function() {
+      var activity, fetchSymbolFn, getChildElements, root, setupElement, symbolFns;
+      root = null;
+      symbolFns = {};
+      fetchSymbolFn = function(name) {
+        return symbolFns[name] || symbolFns["default"];
+      };
+      getChildElements = function(element) {
+        var child, childElements, childNum, childRef, children, k, len;
+        children = PureDom.querySelectorAllChildren(element, "g");
+        childElements = [];
+        childNum = 0;
+        for (k = 0, len = children.length; k < len; k++) {
+          child = children[k];
+          if (child.getAttribute("id") == null) {
+            childNum++;
+            childRef = "child" + childNum;
+            child.setAttribute("id", childRef);
+          }
+          childElements.push(child);
+        }
+        return childElements;
+      };
+      setupElement = function(parent, element) {
+        var base, child, childElements, id, instance, k, len, results;
+        id = element.getAttribute("id").split("_")[0];
+        instance = fetchSymbolFn(id)(element);
+        parent[id] = instance;
+        instance.transform = SVGTransform(element);
+        if (typeof (base = instance.transform).setup === "function") {
+          base.setup();
+        }
+        instance.style = SVGStyle(element);
+        parent.children.push(instance);
+        instance.children = [];
+        instance.global = Global;
+        instance.root = root;
+        instance.getElement = function() {
+          return element;
+        };
+        childElements = getChildElements(element);
+        results = [];
+        for (k = 0, len = childElements.length; k < len; k++) {
+          child = childElements[k];
+          results.push(setupElement(instance, child));
+        }
+        return results;
+      };
+      return activity = {
+        registerInstance: function(instanceName, symbolFn) {
+          return symbolFns[instanceName] = symbolFn;
         },
-        setupDocument: function(activityName, contentDocument) {
-          var base, child, childElements, defs, k, len;
-          scope.registerInstance("default", defaultElement);
-          scope.root = scope.instances["root"](contentDocument);
-          scope.root.FlowArrows = new FlowArrows();
-          scope.root.getElement = function() {
-            return contentDocument;
+        setupSvg: function(svg) {
+          var child, k, len, ref;
+          activity.registerInstance("default", defaultElement);
+          root = fetchSymbolFn("root")(svg);
+          root.FlowArrows = new FlowArrows();
+          root.getElement = function() {
+            return svg;
           };
-          scope.root.global = scope.global;
-          scope.root.root = scope.root;
-          defs = contentDocument.querySelector("defs");
-          setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
-          setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.0 0.0 0.0 1.0 0");
-          setupColorMatrix(defs, "allblackMatrix", "0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 0.0 0 0.0 0.0 0.0 1.0 0");
-          childElements = getChildElements(contentDocument);
-          scope.root.children = [];
-          for (k = 0, len = childElements.length; k < len; k++) {
-            child = childElements[k];
-            scope.setupElement(scope.root, child);
+          root.global = Global;
+          root.root = root;
+          root.children = [];
+          ref = getChildElements(svg);
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            setupElement(root, child);
           }
-          if (scope.root.controlPanel != null) {
-            scope.root._controlPanel = new SVGControlPanel(scope.root, scope.root.controlPanel);
-            if (typeof (base = scope.root._controlPanel).setup === "function") {
-              base.setup();
-            }
-          }
-          setupInstance(scope.root);
-          if (scope.root.controlPanel != null) {
-            return scope.root._controlPanel.schematicToggle.schematicMode();
-          }
-        },
-        getRootElement: function() {
-          console.log("DEPRECATED: getRootElement");
-          return scope.root.getRootElement();
-        },
-        setupElement: function(parent, element) {
-          var base, child, childElements, id, instance, k, len, results;
-          id = element.getAttribute("id");
-          id = id.split("_")[0];
-          instance = scope.instances[id] || scope.instances["default"];
-          parent[id] = instance(element);
-          parent[id].transform = SVGTransform(element);
-          if (typeof (base = parent[id].transform).setup === "function") {
-            base.setup();
-          }
-          parent[id].style = SVGStyle(element);
-          parent.children.push(parent[id]);
-          parent[id].children = [];
-          parent[id].global = scope.global;
-          parent[id].root = scope.root;
-          parent[id].getElement = function() {
-            return element;
-          };
-          childElements = getChildElements(element);
-          results = [];
-          for (k = 0, len = childElements.length; k < len; k++) {
-            child = childElements[k];
-            results.push(scope.setupElement(parent[id], child));
-          }
-          return results;
+          Dispatch(root, "setup");
+          return Dispatch(root, "schematicMode");
         }
       };
     });

@@ -1,49 +1,58 @@
-Take ["crank", "defaultElement", "button", "slider", "Joystick", "SVGActivity", "DOMContentLoaded"],
- (crank, defaultElement, button, slider, Joystick, SVGActivity)->
-    activityDefinitions = []
-    activities = []
-    waitingActivities = []
-    waitingForRunningActivity = []
+Take ["button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "SVGActivity", "DOMContentLoaded"],
+(      button ,  crank ,  defaultElement ,  Joystick ,  SetupGraphic ,  slider ,  SVGActivity)->
+  
+  activityDefinitions = []
+  activities = []
+  waitingActivities = []
+  waitingForRunningActivity = []
+  
+  
+  runActivity = (data)->
+    setTimeout ()->
+      activityDefinition = activityDefinitions[data.name]
+      activityDefinition.registerInstance("joystick", "joystick")
+      activityDefinition.crank = crank
+      activityDefinition.button = button
+      activityDefinition.slider = slider
+      activityDefinition.defaultElement = defaultElement
+      activityDefinition.joystick = Joystick
+      svg = SetupGraphic data.svg.contentDocument.querySelector "svg"
+      svgActivity = SVGActivity()
+      activities[data.id] = svgActivity
+      for pair in activityDefinition._instances
+        svgActivity.registerInstance(pair.name, activityDefinition[pair.instance])
+      svgActivity.registerInstance("default", activityDefinition.defaultElement)
+      svgActivity.setupSvg svg
+      Make data.id, svgActivity.root
+      data.svg.style.opacity = 1
+
+  
+  Make "SVGActivities", SVGActivities =
     
-    Make "SVGActivities", SVGActivities =
-      registerActivityDefinition: (activity)->
-        activityDefinitions[activity._name] = activity
-        toRemove = []
-        for waitingActivity in waitingActivities
-          if waitingActivity.name is activity._name
-            setTimeout ()->
-              SVGActivities.runActivity(waitingActivity.name, waitingActivity.id, waitingActivity.svg)
-            toRemove.push waitingActivity
-        for remove in toRemove
-          waitingActivities.splice(waitingActivities.indexOf(remove), 1)
+    registerActivityDefinition: (activityDefinition)->
+      activityDefinitions[activityDefinition._name] = activityDefinition
+      toRemove = []
+      for waitingActivity in waitingActivities
+        if waitingActivity.name is activityDefinition._name
+          runActivity waitingActivity
+          toRemove.push waitingActivity
+      for remove in toRemove
+        waitingActivities.splice(waitingActivities.indexOf(remove), 1)
 
-      getActivity: (activityID)->
-        return activities[activityName]
 
-      startActivity: (activityName, activityId, svgElement)->
-        if activities[activityId]?
-          return
-        if not activityDefinitions[activityName]
-          waitingActivities.push {name: activityName, id: activityId, svg: svgElement}
-        else
-          setTimeout ()->
-            SVGActivities.runActivity(activityName, activityId, svgElement)
+    getActivity: (activityID)->
+      console.log "DEPRECATED: getActivity"
+      return activities[activityName]
 
-      runActivity: (activityName, id, svgElement, waitingActivity)->
-        activity = activityDefinitions[activityName]
-        activity.registerInstance("joystick", "joystick")
-        activityName = activity._name
-        activity.crank = crank
-        activity.button = button
-        activity.slider = slider
-        activity.defaultElement = defaultElement
-        activity.joystick = Joystick
-        svgActivity = SVGActivity()
-        for pair in activity._instances
-          svgActivity.registerInstance(pair.name, activity[pair.instance])
-        svgActivity.registerInstance("default", activity.defaultElement)
-        svg = svgElement.contentDocument.querySelector("svg")
-        svgActivity.setupDocument(activityName, svg)
-        svgElement.style.opacity = 1.0
-        activities[id] = svgActivity
-        Make id, activities[id].root
+
+    startActivity: (activityName, activityId, svgElement)->
+      return if activities[activityId]?
+      data =
+        name: activityName
+        id: activityId
+        svg: svgElement
+      
+      if not activityDefinitions[activityName]
+        waitingActivities.push data
+      else
+        runActivity data

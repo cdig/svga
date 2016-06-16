@@ -1,6 +1,6 @@
 {
   "name": "svg-activity-components",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "",
   "devDependencies": {
     "coffee-script": "^=1.10.0",

@@ -1225,20 +1225,22 @@
   });
 
   Take([], function() {
-    var global, internal;
+    var global, internal, readWrite;
     Make("Global", global = {});
-    internal = {
-      animateMode: false
+    internal = {};
+    readWrite = function(name, initial) {
+      internal[name] = initial;
+      return Object.defineProperty(global, name, {
+        get: function() {
+          return internal[name];
+        },
+        set: function(val) {
+          return internal[name] = val;
+        }
+      });
     };
-    Object.defineProperty(global, "animateMode", {
-      get: function() {
-        return internal.animateMode;
-      },
-      set: function(val) {
-        return internal.animateMode = val;
-      }
-    });
-    return Object.defineProperty(global, "schematicMode", {
+    readWrite("animateMode", false);
+    Object.defineProperty(global, "schematicMode", {
       get: function() {
         return !internal.animateMode;
       },
@@ -1246,6 +1248,7 @@
         return internal.animateMode = !val;
       }
     });
+    return readWrite("enableHydraulicLines");
   });
 
   (function() {
@@ -1660,12 +1663,13 @@
     return maskedParent.setAttribute("style", newStyle);
   });
 
-  Take(["PureDom", "HydraulicPressure"], function(PureDom, HydraulicPressure) {
+  Take(["PureDom", "HydraulicPressure", "Global"], function(PureDom, HydraulicPressure, Global) {
     var SVGStyle;
     return Make("SVGStyle", SVGStyle = function(svgElement) {
-      var scope, styleCache;
+      var ref, scope, styleCache;
       styleCache = {};
       return scope = {
+        isLine: ((ref = svgElement.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1,
         pressure: 0,
         visible: function(isVisible) {
           if (isVisible) {
@@ -1686,7 +1690,11 @@
             alpha = 1.0;
           }
           scope.pressure = val;
-          return scope.fill(HydraulicPressure(scope.pressure, alpha));
+          if (scope.isLine && Global.enableHydraulicLines) {
+            return scope.stroke(HydraulicPressure(scope.pressure, alpha));
+          } else {
+            return scope.fill(HydraulicPressure(scope.pressure, alpha));
+          }
         },
         getPressure: function() {
           return scope.pressure;

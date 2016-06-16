@@ -1,8 +1,9 @@
-Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
+Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Global)->
   Make "SVGStyle", SVGStyle = (svgElement)->
     styleCache = {}
-
+    
     scope =
+      isLine: svgElement.getAttribute("id")?.indexOf("Line") > -1
       pressure: 0
       
       visible: (isVisible)->
@@ -19,7 +20,10 @@ Take ["PureDom", "HydraulicPressure"], (PureDom, HydraulicPressure)->
       
       setPressure: (val, alpha=1.0)->
         scope.pressure = val
-        scope.fill(HydraulicPressure(scope.pressure, alpha))
+        if scope.isLine and Global.enableHydraulicLines
+          scope.stroke HydraulicPressure scope.pressure, alpha
+        else
+          scope.fill HydraulicPressure scope.pressure, alpha
       
       getPressure: ()->
         return scope.pressure

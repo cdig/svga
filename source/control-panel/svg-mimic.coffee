@@ -8,7 +8,7 @@ Take ["Draggable", "PointerInput", "DOMContentLoaded"], (Draggable, PointerInput
 
       setup: ()->
         scope.draggable = new Draggable(control, activity)
-        scope.draggable.setup()
+        scope.draggable.setup?()
         PointerInput.addClick controlButton.getElement(), scope.toggle
         if control.closer?
           PointerInput.addClick control.closer.getElement(), scope.hide

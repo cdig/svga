@@ -53,41 +53,41 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
           rootElement.appendChild(root.navOverlay.getElement()) #these appends are done to
           #place elements on top layer
           scope.camera = new SVGCamera(rootElement, root.mainStage, root.navOverlay, controlPanel.nav)
-          scope.camera.setup()
+          scope.camera.setup?()
 
         if controlPanel.poi? and root.poiPanel?
           scope.poi = new SVGPOI(root.poiPanel, controlPanel.poi, root, scope.camera)
-          scope.poi.setup()
+          scope.poi.setup?()
 
         if controlPanel.bom?
           scope.bom = new SVGBOM(document, root,controlPanel.bom )
-          scope.bom.setup()
+          scope.bom.setup?()
 
         if controlPanel.background?
           scope.background = new SVGBackground(document, root, controlPanel.background)
-          scope.background.setup()
+          scope.background.setup?()
 
         if root.ctrlPanel? and controlPanel.controls
           rootElement.appendChild(root.ctrlPanel.getElement())
           scope.controls = new SVGControl(root, root.ctrlPanel, controlPanel.controls)
-          scope.controls.setup()
+          scope.controls.setup?()
         
         if root.mimicPanel? and controlPanel.mimic
           rootElement.appendChild(root.mimicPanel.getElement())
           scope.mimic = new SVGControl(root, root.mimicPanel, controlPanel.mimic)
-          scope.mimic.setup()
+          scope.mimic.setup?()
 
         if controlPanel.labels?
           scope.labels = new SVGLabels(root, root.mainStage.labelsContainer, controlPanel.labels)
-          scope.labels.setup()
+          scope.labels.setup?()
 
         if controlPanel.arrows?
           scope.arrows = new SVGArrows(root, root.FlowArrows, controlPanel.arrows)
-          scope.arrows.setup()
+          scope.arrows.setup?()
         
         if controlPanel.toggle and controlPanel.toggle.schematicSelected? and controlPanel.toggle.animateSelected?
           scope.schematicToggle = new SVGAnimate(controlPanel.toggle, controlPanel, root.mainStage)
-          scope.schematicToggle.setup()
+          scope.schematicToggle.setup?()
         
         window.addEventListener "resize", ()-> RequestUniqueAnimation(onResize, true)
         onResize()

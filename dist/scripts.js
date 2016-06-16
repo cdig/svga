@@ -938,47 +938,65 @@
         labels: null,
         panelHeight: 50,
         setup: function() {
-          var rootElement;
+          var base, base1, base2, base3, base4, base5, base6, base7, base8, rootElement;
           rootElement = root.getElement();
           rootElement.appendChild(controlPanel.getElement());
           if (controlPanel.nav != null) {
             rootElement.appendChild(root.navOverlay.getElement());
             scope.camera = new SVGCamera(rootElement, root.mainStage, root.navOverlay, controlPanel.nav);
-            scope.camera.setup();
+            if (typeof (base = scope.camera).setup === "function") {
+              base.setup();
+            }
           }
           if ((controlPanel.poi != null) && (root.poiPanel != null)) {
             scope.poi = new SVGPOI(root.poiPanel, controlPanel.poi, root, scope.camera);
-            scope.poi.setup();
+            if (typeof (base1 = scope.poi).setup === "function") {
+              base1.setup();
+            }
           }
           if (controlPanel.bom != null) {
             scope.bom = new SVGBOM(document, root, controlPanel.bom);
-            scope.bom.setup();
+            if (typeof (base2 = scope.bom).setup === "function") {
+              base2.setup();
+            }
           }
           if (controlPanel.background != null) {
             scope.background = new SVGBackground(document, root, controlPanel.background);
-            scope.background.setup();
+            if (typeof (base3 = scope.background).setup === "function") {
+              base3.setup();
+            }
           }
           if ((root.ctrlPanel != null) && controlPanel.controls) {
             rootElement.appendChild(root.ctrlPanel.getElement());
             scope.controls = new SVGControl(root, root.ctrlPanel, controlPanel.controls);
-            scope.controls.setup();
+            if (typeof (base4 = scope.controls).setup === "function") {
+              base4.setup();
+            }
           }
           if ((root.mimicPanel != null) && controlPanel.mimic) {
             rootElement.appendChild(root.mimicPanel.getElement());
             scope.mimic = new SVGControl(root, root.mimicPanel, controlPanel.mimic);
-            scope.mimic.setup();
+            if (typeof (base5 = scope.mimic).setup === "function") {
+              base5.setup();
+            }
           }
           if (controlPanel.labels != null) {
             scope.labels = new SVGLabels(root, root.mainStage.labelsContainer, controlPanel.labels);
-            scope.labels.setup();
+            if (typeof (base6 = scope.labels).setup === "function") {
+              base6.setup();
+            }
           }
           if (controlPanel.arrows != null) {
             scope.arrows = new SVGArrows(root, root.FlowArrows, controlPanel.arrows);
-            scope.arrows.setup();
+            if (typeof (base7 = scope.arrows).setup === "function") {
+              base7.setup();
+            }
           }
           if (controlPanel.toggle && (controlPanel.toggle.schematicSelected != null) && (controlPanel.toggle.animateSelected != null)) {
             scope.schematicToggle = new SVGAnimate(controlPanel.toggle, controlPanel, root.mainStage);
-            scope.schematicToggle.setup();
+            if (typeof (base8 = scope.schematicToggle).setup === "function") {
+              base8.setup();
+            }
           }
           window.addEventListener("resize", function() {
             return RequestUniqueAnimation(onResize, true);
@@ -998,8 +1016,11 @@
         open: false,
         draggable: null,
         setup: function() {
+          var base;
           scope.draggable = new Draggable(control, activity);
-          scope.draggable.setup();
+          if (typeof (base = scope.draggable).setup === "function") {
+            base.setup();
+          }
           PointerInput.addClick(controlButton.getElement(), scope.toggle);
           if (control.closer != null) {
             PointerInput.addClick(control.closer.getElement(), scope.hide);
@@ -1133,8 +1154,11 @@
         disabled: false,
         draggable: null,
         setup: function() {
+          var base;
           scope.draggable = new Draggable(control, activity);
-          scope.draggable.setup();
+          if (typeof (base = scope.draggable).setup === "function") {
+            base.setup();
+          }
           PointerInput.addClick(controlButton.getElement(), scope.toggle);
           if (control.closer != null) {
             PointerInput.addClick(control.closer.getElement(), scope.hide);
@@ -1180,9 +1204,11 @@
         open: false,
         pois: {},
         setup: function() {
-          var name, poi, results;
+          var base, base1, base2, name, poi, results;
           scope.draggable = new Draggable(control, svgActivity);
-          scope.draggable.setup();
+          if (typeof (base = scope.draggable).setup === "function") {
+            base.setup();
+          }
           PointerInput.addClick(controlButton.getElement(), scope.toggle);
           if (control.closer != null) {
             PointerInput.addClick(control.closer.getElement(), scope.hide);
@@ -1195,10 +1221,10 @@
             poi = control[name];
             if (name.indexOf("poi") > -1) {
               scope.pois[name] = new POI(poi, camera);
-              results.push(scope.pois[name].setup());
+              results.push(typeof (base1 = scope.pois[name]).setup === "function" ? base1.setup() : void 0);
             } else if (name.indexOf("reset") > -1) {
               scope.pois[name] = new POI(poi, camera);
-              results.push(scope.pois[name].setup());
+              results.push(typeof (base2 = scope.pois[name]).setup === "function" ? base2.setup() : void 0);
             } else {
               results.push(void 0);
             }
@@ -1407,7 +1433,7 @@
         child = ref[k];
         setupInstance(child);
       }
-      return instance.setup();
+      return typeof instance.setup === "function" ? instance.setup() : void 0;
     };
     setupColorMatrix = function(defs, name, matrixValue) {
       var colorMatrix, filter;
@@ -1447,7 +1473,7 @@
           return scope.instances[instanceName] = instance;
         },
         setupDocument: function(activityName, contentDocument) {
-          var child, childElements, defs, k, len;
+          var base, child, childElements, defs, k, len;
           scope.registerInstance("default", defaultElement);
           scope.root = scope.instances["root"](contentDocument);
           scope.root.FlowArrows = new FlowArrows();
@@ -1468,7 +1494,9 @@
           }
           if (scope.root.controlPanel != null) {
             scope.root._controlPanel = new SVGControlPanel(scope.root, scope.root.controlPanel);
-            scope.root._controlPanel.setup();
+            if (typeof (base = scope.root._controlPanel).setup === "function") {
+              base.setup();
+            }
           }
           setupInstance(scope.root);
           if (scope.root.controlPanel != null) {
@@ -1479,13 +1507,15 @@
           return scope.root.getRootElement();
         },
         setupElement: function(parent, element) {
-          var child, childElements, id, instance, k, len, results;
+          var base, child, childElements, id, instance, k, len, results;
           id = element.getAttribute("id");
           id = id.split("_")[0];
           instance = scope.instances[id] || scope.instances["default"];
           parent[id] = instance(element);
           parent[id].transform = SVGTransform(element);
-          parent[id].transform.setup();
+          if (typeof (base = parent[id].transform).setup === "function") {
+            base.setup();
+          }
           parent[id].style = SVGStyle(element);
           parent.children.push(parent[id]);
           parent[id].children = [];

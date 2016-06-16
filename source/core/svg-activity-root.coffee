@@ -3,7 +3,7 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
     setupInstance = (instance)->
       for child in instance.children
         setupInstance(child)
-      instance.setup()
+      instance.setup?()
 
     setupColorMatrix = (defs, name, matrixValue)->
       filter = document.createElementNS("http://www.w3.org/2000/svg", "filter")
@@ -65,7 +65,7 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
             scope.setupElement(scope.root, child)
           if scope.root.controlPanel?
             scope.root._controlPanel = new SVGControlPanel(scope.root, scope.root.controlPanel)
-            scope.root._controlPanel.setup()
+            scope.root._controlPanel.setup?()
           setupInstance(scope.root)
           if scope.root.controlPanel?
             scope.root._controlPanel.schematicToggle.schematicMode()
@@ -79,7 +79,7 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
           instance = scope.instances[id] or scope.instances["default"]
           parent[id] = instance(element)
           parent[id].transform = SVGTransform(element)
-          parent[id].transform.setup()
+          parent[id].transform.setup?()
           parent[id].style = SVGStyle(element)
           parent.children.push parent[id]
           parent[id].children = []

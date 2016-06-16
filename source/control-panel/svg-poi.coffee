@@ -6,7 +6,7 @@ Take ["Draggable", "POI", "PointerInput"], (Draggable, POI, PointerInput)->
       
       setup: ()->
         scope.draggable = new Draggable(control, svgActivity)
-        scope.draggable.setup()
+        scope.draggable.setup?()
 
         PointerInput.addClick controlButton.getElement(), scope.toggle
 
@@ -19,10 +19,10 @@ Take ["Draggable", "POI", "PointerInput"], (Draggable, POI, PointerInput)->
         for name, poi of control
           if name.indexOf("poi") > -1
             scope.pois[name] = new POI(poi, camera)
-            scope.pois[name].setup()
+            scope.pois[name].setup?()
           else if name.indexOf("reset") > -1
             scope.pois[name] = new POI(poi, camera)
-            scope.pois[name].setup()
+            scope.pois[name].setup?()
 
 
       toggle: ()->

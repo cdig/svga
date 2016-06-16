@@ -1,111 +1,86 @@
 Take "RequestDeferredRender", (RequestDeferredRender)->
   Make "SVGTransform", SVGTransform = (svgElement)->
+    baseTransform = svgElement.getAttribute "transform"
     currentTransformString = null
     newTransformString = null
+    translateString = ""
+    rotationString = ""
+    scaleString = ""
     
-    scope =
-      angleVal: 0
-      xVal: 0
-      yVal: 0
-      cxVal: 0
-      cyVal: 0
-      scaleVal: 1
-      scaleXVal: 1
-      scaleYVal: 1
-      turnsVal: 0
+    xVal = 0
+    yVal = 0
+    cxVal = 0
+    cyVal = 0
+    angleVal = 0
+    scaleVal = 1
+    scaleXVal = 1
+    scaleYVal = 1
+    
+    scope = {}
+    
+    
+    # LEGACY
+    scope.setBaseIdentity = ()-> baseTransform = "matrix(1,0,0,1,0,0)"
+    scope.setBaseTransform = ()-> baseTransform = svgElement.getAttribute("transform")
+    
+    
+    rotate = (angle, cx, cy)->
+      rotationString = "rotate(#{angle}, #{cx}, #{cy})"
+      setTransform()
+
+    translate = (x, y)->
+      translateString = "translate(#{x}, #{y})"
+      setTransform()
+
+    scaling = (scaleX, scaleY=scaleX)->
+      scaleString = "scale(#{scaleX}, #{scaleY})"
+      setTransform()
+
+    setTransform = ()->
+      newTransformString = "#{baseTransform} #{rotationString} #{scaleString} #{translateString}"
+      RequestDeferredRender applyTransform, true
+    
+    applyTransform = ()->
+      return if currentTransformString is newTransformString # Don't update unless the value is changing
+      currentTransformString = newTransformString
+      svgElement.setAttribute "transform", currentTransformString
+    
+    
+    Object.defineProperty scope, 'x',
+      get: ()-> xVal
+      set: (val)-> translate xVal = val, yVal
+
+    Object.defineProperty scope, 'y',
+      get: ()-> yVal
+      set: (val)-> translate xVal, yVal = val
+    
+    Object.defineProperty scope, 'cx',
+      get: ()-> cxVal
+      set: (val)-> rotate angleVal, cxVal = val, cyVal
+    
+    Object.defineProperty scope, 'cy',
+      get: ()-> cyVal
+      set: (val)-> rotate angleVal, cxVal, cyVal = val
+    
+    Object.defineProperty scope, 'angle',
+      get: ()-> angleVal
+      set: (val)-> rotate angleVal = val, cxVal, cyVal
+    
+    Object.defineProperty scope, 'turns',
+      get: ()-> scope.angle / 360
+      set: (val)-> scope.angle = val * 360
+    
+    Object.defineProperty scope, 'scale',
+      get: ()-> scaleVal
+      set: (val)-> scaling scaleVal = val
+
+    Object.defineProperty scope, 'scaleX',
+      get: ()-> scaleXVal
+      set: (val)-> scaling scaleXVal = val, scaleYVal
+    
+    Object.defineProperty scope, 'scaleY',
+      get: ()-> scaleYVal
+      set: (val)-> scaling scaleXVal, scaleYVal = val
+
       
-      # Do not ever set these properties
-      scaleString: ""
-      translateString: ""
-      rotationString: ""
-      baseTransform: svgElement.getAttribute("transform")
-
-      setup: ()->
-        Object.defineProperty scope, 'x',
-          get: ()-> scope.xVal
-          set: (val)->
-            scope.xVal = val
-            scope.translate(val, scope.y)
-
-        Object.defineProperty scope, 'y',
-          get: ()-> scope.yVal
-          set: (val)->
-            scope.yVal = val
-            scope.translate(scope.x, val)
-        
-        Object.defineProperty scope, 'cx',
-          get: ()-> scope.cxVal
-          set: (val)->
-            scope.cxVal = val
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-        
-        Object.defineProperty scope, 'cy',
-          get: ()-> scope.cyVal
-          set: (val)->
-            scope.cyVal = val
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-      
-        Object.defineProperty scope, 'turns',
-          get: ()-> scope.turnsVal
-          set: (val)->
-            scope.turnsVal = val
-            scope.angleVal = scope.turnsVal * 360
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-              
-        Object.defineProperty scope, 'angle',
-          get: ()-> scope.angleVal
-          set: (val)->
-            scope.angleVal = val
-            scope.turnsVal = scope.angleVal / 360
-            scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal)
-            
-        Object.defineProperty scope, 'scale',
-          get: ()-> scope.scaleVal
-          set: (val)->
-            scope.scaleVal = val
-            scope.scaling(val)
-
-        Object.defineProperty scope, 'scaleX',
-          get: ()-> scope.scaleXVal
-          set: (val)->
-            scope.scaleXVal = val
-            scope.scaling(scope.scaleXVal, scope.scaleYVal)
-        
-        Object.defineProperty scope, 'scaleY',
-          get: ()-> scope.scaleYVal
-          set: (val)->
-            scope.scaleYVal = val
-            scope.scaling(scope.scaleXVal, scope.scaleYVal)
-
-      # Private Functions
-      
-      rotate: (angle, cx, cy)->
-        scope.rotationString = "rotate(#{angle}, #{cx}, #{cy})"
-        scope.setTransform()
-
-      translate: (x, y)->
-        scope.translateString = "translate(#{x}, #{y})"
-        scope.setTransform()
-
-      scaling: (scaleX, scaleY=scaleX)->
-        scope.scaleString = "scale(#{scaleX}, #{scaleY})"
-        scope.setTransform()
-
-      setBaseTransform: ()->
-        scope.baseTransform = svgElement.getAttribute("transform")
-      
-      setBaseIdentity: ()->
-        scope.baseTransform = "matrix(1,0,0,1,0,0)"
-
-      # setTransform: ()->
-      #   newTransform = "#{scope.baseTransform} #{scope.rotationString} #{scope.scaleString} #{scope.translateString}"
-      #   svgElement.setAttribute('transform', newTransform)
-      
-      setTransform: ()->
-        newTransformString = "#{scope.baseTransform} #{scope.rotationString} #{scope.scaleString} #{scope.translateString}"
-        RequestDeferredRender scope.applyTransform, true
-      
-      applyTransform: ()->
-        return if currentTransformString is newTransformString # Don't update unless the value is changing
-        currentTransformString = newTransformString
-        svgElement.setAttribute "transform", currentTransformString
+    return scope

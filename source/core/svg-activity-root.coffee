@@ -8,7 +8,6 @@ Take ["defaultElement", "Dispatch", "FlowArrows", "Global", "PureDom", "SVGStyle
       symbolFns[name] or symbolFns["default"]
     
     getChildElements = (element)->
-      
       children = PureDom.querySelectorAllChildren(element, "g")
       childElements = []
       childNum = 0
@@ -24,16 +23,15 @@ Take ["defaultElement", "Dispatch", "FlowArrows", "Global", "PureDom", "SVGStyle
       id = element.getAttribute("id").split("_")[0]
       instance = fetchSymbolFn(id)(element)
       parent[id] = instance
-      instance.transform = SVGTransform(element)
-      instance.transform.setup?()
-      instance.style = SVGStyle(element)
       parent.children.push instance
       instance.children = []
+      instance.element = element
+      instance.getElement = ()-> return element
       instance.global = Global
       instance.root = root
-      instance.getElement = ()-> return element
-      childElements = getChildElements(element)
-      setupElement instance, child for child in childElements
+      instance.style = SVGStyle element
+      instance.transform = SVGTransform element
+      setupElement instance, child for child in getChildElements element
     
     
     return activity =

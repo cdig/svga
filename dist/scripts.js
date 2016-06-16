@@ -1418,26 +1418,24 @@
         return childElements;
       };
       setupElement = function(parent, element) {
-        var base, child, childElements, id, instance, k, len, results;
+        var child, id, instance, k, len, ref, results;
         id = element.getAttribute("id").split("_")[0];
         instance = fetchSymbolFn(id)(element);
         parent[id] = instance;
-        instance.transform = SVGTransform(element);
-        if (typeof (base = instance.transform).setup === "function") {
-          base.setup();
-        }
-        instance.style = SVGStyle(element);
         parent.children.push(instance);
         instance.children = [];
-        instance.global = Global;
-        instance.root = root;
+        instance.element = element;
         instance.getElement = function() {
           return element;
         };
-        childElements = getChildElements(element);
+        instance.global = Global;
+        instance.root = root;
+        instance.style = SVGStyle(element);
+        instance.transform = SVGTransform(element);
+        ref = getChildElements(element);
         results = [];
-        for (k = 0, len = childElements.length; k < len; k++) {
-          child = childElements[k];
+        for (k = 0, len = ref.length; k < len; k++) {
+          child = ref[k];
           results.push(setupElement(instance, child));
         }
         return results;
@@ -1795,141 +1793,127 @@
   Take("RequestDeferredRender", function(RequestDeferredRender) {
     var SVGTransform;
     return Make("SVGTransform", SVGTransform = function(svgElement) {
-      var currentTransformString, newTransformString, scope;
+      var angleVal, applyTransform, baseTransform, currentTransformString, cxVal, cyVal, newTransformString, rotate, rotationString, scaleString, scaleVal, scaleXVal, scaleYVal, scaling, scope, setTransform, translate, translateString, xVal, yVal;
+      baseTransform = svgElement.getAttribute("transform");
       currentTransformString = null;
       newTransformString = null;
-      return scope = {
-        angleVal: 0,
-        xVal: 0,
-        yVal: 0,
-        cxVal: 0,
-        cyVal: 0,
-        scaleVal: 1,
-        scaleXVal: 1,
-        scaleYVal: 1,
-        turnsVal: 0,
-        scaleString: "",
-        translateString: "",
-        rotationString: "",
-        baseTransform: svgElement.getAttribute("transform"),
-        setup: function() {
-          Object.defineProperty(scope, 'x', {
-            get: function() {
-              return scope.xVal;
-            },
-            set: function(val) {
-              scope.xVal = val;
-              return scope.translate(val, scope.y);
-            }
-          });
-          Object.defineProperty(scope, 'y', {
-            get: function() {
-              return scope.yVal;
-            },
-            set: function(val) {
-              scope.yVal = val;
-              return scope.translate(scope.x, val);
-            }
-          });
-          Object.defineProperty(scope, 'cx', {
-            get: function() {
-              return scope.cxVal;
-            },
-            set: function(val) {
-              scope.cxVal = val;
-              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-            }
-          });
-          Object.defineProperty(scope, 'cy', {
-            get: function() {
-              return scope.cyVal;
-            },
-            set: function(val) {
-              scope.cyVal = val;
-              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-            }
-          });
-          Object.defineProperty(scope, 'turns', {
-            get: function() {
-              return scope.turnsVal;
-            },
-            set: function(val) {
-              scope.turnsVal = val;
-              scope.angleVal = scope.turnsVal * 360;
-              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-            }
-          });
-          Object.defineProperty(scope, 'angle', {
-            get: function() {
-              return scope.angleVal;
-            },
-            set: function(val) {
-              scope.angleVal = val;
-              scope.turnsVal = scope.angleVal / 360;
-              return scope.rotate(scope.angleVal, scope.cxVal, scope.cyVal);
-            }
-          });
-          Object.defineProperty(scope, 'scale', {
-            get: function() {
-              return scope.scaleVal;
-            },
-            set: function(val) {
-              scope.scaleVal = val;
-              return scope.scaling(val);
-            }
-          });
-          Object.defineProperty(scope, 'scaleX', {
-            get: function() {
-              return scope.scaleXVal;
-            },
-            set: function(val) {
-              scope.scaleXVal = val;
-              return scope.scaling(scope.scaleXVal, scope.scaleYVal);
-            }
-          });
-          return Object.defineProperty(scope, 'scaleY', {
-            get: function() {
-              return scope.scaleYVal;
-            },
-            set: function(val) {
-              scope.scaleYVal = val;
-              return scope.scaling(scope.scaleXVal, scope.scaleYVal);
-            }
-          });
-        },
-        rotate: function(angle, cx, cy) {
-          scope.rotationString = "rotate(" + angle + ", " + cx + ", " + cy + ")";
-          return scope.setTransform();
-        },
-        translate: function(x, y) {
-          scope.translateString = "translate(" + x + ", " + y + ")";
-          return scope.setTransform();
-        },
-        scaling: function(scaleX, scaleY) {
-          if (scaleY == null) {
-            scaleY = scaleX;
-          }
-          scope.scaleString = "scale(" + scaleX + ", " + scaleY + ")";
-          return scope.setTransform();
-        },
-        setBaseTransform: function() {
-          return scope.baseTransform = svgElement.getAttribute("transform");
-        },
-        setBaseIdentity: function() {
-          return scope.baseTransform = "matrix(1,0,0,1,0,0)";
-        },
-        setTransform: function() {
-          newTransformString = scope.baseTransform + " " + scope.rotationString + " " + scope.scaleString + " " + scope.translateString;
-          return RequestDeferredRender(scope.applyTransform, true);
-        },
-        applyTransform: function() {
-          if (currentTransformString === newTransformString) {
-            return;
-          }
-          currentTransformString = newTransformString;
-          return svgElement.setAttribute("transform", currentTransformString);
-        }
+      translateString = "";
+      rotationString = "";
+      scaleString = "";
+      xVal = 0;
+      yVal = 0;
+      cxVal = 0;
+      cyVal = 0;
+      angleVal = 0;
+      scaleVal = 1;
+      scaleXVal = 1;
+      scaleYVal = 1;
+      scope = {};
+      scope.setBaseIdentity = function() {
+        return baseTransform = "matrix(1,0,0,1,0,0)";
       };
+      scope.setBaseTransform = function() {
+        return baseTransform = svgElement.getAttribute("transform");
+      };
+      rotate = function(angle, cx, cy) {
+        rotationString = "rotate(" + angle + ", " + cx + ", " + cy + ")";
+        return setTransform();
+      };
+      translate = function(x, y) {
+        translateString = "translate(" + x + ", " + y + ")";
+        return setTransform();
+      };
+      scaling = function(scaleX, scaleY) {
+        if (scaleY == null) {
+          scaleY = scaleX;
+        }
+        scaleString = "scale(" + scaleX + ", " + scaleY + ")";
+        return setTransform();
+      };
+      setTransform = function() {
+        newTransformString = baseTransform + " " + rotationString + " " + scaleString + " " + translateString;
+        return RequestDeferredRender(applyTransform, true);
+      };
+      applyTransform = function() {
+        if (currentTransformString === newTransformString) {
+          return;
+        }
+        currentTransformString = newTransformString;
+        return svgElement.setAttribute("transform", currentTransformString);
+      };
+      Object.defineProperty(scope, 'x', {
+        get: function() {
+          return xVal;
+        },
+        set: function(val) {
+          return translate(xVal = val, yVal);
+        }
+      });
+      Object.defineProperty(scope, 'y', {
+        get: function() {
+          return yVal;
+        },
+        set: function(val) {
+          return translate(xVal, yVal = val);
+        }
+      });
+      Object.defineProperty(scope, 'cx', {
+        get: function() {
+          return cxVal;
+        },
+        set: function(val) {
+          return rotate(angleVal, cxVal = val, cyVal);
+        }
+      });
+      Object.defineProperty(scope, 'cy', {
+        get: function() {
+          return cyVal;
+        },
+        set: function(val) {
+          return rotate(angleVal, cxVal, cyVal = val);
+        }
+      });
+      Object.defineProperty(scope, 'angle', {
+        get: function() {
+          return angleVal;
+        },
+        set: function(val) {
+          return rotate(angleVal = val, cxVal, cyVal);
+        }
+      });
+      Object.defineProperty(scope, 'turns', {
+        get: function() {
+          return scope.angle / 360;
+        },
+        set: function(val) {
+          return scope.angle = val * 360;
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return scaleVal;
+        },
+        set: function(val) {
+          return scaling(scaleVal = val);
+        }
+      });
+      Object.defineProperty(scope, 'scaleX', {
+        get: function() {
+          return scaleXVal;
+        },
+        set: function(val) {
+          return scaling(scaleXVal = val, scaleYVal);
+        }
+      });
+      Object.defineProperty(scope, 'scaleY', {
+        get: function() {
+          return scaleYVal;
+        },
+        set: function(val) {
+          return scaling(scaleXVal, scaleYVal = val);
+        }
+      });
+      return scope;
     });
   });
 

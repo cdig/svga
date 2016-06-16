@@ -2,7 +2,6 @@ Take ["Draggable", "POI", "PointerInput"], (Draggable, POI, PointerInput)->
   Make "SVGPOI", SVGPOI = (control, controlButton, svgActivity, camera)->
     return scope =
       open: false
-      disabled: false
       pois: {}
       
       setup: ()->
@@ -30,17 +29,9 @@ Take ["Draggable", "POI", "PointerInput"], (Draggable, POI, PointerInput)->
         if scope.open then scope.hide() else scope.show()
 
       show: ()->
-        return if scope.disabled
         scope.open = true
         control.style.show(true)
 
       hide: ()->
         scope.open = false
         control.style.show(false)
-      
-      disable: ()->
-        scope.hide()
-        scope.disabled = true
-      
-      enable: ()->
-        scope.disabled = false

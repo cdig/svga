@@ -1,5 +1,5 @@
 Take ["PointerInput", "Global"], (PointerInput, Global)->
-  Make "SVGSchematic", (toggle, svgControlPanel, mainStage)->
+  Make "SVGAnimate", (toggle, svgControlPanel, mainStage)->
     return scope =
       
       setup: ()->
@@ -46,11 +46,11 @@ Take ["PointerInput", "Global"], (PointerInput, Global)->
       
       
       disableControlPanelButtons: ()->
-        for name in ["arrows", "controls", "poi", "mimic"]
+        for name in ["arrows", "controls", "mimic"]
           mainStage.root._controlPanel[name]?.disable()
           svgControlPanel[name]?.getElement().setAttribute "filter", "url(#greyscaleMatrix)"
       
       enableControlPanelButtons: ()->
-        for name in ["arrows", "controls", "poi", "mimic"]
+        for name in ["arrows", "controls", "mimic"]
           mainStage.root._controlPanel[name]?.enable()
           svgControlPanel[name]?.getElement().removeAttribute "filter"

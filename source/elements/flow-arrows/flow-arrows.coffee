@@ -1,8 +1,6 @@
 Take ["Organizer", "RequestUniqueAnimation"], (Organizer, RequestUniqueAnimation)->
   Make "FlowArrows", FlowArrows = ()->
     currentTime = null
-    elapsedTime = 0
-    requested = false
     
     removeOriginalArrow = (selectedSymbol)->
       children = []
@@ -10,17 +8,16 @@ Take ["Organizer", "RequestUniqueAnimation"], (Organizer, RequestUniqueAnimation
         children.push child
       for child in children
         selectedSymbol.removeChild(child)
-
+    
     update = (time)->
       RequestUniqueAnimation(update)
-      currentTime = time if not currentTime?
+      currentTime ?= time
       dT = (time - currentTime)/1000
       currentTime = time
-      elapsedTime += dT
       return unless scope.isVisible
       for arrowsContainer in scope.arrowsContainers
-        arrowsContainer.update(dT)
-
+        arrowsContainer.update dT
+    
     return scope =
       # state
       isVisible: false
@@ -43,9 +40,7 @@ Take ["Organizer", "RequestUniqueAnimation"], (Organizer, RequestUniqueAnimation
         for lineData in linesData
           Organizer.build(parent,lineData.edges, arrowsContainer, this)
         
-        unless requested
-          requested = true
-          RequestUniqueAnimation(update)
+        RequestUniqueAnimation update, true
         
         return arrowsContainer
       

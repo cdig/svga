@@ -1,5 +1,5 @@
-Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic", "RequestUniqueAnimation"],
-(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic, RequestUniqueAnimation)->
+Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGMimic", "SVGPOI", "SVGAnimate", "RequestUniqueAnimation"],
+(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGAnimate, RequestUniqueAnimation)->
   Make "SVGControlPanel", SVGControlpanel = (root)->
     
     controlPanel = root.controlPanel
@@ -86,7 +86,7 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
           scope.arrows.setup()
         
         if controlPanel.toggle and controlPanel.toggle.schematicSelected? and controlPanel.toggle.animateSelected?
-          scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, root.mainStage)
+          scope.schematicToggle = new SVGAnimate(controlPanel.toggle, controlPanel, root.mainStage)
           scope.schematicToggle.setup()
         
         window.addEventListener "resize", ()-> RequestUniqueAnimation(onResize, true)

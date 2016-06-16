@@ -3,9 +3,9 @@ class Segment
   direction: 1
   flow: null
   name: ""
-
   scale: 1.0
-  fillColor: "white"
+  fillColor: "transparent"
+  
   constructor: (@parent, @edges, @arrowsContainer, @segmentLength, @flowArrows)->
     @arrows = []
     @name = "segment" + @arrowsContainer.segments.length

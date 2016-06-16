@@ -788,12 +788,13 @@
 
   Take(["SVGArrows", "SVGBackground", "SVGBOM", "SVGCamera", "SVGControl", "SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic", "RequestUniqueAnimation"], function(SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic, RequestUniqueAnimation) {
     var SVGControlpanel;
-    return Make("SVGControlPanel", SVGControlpanel = function(activity, controlPanel) {
-      var onResize, scope;
+    return Make("SVGControlPanel", SVGControlpanel = function(root) {
+      var controlPanel, onResize, scope;
+      controlPanel = root.controlPanel;
       onResize = function() {
         var hScale, innerRect, outerRect, scale, svgRect, wScale;
-        svgRect = activity.getElement().viewBox.baseVal;
-        outerRect = activity.getElement().getBoundingClientRect();
+        svgRect = root.getElement().viewBox.baseVal;
+        outerRect = root.getElement().getBoundingClientRect();
         wScale = outerRect.width / svgRect.width;
         hScale = outerRect.height / svgRect.height;
         scale = Math.min(wScale, hScale);
@@ -804,14 +805,14 @@
         innerRect.left = (outerRect.width - innerRect.width) / 2;
         innerRect.top = (outerRect.height - innerRect.height) / 2;
         controlPanel.transform.scale = 1 / scale;
-        if (activity.ctrlPanel != null) {
-          activity.ctrlPanel.transform.scale = 1 / scale;
+        if (root.ctrlPanel != null) {
+          root.ctrlPanel.transform.scale = 1 / scale;
         }
-        if (activity.mimicPanel != null) {
-          activity.mimicPanel.transform.scale = 1 / scale;
+        if (root.mimicPanel != null) {
+          root.mimicPanel.transform.scale = 1 / scale;
         }
-        if (activity.poiPanel != null) {
-          activity.poiPanel.transform.scale = 1 / scale;
+        if (root.poiPanel != null) {
+          root.poiPanel.transform.scale = 1 / scale;
         }
         return controlPanel.transform.y = innerRect.top + (scope.panelHeight * scale - scope.panelHeight);
       };
@@ -824,46 +825,46 @@
         labels: null,
         panelHeight: 50,
         setup: function() {
-          var activityElement;
-          activityElement = activity.getElement();
-          activityElement.appendChild(controlPanel.getElement());
+          var rootElement;
+          rootElement = root.getElement();
+          rootElement.appendChild(controlPanel.getElement());
           if (controlPanel.nav != null) {
-            activityElement.appendChild(activity.navOverlay.getElement());
-            scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav);
+            rootElement.appendChild(root.navOverlay.getElement());
+            scope.camera = new SVGCamera(rootElement, root.mainStage, root.navOverlay, controlPanel.nav);
             scope.camera.setup();
           }
-          if ((controlPanel.poi != null) && (activity.poiPanel != null)) {
-            scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera);
+          if ((controlPanel.poi != null) && (root.poiPanel != null)) {
+            scope.poi = new SVGPOI(root.poiPanel, controlPanel.poi, root, scope.camera);
             scope.poi.setup();
           }
           if (controlPanel.bom != null) {
-            scope.bom = new SVGBOM(document, activity, controlPanel.bom);
+            scope.bom = new SVGBOM(document, root, controlPanel.bom);
             scope.bom.setup();
           }
           if (controlPanel.background != null) {
-            scope.background = new SVGBackground(document, activity, controlPanel.background);
+            scope.background = new SVGBackground(document, root, controlPanel.background);
             scope.background.setup();
           }
-          if ((activity.ctrlPanel != null) && controlPanel.controls) {
-            activityElement.appendChild(activity.ctrlPanel.getElement());
-            scope.controls = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls);
+          if ((root.ctrlPanel != null) && controlPanel.controls) {
+            rootElement.appendChild(root.ctrlPanel.getElement());
+            scope.controls = new SVGControl(root, root.ctrlPanel, controlPanel.controls);
             scope.controls.setup();
           }
-          if ((activity.mimicPanel != null) && controlPanel.mimic) {
-            activityElement.appendChild(activity.mimicPanel.getElement());
-            scope.mimic = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic);
+          if ((root.mimicPanel != null) && controlPanel.mimic) {
+            rootElement.appendChild(root.mimicPanel.getElement());
+            scope.mimic = new SVGControl(root, root.mimicPanel, controlPanel.mimic);
             scope.mimic.setup();
           }
           if (controlPanel.labels != null) {
-            scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels);
+            scope.labels = new SVGLabels(root, root.mainStage.labelsContainer, controlPanel.labels);
             scope.labels.setup();
           }
           if (controlPanel.arrows != null) {
-            scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows);
+            scope.arrows = new SVGArrows(root, root.FlowArrows, controlPanel.arrows);
             scope.arrows.setup();
           }
           if (controlPanel.toggle && (controlPanel.toggle.schematicSelected != null) && (controlPanel.toggle.animateSelected != null)) {
-            scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage);
+            scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, root.mainStage);
             scope.schematicToggle.setup();
           }
           window.addEventListener("resize", function() {

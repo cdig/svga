@@ -1,12 +1,15 @@
 Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabels", "SVGMimic", "SVGPOI", "SVGSchematic", "RequestUniqueAnimation"],
 (SVGArrows, SVGBackground, SVGBOM, SVGCamera, SVGControl, SVGLabels, SVGMimic, SVGPOI, SVGSchematic, RequestUniqueAnimation)->
-  Make "SVGControlPanel", SVGControlpanel = (activity, controlPanel)->
+  Make "SVGControlPanel", SVGControlpanel = (root)->
+    
+    controlPanel = root.controlPanel
+    
     onResize = ()->
       # This is the natural size of the SVG graphic in units
-      svgRect = activity.getElement().viewBox.baseVal
+      svgRect = root.getElement().viewBox.baseVal
       
       # This is the outer size of the SVG graphic in pixels
-      outerRect = activity.getElement().getBoundingClientRect()
+      outerRect = root.getElement().getBoundingClientRect()
       
       # Figure out the scaling factor applied to the SVG
       wScale = outerRect.width / svgRect.width
@@ -28,9 +31,9 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
       
       # LEGACY:
       controlPanel.transform.scale = 1/scale
-      activity.ctrlPanel.transform.scale = 1/scale if activity.ctrlPanel?
-      activity.mimicPanel.transform.scale = 1/scale if activity.mimicPanel?
-      activity.poiPanel.transform.scale = 1/scale if activity.poiPanel?
+      root.ctrlPanel.transform.scale = 1/scale if root.ctrlPanel?
+      root.mimicPanel.transform.scale = 1/scale if root.mimicPanel?
+      root.poiPanel.transform.scale = 1/scale if root.poiPanel?
       controlPanel.transform.y = innerRect.top + (scope.panelHeight*scale - scope.panelHeight)
     
     return scope =
@@ -43,47 +46,47 @@ Take ["SVGArrows", "SVGBackground","SVGBOM", "SVGCamera", "SVGControl","SVGLabel
       panelHeight: 50 # This is the default panel height
 
       setup: ()->
-        activityElement = activity.getElement()
-        activityElement.appendChild(controlPanel.getElement())
+        rootElement = root.getElement()
+        rootElement.appendChild(controlPanel.getElement())
 
         if controlPanel.nav?
-          activityElement.appendChild(activity.navOverlay.getElement()) #these appends are done to
+          rootElement.appendChild(root.navOverlay.getElement()) #these appends are done to
           #place elements on top layer
-          scope.camera = new SVGCamera(activityElement, activity.mainStage, activity.navOverlay, controlPanel.nav)
+          scope.camera = new SVGCamera(rootElement, root.mainStage, root.navOverlay, controlPanel.nav)
           scope.camera.setup()
 
-        if controlPanel.poi? and activity.poiPanel?
-          scope.poi = new SVGPOI(activity.poiPanel, controlPanel.poi, activity, scope.camera)
+        if controlPanel.poi? and root.poiPanel?
+          scope.poi = new SVGPOI(root.poiPanel, controlPanel.poi, root, scope.camera)
           scope.poi.setup()
 
         if controlPanel.bom?
-          scope.bom = new SVGBOM(document, activity,controlPanel.bom )
+          scope.bom = new SVGBOM(document, root,controlPanel.bom )
           scope.bom.setup()
 
         if controlPanel.background?
-          scope.background = new SVGBackground(document, activity, controlPanel.background)
+          scope.background = new SVGBackground(document, root, controlPanel.background)
           scope.background.setup()
 
-        if activity.ctrlPanel? and controlPanel.controls
-          activityElement.appendChild(activity.ctrlPanel.getElement())
-          scope.controls = new SVGControl(activity, activity.ctrlPanel, controlPanel.controls)
+        if root.ctrlPanel? and controlPanel.controls
+          rootElement.appendChild(root.ctrlPanel.getElement())
+          scope.controls = new SVGControl(root, root.ctrlPanel, controlPanel.controls)
           scope.controls.setup()
         
-        if activity.mimicPanel? and controlPanel.mimic
-          activityElement.appendChild(activity.mimicPanel.getElement())
-          scope.mimic = new SVGControl(activity, activity.mimicPanel, controlPanel.mimic)
+        if root.mimicPanel? and controlPanel.mimic
+          rootElement.appendChild(root.mimicPanel.getElement())
+          scope.mimic = new SVGControl(root, root.mimicPanel, controlPanel.mimic)
           scope.mimic.setup()
 
         if controlPanel.labels?
-          scope.labels = new SVGLabels(activity, activity.mainStage.labelsContainer, controlPanel.labels)
+          scope.labels = new SVGLabels(root, root.mainStage.labelsContainer, controlPanel.labels)
           scope.labels.setup()
 
         if controlPanel.arrows?
-          scope.arrows = new SVGArrows(activity, activity.FlowArrows, controlPanel.arrows)
+          scope.arrows = new SVGArrows(root, root.FlowArrows, controlPanel.arrows)
           scope.arrows.setup()
         
         if controlPanel.toggle and controlPanel.toggle.schematicSelected? and controlPanel.toggle.animateSelected?
-          scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, activity.mainStage)
+          scope.schematicToggle = new SVGSchematic(controlPanel.toggle, controlPanel, root.mainStage)
           scope.schematicToggle.setup()
         
         window.addEventListener "resize", ()-> RequestUniqueAnimation(onResize, true)

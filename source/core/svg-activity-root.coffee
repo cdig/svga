@@ -69,10 +69,11 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
           setupInstance(scope.root)
           if scope.root.controlPanel?
             scope.root._controlPanel.schematicToggle.schematicMode()
-
+        
         getRootElement: ()->
+          console.log "DEPRECATED: getRootElement"
           return scope.root.getRootElement()
-
+        
         setupElement: (parent, element)->
           id = element.getAttribute("id")
           id = id.split("_")[0]

@@ -256,82 +256,6 @@
               return scope.schematicMode();
             }
           }
-        },
-        schematicMode: function() {
-          scope.disableControlPanelButtons();
-          return scope.dispatchSchematicMode(mainStage.root);
-        },
-        animateMode: function() {
-          scope.enableControlPanelButtons();
-          return scope.dispatchAnimateMode(mainStage.root);
-        },
-        dispatchSchematicMode: function(instance) {
-          var child, k, len, ref, results;
-          if (typeof instance.schematicMode === "function") {
-            instance.schematicMode();
-          }
-          scope.setLinesBlack(instance);
-          ref = instance.children;
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            child = ref[k];
-            results.push(scope.dispatchSchematicMode(child));
-          }
-          return results;
-        },
-        dispatchAnimateMode: function(instance) {
-          var child, k, len, ref, results;
-          if (typeof instance.animateMode === "function") {
-            instance.animateMode();
-          }
-          scope.removeLinesBlack(instance);
-          ref = instance.children;
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            child = ref[k];
-            results.push(scope.dispatchAnimateMode(child));
-          }
-          return results;
-        },
-        setLinesBlack: function(instance) {
-          var element, ref;
-          element = instance.getElement();
-          if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
-            return element.setAttribute("filter", "url(#allblackMatrix)");
-          }
-        },
-        removeLinesBlack: function(instance) {
-          var element, ref;
-          element = instance.getElement();
-          if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
-            return element.removeAttribute("filter");
-          }
-        },
-        disableControlPanelButtons: function() {
-          var k, len, name, ref, ref1, ref2, results;
-          ref = ["arrows", "controls", "mimic"];
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            name = ref[k];
-            if ((ref1 = mainStage.root._controlPanel[name]) != null) {
-              ref1.disable();
-            }
-            results.push((ref2 = svgControlPanel[name]) != null ? ref2.getElement().setAttribute("filter", "url(#greyscaleMatrix)") : void 0);
-          }
-          return results;
-        },
-        enableControlPanelButtons: function() {
-          var k, len, name, ref, ref1, ref2, results;
-          ref = ["arrows", "controls", "mimic"];
-          results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            name = ref[k];
-            if ((ref1 = mainStage.root._controlPanel[name]) != null) {
-              ref1.enable();
-            }
-            results.push((ref2 = svgControlPanel[name]) != null ? ref2.getElement().removeAttribute("filter") : void 0);
-          }
-          return results;
         }
       };
     });
@@ -1251,6 +1175,11 @@
   });
 
   Take([], function() {
+    var Features;
+    return Make("SVGA:Features", Features = {});
+  });
+
+  Take([], function() {
     var global, internal, readWrite;
     Make("Global", global = {});
     internal = {};
@@ -1504,6 +1433,7 @@
           }
         },
         getRootElement: function() {
+          console.log("DEPRECATED: getRootElement");
           return scope.root.getRootElement();
         },
         setupElement: function(parent, element) {
@@ -2419,6 +2349,62 @@
         }
       };
     });
+  });
+
+  Take(["SVGA:Features"], function(Features) {
+    return Features["schematicMode"] = function(root) {
+      var scope;
+      return scope = {
+        schematicMode: function() {
+          return scope.dispatchSchematicMode(mainStage.root);
+        },
+        animateMode: function() {
+          return scope.dispatchAnimateMode(mainStage.root);
+        },
+        dispatchSchematicMode: function(instance) {
+          var child, k, len, ref, results;
+          if (typeof instance.schematicMode === "function") {
+            instance.schematicMode();
+          }
+          scope.setLinesBlack(instance);
+          ref = instance.children;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            results.push(scope.dispatchSchematicMode(child));
+          }
+          return results;
+        },
+        dispatchAnimateMode: function(instance) {
+          var child, k, len, ref, results;
+          if (typeof instance.animateMode === "function") {
+            instance.animateMode();
+          }
+          scope.removeLinesBlack(instance);
+          ref = instance.children;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            child = ref[k];
+            results.push(scope.dispatchAnimateMode(child));
+          }
+          return results;
+        },
+        setLinesBlack: function(instance) {
+          var element, ref;
+          element = instance.getElement();
+          if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
+            return element.setAttribute("filter", "url(#allblackMatrix)");
+          }
+        },
+        removeLinesBlack: function(instance) {
+          var element, ref;
+          element = instance.getElement();
+          if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
+            return element.removeAttribute("filter");
+          }
+        }
+      };
+    };
   });
 
   Arrow = (function() {

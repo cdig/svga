@@ -1450,11 +1450,11 @@
           scope.registerInstance("default", defaultElement);
           scope.root = scope.instances["root"](contentDocument);
           scope.root.FlowArrows = new FlowArrows();
-          scope.root.global = scope.global;
-          scope.root.root = scope.root;
           scope.root.getElement = function() {
             return contentDocument;
           };
+          scope.root.global = scope.global;
+          scope.root.root = scope.root;
           defs = contentDocument.querySelector("defs");
           setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00 0.5 1.0 0.5 0.0 20 0.0 0.0 0.5 0.0 00 0.0 0.0 0.0 1.0 00");
           setupColorMatrix(defs, "greyscaleMatrix", "0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.33 0.33 0.33 0.0 0 0.0 0.0 0.0 1.0 0");

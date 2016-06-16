@@ -39,12 +39,13 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
 
         setupDocument: (activityName, contentDocument)->
           scope.registerInstance("default", defaultElement)
+
           scope.root = scope.instances["root"](contentDocument)
           scope.root.FlowArrows = new FlowArrows()
+          scope.root.getElement = ()-> return contentDocument
           scope.root.global = scope.global
           scope.root.root = scope.root
-          scope.root.getElement = ()->
-            return contentDocument
+
           defs = contentDocument.querySelector("defs")
           setupColorMatrix(defs, "highlightMatrix", "0.5 0.0 0.0 0.0 00
                0.5 1.0 0.5 0.0 20
@@ -84,8 +85,6 @@ Take ["defaultElement", "PureDom","FlowArrows", "SVGControlPanel","SVGTransform"
           parent[id].children = []
           parent[id].global = scope.global
           parent[id].root = scope.root
-          parent[id].getElement = ()->
-            return element
+          parent[id].getElement = ()-> return element
           childElements = getChildElements(element)
-          for child in childElements
-            scope.setupElement(parent[id], child)
+          scope.setupElement parent[id], child for child in childElements

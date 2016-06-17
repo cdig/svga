@@ -1,5 +1,5 @@
-Take ["button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "SVGActivity", "DOMContentLoaded"],
-(      button ,  crank ,  defaultElement ,  Joystick ,  SetupGraphic ,  slider ,  SVGActivity)->
+Take ["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "SVGActivity", "DOMContentLoaded"],
+(      Action ,  button ,  crank ,  defaultElement ,  Joystick ,  SetupGraphic ,  slider ,  SVGActivity)->
   
   activityDefinitions = []
   activities = []
@@ -24,6 +24,8 @@ Take ["button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider",
       svgActivity.registerInstance("default", activityDefinition.defaultElement)
       svgActivity.setupSvg svg
       Make data.id, svgActivity.root
+      Action "setup"
+      Action "schematicMode"
       data.svg.style.opacity = 1
 
   

@@ -5,6 +5,11 @@ gulp_concat = require "gulp-concat"
 gulp_sass = require "gulp-sass"
 
 
+logAndKillError = (err)->
+  console.log "\n## Error ##"
+  console.log err.toString()
+  @emit "end"
+
 paths =
   coffee: "source/**/*.coffee"
   scss: "source/**/*.scss"
@@ -14,6 +19,7 @@ gulp.task "coffee", ()->
   gulp.src paths.coffee
     .pipe gulp_concat "scripts.coffee"
     .pipe gulp_coffee()
+    .on "error", logAndKillError
     .pipe gulp.dest "dist"
 
 
@@ -24,6 +30,7 @@ gulp.task "scss", ()->
       errLogToConsole: true
       outputStyle: "compressed"
       precision: 1
+    .on "error", logAndKillError
     .pipe gulp_autoprefixer
       browsers: "last 5 Chrome versions, last 2 ff versions, IE >= 10, Safari >= 8, iOS >= 8"
       cascade: false

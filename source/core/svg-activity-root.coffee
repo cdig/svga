@@ -1,5 +1,5 @@
-Take ["defaultElement", "Dispatch", "FlowArrows", "Global", "PureDom", "SVGStyle", "SVGTransform", "load"],
-(      defaultElement ,  Dispatch ,  FlowArrows ,  Global ,  PureDom ,  SVGStyle ,  SVGTransform)->
+Take ["defaultElement", "FlowArrows", "Global", "PureDom", "Reaction", "SVGStyle", "SVGTransform", "load"],
+(      defaultElement ,  FlowArrows ,  Global ,  PureDom ,  Reaction ,  SVGStyle ,  SVGTransform)->
   Make "SVGActivity", ()->
     root = null
     symbolFns = {}
@@ -31,6 +31,9 @@ Take ["defaultElement", "Dispatch", "FlowArrows", "Global", "PureDom", "SVGStyle
       instance.root = root
       instance.style = SVGStyle element
       instance.transform = SVGTransform element
+      if element.getAttribute("id")?.indexOf("Line") > -1
+        Reaction "animateMode", ()-> element.removeAttribute "filter"
+        Reaction "schematicMode", ()-> element.setAttribute "filter", "url(#allblackMatrix)"
       setupElement instance, child for child in getChildElements element
     
     
@@ -42,12 +45,10 @@ Take ["defaultElement", "Dispatch", "FlowArrows", "Global", "PureDom", "SVGStyle
       setupSvg: (svg)->
         activity.registerInstance("default", defaultElement)
         root = fetchSymbolFn("root")(svg)
+        Make "root", root
         root.FlowArrows = new FlowArrows()
         root.getElement = ()-> svg
         root.global = Global
         root.root = root
         root.children = []
         setupElement root, child for child in getChildElements svg
-
-        Dispatch root, "setup"
-        Dispatch root, "schematicMode"

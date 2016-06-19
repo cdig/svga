@@ -3,6 +3,7 @@ gulp_autoprefixer = require "gulp-autoprefixer"
 gulp_coffee = require "gulp-coffee"
 gulp_concat = require "gulp-concat"
 gulp_sass = require "gulp-sass"
+gulp_uglify = require "gulp-uglify"
 
 
 logAndKillError = (err)->
@@ -19,6 +20,7 @@ gulp.task "coffee", ()->
   gulp.src paths.coffee
     .pipe gulp_concat "scripts.coffee"
     .pipe gulp_coffee()
+    .pipe gulp_uglify()
     .on "error", logAndKillError
     .pipe gulp.dest "dist"
 

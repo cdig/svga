@@ -26,6 +26,7 @@ Take ["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic",
       Make data.id, svgActivity.root
       Action "setup"
       Action "schematicMode"
+      data.svg.style.transition = "opacity .7s"
       data.svg.style.opacity = 1
 
   

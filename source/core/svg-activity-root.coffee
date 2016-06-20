@@ -4,8 +4,9 @@ Take ["defaultElement", "FlowArrows", "Global", "PureDom", "Reaction", "SVGStyle
     root = null
     symbolFns = {}
     
-    fetchSymbolFn = (name)->
-      symbolFns[name] or symbolFns["default"]
+    buildInstance = (name, elm)->
+      fn = symbolFns[name] or symbolFns["default"]
+      fn elm
     
     getChildElements = (element)->
       children = PureDom.querySelectorAllChildren(element, "g")
@@ -21,7 +22,7 @@ Take ["defaultElement", "FlowArrows", "Global", "PureDom", "Reaction", "SVGStyle
 
     setupElement = (parent, element)->
       id = element.getAttribute("id").split("_")[0]
-      instance = fetchSymbolFn(id)(element)
+      instance = buildInstance id, element
       parent[id] = instance
       parent.children.push instance
       instance.children = []
@@ -44,7 +45,7 @@ Take ["defaultElement", "FlowArrows", "Global", "PureDom", "Reaction", "SVGStyle
       
       setupSvg: (svg)->
         activity.registerInstance("default", defaultElement)
-        root = fetchSymbolFn("root")(svg)
+        root = buildInstance "root", svg
         Make "root", root
         root.FlowArrows = new FlowArrows()
         root.getElement = ()-> svg

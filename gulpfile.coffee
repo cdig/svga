@@ -20,7 +20,7 @@ gulp.task "coffee", ()->
   gulp.src paths.coffee
     .pipe gulp_concat "scripts.coffee"
     .pipe gulp_coffee()
-    .pipe gulp_uglify()
+    # .pipe gulp_uglify()
     .on "error", logAndKillError
     .pipe gulp.dest "dist"
 

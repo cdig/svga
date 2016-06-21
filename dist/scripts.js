@@ -1,1 +1,1945 @@
-(function(){var e,t,n,r,o,i,u=[].slice,a=function(e,t){return function(){return e.apply(t,arguments)}};Take(["PointerInput","PureDom","SVGTransform","Vector","DOMContentLoaded"],function(e,t,n,r){var o,i,u,a,s;return s=function(e){return r.add(r.create(e.clientX,e.clientY),r.fromPageOffset())},i=function(e){var n,r,o,i;return r=t.querySelectorParent(e,"svg"),o=r.getBoundingClientRect(),i=o.width,n=o.height,o},u=function(e,t,n,r,o){var u,a,s,l,c,f;return a=i(n),l=r/n.getBoundingClientRect().width/e.transform.scale,f=o/n.getBoundingClientRect().height/e.transform.scale,u=Math.max(l,f),s=t.x*u,c=t.y*u,{x:s,y:c}},a=function(e,t){return t.pos=s(e),t.delta=r.subtract(t.pos,t.last),t.last=t.pos},Make("Draggable",o=function(t,n){var r;return null==n&&(n=null),r={mouse:null,dragging:!1,setup:function(){var o;return null!=n&&(o=n.getElement().getAttribute("viewBox").split(" "),r.viewWidth=parseFloat(o[2]),r.viewHeight=parseFloat(o[3])),r.mouse={},r.mouse.pos={x:0,y:0},r.mouse.delta={x:0,y:0},r.mouse.last={x:0,y:0},e.addDown(t.grabber.getElement(),r.mouseDown),e.addMove(t.getElement(),r.mouseMove),null!=n&&e.addMove(n.getElement(),r.mouseMove),e.addUp(t.getElement(),r.mouseUp),null!=n?e.addUp(n.getElement(),r.mouseUp):void 0},mouseDown:function(e){return a(e,r.mouse),0===e.button?r.dragging=!0:void 0},mouseMove:function(e){var o;return a(e,r.mouse),r.dragging?(o=null!=n?u(t,r.mouse.delta,n.getElement(),r.viewWidth,r.viewHeight):{x:r.mouse.x,y:r.mouse.y},t.transform.x+=o.x,t.transform.y+=o.y):void 0},mouseUp:function(e){return r.dragging=!1}}})}),Take([],function(){var e;return e=[],Make("Reaction",function(t,n){return(null!=e[t]?e[t]:e[t]=[]).push(n)}),Make("Action",function(){var t,n,r,o,i,a,s;for(i=arguments[0],t=2<=arguments.length?u.call(arguments,1):[],a=e[i],s=[],r=0,o=a.length;o>r;r++)n=a[r],s.push(n.apply(null,t));return s})}),Take(["root"],function(e){var t,n;return n={},Make("ControlPanel",t={registerButton:function(e,t){return n[e]=t}})}),Take([],function(){var e,t;return Make("Dispatch",function(n,r,o){return null==o&&(o="children"),"string"==typeof r?t(n,r,o):e(n,r,o)}),t=function(e,n,r){var o,i,u,a,s;for("function"==typeof e[n]&&e[n](),a=e[r],s=[],i=0,u=a.length;u>i;i++)o=a[i],s.push(t(o,n,r));return s},e=function(t,n,r){var o,i,u,a,s;for(n(t),a=t[r],s=[],i=0,u=a.length;u>i;i++)o=a[i],s.push(e(o,n,r));return s}}),Take([],function(){var e,t,n;return Make("Global",e={}),t={},n=function(n,r){return t[n]=r,Object.defineProperty(e,n,{get:function(){return t[n]},set:function(e){return t[n]=e}})},n("animateMode",!1),Object.defineProperty(e,"schematicMode",{get:function(){return!t.animateMode},set:function(e){return t.animateMode=!e}}),n("enableHydraulicLines")}),function(){var e,t,n,r;return n=!1,t=[],e=[],r=function(r){var o,i,u,a,s,l,c;for(n=!1,o=t,t=[],u=0,s=o.length;s>u;u++)(i=o[u])(r);for(o=e,e=[],c=[],a=0,l=o.length;l>a;a++)i=o[a],c.push(i());return c},Make("RequestDeferredRender",function(t,o){var i,u,a;if(null==o&&(o=!1),null==t)return console.log("Warning: RequestDeferredRender(null)");for(u=0,a=e.length;a>u;u++)if(i=e[u],i===t){if(o)return;return this.RDRDuplicate=t,console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.")}return e.push(t),n?void 0:(n=!0,requestAnimationFrame(r))}),Make("RequestUniqueAnimation",function(e,o){var i,u,a;if(null==o&&(o=!1),null==e)return console.log("Warning: RequestUniqueAnimation(null)");for(u=0,a=t.length;a>u;u++)if(i=t[u],i===e){if(o)return;return this.RUADuplicate=e,console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.")}return t.push(e),n?void 0:(n=!0,requestAnimationFrame(r))})}(),Take([],function(){var e;return e=function(e,t,n){var r,o;return o=document.createElementNS("http://www.w3.org/2000/svg","filter"),o.setAttribute("id",t),r=document.createElementNS("http://www.w3.org/2000/svg","feColorMatrix"),r.setAttribute("in","SourceGraphic"),r.setAttribute("type","matrix"),r.setAttribute("values",n),o.appendChild(r),e.appendChild(o)},Make("SetupGraphic",function(t){var n;return n=t.querySelector("defs"),e(n,"highlightMatrix",".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0"),e(n,"greyscaleMatrix",".33 .33 .33  0   0 .33 .33 .33  0   0 .33 .33 .33  0   0 0   0   0    1   0"),e(n,"allblackMatrix","0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0"),t})}),Take(["Action","button","crank","defaultElement","Joystick","SetupGraphic","slider","SVGActivity","DOMContentLoaded"],function(e,t,n,r,o,i,u,a){var s,l,c,f,d,h;return c=[],l=[],d=[],h=[],f=function(s){return setTimeout(function(){var f,d,h,m,g,p,v;for(f=c[s.name],f.registerInstance("joystick","joystick"),f.crank=n,f.button=t,f.slider=u,f.defaultElement=r,f.joystick=o,p=i(s.svg.contentDocument.querySelector("svg")),v=a(),l[s.id]=v,g=f._instances,d=0,h=g.length;h>d;d++)m=g[d],v.registerInstance(m.name,f[m.instance]);return v.registerInstance("default",f.defaultElement),v.setupSvg(p),Make(s.id,v.root),e("setup"),e("schematicMode"),s.svg.style.transition="opacity .7s",s.svg.style.opacity=1})},Make("SVGActivities",s={registerActivityDefinition:function(e){var t,n,r,o,i,u,a,s;for(c[e._name]=e,a=[],t=0,r=d.length;r>t;t++)s=d[t],s.name===e._name&&(f(s),a.push(s));for(u=[],n=0,o=a.length;o>n;n++)i=a[n],u.push(d.splice(d.indexOf(i),1));return u},getActivity:function(e){return console.log("DEPRECATED: getActivity"),l[activityName]},startActivity:function(e,t,n){var r;if(null==l[t])return r={name:e,id:t,svg:n},c[e]?f(r):d.push(r)}})}),Take(["defaultElement","FlowArrows","Global","PureDom","Reaction","SVGStyle","SVGTransform","load"],function(e,t,n,r,o,i,u){return Make("SVGActivity",function(){var a,s,l,c,f,d;return c=null,d={},s=function(e,t){var n;return(n=d[e]||d["default"])(t)},l=function(e){var t,n,o,i,u,a,s;for(u=r.querySelectorAllChildren(e,"g"),n=[],o=0,a=0,s=u.length;s>a;a++)t=u[a],null==t.getAttribute("id")&&(o++,i="child"+o,t.setAttribute("id",i)),n.push(t);return n},f=function(e,t){var r,a,d,h,m,g,p,v;for(a=t.getAttribute("id").split("_")[0],d=s(a,t),e[a]=d,e.children.push(d),d.children=[],d.element=t,d.getElement=function(){return t},d.global=n,d.root=c,d.style=i(t),d.transform=u(t),(null!=(g=t.getAttribute("id"))?g.indexOf("Line"):void 0)>-1&&(o("animateMode",function(){return t.removeAttribute("filter")}),o("schematicMode",function(){return t.setAttribute("filter","url(#allblackMatrix)")})),p=l(t),v=[],h=0,m=p.length;m>h;h++)r=p[h],v.push(f(d,r));return v},a={registerInstance:function(e,t){return d[e]=t},setupSvg:function(r){var o,i,u,d,h;for(a.registerInstance("default",e),c=s("root",r),Make("root",c),c.FlowArrows=new t,c.getElement=function(){return r},c.global=n,c.root=c,c.children=[],d=l(r),h=[],i=0,u=d.length;u>i;i++)o=d[i],h.push(f(c,o));return h}}})}),Take("RequestUniqueAnimation",function(e){var t;return Make("SVGAnimation",t=function(t){var n;return n={running:!1,restart:!1,time:0,startTime:0,dT:0,runAnimation:function(r){var o,i;if(n.running)return n.restart?(n.startTime=r,n.time=0,n.restart=!1):(i=r-n.startTime,o=(i-n.time)/1e3,n.time=i,t(o,n.time)),n.running?e(n.runAnimation):void 0},start:function(){var t;return n.running?void(n.restart=!0):(n.running=!0,t=function(t){return n.startTime=t,n.time=0,e(n.runAnimation)},e(t))},stop:function(){return n.running=!1}}})}),Take("DOMContentLoaded",function(){var e,t,n,r,o;for(r=document.querySelectorAll("svg-activity"),n=[],e=0,t=r.length;t>e;e++)o=r[e],n.push(o.querySelector("object").style.opacity=0);return n}),function(){var e,t;return t=!0,Make("Highlighter",e={setup:function(e){var n,r,o,i,u,a;for(null==e&&(e=[]),u=function(n){var r,o,i,u;if(t){for(u=[],o=0,i=e.length;i>o;o++)r=e[o],u.push(r.setAttribute("filter","url(#highlightMatrix)"));return u}},i=function(t){var n,r,o,i;for(i=[],r=0,o=e.length;o>r;r++)n=e[r],i.push(n.removeAttribute("filter"));return i},a=[],r=0,o=e.length;o>r;r++)n=e[r],n.addEventListener("mouseover",u),a.push(n.addEventListener("mouseleave",i));return a},enable:function(){return t=!0},disable:function(){return t=!0}})}(),i=function(e,t,n){var r,o,u,a,s;return"svg"===t.nodeName||"mainStage"===t.getAttribute("id")?n:(s=e.getElement().createSVGMatrix(),a=t.getAttribute("transform"),u=a.match(/[+-]?\d+(\.\d+)?/g),s.a=u[0],s.b=u[1],s.c=u[2],s.d=u[3],s.e=u[4],s.f=u[5],r=s.inverse(),o="matrix("+r.a+", "+r.b+", "+r.c+", "+r.d+", "+r.e+", "+r.f+")",n=n+" "+o,i(e,t.parentNode,n))},Make("SVGMask",r=function(e,t,n,r){var o,u,a,s,l,c,f,d,h,m;return a=t.getElement(),s=n.getElement(),h=e.getElement(),u=document.createElementNS("http://www.w3.org/2000/svg","mask"),u.setAttribute("id",r),u.setAttribute("maskContentUnits","userSpaceOnUse"),l=document.createElementNS("http://www.w3.org/2000/svg","g"),l.setAttribute("transform",s.getAttribute("transform")),s.parentNode.insertBefore(l,s),s.parentNode.removeChild(s),l.appendChild(s),u.appendChild(a),h.querySelector("defs").insertBefore(u,null),o=i(e,s.parentNode,""),f=a.getAttribute("transform"),m=o+" "+f+" ",a.setAttribute("transform",m),d=s.getAttribute("style"),c=null!=d?d+("; mask: url(#"+r+");"):"mask: url(#"+r+");",s.setAttribute("transform","matrix(1, 0, 0, 1, 0, 0)"),n.transform.setBaseTransform(),l.setAttribute("style",c)}),Take(["PureDom","HydraulicPressure","Global"],function(e,t,n){var r;return Make("SVGStyle",r=function(r){var o,i,u;return u={},i={isLine:(null!=(o=r.getAttribute("id"))?o.indexOf("Line"):void 0)>-1,pressure:0,visible:function(e){return e?r.style.opacity=1:r.style.opacity=0},show:function(e){return e?r.style.visibility="visible":r.style.visibility="hidden"},setPressure:function(e,r){return null==r&&(r=1),i.pressure=e,i.isLine&&n.enableHydraulicLines?i.stroke(t(i.pressure,r)):i.fill(t(i.pressure,r))},getPressure:function(){return i.pressure},getPressureColor:function(e){return t(e)},stroke:function(t){var n,o,i,u,a,s,l;return a=r.querySelector("path"),s=r.querySelector("use"),null==a&&null!=s&&(l=e.querySelectorParent(s,"g"),u=e.querySelectorParent(r,"svg"),o=u.querySelector("defs"),i=o.querySelector(s.getAttribute("xlink:href")),n=i.cloneNode(!0),l.appendChild(n),l.removeChild(s)),a=r.querySelector("path"),null!=a?a.setAttributeNS(null,"stroke",t):void 0},fill:function(t){var n,o,i,u,a,s,l;return a=r.querySelector("path"),s=r.querySelector("use"),null==a&&null!=s&&(l=e.querySelectorParent(s,"g"),u=e.querySelectorParent(r,"svg"),o=u.querySelector("defs"),i=o.querySelector(s.getAttribute("xlink:href")),n=i.cloneNode(!0),l.appendChild(n),l.removeChild(s)),a=r.querySelector("path"),null!=a?a.setAttributeNS(null,"fill",t):void 0},linearGradient:function(t,n,o,u,a){var s,l,c,f,d,h,m,g;for(null==n&&(n=0),null==o&&(o=0),null==u&&(u=1),null==a&&(a=0),g=e.querySelectorParent(r,"svg"),c="Gradient_"+r.getAttributeNS(null,"id"),l=g.querySelector("defs").querySelector("#"+c),null==l&&(l=document.createElementNS("http://www.w3.org/2000/svg","linearGradient"),g.querySelector("defs").appendChild(l)),l.setAttribute("id",c),l.setAttributeNS(null,"x1",n),l.setAttributeNS(null,"y1",o),l.setAttributeNS(null,"x2",u),l.setAttributeNS(null,"y2",a);l.hasChildNodes();)l.removeChild(l.firstChild);for(d=0,h=t.length;h>d;d++)m=t[d],f=document.createElementNS("http://www.w3.org/2000/svg","stop"),f.setAttribute("offset",m.offset),f.setAttribute("stop-color",m.color),l.appendChild(f);return s="url(#"+c+")",i.fill(s)},radialGradient:function(t,n,o,u){var a,s,l,c,f,d,h,m;for(m=e.querySelectorParent(r,"svg"),l="Gradient_"+r.getAttributeNS(null,"id"),s=m.querySelector("defs").querySelector("#"+l),null==s&&(s=document.createElementNS("http://www.w3.org/2000/svg","radialGradient"),m.querySelector("defs").appendChild(s)),s.setAttribute("id",l),null!=n&&s.setAttributeNS(null,"cx",n),null!=o&&s.setAttributeNS(null,"cy",o),null!=u&&s.setAttributeNS(null,"r",u);s.hasChildNodes();)s.removeChild(s.firstChild);for(f=0,d=t.length;d>f;f++)h=t[f],c=document.createElementNS("http://www.w3.org/2000/svg","stop"),c.setAttribute("offset",h.offset),c.setAttribute("stop-color",h.color),s.appendChild(c);return a="url(#"+l+")",i.fill(a)},setText:function(e){var t;return t=r.querySelector("text").querySelector("tspan"),null!=t?t.textContent=e:void 0},setProperty:function(e,t){return u[e]!==t?(u[e]=t,r.style[e]=t):void 0},getElement:function(){return r}}})}),Take("RequestDeferredRender",function(e){var t;return Make("SVGTransform",t=function(t){var n,r,o,i,u,a,s,l,c,f,d,h,m,g,p,v,y,b,M,w;return o=t.getAttribute("transform"),i=null,s=null,b="",c="",f="",M=0,w=0,u=0,a=0,n=0,d=1,h=1,m=1,p={},p.setBaseIdentity=function(){return o="matrix(1,0,0,1,0,0)"},p.setBaseTransform=function(){return o=t.getAttribute("transform")},l=function(e,t,n){return c="rotate("+e+", "+t+", "+n+")",v()},y=function(e,t){return b="translate("+e+", "+t+")",v()},g=function(e,t){return null==t&&(t=e),f="scale("+e+", "+t+")",v()},v=function(){return s=o+" "+c+" "+f+" "+b,e(r,!0)},r=function(){return i!==s?(i=s,t.setAttribute("transform",i)):void 0},Object.defineProperty(p,"x",{get:function(){return M},set:function(e){return y(M=e,w)}}),Object.defineProperty(p,"y",{get:function(){return w},set:function(e){return y(M,w=e)}}),Object.defineProperty(p,"cx",{get:function(){return u},set:function(e){return l(n,u=e,a)}}),Object.defineProperty(p,"cy",{get:function(){return a},set:function(e){return l(n,u,a=e)}}),Object.defineProperty(p,"angle",{get:function(){return n},set:function(e){return l(n=e,u,a)}}),Object.defineProperty(p,"turns",{get:function(){return p.angle/360},set:function(e){return p.angle=360*e}}),Object.defineProperty(p,"scale",{get:function(){return d},set:function(e){return g(d=e)}}),Object.defineProperty(p,"scaleX",{get:function(){return h},set:function(e){return g(h=e,m)}}),Object.defineProperty(p,"scaleY",{get:function(){return m},set:function(e){return g(h,m=e)}}),p})}),function(){var e;return Make("button",e=function(e){var t;return t={callbacks:[],setup:function(){return e.addEventListener("click",t.clicked)},setCallback:function(e){return t.callbacks.push(e)},clicked:function(){var e,n,r,o,i;for(o=t.callbacks,i=[],n=0,r=o.length;r>n;n++)e=o[n],i.push(e());return i}}})}(),function(){return Take(["Ease","Vector","PointerInput"],function(e,t,n){var r;return Make("crank",r=function(r){var o;return o={deadbands:[],unmapped:0,domainMin:0,domainMax:359,rangeMin:-1,rangeMax:1,oldAngle:0,newAngle:0,progress:0,rotation:0,callback:function(){},setup:function(){return n.addDown(r,o.mouseDown)},setCallback:function(e){return o.callback=e},getValue:function(){return e.linear(o.transform.angle,o.domainMin,o.domainMax,o.rangeMin,o.rangeMax)},setValue:function(t){return o.unmapped=e.linear(t,o.domainMin,o.domainMax,o.rangeMin,o.rangeMax)},setDomain:function(e,t){return o.domainMin=e,o.domainMax=t,o.transform.angle<o.domainMin?o.transform.angle=o.rotation=o.unmapped=o.domainMin:o.transform.angle>o.domainMax?o.transform.angle=o.rotation=o.unmapped=o.domainMax:void 0},setRange:function(e,t){return o.rangeMin=e,o.rangeMax=t},addDeadband:function(e,t,n){var r;return r={min:e,set:t,max:n},o.deadbands.push(r),r},begin:function(e){var n,i;return n=r.getBoundingClientRect(),o.position=t.fromRectPos(n),o.position.x+=n.width/2,o.position.y+=n.height/2,i=t.fromEventClient(e),o.oldAngle=Math.atan2(i.y-o.position.y,i.x-o.position.x)},compute:function(e){var n,r;return n=t.fromEventClient(e),o.newAngle=Math.atan2(n.y-o.position.y,n.x-o.position.x),r=o.newAngle-o.oldAngle,r+=r>Math.PI?-2*Math.PI:r<-Math.PI?2*Math.PI:0,o.unmapped+=180*r/Math.PI,o.update()},update:function(){var e,t,n,r,i;for(o.unmapped=Math.max(o.domainMin,Math.min(o.domainMax,o.unmapped)),i=o.unmapped,r=o.deadbands,t=0,n=r.length;n>t;t++)e=r[t],i>e.min&&i<e.max&&(i=e.set);return o.transform.angle=i,o.oldAngle=o.newAngle,"undefined"!=typeof callback&&null!==callback?callback():void 0},mouseDown:function(e){return n.addMove(o.root.getElement(),o.mouseMove),n.addUp(o.root.getElement(),o.mouseUp),n.addUp(window,o.mouseUp),o.begin(e),o.compute(e)},mouseMove:function(e){return o.compute(e)},mouseUp:function(e){return n.removeMove(o.root.getElement(),o.mouseMove),n.removeUp(o.root.getElement(),o.mouseUp),n.removeUp(window,o.mouseUp)}}})})}(),function(){var e;return Make("defaultElement",e=function(e){var t;return t={setup:function(){},setText:function(t){var n;return n=e.querySelector("text").querySelector("tspan"),null!=n?n.textContent=t:void 0},animate:function(e,t){}}})}(),function(){return Take(["Ease","PointerInput","Vector"],function(e,t,n){var r,o,i,u,a,s;return i=-30.1,o=.84,a=-7.1,s=-8,u=-4,Make("Joystick",r=function(r){var l;return l={movement:0,"default":0,down:!1,mousePos:{x:0,y:0},moved:!1,callbacks:[],rangeMin:0,rangeMax:1,enabled:!0,sticky:!0,setup:function(){return l.setTransforms(),t.addDown(r,l.mouseDown),t.addMove(r,l.mouseMove),t.addMove(l.root.getElement(),l.mouseMove),t.addUp(r,l.mouseUp),t.addUp(l.root.getElement(),l.mouseUp)},schematicMode:function(){return l.enabled=!1},animateMode:function(){return l.enabled=!0},setDefault:function(t){return l["default"]=e.linear(t,l.rangeMin,l.rangeMax,0,1,!0),l.movement=l["default"],l.setTransforms()},setTransforms:function(){return l.knob.child5.transform.y=l.movement*i,l.knob.child5.transform.scaleY=1-l.movement+l.movement*o,l.knob.child4.transform.y=l.movement*a,l.knob.child3.transform.y=l.movement*s,l.knob.child2.transform.y=l.movement*u},setRange:function(e,t){return l.rangeMin=e,l.rangeMax=t},setSticky:function(e){return l.sticky=e},mouseClick:function(e){return l.movement=l["default"],l.setTransforms()},mouseDown:function(e){return l.enabled?(l.down=!0,l.mousePos=n.fromEventClient(e)):void 0},mouseMove:function(t){var r,o,i,u,a,s,c;if(l.down&&l.enabled){for(l.moved=!0,a=n.fromEventClient(t),o=(a.y-l.mousePos.y)/100,l.mousePos=a,l.movement-=o,l.movement>1?l.movement=1:l.movement<0&&(l.movement=0),l.setTransforms(),s=l.callbacks,c=[],i=0,u=s.length;u>i;i++)r=s[i],c.push(r(e.linear(l.movement,0,1,l.rangeMin,l.rangeMax)));return c}},mouseUp:function(){var t,n,r,o;if(l.down){if(l.down=!1,!l.moved||!l.sticky)for(l.movement=l["default"],l.setTransforms(),o=l.callbacks,n=0,r=o.length;r>n;n++)(t=o[n])(e.linear(l.movement,0,1,l.rangeMin,l.rangeMax));return l.moved=!1}},setCallback:function(e){return l.callbacks.push(e)}}})})}(),Take(["Ease","PointerInput","PureDom","SVGTransform","Vector","DOMContentLoaded"],function(e,t,n,r,o){var i,u,a,s,l;return l=function(e){return o.add(o.create(e.clientX,e.clientY),o.fromPageOffset())},u=function(e){var t,r,o,i;return r=n.querySelectorParent(e,"svg"),o=r.getBoundingClientRect(),i=o.width,t=o.height,o},a=function(e,t,n,r,o){var i,a,s,l,c,f;return a=u(n),l=r/n.getBoundingClientRect().width/e.transform.scale,f=o/n.getBoundingClientRect().height/e.transform.scale,i=Math.max(l,f),s=t.x*i,c=t.y*i,{x:s,y:c}},s=function(e,t){return t.pos=l(e),t.delta=o.subtract(t.pos,t.last),t.last=t.pos},Make("slider",i=function(n){var r;return r={mouse:null,horizontalSlider:!0,domainMin:0,domainMax:359,transformX:0,transformY:0,rangeMin:-1,rangeMax:1,progress:0,dragging:!1,callback:function(){},setup:function(){var e;return r.mouse={},r.mouse.pos={x:0,y:0},r.mouse.delta={x:0,y:0},r.mouse.last={x:0,y:0},e=r.root.getElement().getAttribute("viewBox").split(" "),r.viewWidth=parseFloat(e[2]),r.viewHeight=parseFloat(e[3]),t.addDown(n,r.mouseDown)},setVertical:function(){return r.horizontalSlider=!1},setHorizontal:function(){return r.horizontalSlider=!0},setCallback:function(e){return r.callback=e},getValue:function(){return e.linear(r.transform.angle,r.domainMin,r.domainMax,r.rangeMin,r.rangeMax)},setValue:function(t){return r.unmapped=e.linear(t,r.domainMin,r.domainMax,r.rangeMin,r.rangeMax)},setDomain:function(e,t){return r.domainMin=e,r.domainMax=t},setRange:function(e,t){return r.rangeMin=e,r.rangeMax=t},update:function(){return"undefined"!=typeof callback&&null!==callback?callback():void 0},mouseDown:function(e){return t.addMove(r.root.getElement(),r.mouseMove),t.addUp(r.root.getElement(),r.mouseUp),t.addUp(window,r.mouseUp),r.dragging=!0,s(e,r.mouse)},mouseMove:function(t){var n,o;return s(t,r.mouse),r.dragging?(o="undefined"!=typeof parent&&null!==parent?a(r,r.mouse.delta,r.root.getElement(),r.viewWidth,r.viewHeight):{x:r.mouse.pos.x,y:r.mouse.y},n=0,r.horizontalSlider?(r.transformX+=o.x,r.transform.x=r.transformX,r.transform.x<r.domainMin&&(r.transform.x=r.domainMin),r.transform.x>r.domainMax&&(r.transform.x=r.domainMax),n=e.linear(r.transform.x,r.domainMin,r.domainMax,r.rangeMin,r.rangeMax)):(r.transformY+=o.y,r.transform.y=r.transformY,r.transform.y<r.domainMin&&(r.transform.y=r.domainMin),r.transform.y>r.domainMax&&(r.transform.y=r.domainMax),n=e.linear(r.transform.y,r.domainMin,r.domainMax,r.rangeMin,r.rangeMax)),r.callback(n)):void 0},mouseUp:function(e){return r.dragging=!0,t.removeMove(r.root.getElement(),r.mouseMove),t.removeUp(r.root.getElement(),r.mouseUp),t.removeUp(window,r.mouseUp)}}})}),Take(["Action","Dispatch","Global","Reaction","root"],function(e,t,n,r,o){return r("toggleAnimateMode",function(){return e(n.animateMode?"schematicMode":"animateMode")}),r("animateMode",function(){return n.animateMode=!0,t(o,"animateMode")}),r("schematicMode",function(){return n.animateMode=!1,t(o,"schematicMode")})}),Take(["Action","Dispatch","Global","Reaction","root"],function(e,t,n,r,o){var i,u,a;return i=["#666","#bbb","#fff"],u=1,a=function(e){return o.getElement().style["background-color"]=i[e%i.length]},r("setup",function(){return a(1)}),r("cycleBackgroundColor",function(){return a(++u)})}),Take(["Dispatch","Reaction","root"],function(e,t,n){return t("setup",function(){return e(n,"setup")})}),e=function(){function e(e,t,n,r,o,i){var u;this.parent=e,this.target=t,this.segment=n,this.position=r,this.edgeIndex=o,this.flowArrows=i,this.update=a(this.update,this),this.setVisibility=a(this.setVisibility,this),this.updateVisibility=a(this.updateVisibility,this),this.setColor=a(this.setColor,this),this.createArrow=a(this.createArrow,this),this.createArrow(),this.edge=this.segment.edges[this.edgeIndex],u=this}var t;return e.prototype.edge=null,e.prototype.element=null,e.prototype.visible=!1,e.prototype.deltaFlow=0,e.prototype.vector=null,e.prototype.createArrow=function(){var e,t;return this.element=document.createElementNS("http://www.w3.org/2000/svg","g"),t=document.createElementNS("http://www.w3.org/2000/svg","polygon"),t.setAttributeNS(null,"points","0,-16 30,0 0,16"),e=document.createElementNS("http://www.w3.org/2000/svg","polygon"),e.setAttributeNS(null,"points","0, 0, -23, 0"),e.setAttributeNS(null,"fill","#fff"),e.setAttributeNS(null,"stroke-width","11"),this.element.appendChild(t),this.element.appendChild(e),this.target.appendChild(this.element),this.element.setAttributeNS(null,"fill","blue"),this.element.setAttributeNS(null,"stroke","blue")},e.prototype.setColor=function(e){return this.element.setAttributeNS(null,"fill",e),this.element.setAttributeNS(null,"stroke",e)},e.prototype.updateVisibility=function(){if(this.visible&&0!==this.deltaFlow){if("visible"!==this.element.style.visibility)return this.element.style.visibility="visible"}else if("hidden"!==this.element.style.visibility)return this.element.style.visibility="hidden"},e.prototype.setVisibility=function(e){return this.visible=e,this.updateVisibility()},e.prototype.update=function(e){var n,r,o,i,u,a;for(this.deltaFlow=e,this.updateVisibility(),this.position+=e;this.position>this.edge.length;)this.edgeIndex++,this.edgeIndex>=this.segment.edges.length&&(this.edgeIndex=0),this.position-=this.edge.length,this.edge=this.segment.edges[this.edgeIndex];for(;this.position<0;)this.edgeIndex--,this.edgeIndex<0&&(this.edgeIndex=this.segment.edges.length-1),this.edge=this.segment.edges[this.edgeIndex],this.position+=this.edge.length;return i=0,o=this.flowArrows?this.flowArrows.FADE_LENGTH:50,i=t(this.position,this.segment.edges,this.edgeIndex,o),u=this.segment.scale*this.segment.arrowsContainer.scale,this.flowArrows&&(u*=this.flowArrows.scale),i*=u,r={x:0,y:0},r.x=Math.cos(this.edge.angle)*this.position+this.edge.x,r.y=Math.sin(this.edge.angle)*this.position+this.edge.y,n=180*this.edge.angle/Math.PI+(0>e?180:0),a="translate("+r.x+", "+r.y+") scale("+i+") rotate("+n+")",this.element.setAttribute("transform",a)},t=function(e,t,n,r){var o,i,u,a,s;return o=t[n],a=e<o.length/2,u=(a||t.length>1)&&0===n,i=(!a||t.length>1)&&n===t.length-1,s=1,u?s=e/o.length*o.length/r:i&&(s=1-(e-(o.length-r))/r),Math.min(1,s)},e}(),t=function(){function e(e){this.target=e,this.update=a(this.update,this),this.setColor=a(this.setColor,this),this.reverse=a(this.reverse,this),this.visible=a(this.visible,this),this.addSegment=a(this.addSegment,this),this.segments=[]}return e.prototype.segments=null,e.prototype.fadeStart=!0,e.prototype.fadeEnd=!0,e.prototype.direction=1,e.prototype.scale=1,e.prototype.name="",e.prototype.flow=1,e.prototype.addSegment=function(e){return this.segments.push(e),this[e.name]=e},e.prototype.visible=function(e){var t,n,r,o,i;for(r=this.segments,o=[],t=0,n=r.length;n>t;t++)i=r[t],o.push(i.visible(e));return o},e.prototype.reverse=function(){return this.direction*=-1},e.prototype.setColor=function(e){var t,n,r,o,i;for(r=this.segments,o=[],t=0,n=r.length;n>t;t++)i=r[t],o.push(i.setColor(e));return o},e.prototype.update=function(e){var t,n,r,o,i;for(e*=this.direction,r=this.segments,o=[],t=0,n=r.length;n>t;t++)i=r[t],i.visible?o.push(i.update(e,this.flow)):o.push(void 0);return o},e}(),n=function(){function e(){}return e.prototype.x=null,e.prototype.y=null,e.prototype.angle=null,e.prototype.length=null,e}(),Take(["Organizer","RequestUniqueAnimation"],function(e,n){var r;return Make("FlowArrows",r=function(){var r,o,i,u;return r=null,o=function(e){var t,n,r,o,i,u,a,s;for(n=[],a=e.childNodes,r=0,i=a.length;i>r;r++)t=a[r],n.push(t);for(s=[],o=0,u=n.length;u>o;o++)t=n[o],s.push(e.removeChild(t));return s},u=function(e){var t,o,a,s,l,c;if(n(u),null==r&&(r=e),o=(e-r)/1e3,r=e,i.isVisible){for(l=i.arrowsContainers,c=[],a=0,s=l.length;s>a;a++)t=l[a],c.push(t.update(o));return c}},i={isVisible:!1,SPEED:200,MIN_EDGE_LENGTH:8,MIN_SEGMENT_LENGTH:1,CONNECTED_DISTANCE:1,ARROWS_PROPERTY:"arrows",scale:.75,SPACING:600,FADE_LENGTH:50,arrowsContainers:[],setup:function(r,a,s){var l,c,f,d;for(o(a),l=new t(a),i.arrowsContainers.push(l),c=0,f=s.length;f>c;c++)d=s[c],e.build(r,d.edges,l,this);return n(u,!0),l},show:function(){var e,t,n,r,o;for(i.isVisible=!0,r=i.arrowsContainers,o=[],t=0,n=r.length;n>t;t++)e=r[t],o.push(e.visible(!0));return o},hide:function(){var e,t,n,r,o;for(i.isVisible=!1,r=i.arrowsContainers,o=[],t=0,n=r.length;n>t;t++)e=r[t],o.push(e.visible(!1));return o},start:function(){return console.log("FlowArrows.start() is deprecated. Please remove it from your animation.")}}})}),function(){var e,t,r,i,u,a,s,l,c,f,d,h;return s=function(e){var t,n,r,o,i;for(o=[],t=[],n=r=0,i=e.length-1;i>=0?i>=r:r>=i;n=i>=0?++r:--r)t=e[n],o.push(t[0],t[2]);return o},c=function(e,t){var n,r,o,i,u,a,s;for(s=[],a=null,n=r=0,u=e.length-1;u>=r;n=r+=2)o=e[n],i=e[n+1],null!=a&&f(o,a[a.length-1],t)?a.push(i):null!=a&&f(i,a[a.length-1],t)?a.push(o):null!=a&&f(a[0],i,t)?a.unshift(o):null!=a&&f(a[0],o,t)?a.unshift(i):(a=[o,i],s.push(a));return s},h=function(e,t){var n,r,o,i,u,a;for(u=null,a=null,o=null,i=null,n=e.length;n--;)for(r=e.length;--r>n;)u=e[n],a=e[r],o=u[0],i=a[0],f(o,i,t)?(a.reverse(),a.pop(),e[n]=a.concat(u),e.splice(r,1)):(o=u[u.length-1],i=a[a.length-1],f(o,i,t)?(a.reverse(),a.unshift(),e[n]=u.concat(a),e.splice(r,1)):(o=u[u.length-1],i=a[0],f(o,i,t)?(e[n]=u.concat(a),e.splice(r,1)):(o=u[0],i=a[a.length-1],f(o,i,t)&&(e[n]=a.concat(u),e.splice(r,1)))));return e},r=function(e,t){var n,r,o,i,u;for(n=e.length,u=[],o=i=null;n--;)for(u=e[n],r=u.length-1;r-- >0;)o=u[r],i=u[r+1],a(o,i)<t.MIN_EDGE_LENGTH&&(o.cull=!0);for(n=e.length;n--;)for(u=e[n],r=u.length-1;r-- >0;)u[r].cull&&u.splice(r,1);return e},u=function(e){var t,n,r,o,i,u;for(u=[],r=null,o=null,i=null,t=e.length;t--;)for(u=e[t],n=u.length-2;n-- >0&&u.length>2;)r=u[n],o=u[n+1],i=u[n+2],d(r,o,i)&&u.splice(n+1,1);return e},i=function(e,t){var n;for(n=e.length;n--;)e.length<t.MIN_SEGMENT_LENGTH&&e.splice(n,1);return e},l=function(e,r,i,u){var s,l,c,f,d,h,m,g,p,v,y;for(p=[],c=d=0,m=r.length-1;m>=0?m>=d:d>=m;c=m>=0?++d:--d){for(v=r[c],y=0,l=[],f=h=0,g=v.length-2;g>=0?g>=h:h>=g;f=g>=0?++h:--h)s=new n,s.x=v[f].x,s.y=v[f].y,s.length=a(v[f],v[f+1]),s.angle=t(v[f],v[f+1]),y+=s.length,l.push(s);y<u.MIN_SEGMENT_LENGTH||p.push(new o(e,l,i,y,u))}return p},f=function(e,t,n){var r,o;return r=Math.abs(e.x-t.x),o=Math.abs(e.y-t.y),r<n.CONNECTED_DISTANCE&&o<n.CONNECTED_DISTANCE},d=function(e,t,n){var r,o,i;return r=(n.y-e.y)*(t.x-e.x)-(n.x-e.x)*(t.y-e.y),Math.abs(r)>.01?!1:(o=(n.x-e.x)*(t.x-e.x)+(n.y-e.y)*(t.y-e.y),0>o?!1:(i=(t.x-e.x)*(t.x-e.x)+(t.y-e.y)*(t.y-e.y),!(o>i)))},a=function(e,t){var n,r;return n=t.x-e.x,r=t.y-e.y,Math.sqrt(n*n+r*r)},t=function(e,t){return Math.atan2(t.y-e.y,t.x-e.x)},Make("Organizer",e={build:function(e,t,n,o){var i,a;return i=s(t),a=[],a=c(i,o),a=h(a,o),a=r(a,o),a=u(a),l(e,a,n,o)}})}(),o=function(){function t(t,n,r,o,i){var u,s,l,c,f,d,h,m,g,p;for(this.parent=t,this.edges=n,this.arrowsContainer=r,this.segmentLength=o,this.flowArrows=i,this.update=a(this.update,this),this.setColor=a(this.setColor,this),this.reverse=a(this.reverse,this),this.visible=a(this.visible,this),this.arrows=[],this.name="segment"+this.arrowsContainer.segments.length,this.arrowsContainer.addSegment(this),p=this,m=Math.max(1,Math.round(p.segmentLength/this.flowArrows.SPACING)),g=p.segmentLength/m,d=0,l=0,s=p.edges[l],c=f=0,h=m-1;h>=0?h>=f:f>=h;c=h>=0?++f:--f){for(;d>s.length;)d-=s.length,s=p.edges[++l];u=new e(p.parent,p.arrowsContainer.target,p,d,l,this.flowArrows),u.name="arrow"+c,p[u.name]=u,p.arrows.push(u),d+=g}}return t.prototype.arrows=null,t.prototype.direction=1,t.prototype.flow=null,t.prototype.name="",t.prototype.scale=1,t.prototype.fillColor="transparent",t.prototype.visible=function(e){var t,n,r,o,i;for(o=this.arrows,i=[],n=0,r=o.length;r>n;n++)t=o[n],i.push(t.setVisibility(e));return i},t.prototype.reverse=function(){return this.direction*=-1},t.prototype.setColor=function(e){return this.fillColor=e},t.prototype.update=function(e,t){var n,r,o,i,u,a;for(r=null!=this.flow?this.flow:t,this.flowArrows&&(r*=e*this.direction*this.flowArrows.SPEED),u=this.arrows,a=[],o=0,i=u.length;i>o;o++)n=u[o],n.setColor(this.fillColor),a.push(n.update(r));return a},t}()}).call(this);
+(function() {
+  var Arrow, ArrowsContainer, Edge, SVGMask, Segment, getParentInverseTransform,
+    slice = [].slice,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
+    var Draggable, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+    vecFromEventGlobal = function(e) {
+      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+    };
+    getParentRect = function(element) {
+      var height, parent, rect, width;
+      parent = PureDom.querySelectorParent(element, "svg");
+      rect = parent.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      return rect;
+    };
+    mouseConversion = function(instance, position, parentElement, width, height) {
+      var diff, parentRect, x, xDiff, y, yDiff;
+      parentRect = getParentRect(parentElement);
+      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
+      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
+      diff = Math.max(xDiff, yDiff);
+      x = position.x * diff;
+      y = position.y * diff;
+      return {
+        x: x,
+        y: y
+      };
+    };
+    updateMousePos = function(e, mouse) {
+      mouse.pos = vecFromEventGlobal(e);
+      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+      return mouse.last = mouse.pos;
+    };
+    return Make("Draggable", Draggable = function(instance, parent) {
+      var scope;
+      if (parent == null) {
+        parent = null;
+      }
+      return scope = {
+        mouse: null,
+        dragging: false,
+        setup: function() {
+          var properties;
+          if (parent != null) {
+            properties = parent.getElement().getAttribute("viewBox").split(" ");
+            scope.viewWidth = parseFloat(properties[2]);
+            scope.viewHeight = parseFloat(properties[3]);
+          }
+          scope.mouse = {};
+          scope.mouse.pos = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.delta = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.last = {
+            x: 0,
+            y: 0
+          };
+          PointerInput.addDown(instance.grabber.getElement(), scope.mouseDown);
+          PointerInput.addMove(instance.getElement(), scope.mouseMove);
+          if (parent != null) {
+            PointerInput.addMove(parent.getElement(), scope.mouseMove);
+          }
+          PointerInput.addUp(instance.getElement(), scope.mouseUp);
+          if (parent != null) {
+            return PointerInput.addUp(parent.getElement(), scope.mouseUp);
+          }
+        },
+        mouseDown: function(e) {
+          updateMousePos(e, scope.mouse);
+          if (e.button === 0) {
+            return scope.dragging = true;
+          }
+        },
+        mouseMove: function(e) {
+          var newMouse;
+          updateMousePos(e, scope.mouse);
+          if (scope.dragging) {
+            if (parent != null) {
+              newMouse = mouseConversion(instance, scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
+            } else {
+              newMouse = {
+                x: scope.mouse.x,
+                y: scope.mouse.y
+              };
+            }
+            instance.transform.x += newMouse.x;
+            return instance.transform.y += newMouse.y;
+          }
+        },
+        mouseUp: function(e) {
+          return scope.dragging = false;
+        }
+      };
+    });
+  });
+
+  Take([], function() {
+    var cbs;
+    cbs = [];
+    Make("Reaction", function(name, cb) {
+      return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
+    });
+    return Make("Action", function() {
+      var args, cb, k, len, name, ref, results;
+      name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (cbs[name] != null) {
+        ref = cbs[name];
+        results = [];
+        for (k = 0, len = ref.length; k < len; k++) {
+          cb = ref[k];
+          results.push(cb.apply(null, args));
+        }
+        return results;
+      }
+    });
+  });
+
+  Take([], function() {
+    var dispatchFn, dispatchString;
+    Make("Dispatch", function(node, fn, sub) {
+      if (sub == null) {
+        sub = "children";
+      }
+      if (typeof fn === "string") {
+        return dispatchString(node, fn, sub);
+      } else {
+        return dispatchFn(node, fn, sub);
+      }
+    });
+    dispatchString = function(node, fn, sub) {
+      var child, k, len, ref, results;
+      if (typeof node[fn] === "function") {
+        node[fn]();
+      }
+      ref = node[sub];
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        child = ref[k];
+        results.push(dispatchString(child, fn, sub));
+      }
+      return results;
+    };
+    return dispatchFn = function(node, fn, sub) {
+      var child, k, len, ref, results;
+      fn(node);
+      ref = node[sub];
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        child = ref[k];
+        results.push(dispatchFn(child, fn, sub));
+      }
+      return results;
+    };
+  });
+
+  Take([], function() {
+    var Global, internal, readWrite;
+    Make("Global", Global = {});
+    internal = {};
+    readWrite = function(name, initial) {
+      internal[name] = initial;
+      return Object.defineProperty(Global, name, {
+        get: function() {
+          return internal[name];
+        },
+        set: function(val) {
+          return internal[name] = val;
+        }
+      });
+    };
+    readWrite("animateMode", false);
+    Object.defineProperty(Global, "schematicMode", {
+      get: function() {
+        return !internal.animateMode;
+      },
+      set: function(val) {
+        return internal.animateMode = !val;
+      }
+    });
+    return readWrite("enableHydraulicLines");
+  });
+
+  (function() {
+    var deferredCallbacks, rafCallbacks, requested, run;
+    requested = false;
+    rafCallbacks = [];
+    deferredCallbacks = [];
+    run = function(t) {
+      var _cbs, cb, k, l, len, len1, results;
+      requested = false;
+      _cbs = rafCallbacks;
+      rafCallbacks = [];
+      for (k = 0, len = _cbs.length; k < len; k++) {
+        cb = _cbs[k];
+        cb(t);
+      }
+      _cbs = deferredCallbacks;
+      deferredCallbacks = [];
+      results = [];
+      for (l = 0, len1 = _cbs.length; l < len1; l++) {
+        cb = _cbs[l];
+        results.push(cb());
+      }
+      return results;
+    };
+    Make("RequestDeferredRender", function(cb, ignoreDuplicates) {
+      var c, k, len;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
+      if (cb == null) {
+        return console.log("Warning: RequestDeferredRender(null)");
+      }
+      for (k = 0, len = deferredCallbacks.length; k < len; k++) {
+        c = deferredCallbacks[k];
+        if (!(c === cb)) {
+          continue;
+        }
+        if (ignoreDuplicates) {
+          return;
+        }
+        this.RDRDuplicate = cb;
+        return console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
+      }
+      deferredCallbacks.push(cb);
+      if (!requested) {
+        requested = true;
+        return requestAnimationFrame(run);
+      }
+    });
+    return Make("RequestUniqueAnimation", function(cb, ignoreDuplicates) {
+      var c, k, len;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
+      if (cb == null) {
+        return console.log("Warning: RequestUniqueAnimation(null)");
+      }
+      for (k = 0, len = rafCallbacks.length; k < len; k++) {
+        c = rafCallbacks[k];
+        if (!(c === cb)) {
+          continue;
+        }
+        if (ignoreDuplicates) {
+          return;
+        }
+        this.RUADuplicate = cb;
+        return console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.");
+      }
+      rafCallbacks.push(cb);
+      if (!requested) {
+        requested = true;
+        return requestAnimationFrame(run);
+      }
+    });
+  })();
+
+  Take(["defaultElement", "FlowArrows", "Global", "PureDom", "Reaction", "SVGStyle", "SVGTransform", "load"], function(defaultElement, FlowArrows, Global, PureDom, Reaction, SVGStyle, SVGTransform) {
+    var activity, buildInstance, getChildElements, setupElement, symbolFns;
+    symbolFns = {};
+    buildInstance = function(name, elm) {
+      var fn;
+      fn = symbolFns[name] || symbolFns["default"];
+      return fn(elm);
+    };
+    getChildElements = function(element) {
+      var child, childElements, childNum, childRef, children, k, len;
+      children = PureDom.querySelectorAllChildren(element, "g");
+      childElements = [];
+      childNum = 0;
+      for (k = 0, len = children.length; k < len; k++) {
+        child = children[k];
+        if (child.getAttribute("id") == null) {
+          childNum++;
+          childRef = "child" + childNum;
+          child.setAttribute("id", childRef);
+        }
+        childElements.push(child);
+      }
+      return childElements;
+    };
+    setupElement = function(parent, element) {
+      var child, id, instance, k, len, ref, ref1, results;
+      id = element.getAttribute("id").split("_")[0];
+      instance = buildInstance(id, element);
+      parent[id] = instance;
+      parent.children.push(instance);
+      instance.children = [];
+      instance.element = element;
+      instance.getElement = function() {
+        return element;
+      };
+      instance.global = Global;
+      instance.root = parent.root;
+      instance.style = SVGStyle(element);
+      instance.transform = SVGTransform(element);
+      if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
+        Reaction("animateMode", function() {
+          return element.removeAttribute("filter");
+        });
+        Reaction("schematicMode", function() {
+          return element.setAttribute("filter", "url(#allblackMatrix)");
+        });
+      }
+      ref1 = getChildElements(element);
+      results = [];
+      for (k = 0, len = ref1.length; k < len; k++) {
+        child = ref1[k];
+        results.push(setupElement(instance, child));
+      }
+      return results;
+    };
+    return Make("RootBuilder", activity = {
+      registerInstance: function(instanceName, symbolFn) {
+        console.log("Component registerInstance");
+        return symbolFns[instanceName] = symbolFn;
+      },
+      setupSvg: function(svg) {
+        var child, k, len, ref, root;
+        symbol.registerInstance("default", defaultElement);
+        root = buildInstance("root", svg);
+        Make("root", root);
+        root.FlowArrows = new FlowArrows();
+        root.getElement = function() {
+          return svg;
+        };
+        root.global = Global;
+        root.root = root;
+        root.children = [];
+        ref = getChildElements(svg);
+        for (k = 0, len = ref.length; k < len; k++) {
+          child = ref[k];
+          setupElement(root, child);
+        }
+        svg.style.transition = "opacity .7s .1s";
+        svg.style.opacity = 1;
+        return null;
+      }
+    });
+  });
+
+  Take([], function() {
+    var setupColorMatrix;
+    setupColorMatrix = function(defs, name, matrixValue) {
+      var colorMatrix, filter;
+      filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+      filter.setAttribute("id", name);
+      colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+      colorMatrix.setAttribute("in", "SourceGraphic");
+      colorMatrix.setAttribute("type", "matrix");
+      colorMatrix.setAttribute("values", matrixValue);
+      filter.appendChild(colorMatrix);
+      return defs.appendChild(filter);
+    };
+    return Make("SetupGraphic", function(svg) {
+      var defs;
+      defs = svg.querySelector("defs");
+      setupColorMatrix(defs, "highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
+      setupColorMatrix(defs, "greyscaleMatrix", ".33 .33 .33  0   0 .33 .33 .33  0   0 .33 .33 .33  0   0 0   0   0    1   0");
+      setupColorMatrix(defs, "allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
+      return svg;
+    });
+  });
+
+  Take(["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "RootBuilder", "DOMContentLoaded"], function(Action, button, crank, defaultElement, Joystick, SetupGraphic, slider, RootBuilder) {
+    var SVGActivity, activityDefinitions, runActivity, runningActivities, waitingObjects;
+    activityDefinitions = [];
+    waitingObjects = [];
+    runningActivities = [];
+    runActivity = function(data) {
+      var activityDefinition, id, k, len, pair, ref, rootActivity, svg;
+      activityDefinition = activityDefinitions[data.activityName];
+      id = data.id || data.activityName;
+      activityDefinition.defaultElement = defaultElement;
+      activityDefinition.registerInstance("joystick", "joystick");
+      activityDefinition.crank = crank;
+      activityDefinition.button = button;
+      activityDefinition.slider = slider;
+      activityDefinition.joystick = Joystick;
+      svg = SetupGraphic(data.object.contentDocument.querySelector("svg"));
+      rootActivity = RootBuilder;
+      runningActivities[id] = rootActivity;
+      ref = activityDefinition._waitingInstances;
+      for (k = 0, len = ref.length; k < len; k++) {
+        pair = ref[k];
+        rootActivity.registerInstance(pair.name, activityDefinition[pair.instance]);
+      }
+      rootActivity.registerInstance("default", activityDefinition.defaultElement);
+      rootActivity.setupSvg(svg);
+      Make(id, rootActivity.root);
+      Action("setup");
+      Action("schematicMode");
+      return data;
+    };
+    return Make("SVGActivity", SVGActivity = {
+      registerActivity: function(activityDefinition) {
+        var i, k, len, o, results, toRemove, v;
+        activityDefinitions[activityDefinition._activityName] = activityDefinition;
+        toRemove = (function() {
+          var k, len, results;
+          results = [];
+          for (k = 0, len = waitingObjects.length; k < len; k++) {
+            o = waitingObjects[k];
+            if (o.activityName === activityDefinition._activityName) {
+              results.push(runActivity(o));
+            }
+          }
+          return results;
+        })();
+        results = [];
+        for (i = k = 0, len = toRemove.length; k < len; i = ++k) {
+          v = toRemove[i];
+          results.push(waitingObjects.splice(i, 1));
+        }
+        return results;
+      },
+      getActivity: function(activityID) {
+        throw "DEPRECATED: getActivity";
+      },
+      start: function(elm) {
+        var data;
+        data = {
+          activityName: elm.getAttribute("name"),
+          id: elm.getAttribute("id"),
+          object: elm.querySelector("object")
+        };
+        if (activityDefinitions[data.activityName] != null) {
+          return runActivity(data);
+        } else {
+          return waitingObjects.push(data);
+        }
+      },
+      stop: function(elm) {
+        return console.log("TODO: Implement SVGActivity.stop()");
+      }
+    });
+  });
+
+  Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
+    var SVGAnimation;
+    return Make("SVGAnimation", SVGAnimation = function(callback) {
+      var scope;
+      return scope = {
+        running: false,
+        restart: false,
+        time: 0,
+        startTime: 0,
+        dT: 0,
+        runAnimation: function(currTime) {
+          var dT, newTime;
+          if (!scope.running) {
+            return;
+          }
+          if (scope.restart) {
+            scope.startTime = currTime;
+            scope.time = 0;
+            scope.restart = false;
+          } else {
+            newTime = currTime - scope.startTime;
+            dT = (newTime - scope.time) / 1000;
+            scope.time = newTime;
+            callback(dT, scope.time);
+          }
+          if (scope.running) {
+            return RequestUniqueAnimation(scope.runAnimation);
+          }
+        },
+        start: function() {
+          var startAnimation;
+          if (scope.running) {
+            scope.restart = true;
+            return;
+          }
+          scope.running = true;
+          startAnimation = function(currTime) {
+            scope.startTime = currTime;
+            scope.time = 0;
+            return RequestUniqueAnimation(scope.runAnimation);
+          };
+          return RequestUniqueAnimation(startAnimation);
+        },
+        stop: function() {
+          return scope.running = false;
+        }
+      };
+    });
+  });
+
+  (function() {
+    var Highlighter, enabled;
+    enabled = true;
+    return Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, k, len, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, k, len, results;
+          if (enabled) {
+            results = [];
+            for (k = 0, len = highlighted.length; k < len; k++) {
+              highlight = highlighted[k];
+              results.push(highlight.setAttribute("filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, k, len, results;
+          results = [];
+          for (k = 0, len = highlighted.length; k < len; k++) {
+            highlight = highlighted[k];
+            results.push(highlight.removeAttribute("filter"));
+          }
+          return results;
+        };
+        results = [];
+        for (k = 0, len = highlighted.length; k < len; k++) {
+          highlight = highlighted[k];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
+    });
+  })();
+
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.getElement().createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("SVGMask", SVGMask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.getElement();
+    maskedElement = maskedInstance.getElement();
+    rootElement = root.getElement();
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
+    } else {
+      newStyle = "mask: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    maskedInstance.transform.setBaseTransform();
+    return maskedParent.setAttribute("style", newStyle);
+  });
+
+  Take(["PureDom", "HydraulicPressure", "Global"], function(PureDom, HydraulicPressure, Global) {
+    var SVGStyle;
+    return Make("SVGStyle", SVGStyle = function(svgElement) {
+      var ref, scope, styleCache;
+      styleCache = {};
+      return scope = {
+        isLine: ((ref = svgElement.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1,
+        pressure: 0,
+        visible: function(isVisible) {
+          if (isVisible) {
+            return svgElement.style.opacity = 1.0;
+          } else {
+            return svgElement.style.opacity = 0.0;
+          }
+        },
+        show: function(showElement) {
+          if (showElement) {
+            return svgElement.style.visibility = "visible";
+          } else {
+            return svgElement.style.visibility = "hidden";
+          }
+        },
+        setPressure: function(val, alpha) {
+          if (alpha == null) {
+            alpha = 1.0;
+          }
+          scope.pressure = val;
+          if (scope.isLine && Global.enableHydraulicLines) {
+            return scope.stroke(HydraulicPressure(scope.pressure, alpha));
+          } else {
+            return scope.fill(HydraulicPressure(scope.pressure, alpha));
+          }
+        },
+        getPressure: function() {
+          return scope.pressure;
+        },
+        getPressureColor: function(pressure) {
+          return HydraulicPressure(pressure);
+        },
+        stroke: function(color) {
+          var clone, defs, link, parent, path, use, useParent;
+          path = svgElement.querySelector("path");
+          use = svgElement.querySelector("use");
+          if ((path == null) && (use != null)) {
+            useParent = PureDom.querySelectorParent(use, "g");
+            parent = PureDom.querySelectorParent(svgElement, "svg");
+            defs = parent.querySelector("defs");
+            link = defs.querySelector(use.getAttribute("xlink:href"));
+            clone = link.cloneNode(true);
+            useParent.appendChild(clone);
+            useParent.removeChild(use);
+          }
+          path = svgElement.querySelector("path");
+          if (path != null) {
+            return path.setAttributeNS(null, "stroke", color);
+          }
+        },
+        fill: function(color) {
+          var clone, defs, link, parent, path, use, useParent;
+          path = svgElement.querySelector("path");
+          use = svgElement.querySelector("use");
+          if ((path == null) && (use != null)) {
+            useParent = PureDom.querySelectorParent(use, "g");
+            parent = PureDom.querySelectorParent(svgElement, "svg");
+            defs = parent.querySelector("defs");
+            link = defs.querySelector(use.getAttribute("xlink:href"));
+            clone = link.cloneNode(true);
+            useParent.appendChild(clone);
+            useParent.removeChild(use);
+          }
+          path = svgElement.querySelector("path");
+          if (path != null) {
+            return path.setAttributeNS(null, "fill", color);
+          }
+        },
+        linearGradient: function(stops, x1, y1, x2, y2) {
+          var fillUrl, gradient, gradientName, gradientStop, k, len, stop, useParent;
+          if (x1 == null) {
+            x1 = 0;
+          }
+          if (y1 == null) {
+            y1 = 0;
+          }
+          if (x2 == null) {
+            x2 = 1;
+          }
+          if (y2 == null) {
+            y2 = 0;
+          }
+          useParent = PureDom.querySelectorParent(svgElement, "svg");
+          gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
+          gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
+          if (gradient == null) {
+            gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+            useParent.querySelector("defs").appendChild(gradient);
+          }
+          gradient.setAttribute("id", gradientName);
+          gradient.setAttributeNS(null, "x1", x1);
+          gradient.setAttributeNS(null, "y1", y1);
+          gradient.setAttributeNS(null, "x2", x2);
+          gradient.setAttributeNS(null, "y2", y2);
+          while (gradient.hasChildNodes()) {
+            gradient.removeChild(gradient.firstChild);
+          }
+          for (k = 0, len = stops.length; k < len; k++) {
+            stop = stops[k];
+            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+            gradientStop.setAttribute("offset", stop.offset);
+            gradientStop.setAttribute("stop-color", stop.color);
+            gradient.appendChild(gradientStop);
+          }
+          fillUrl = "url(#" + gradientName + ")";
+          return scope.fill(fillUrl);
+        },
+        radialGradient: function(stops, cx, cy, radius) {
+          var fillUrl, gradient, gradientName, gradientStop, k, len, stop, useParent;
+          useParent = PureDom.querySelectorParent(svgElement, "svg");
+          gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
+          gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
+          if (gradient == null) {
+            gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
+            useParent.querySelector("defs").appendChild(gradient);
+          }
+          gradient.setAttribute("id", gradientName);
+          if (cx != null) {
+            gradient.setAttributeNS(null, "cx", cx);
+          }
+          if (cy != null) {
+            gradient.setAttributeNS(null, "cy", cy);
+          }
+          if (radius != null) {
+            gradient.setAttributeNS(null, "r", radius);
+          }
+          while (gradient.hasChildNodes()) {
+            gradient.removeChild(gradient.firstChild);
+          }
+          for (k = 0, len = stops.length; k < len; k++) {
+            stop = stops[k];
+            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+            gradientStop.setAttribute("offset", stop.offset);
+            gradientStop.setAttribute("stop-color", stop.color);
+            gradient.appendChild(gradientStop);
+          }
+          fillUrl = "url(#" + gradientName + ")";
+          return scope.fill(fillUrl);
+        },
+        setText: function(text) {
+          var textElement;
+          textElement = svgElement.querySelector("text").querySelector("tspan");
+          if (textElement != null) {
+            return textElement.textContent = text;
+          }
+        },
+        setProperty: function(key, val) {
+          if (styleCache[key] !== val) {
+            styleCache[key] = val;
+            return svgElement.style[key] = val;
+          }
+        },
+        getElement: function() {
+          return svgElement;
+        }
+      };
+    });
+  });
+
+  Take("RequestDeferredRender", function(RequestDeferredRender) {
+    var SVGTransform;
+    return Make("SVGTransform", SVGTransform = function(svgElement) {
+      var angleVal, applyTransform, baseTransform, currentTransformString, cxVal, cyVal, newTransformString, rotate, rotationString, scaleString, scaleVal, scaleXVal, scaleYVal, scaling, scope, setTransform, translate, translateString, xVal, yVal;
+      baseTransform = svgElement.getAttribute("transform");
+      currentTransformString = null;
+      newTransformString = null;
+      translateString = "";
+      rotationString = "";
+      scaleString = "";
+      xVal = 0;
+      yVal = 0;
+      cxVal = 0;
+      cyVal = 0;
+      angleVal = 0;
+      scaleVal = 1;
+      scaleXVal = 1;
+      scaleYVal = 1;
+      scope = {};
+      scope.setBaseIdentity = function() {
+        return baseTransform = "matrix(1,0,0,1,0,0)";
+      };
+      scope.setBaseTransform = function() {
+        return baseTransform = svgElement.getAttribute("transform");
+      };
+      rotate = function(angle, cx, cy) {
+        rotationString = "rotate(" + angle + ", " + cx + ", " + cy + ")";
+        return setTransform();
+      };
+      translate = function(x, y) {
+        translateString = "translate(" + x + ", " + y + ")";
+        return setTransform();
+      };
+      scaling = function(scaleX, scaleY) {
+        if (scaleY == null) {
+          scaleY = scaleX;
+        }
+        scaleString = "scale(" + scaleX + ", " + scaleY + ")";
+        return setTransform();
+      };
+      setTransform = function() {
+        newTransformString = baseTransform + " " + rotationString + " " + scaleString + " " + translateString;
+        return RequestDeferredRender(applyTransform, true);
+      };
+      applyTransform = function() {
+        if (currentTransformString === newTransformString) {
+          return;
+        }
+        currentTransformString = newTransformString;
+        return svgElement.setAttribute("transform", currentTransformString);
+      };
+      Object.defineProperty(scope, 'x', {
+        get: function() {
+          return xVal;
+        },
+        set: function(val) {
+          return translate(xVal = val, yVal);
+        }
+      });
+      Object.defineProperty(scope, 'y', {
+        get: function() {
+          return yVal;
+        },
+        set: function(val) {
+          return translate(xVal, yVal = val);
+        }
+      });
+      Object.defineProperty(scope, 'cx', {
+        get: function() {
+          return cxVal;
+        },
+        set: function(val) {
+          return rotate(angleVal, cxVal = val, cyVal);
+        }
+      });
+      Object.defineProperty(scope, 'cy', {
+        get: function() {
+          return cyVal;
+        },
+        set: function(val) {
+          return rotate(angleVal, cxVal, cyVal = val);
+        }
+      });
+      Object.defineProperty(scope, 'angle', {
+        get: function() {
+          return angleVal;
+        },
+        set: function(val) {
+          return rotate(angleVal = val, cxVal, cyVal);
+        }
+      });
+      Object.defineProperty(scope, 'turns', {
+        get: function() {
+          return scope.angle / 360;
+        },
+        set: function(val) {
+          return scope.angle = val * 360;
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return scaleVal;
+        },
+        set: function(val) {
+          return scaling(scaleVal = val);
+        }
+      });
+      Object.defineProperty(scope, 'scaleX', {
+        get: function() {
+          return scaleXVal;
+        },
+        set: function(val) {
+          return scaling(scaleXVal = val, scaleYVal);
+        }
+      });
+      Object.defineProperty(scope, 'scaleY', {
+        get: function() {
+          return scaleYVal;
+        },
+        set: function(val) {
+          return scaling(scaleXVal, scaleYVal = val);
+        }
+      });
+      return scope;
+    });
+  });
+
+  (function() {
+    var Button;
+    return Make("button", Button = function(svgElement) {
+      var scope;
+      return scope = {
+        callbacks: [],
+        setup: function() {
+          return svgElement.addEventListener("click", scope.clicked);
+        },
+        setCallback: function(callback) {
+          return scope.callbacks.push(callback);
+        },
+        clicked: function() {
+          var callback, k, len, ref, results;
+          ref = scope.callbacks;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            callback = ref[k];
+            results.push(callback());
+          }
+          return results;
+        }
+      };
+    });
+  })();
+
+  (function() {
+    return Take(["Ease", "Vector", "PointerInput"], function(Ease, Vector, PointerInput) {
+      var Crank;
+      return Make("crank", Crank = function(svgElement) {
+        var scope;
+        return scope = {
+          deadbands: [],
+          unmapped: 0,
+          domainMin: 0,
+          domainMax: 359,
+          rangeMin: -1,
+          rangeMax: 1,
+          oldAngle: 0,
+          newAngle: 0,
+          progress: 0,
+          rotation: 0,
+          callback: function() {},
+          setup: function() {
+            return PointerInput.addDown(svgElement, scope.mouseDown);
+          },
+          setCallback: function(callBackFunction) {
+            return scope.callback = callBackFunction;
+          },
+          getValue: function() {
+            return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+          },
+          setValue: function(input) {
+            return scope.unmapped = Ease.linear(input, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+          },
+          setDomain: function(min, max) {
+            scope.domainMin = min;
+            scope.domainMax = max;
+            if (scope.transform.angle < scope.domainMin) {
+              return scope.transform.angle = scope.rotation = scope.unmapped = scope.domainMin;
+            } else if (scope.transform.angle > scope.domainMax) {
+              return scope.transform.angle = scope.rotation = scope.unmapped = scope.domainMax;
+            }
+          },
+          setRange: function(min, max) {
+            scope.rangeMin = min;
+            return scope.rangeMax = max;
+          },
+          addDeadband: function(min, set, max) {
+            var deadband;
+            deadband = {
+              min: min,
+              set: set,
+              max: max
+            };
+            scope.deadbands.push(deadband);
+            return deadband;
+          },
+          begin: function(e) {
+            var clientRect, mousePos;
+            clientRect = svgElement.getBoundingClientRect();
+            scope.position = Vector.fromRectPos(clientRect);
+            scope.position.x += clientRect.width / 2;
+            scope.position.y += clientRect.height / 2;
+            mousePos = Vector.fromEventClient(e);
+            return scope.oldAngle = Math.atan2(mousePos.y - scope.position.y, mousePos.x - scope.position.x);
+          },
+          compute: function(e) {
+            var mousePos, progress;
+            mousePos = Vector.fromEventClient(e);
+            scope.newAngle = Math.atan2(mousePos.y - scope.position.y, mousePos.x - scope.position.x);
+            progress = scope.newAngle - scope.oldAngle;
+            if (progress > Math.PI) {
+              progress += -2 * Math.PI;
+            } else {
+              if (progress < -Math.PI) {
+                progress += 2 * Math.PI;
+              } else {
+                progress += 0;
+              }
+            }
+            scope.unmapped += progress * 180 / Math.PI;
+            return scope.update();
+          },
+          update: function() {
+            var band, k, len, ref, rotation;
+            scope.unmapped = Math.max(scope.domainMin, Math.min(scope.domainMax, scope.unmapped));
+            rotation = scope.unmapped;
+            ref = scope.deadbands;
+            for (k = 0, len = ref.length; k < len; k++) {
+              band = ref[k];
+              if (rotation > band.min && rotation < band.max) {
+                rotation = band.set;
+              }
+            }
+            scope.transform.angle = rotation;
+            scope.oldAngle = scope.newAngle;
+            if (typeof callback !== "undefined" && callback !== null) {
+              return callback();
+            }
+          },
+          mouseDown: function(e) {
+            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+            PointerInput.addUp(window, scope.mouseUp);
+            scope.begin(e);
+            return scope.compute(e);
+          },
+          mouseMove: function(e) {
+            return scope.compute(e);
+          },
+          mouseUp: function(e) {
+            PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
+            return PointerInput.removeUp(window, scope.mouseUp);
+          }
+        };
+      });
+    });
+  })();
+
+  (function() {
+    var defaultElement;
+    return Make("defaultElement", defaultElement = function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {},
+        setText: function(text) {
+          var textElement;
+          textElement = svgElement.querySelector("text").querySelector("tspan");
+          if (textElement != null) {
+            return textElement.textContent = text;
+          }
+        },
+        animate: function(dT, time) {}
+      };
+    });
+  })();
+
+  (function() {
+    return Take(["Ease", "PointerInput", "Vector"], function(Ease, PointerInput, Vector) {
+      var joystick, knobMaxScale, knobMaxY, middleMaxY, stemMaxY, topMaxY;
+      knobMaxY = -30.1;
+      knobMaxScale = 0.84;
+      stemMaxY = -7.1;
+      topMaxY = -8;
+      middleMaxY = -4;
+      return Make("Joystick", joystick = function(svgElement) {
+        var scope;
+        return scope = {
+          movement: 0.0,
+          "default": 0.0,
+          down: false,
+          mousePos: {
+            x: 0,
+            y: 0
+          },
+          moved: false,
+          callbacks: [],
+          rangeMin: 0,
+          rangeMax: 1,
+          enabled: true,
+          sticky: true,
+          setup: function() {
+            scope.setTransforms();
+            PointerInput.addDown(svgElement, scope.mouseDown);
+            PointerInput.addMove(svgElement, scope.mouseMove);
+            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.addUp(svgElement, scope.mouseUp);
+            return PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+          },
+          schematicMode: function() {
+            return scope.enabled = false;
+          },
+          animateMode: function() {
+            return scope.enabled = true;
+          },
+          setDefault: function(pos) {
+            scope["default"] = Ease.linear(pos, scope.rangeMin, scope.rangeMax, 0, 1, true);
+            scope.movement = scope["default"];
+            return scope.setTransforms();
+          },
+          setTransforms: function() {
+            scope.knob.child5.transform.y = scope.movement * knobMaxY;
+            scope.knob.child5.transform.scaleY = (1.0 - scope.movement) + scope.movement * knobMaxScale;
+            scope.knob.child4.transform.y = scope.movement * stemMaxY;
+            scope.knob.child3.transform.y = scope.movement * topMaxY;
+            return scope.knob.child2.transform.y = scope.movement * middleMaxY;
+          },
+          setRange: function(rMin, rMax) {
+            scope.rangeMin = rMin;
+            return scope.rangeMax = rMax;
+          },
+          setSticky: function(sticky) {
+            return scope.sticky = sticky;
+          },
+          mouseClick: function(e) {
+            scope.movement = scope["default"];
+            return scope.setTransforms();
+          },
+          mouseDown: function(e) {
+            if (scope.enabled) {
+              scope.down = true;
+              return scope.mousePos = Vector.fromEventClient(e);
+            }
+          },
+          mouseMove: function(e) {
+            var callback, distance, k, len, newPos, ref, results;
+            if (scope.down && scope.enabled) {
+              scope.moved = true;
+              newPos = Vector.fromEventClient(e);
+              distance = (newPos.y - scope.mousePos.y) / 100;
+              scope.mousePos = newPos;
+              scope.movement -= distance;
+              if (scope.movement > 1.0) {
+                scope.movement = 1.0;
+              } else if (scope.movement < 0.0) {
+                scope.movement = 0.0;
+              }
+              scope.setTransforms();
+              ref = scope.callbacks;
+              results = [];
+              for (k = 0, len = ref.length; k < len; k++) {
+                callback = ref[k];
+                results.push(callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax)));
+              }
+              return results;
+            }
+          },
+          mouseUp: function() {
+            var callback, k, len, ref;
+            if (!scope.down) {
+              return;
+            }
+            scope.down = false;
+            if (!scope.moved || !scope.sticky) {
+              scope.movement = scope["default"];
+              scope.setTransforms();
+              ref = scope.callbacks;
+              for (k = 0, len = ref.length; k < len; k++) {
+                callback = ref[k];
+                callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax));
+              }
+            }
+            return scope.moved = false;
+          },
+          setCallback: function(callback) {
+            return scope.callbacks.push(callback);
+          }
+        };
+      });
+    });
+  })();
+
+  Take(["Ease", "PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(Ease, PointerInput, PureDom, SVGTransform, Vector) {
+    var Slider, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+    vecFromEventGlobal = function(e) {
+      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+    };
+    getParentRect = function(element) {
+      var height, parent, rect, width;
+      parent = PureDom.querySelectorParent(element, "svg");
+      rect = parent.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      return rect;
+    };
+    mouseConversion = function(instance, position, parentElement, width, height) {
+      var diff, parentRect, x, xDiff, y, yDiff;
+      parentRect = getParentRect(parentElement);
+      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
+      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
+      diff = Math.max(xDiff, yDiff);
+      x = position.x * diff;
+      y = position.y * diff;
+      return {
+        x: x,
+        y: y
+      };
+    };
+    updateMousePos = function(e, mouse) {
+      mouse.pos = vecFromEventGlobal(e);
+      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+      return mouse.last = mouse.pos;
+    };
+    return Make("slider", Slider = function(svgElement) {
+      var scope;
+      return scope = {
+        mouse: null,
+        horizontalSlider: true,
+        domainMin: 0,
+        domainMax: 359,
+        transformX: 0,
+        transformY: 0,
+        rangeMin: -1,
+        rangeMax: 1,
+        progress: 0,
+        dragging: false,
+        callback: function() {},
+        setup: function() {
+          var properties;
+          scope.mouse = {};
+          scope.mouse.pos = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.delta = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.last = {
+            x: 0,
+            y: 0
+          };
+          properties = scope.root.getElement().getAttribute("viewBox").split(" ");
+          scope.viewWidth = parseFloat(properties[2]);
+          scope.viewHeight = parseFloat(properties[3]);
+          return PointerInput.addDown(svgElement, scope.mouseDown);
+        },
+        setVertical: function() {
+          return scope.horizontalSlider = false;
+        },
+        setHorizontal: function() {
+          return scope.horizontalSlider = true;
+        },
+        setCallback: function(callBackFunction) {
+          return scope.callback = callBackFunction;
+        },
+        getValue: function() {
+          return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+        },
+        setValue: function(input) {
+          return scope.unmapped = Ease.linear(input, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+        },
+        setDomain: function(min, max) {
+          scope.domainMin = min;
+          return scope.domainMax = max;
+        },
+        setRange: function(min, max) {
+          scope.rangeMin = min;
+          return scope.rangeMax = max;
+        },
+        update: function() {
+          if (typeof callback !== "undefined" && callback !== null) {
+            return callback();
+          }
+        },
+        mouseDown: function(e) {
+          PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+          PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+          PointerInput.addUp(window, scope.mouseUp);
+          scope.dragging = true;
+          return updateMousePos(e, scope.mouse);
+        },
+        mouseMove: function(e) {
+          var callbackValue, newMouse;
+          updateMousePos(e, scope.mouse);
+          if (scope.dragging) {
+            if (typeof parent !== "undefined" && parent !== null) {
+              newMouse = mouseConversion(scope, scope.mouse.delta, scope.root.getElement(), scope.viewWidth, scope.viewHeight);
+            } else {
+              newMouse = {
+                x: scope.mouse.pos.x,
+                y: scope.mouse.y
+              };
+            }
+            callbackValue = 0;
+            if (scope.horizontalSlider) {
+              scope.transformX += newMouse.x;
+              scope.transform.x = scope.transformX;
+              if (scope.transform.x < scope.domainMin) {
+                scope.transform.x = scope.domainMin;
+              }
+              if (scope.transform.x > scope.domainMax) {
+                scope.transform.x = scope.domainMax;
+              }
+              callbackValue = Ease.linear(scope.transform.x, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+            } else {
+              scope.transformY += newMouse.y;
+              scope.transform.y = scope.transformY;
+              if (scope.transform.y < scope.domainMin) {
+                scope.transform.y = scope.domainMin;
+              }
+              if (scope.transform.y > scope.domainMax) {
+                scope.transform.y = scope.domainMax;
+              }
+              callbackValue = Ease.linear(scope.transform.y, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+            }
+            return scope.callback(callbackValue);
+          }
+        },
+        mouseUp: function(e) {
+          scope.dragging = true;
+          PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
+          PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
+          return PointerInput.removeUp(window, scope.mouseUp);
+        }
+      };
+    });
+  });
+
+  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
+    Reaction("toggleAnimateMode", function() {
+      return Action(Global.animateMode ? "schematicMode" : "animateMode");
+    });
+    Reaction("animateMode", function() {
+      Global.animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("schematicMode", function() {
+      Global.animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return root.getElement().style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
+    });
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
+  });
+
+  Arrow = (function() {
+    var getScaleFactor;
+
+    Arrow.prototype.edge = null;
+
+    Arrow.prototype.element = null;
+
+    Arrow.prototype.visible = false;
+
+    Arrow.prototype.deltaFlow = 0;
+
+    Arrow.prototype.vector = null;
+
+    function Arrow(parent1, target, segment1, position1, edgeIndex1, flowArrows1) {
+      var self;
+      this.parent = parent1;
+      this.target = target;
+      this.segment = segment1;
+      this.position = position1;
+      this.edgeIndex = edgeIndex1;
+      this.flowArrows = flowArrows1;
+      this.update = bind(this.update, this);
+      this.setVisibility = bind(this.setVisibility, this);
+      this.updateVisibility = bind(this.updateVisibility, this);
+      this.setColor = bind(this.setColor, this);
+      this.createArrow = bind(this.createArrow, this);
+      this.createArrow();
+      this.edge = this.segment.edges[this.edgeIndex];
+      self = this;
+    }
+
+    Arrow.prototype.createArrow = function() {
+      var line, triangle;
+      this.element = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      triangle = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      triangle.setAttributeNS(null, "points", "0,-16 30,0 0,16");
+      line = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      line.setAttributeNS(null, "points", "0, 0, -23, 0");
+      line.setAttributeNS(null, "fill", "#fff");
+      line.setAttributeNS(null, "stroke-width", "11");
+      this.element.appendChild(triangle);
+      this.element.appendChild(line);
+      this.target.appendChild(this.element);
+      this.element.setAttributeNS(null, "fill", "blue");
+      return this.element.setAttributeNS(null, "stroke", "blue");
+    };
+
+    Arrow.prototype.setColor = function(fillColor) {
+      this.element.setAttributeNS(null, "fill", fillColor);
+      return this.element.setAttributeNS(null, "stroke", fillColor);
+    };
+
+    Arrow.prototype.updateVisibility = function() {
+      if (this.visible && this.deltaFlow !== 0) {
+        if (this.element.style.visibility !== "visible") {
+          return this.element.style.visibility = "visible";
+        }
+      } else {
+        if (this.element.style.visibility !== "hidden") {
+          return this.element.style.visibility = "hidden";
+        }
+      }
+    };
+
+    Arrow.prototype.setVisibility = function(isVisible) {
+      this.visible = isVisible;
+      return this.updateVisibility();
+    };
+
+    Arrow.prototype.update = function(deltaFlow) {
+      var angle, currentPosition, fadeLength, scaleFactor, scalingFactor, transString;
+      this.deltaFlow = deltaFlow;
+      this.updateVisibility();
+      this.position += deltaFlow;
+      while (this.position > this.edge.length) {
+        this.edgeIndex++;
+        if (this.edgeIndex >= this.segment.edges.length) {
+          this.edgeIndex = 0;
+        }
+        this.position -= this.edge.length;
+        this.edge = this.segment.edges[this.edgeIndex];
+      }
+      while (this.position < 0) {
+        this.edgeIndex--;
+        if (this.edgeIndex < 0) {
+          this.edgeIndex = this.segment.edges.length - 1;
+        }
+        this.edge = this.segment.edges[this.edgeIndex];
+        this.position += this.edge.length;
+      }
+      scaleFactor = 0;
+      fadeLength = this.flowArrows ? this.flowArrows.FADE_LENGTH : 50;
+      scaleFactor = getScaleFactor(this.position, this.segment.edges, this.edgeIndex, fadeLength);
+      scalingFactor = this.segment.scale * this.segment.arrowsContainer.scale;
+      if (this.flowArrows) {
+        scalingFactor *= this.flowArrows.scale;
+      }
+      scaleFactor = scaleFactor * scalingFactor;
+      currentPosition = {
+        x: 0,
+        y: 0
+      };
+      currentPosition.x = Math.cos(this.edge.angle) * this.position + this.edge.x;
+      currentPosition.y = Math.sin(this.edge.angle) * this.position + this.edge.y;
+      angle = this.edge.angle * 180 / Math.PI + (deltaFlow < 0 ? 180 : 0);
+      transString = "translate(" + currentPosition.x + ", " + currentPosition.y + ") scale(" + scaleFactor + ") rotate(" + angle + ")";
+      return this.element.setAttribute('transform', transString);
+    };
+
+    getScaleFactor = function(position, edges, edgeIndex, fadeLength) {
+      var edge, fadeEnd, fadeStart, firstHalf, scale;
+      edge = edges[edgeIndex];
+      firstHalf = position < edge.length / 2;
+      fadeStart = (firstHalf || edges.length > 1) && edgeIndex === 0;
+      fadeEnd = (!firstHalf || edges.length > 1) && edgeIndex === edges.length - 1;
+      scale = 1;
+      if (fadeStart) {
+        scale = (position / edge.length) * edge.length / fadeLength;
+      } else if (fadeEnd) {
+        scale = 1.0 - (position - (edge.length - fadeLength)) / fadeLength;
+      }
+      return Math.min(1, scale);
+    };
+
+    return Arrow;
+
+  })();
+
+  ArrowsContainer = (function() {
+    ArrowsContainer.prototype.segments = null;
+
+    ArrowsContainer.prototype.fadeStart = true;
+
+    ArrowsContainer.prototype.fadeEnd = true;
+
+    ArrowsContainer.prototype.direction = 1;
+
+    ArrowsContainer.prototype.scale = 1;
+
+    ArrowsContainer.prototype.name = "";
+
+    ArrowsContainer.prototype.flow = 1;
+
+    function ArrowsContainer(target) {
+      this.target = target;
+      this.update = bind(this.update, this);
+      this.setColor = bind(this.setColor, this);
+      this.reverse = bind(this.reverse, this);
+      this.visible = bind(this.visible, this);
+      this.addSegment = bind(this.addSegment, this);
+      this.segments = [];
+    }
+
+    ArrowsContainer.prototype.addSegment = function(segment) {
+      this.segments.push(segment);
+      return this[segment.name] = segment;
+    };
+
+    ArrowsContainer.prototype.visible = function(isVisible) {
+      var k, len, ref, results, segment;
+      ref = this.segments;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        segment = ref[k];
+        results.push(segment.visible(isVisible));
+      }
+      return results;
+    };
+
+    ArrowsContainer.prototype.reverse = function() {
+      return this.direction *= -1;
+    };
+
+    ArrowsContainer.prototype.setColor = function(fillColor) {
+      var k, len, ref, results, segment;
+      ref = this.segments;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        segment = ref[k];
+        results.push(segment.setColor(fillColor));
+      }
+      return results;
+    };
+
+    ArrowsContainer.prototype.update = function(deltaTime) {
+      var k, len, ref, results, segment;
+      deltaTime *= this.direction;
+      ref = this.segments;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        segment = ref[k];
+        if (segment.visible) {
+          results.push(segment.update(deltaTime, this.flow));
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
+
+    return ArrowsContainer;
+
+  })();
+
+  Edge = (function() {
+    Edge.prototype.x = null;
+
+    Edge.prototype.y = null;
+
+    Edge.prototype.angle = null;
+
+    Edge.prototype.length = null;
+
+    function Edge() {}
+
+    return Edge;
+
+  })();
+
+  Take(["Organizer", "RequestUniqueAnimation"], function(Organizer, RequestUniqueAnimation) {
+    var FlowArrows;
+    return Make("FlowArrows", FlowArrows = function() {
+      var currentTime, removeOriginalArrow, scope, update;
+      currentTime = null;
+      removeOriginalArrow = function(selectedSymbol) {
+        var child, children, k, l, len, len1, ref, results;
+        children = [];
+        ref = selectedSymbol.childNodes;
+        for (k = 0, len = ref.length; k < len; k++) {
+          child = ref[k];
+          children.push(child);
+        }
+        results = [];
+        for (l = 0, len1 = children.length; l < len1; l++) {
+          child = children[l];
+          results.push(selectedSymbol.removeChild(child));
+        }
+        return results;
+      };
+      update = function(time) {
+        var arrowsContainer, dT, k, len, ref, results;
+        RequestUniqueAnimation(update);
+        if (currentTime == null) {
+          currentTime = time;
+        }
+        dT = (time - currentTime) / 1000;
+        currentTime = time;
+        if (!scope.isVisible) {
+          return;
+        }
+        ref = scope.arrowsContainers;
+        results = [];
+        for (k = 0, len = ref.length; k < len; k++) {
+          arrowsContainer = ref[k];
+          results.push(arrowsContainer.update(dT));
+        }
+        return results;
+      };
+      return scope = {
+        isVisible: false,
+        SPEED: 200,
+        MIN_EDGE_LENGTH: 8,
+        MIN_SEGMENT_LENGTH: 1,
+        CONNECTED_DISTANCE: 1,
+        ARROWS_PROPERTY: "arrows",
+        scale: 0.75,
+        SPACING: 600,
+        FADE_LENGTH: 50,
+        arrowsContainers: [],
+        setup: function(parent, selectedSymbol, linesData) {
+          var arrowsContainer, k, len, lineData;
+          removeOriginalArrow(selectedSymbol);
+          arrowsContainer = new ArrowsContainer(selectedSymbol);
+          scope.arrowsContainers.push(arrowsContainer);
+          for (k = 0, len = linesData.length; k < len; k++) {
+            lineData = linesData[k];
+            Organizer.build(parent, lineData.edges, arrowsContainer, this);
+          }
+          RequestUniqueAnimation(update, true);
+          return arrowsContainer;
+        },
+        show: function() {
+          var arrowsContainer, k, len, ref, results;
+          scope.isVisible = true;
+          ref = scope.arrowsContainers;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            arrowsContainer = ref[k];
+            results.push(arrowsContainer.visible(true));
+          }
+          return results;
+        },
+        hide: function() {
+          var arrowsContainer, k, len, ref, results;
+          scope.isVisible = false;
+          ref = scope.arrowsContainers;
+          results = [];
+          for (k = 0, len = ref.length; k < len; k++) {
+            arrowsContainer = ref[k];
+            results.push(arrowsContainer.visible(false));
+          }
+          return results;
+        },
+        start: function() {
+          return console.log("FlowArrows.start() is deprecated. Please remove it from your animation.");
+        }
+      };
+    });
+  });
+
+  (function() {
+    var Organizer, angle, cullShortEdges, cullShortSegments, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
+    edgesToLines = function(edgesData) {
+      var edge, i, k, linesData, ref;
+      linesData = [];
+      edge = [];
+      for (i = k = 0, ref = edgesData.length - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+        edge = edgesData[i];
+        linesData.push(edge[0], edge[2]);
+      }
+      return linesData;
+    };
+    formSegments = function(lineData, flowArrows) {
+      var i, k, pointA, pointB, ref, segmentEdges, segments;
+      segments = [];
+      segmentEdges = null;
+      for (i = k = 0, ref = lineData.length - 1; k <= ref; i = k += 2) {
+        pointA = lineData[i];
+        pointB = lineData[i + 1];
+        if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1], flowArrows)) {
+          segmentEdges.push(pointB);
+        } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1], flowArrows)) {
+          segmentEdges.push(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB, flowArrows)) {
+          segmentEdges.unshift(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA, flowArrows)) {
+          segmentEdges.unshift(pointB);
+        } else {
+          segmentEdges = [pointA, pointB];
+          segments.push(segmentEdges);
+        }
+      }
+      return segments;
+    };
+    joinSegments = function(segments, flowArrows) {
+      var i, j, pointA, pointB, segA, segB;
+      segA = null;
+      segB = null;
+      pointA = null;
+      pointB = null;
+      i = segments.length;
+      while (i--) {
+        j = segments.length;
+        while (--j > i) {
+          segA = segments[i];
+          segB = segments[j];
+          pointA = segA[0];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segB.reverse();
+            segB.pop();
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segB.reverse();
+            segB.unshift();
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[0];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB, flowArrows)) {
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+        }
+      }
+      return segments;
+    };
+    cullShortEdges = function(segments, flowArrows) {
+      var i, j, pointA, pointB, seg;
+      i = segments.length;
+      seg = [];
+      pointA = pointB = null;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          if (distance(pointA, pointB) < flowArrows.MIN_EDGE_LENGTH) {
+            pointA.cull = true;
+          }
+        }
+      }
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          if (seg[j].cull) {
+            seg.splice(j, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    cullUnusedPoints = function(segments) {
+      var i, j, pointA, pointB, pointC, seg;
+      seg = [];
+      pointA = null;
+      pointB = null;
+      pointC = null;
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 2;
+        while (j-- > 0 && seg.length > 2) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          pointC = seg[j + 2];
+          if (isInline(pointA, pointB, pointC)) {
+            seg.splice(j + 1, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    cullShortSegments = function(segments, flowArrows) {
+      var i;
+      i = segments.length;
+      while (i--) {
+        if (segments.length < flowArrows.MIN_SEGMENT_LENGTH) {
+          segments.splice(i, 1);
+        }
+      }
+      return segments;
+    };
+    finish = function(parent, segments, arrowsContainer, flowArrows) {
+      var edge, edges, i, j, k, l, ref, ref1, results, segPoints, segmentLength;
+      results = [];
+      for (i = k = 0, ref = segments.length - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+        segPoints = segments[i];
+        segmentLength = 0;
+        edges = [];
+        for (j = l = 0, ref1 = segPoints.length - 2; 0 <= ref1 ? l <= ref1 : l >= ref1; j = 0 <= ref1 ? ++l : --l) {
+          edge = new Edge();
+          edge.x = segPoints[j].x;
+          edge.y = segPoints[j].y;
+          edge.length = distance(segPoints[j], segPoints[j + 1]);
+          edge.angle = angle(segPoints[j], segPoints[j + 1]);
+          segmentLength += edge.length;
+          edges.push(edge);
+        }
+        if (segmentLength < flowArrows.MIN_SEGMENT_LENGTH) {
+          continue;
+        }
+        results.push(new Segment(parent, edges, arrowsContainer, segmentLength, flowArrows));
+      }
+      return results;
+    };
+    isConnected = function(a, b, flowArrows) {
+      var dX, dY;
+      dX = Math.abs(a.x - b.x);
+      dY = Math.abs(a.y - b.y);
+      return dX < flowArrows.CONNECTED_DISTANCE && dY < flowArrows.CONNECTED_DISTANCE;
+    };
+    isInline = function(a, b, c) {
+      var crossproduct, dotproduct, squaredlengthba;
+      crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
+      if (Math.abs(crossproduct) > 0.01) {
+        return false;
+      }
+      dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
+      if (dotproduct < 0) {
+        return false;
+      }
+      squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+      if (dotproduct > squaredlengthba) {
+        return false;
+      }
+      return true;
+    };
+    distance = function(a, b) {
+      var dx, dy;
+      dx = b.x - a.x;
+      dy = b.y - a.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    angle = function(a, b) {
+      return Math.atan2(b.y - a.y, b.x - a.x);
+    };
+    return Make("Organizer", Organizer = {
+      build: function(parent, edgesData, arrowsContainer, flowArrows) {
+        var lineData, segments;
+        lineData = edgesToLines(edgesData);
+        segments = [];
+        segments = formSegments(lineData, flowArrows);
+        segments = joinSegments(segments, flowArrows);
+        segments = cullShortEdges(segments, flowArrows);
+        segments = cullUnusedPoints(segments);
+        return finish(parent, segments, arrowsContainer, flowArrows);
+      }
+    });
+  })();
+
+  Segment = (function() {
+    Segment.prototype.arrows = null;
+
+    Segment.prototype.direction = 1;
+
+    Segment.prototype.flow = null;
+
+    Segment.prototype.name = "";
+
+    Segment.prototype.scale = 1.0;
+
+    Segment.prototype.fillColor = "transparent";
+
+    function Segment(parent1, edges1, arrowsContainer1, segmentLength1, flowArrows1) {
+      var arrow, edge, edgeIndex, i, k, position, ref, segmentArrows, segmentSpacing, self;
+      this.parent = parent1;
+      this.edges = edges1;
+      this.arrowsContainer = arrowsContainer1;
+      this.segmentLength = segmentLength1;
+      this.flowArrows = flowArrows1;
+      this.update = bind(this.update, this);
+      this.setColor = bind(this.setColor, this);
+      this.reverse = bind(this.reverse, this);
+      this.visible = bind(this.visible, this);
+      this.arrows = [];
+      this.name = "segment" + this.arrowsContainer.segments.length;
+      this.arrowsContainer.addSegment(this);
+      self = this;
+      segmentArrows = Math.max(1, Math.round(self.segmentLength / this.flowArrows.SPACING));
+      segmentSpacing = self.segmentLength / segmentArrows;
+      position = 0;
+      edgeIndex = 0;
+      edge = self.edges[edgeIndex];
+      for (i = k = 0, ref = segmentArrows - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+        while (position > edge.length) {
+          position -= edge.length;
+          edge = self.edges[++edgeIndex];
+        }
+        arrow = new Arrow(self.parent, self.arrowsContainer.target, self, position, edgeIndex, this.flowArrows);
+        arrow.name = "arrow" + i;
+        self[arrow.name] = arrow;
+        self.arrows.push(arrow);
+        position += segmentSpacing;
+      }
+    }
+
+    Segment.prototype.visible = function(isVisible) {
+      var arrow, k, len, ref, results;
+      ref = this.arrows;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        arrow = ref[k];
+        results.push(arrow.setVisibility(isVisible));
+      }
+      return results;
+    };
+
+    Segment.prototype.reverse = function() {
+      return this.direction *= -1;
+    };
+
+    Segment.prototype.setColor = function(fillColor) {
+      return this.fillColor = fillColor;
+    };
+
+    Segment.prototype.update = function(deltaTime, ancestorFlow) {
+      var arrow, arrowFlow, k, len, ref, results;
+      arrowFlow = this.flow != null ? this.flow : ancestorFlow;
+      if (this.flowArrows) {
+        arrowFlow *= deltaTime * this.direction * this.flowArrows.SPEED;
+      }
+      ref = this.arrows;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        arrow = ref[k];
+        arrow.setColor(this.fillColor);
+        results.push(arrow.update(arrowFlow));
+      }
+      return results;
+    };
+
+    return Segment;
+
+  })();
+
+}).call(this);

@@ -5,4 +5,4 @@ Take [], ()->
     (cbs[name] ?= []).push cb
   
   Make "Action", (name, args...)->
-    cb args... for cb in cbs[name]
+    cb args... for cb in cbs[name] if cbs[name]?

@@ -318,13 +318,12 @@
       return results;
     };
     return Make("RootBuilder", activity = {
-      registerInstance: function(instanceName, symbolFn) {
-        console.log("Component registerInstance");
+      internInstance: function(instanceName, symbolFn) {
         return symbolFns[instanceName] = symbolFn;
       },
       setupSvg: function(svg) {
         var child, k, len, ref, root;
-        symbol.registerInstance("default", defaultElement);
+        activity.internInstance("default", defaultElement);
         root = buildInstance("root", svg);
         Make("root", root);
         root.FlowArrows = new FlowArrows();
@@ -370,46 +369,50 @@
   });
 
   Take(["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "RootBuilder", "DOMContentLoaded"], function(Action, button, crank, defaultElement, Joystick, SetupGraphic, slider, RootBuilder) {
-    var SVGActivity, activityDefinitions, runActivity, runningActivities, waitingObjects;
-    activityDefinitions = [];
-    waitingObjects = [];
-    runningActivities = [];
-    runActivity = function(data) {
-      var activityDefinition, id, k, len, pair, ref, rootActivity, svg;
-      activityDefinition = activityDefinitions[data.activityName];
-      id = data.id || data.activityName;
-      activityDefinition.defaultElement = defaultElement;
-      activityDefinition.registerInstance("joystick", "joystick");
-      activityDefinition.crank = crank;
-      activityDefinition.button = button;
-      activityDefinition.slider = slider;
-      activityDefinition.joystick = Joystick;
-      svg = SetupGraphic(data.object.contentDocument.querySelector("svg"));
+    var SVGActivity, activities, err, initActivityElm, inited, waiting;
+    activities = {};
+    inited = {};
+    waiting = [];
+    initActivityElm = function(svgaElmData) {
+      var activity, id, k, len, ref, rootActivity, svg, sym;
+      activity = activities[svgaElmData.activityName];
+      id = svgaElmData.id || svgaElmData.activityName;
+      activity.defaultElement = defaultElement;
+      activity.registerInstance("joystick", "joystick");
+      activity.crank = crank;
+      activity.button = button;
+      activity.slider = slider;
+      activity.joystick = Joystick;
+      svg = SetupGraphic(svgaElmData.objectElm.contentDocument.querySelector("svg"));
       rootActivity = RootBuilder;
-      runningActivities[id] = rootActivity;
-      ref = activityDefinition._waitingInstances;
+      inited[id] = rootActivity;
+      ref = activity._waitingInstances;
       for (k = 0, len = ref.length; k < len; k++) {
-        pair = ref[k];
-        rootActivity.registerInstance(pair.name, activityDefinition[pair.instance]);
+        sym = ref[k];
+        rootActivity.internInstance(sym.name, activity[sym.instance]);
       }
-      rootActivity.registerInstance("default", activityDefinition.defaultElement);
+      rootActivity.internInstance("default", activity.defaultElement);
       rootActivity.setupSvg(svg);
       Make(id, rootActivity.root);
       Action("setup");
       Action("schematicMode");
-      return data;
+      return svgaElmData;
+    };
+    err = function(elm, msg) {
+      console.log(elm);
+      throw msg;
     };
     return Make("SVGActivity", SVGActivity = {
-      registerActivity: function(activityDefinition) {
-        var i, k, len, o, results, toRemove, v;
-        activityDefinitions[activityDefinition._activityName] = activityDefinition;
+      registerActivity: function(activity) {
+        var i, k, len, results, svgaElmData, toRemove, v;
+        activities[activity._activityName] = activity;
         toRemove = (function() {
           var k, len, results;
           results = [];
-          for (k = 0, len = waitingObjects.length; k < len; k++) {
-            o = waitingObjects[k];
-            if (o.activityName === activityDefinition._activityName) {
-              results.push(runActivity(o));
+          for (k = 0, len = waiting.length; k < len; k++) {
+            svgaElmData = waiting[k];
+            if (svgaElmData.activityName === activity._activityName) {
+              results.push(initActivityElm(svgaElmData));
             }
           }
           return results;
@@ -417,27 +420,29 @@
         results = [];
         for (i = k = 0, len = toRemove.length; k < len; i = ++k) {
           v = toRemove[i];
-          results.push(waitingObjects.splice(i, 1));
+          results.push(waiting.splice(i, 1));
         }
         return results;
       },
       getActivity: function(activityID) {
         throw "DEPRECATED: getActivity";
       },
-      start: function(elm) {
-        var data;
-        data = {
-          activityName: elm.getAttribute("name"),
-          id: elm.getAttribute("id"),
-          object: elm.querySelector("object")
+      start: function(svgActivityElm) {
+        var svgaElmData;
+        svgaElmData = {
+          activityName: svgActivityElm.getAttribute("name") || err(svgActivityElm, ' ^ This <svg-activity> is missing a name attribute. Please add something like name="special-delivery", where "special-delivery" is the name from your svg-activity.json file.'),
+          id: svgActivityElm.getAttribute("id") || err(svgActivityElm, " ^ This <svg-activity> is missing an id attribute. Please add something like id=\"" + (svgActivityElm.getAttribute("name")) + "\"."),
+          objectElm: svgActivityElm.querySelector("object") || err(svgActivityElm, ' ^ This <svg-activity> must contain an <object>.')
         };
-        if (activityDefinitions[data.activityName] != null) {
-          return runActivity(data);
+        if (inited[svgaElmData.id] != null) {
+
+        } else if (activities[svgaElmData.activityName] != null) {
+          return initActivityElm(svgaElmData);
         } else {
-          return waitingObjects.push(data);
+          return waiting.push(svgaElmData);
         }
       },
-      stop: function(elm) {
+      stop: function(svgActivityElm) {
         return console.log("TODO: Implement SVGActivity.stop()");
       }
     });

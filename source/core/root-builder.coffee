@@ -38,12 +38,11 @@ Take ["defaultElement", "FlowArrows", "Global", "PureDom", "Reaction", "SVGStyle
   
   Make "RootBuilder", activity =
     
-    registerInstance: (instanceName, symbolFn)->
-      console.log "Component registerInstance"
+    internInstance: (instanceName, symbolFn)->
       symbolFns[instanceName] = symbolFn
     
     setupSvg: (svg)->
-      symbol.registerInstance "default", defaultElement # Why is this here?
+      activity.internInstance "default", defaultElement # Why is this here?
       root = buildInstance "root", svg
       Make "root", root
       root.FlowArrows = new FlowArrows()

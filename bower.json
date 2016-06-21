@@ -1,20 +1,12 @@
 {
   "name": "svg-activity-components",
-  "description": "Enables the ability to make activities using SVGs.",
-  "authors": [
-    "Sean Lynch <sean.zo.lynch@gmail.com>"
-  ],
-  "main": [
-    "dist/scripts.js",
-    "dist/styles.css"
-  ],
-  "ignore": [
-    "**/.*"
-  ],
+  "description": "A framework for creating interactive SVG animations",
   "dependencies": {
     "take-and-make": "cdig/take-and-make#v2",
     "cd-library": "cdig/cd-library#v2"
   },
-  "license": "MIT",
+  "main": ["dist/scripts.js"],
+  "ignore": [],
+  "license": "UNLICENSED",
   "private": true
 }

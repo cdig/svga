@@ -1,69 +1,79 @@
 Take ["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "RootBuilder", "DOMContentLoaded"],
 (      Action ,  button ,  crank ,  defaultElement ,  Joystick ,  SetupGraphic ,  slider ,  RootBuilder)->
   
-  activityDefinitions = []
-  waitingObjects = []
-  runningActivities = []
+  activities = {} # Stores the `activity` code definition objects
+  inited = {} # Stores the roots of initialized instances, by id
+  waiting = [] # Stores svgaElms waiting for corresponding activity definiton object
   
   
-  runActivity = (data)->
-    activityDefinition = activityDefinitions[data.activityName]
-    id = data.id or data.activityName
+  initActivityElm = (svgaElmData)->
+    activity = activities[svgaElmData.activityName]
+    id = svgaElmData.id or svgaElmData.activityName
     
-    activityDefinition.defaultElement = defaultElement
-    activityDefinition.registerInstance "joystick", "joystick"
-    activityDefinition.crank = crank
-    activityDefinition.button = button
-    activityDefinition.slider = slider
-    activityDefinition.joystick = Joystick
+    activity.defaultElement = defaultElement
+    activity.registerInstance "joystick", "joystick"
+    activity.crank = crank
+    activity.button = button
+    activity.slider = slider
+    activity.joystick = Joystick
     
-    svg = SetupGraphic data.object.contentDocument.querySelector "svg"
+    svg = SetupGraphic svgaElmData.objectElm.contentDocument.querySelector "svg"
     
     rootActivity = RootBuilder
-    runningActivities[id] = rootActivity
-    for pair in activityDefinition._waitingInstances
-      rootActivity.registerInstance(pair.name, activityDefinition[pair.instance])
-    rootActivity.registerInstance "default", activityDefinition.defaultElement
+    inited[id] = rootActivity
+    for sym in activity._waitingInstances
+      rootActivity.internInstance(sym.name, activity[sym.instance])
+    rootActivity.internInstance "default", activity.defaultElement
     rootActivity.setupSvg svg
     Make id, rootActivity.root
     
     Action "setup"
     Action "schematicMode"
     
-    data # pass through
+    svgaElmData # pass through
+  
+  
+  err = (elm, msg)->
+    console.log elm
+    throw msg
   
   
   # This is taken in:
   # svg-activity-starter's top.coffee
-  # svg-activity-starter's activity-start.coffee
+  # svg-activity-starter's activity-loader.coffee
   # svg-activity-loader's svg-activity-loader.coffee
   Make "SVGActivity", SVGActivity =
     
-    registerActivity: (activityDefinition)->
-      activityDefinitions[activityDefinition._activityName] = activityDefinition
-      toRemove = for o in waitingObjects when o.activityName is activityDefinition._activityName
-        runActivity o
+    registerActivity: (activity)->
+      activities[activity._activityName] = activity
+      toRemove = for svgaElmData in waiting when svgaElmData.activityName is activity._activityName
+        initActivityElm svgaElmData
       
-      waitingObjects.splice i, 1 for v, i in toRemove
+      waiting.splice i, 1 for v, i in toRemove
     
     
     getActivity: (activityID)->
       throw "DEPRECATED: getActivity"
-      # return runningActivities[activityName]
+      # return inited[activityName]
     
-    
-    # Elm is an <svg-activity>
-    start: (elm)->
-      data =
-        activityName: elm.getAttribute "name"
-        id: elm.getAttribute "id"
-        object: elm.querySelector "object"
+    start: (svgActivityElm)->
+      svgaElmData =
+        activityName: svgActivityElm.getAttribute("name") or err svgActivityElm, ' ^ This <svg-activity> is missing a name attribute. Please add something like name="special-delivery", where "special-delivery" is the name from your svg-activity.json file.'
+        id: svgActivityElm.getAttribute("id") or err svgActivityElm, " ^ This <svg-activity> is missing an id attribute. Please add something like id=\"#{svgActivityElm.getAttribute("name")}\"."
+        objectElm: svgActivityElm.querySelector("object") or err svgActivityElm, ' ^ This <svg-activity> must contain an <object>.'
       
-      if activityDefinitions[data.activityName]?
-        runActivity data
+      # Already inited — Resume the activity if paused
+      if inited[svgaElmData.id]?
+        # TODO
+      
+      # Not yet inited — Init if possible
+      else if activities[svgaElmData.activityName]?
+        initActivityElm svgaElmData
+      
+      # Not possible to init yet
       else
-        waitingObjects.push data
+        waiting.push svgaElmData
     
     
-    stop: (elm)->
+    stop: (svgActivityElm)->
       console.log "TODO: Implement SVGActivity.stop()"

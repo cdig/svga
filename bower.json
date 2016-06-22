@@ -5,7 +5,10 @@
     "take-and-make": "cdig/take-and-make#v2",
     "cd-library": "cdig/cd-library#v2"
   },
-  "main": ["dist/scripts.js"],
+  "main": [
+    "dist/styles.css",
+    "dist/scripts.js"
+  ],
   "ignore": [],
   "license": "UNLICENSED",
   "private": true

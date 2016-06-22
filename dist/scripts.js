@@ -1,104 +1,33 @@
 (function() {
-  var Arrow, ArrowsContainer, Edge, SVGMask, Segment, getParentInverseTransform,
+  var Arrow, ArrowsContainer, Edge, SVGMask, Segment, activity, getParentInverseTransform,
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
-    var Draggable, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
-    vecFromEventGlobal = function(e) {
-      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
-    };
-    getParentRect = function(element) {
-      var height, parent, rect, width;
-      parent = PureDom.querySelectorParent(element, "svg");
-      rect = parent.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
-      return rect;
-    };
-    mouseConversion = function(instance, position, parentElement, width, height) {
-      var diff, parentRect, x, xDiff, y, yDiff;
-      parentRect = getParentRect(parentElement);
-      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
-      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
-      diff = Math.max(xDiff, yDiff);
-      x = position.x * diff;
-      y = position.y * diff;
-      return {
-        x: x,
-        y: y
-      };
-    };
-    updateMousePos = function(e, mouse) {
-      mouse.pos = vecFromEventGlobal(e);
-      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
-      return mouse.last = mouse.pos;
-    };
-    return Make("Draggable", Draggable = function(instance, parent) {
-      var scope;
-      if (parent == null) {
-        parent = null;
+  activity = {};
+
+  activity._activityName = "%activity_name";
+
+  activity._waitingInstances = [];
+
+  activity.registerInstance = function(graphicName, symbolName) {
+    var k, len, ref, waitingInstance;
+    ref = activity._waitingInstances;
+    for (k = 0, len = ref.length; k < len; k++) {
+      waitingInstance = ref[k];
+      if (!(waitingInstance.graphicName === graphicName)) {
+        continue;
       }
-      return scope = {
-        mouse: null,
-        dragging: false,
-        setup: function() {
-          var properties;
-          if (parent != null) {
-            properties = parent.getElement().getAttribute("viewBox").split(" ");
-            scope.viewWidth = parseFloat(properties[2]);
-            scope.viewHeight = parseFloat(properties[3]);
-          }
-          scope.mouse = {};
-          scope.mouse.pos = {
-            x: 0,
-            y: 0
-          };
-          scope.mouse.delta = {
-            x: 0,
-            y: 0
-          };
-          scope.mouse.last = {
-            x: 0,
-            y: 0
-          };
-          PointerInput.addDown(instance.grabber.getElement(), scope.mouseDown);
-          PointerInput.addMove(instance.getElement(), scope.mouseMove);
-          if (parent != null) {
-            PointerInput.addMove(parent.getElement(), scope.mouseMove);
-          }
-          PointerInput.addUp(instance.getElement(), scope.mouseUp);
-          if (parent != null) {
-            return PointerInput.addUp(parent.getElement(), scope.mouseUp);
-          }
-        },
-        mouseDown: function(e) {
-          updateMousePos(e, scope.mouse);
-          if (e.button === 0) {
-            return scope.dragging = true;
-          }
-        },
-        mouseMove: function(e) {
-          var newMouse;
-          updateMousePos(e, scope.mouse);
-          if (scope.dragging) {
-            if (parent != null) {
-              newMouse = mouseConversion(instance, scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
-            } else {
-              newMouse = {
-                x: scope.mouse.x,
-                y: scope.mouse.y
-              };
-            }
-            instance.transform.x += newMouse.x;
-            return instance.transform.y += newMouse.y;
-          }
-        },
-        mouseUp: function(e) {
-          return scope.dragging = false;
-        }
-      };
+      console.log("registerInstance(" + graphicName + ", " + symbolName + ") Warning: " + graphicName + " was already registered. Try picking a more unique instance name in your FLA. Please tell Ivan that you saw this error.");
+      return;
+    }
+    return activity._waitingInstances.push({
+      graphicName: graphicName,
+      symbolName: symbolName
     });
+  };
+
+  Take("SVGActivity", function(SVGActivity) {
+    return SVGActivity.registerActivity(activity);
   });
 
   Take([], function() {
@@ -385,7 +314,7 @@
     stages = {};
     waiting = [];
     initActivityElm = function(svgaElmData) {
-      var activity, id;
+      var id;
       activity = activities[svgaElmData.activityName];
       id = svgaElmData.id || svgaElmData.activityName;
       stages[id] = Stage(activity);
@@ -1041,6 +970,104 @@
     });
   })();
 
+  Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
+    var Draggable, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+    vecFromEventGlobal = function(e) {
+      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+    };
+    getParentRect = function(element) {
+      var height, parent, rect, width;
+      parent = PureDom.querySelectorParent(element, "svg");
+      rect = parent.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      return rect;
+    };
+    mouseConversion = function(instance, position, parentElement, width, height) {
+      var diff, parentRect, x, xDiff, y, yDiff;
+      parentRect = getParentRect(parentElement);
+      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
+      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
+      diff = Math.max(xDiff, yDiff);
+      x = position.x * diff;
+      y = position.y * diff;
+      return {
+        x: x,
+        y: y
+      };
+    };
+    updateMousePos = function(e, mouse) {
+      mouse.pos = vecFromEventGlobal(e);
+      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+      return mouse.last = mouse.pos;
+    };
+    return Make("Draggable", Draggable = function(instance, parent) {
+      var scope;
+      if (parent == null) {
+        parent = null;
+      }
+      return scope = {
+        mouse: null,
+        dragging: false,
+        setup: function() {
+          var properties;
+          if (parent != null) {
+            properties = parent.getElement().getAttribute("viewBox").split(" ");
+            scope.viewWidth = parseFloat(properties[2]);
+            scope.viewHeight = parseFloat(properties[3]);
+          }
+          scope.mouse = {};
+          scope.mouse.pos = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.delta = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.last = {
+            x: 0,
+            y: 0
+          };
+          PointerInput.addDown(instance.grabber.getElement(), scope.mouseDown);
+          PointerInput.addMove(instance.getElement(), scope.mouseMove);
+          if (parent != null) {
+            PointerInput.addMove(parent.getElement(), scope.mouseMove);
+          }
+          PointerInput.addUp(instance.getElement(), scope.mouseUp);
+          if (parent != null) {
+            return PointerInput.addUp(parent.getElement(), scope.mouseUp);
+          }
+        },
+        mouseDown: function(e) {
+          updateMousePos(e, scope.mouse);
+          if (e.button === 0) {
+            return scope.dragging = true;
+          }
+        },
+        mouseMove: function(e) {
+          var newMouse;
+          updateMousePos(e, scope.mouse);
+          if (scope.dragging) {
+            if (parent != null) {
+              newMouse = mouseConversion(instance, scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
+            } else {
+              newMouse = {
+                x: scope.mouse.x,
+                y: scope.mouse.y
+              };
+            }
+            instance.transform.x += newMouse.x;
+            return instance.transform.y += newMouse.y;
+          }
+        },
+        mouseUp: function(e) {
+          return scope.dragging = false;
+        }
+      };
+    });
+  });
+
   (function() {
     return Take(["Ease", "PointerInput", "Vector"], function(Ease, PointerInput, Vector) {
       var joystick, knobMaxScale, knobMaxY, middleMaxY, stemMaxY, topMaxY;
@@ -1301,6 +1328,53 @@
         }
       };
     });
+  });
+
+  Take(["Config", "DOMContentLoaded"], function(Config) {
+    var cdHud, hud;
+    hud = document.querySelector("cd-hud");
+    if (Config("hide-hud")) {
+      hud.style.display = "none";
+    }
+    return Make("cdHUD", cdHud = {
+      addElement: function(element, clickHandler) {
+        var clone;
+        clone = element.cloneNode(true);
+        if (clickHandler != null) {
+          clone.addEventListener("click", clickHandler);
+        }
+        hud.appendChild(clone);
+        return clone;
+      },
+      addButton: function(options) {
+        var button;
+        button = document.createElement("div");
+        button.className = "button";
+        button.setAttribute("cd-hud-button", true);
+        if (options.attr != null) {
+          button.setAttribute(options.attr, true);
+        }
+        button.innerHTML = options.text;
+        button.style.order = options.order;
+        return cdHud.addElement(button, options.click);
+      }
+    });
+  });
+
+  Take(["cdHUD", "DOMContentLoaded"], function(cdHUD) {
+    var button, doClick, k, len, menuButton, ref;
+    doClick = function() {
+      return window.history.back();
+    };
+    ref = document.querySelectorAll("[menu-button]");
+    for (k = 0, len = ref.length; k < len; k++) {
+      button = ref[k];
+      button.addEventListener("click", doClick);
+    }
+    menuButton = document.createElement("menu-button");
+    menuButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" fill="#FFF" fill-opacity=".85" viewBox="0 0 200 150"> <path d="M51 112q5.3 3 10 5l3.7-7q-8.7-3-15.1-7-4.6-2.6-9.1-6L10 107.7q-1.6-1.7-2.4-2.4Q6 104 5 102.4q-3-4-5-10.4 1 9 4 15 3 5 8 9.3l29-10.6q4 3.3 10 6.3M29 67L2.5 64.7 4 72l24 2v-3.3q.3-1.3 1-3.7m140.3 35.7l28.1 8.9 2.6-7.6-30.3-9q-5.7 7-16.7 12.5l5 5q4.4-2.8 7-5.2 2-1.9 4.3-4.6m5.1 26.9q-6.4 3.7-12.4 6-7 2.8-15.4 4.4L127 115.3q-9 1.2-15 1.4-7 .3-16.4-.4L85.3 142q-10.9-1-20.7-3.5-7.6-2-13.6-4.5l.3 8q8.3 3.5 16.7 5.3 6.7 1.7 17 2.7l10-25.6q18 1.3 31.5-.9L145 148q7.5-1.6 14-4 7.7-2.7 13-6l2.4-8.4M173 73l17-2 2-6.3-21 2.3q1 1.6 1.3 3 .7 1 .7 3zm-7-24l2-20-7-18h-15l-5-11H67l-5 11H47l-7 18 2 20h5l4 45h106l4-45h5M136 5l3 6H69l3-6h64M67 42h11l1 18H68l-1-18m63 0h11l-1 18h-11l1-18z"/> <path fill-opacity=".3" d="M166 49l2-20-7-18h-15l1 2h-7l-1-2H69l-1 2h-7l1-2H47l-7 18 2 20h25.4l-.4-7h11l.4 7h51.2l.4-7h11l-.4 7H166z"/> </svg>';
+    menuButton.style.order = 1;
+    return cdHUD.addElement(menuButton, doClick);
   });
 
   Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {

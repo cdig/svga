@@ -262,9 +262,26 @@
     });
   })();
 
-  Take(["defaultElement", "FlowArrows", "Global", "PureDom", "Reaction", "SVGStyle", "SVGTransform", "load"], function(defaultElement, FlowArrows, Global, PureDom, Reaction, SVGStyle, SVGTransform) {
-    var activity, buildInstance, getChildElements, setupElement, symbolFns;
-    symbolFns = {};
+  Take(["button", "crank", "defaultElement", "FlowArrows", "Global", "Joystick", "PureDom", "Reaction", "SetupGraphic", "slider", "SVGStyle", "SVGTransform", "DOMContentLoaded"], function(button, crank, defaultElement, FlowArrows, Global, Joystick, PureDom, Reaction, SetupGraphic, slider, SVGStyle, SVGTransform) {
+    var buildInstance, getChildElements, setupColorMatrix, setupElement, setupGraphic;
+    setupColorMatrix = function(defs, name, matrixValue) {
+      var colorMatrix, filter;
+      filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+      filter.setAttribute("id", name);
+      colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+      colorMatrix.setAttribute("in", "SourceGraphic");
+      colorMatrix.setAttribute("type", "matrix");
+      colorMatrix.setAttribute("values", matrixValue);
+      filter.appendChild(colorMatrix);
+      return defs.appendChild(filter);
+    };
+    setupGraphic = function(svg) {
+      var defs;
+      defs = svg.querySelector("defs");
+      setupColorMatrix(defs, "highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
+      setupColorMatrix(defs, "greyscaleMatrix", ".33 .33 .33  0   0 .33 .33 .33  0   0 .33 .33 .33  0   0 0   0   0    1   0");
+      return setupColorMatrix(defs, "allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
+    };
     buildInstance = function(name, elm) {
       var fn;
       fn = symbolFns[name] || symbolFns["default"];
@@ -317,12 +334,29 @@
       }
       return results;
     };
-    return Make("RootBuilder", activity = {
-      internInstance: function(instanceName, symbolFn) {
+    return Make("Stage", function(activity) {
+      var completeSetup, instance, internInstance, k, len, ref, svg, symbolFns;
+      symbolFns = {};
+      activity.defaultElement = defaultElement;
+      activity.registerInstance("joystick", "joystick");
+      activity.crank = crank;
+      activity.button = button;
+      activity.slider = slider;
+      activity.joystick = Joystick;
+      svg = SetupGraphic(svgaElmData.objectElm.contentDocument.querySelector("svg"));
+      ref = activity._waitingInstances;
+      for (k = 0, len = ref.length; k < len; k++) {
+        instance = ref[k];
+        stage.internInstance(instance.graphicName, activity[instance.symbolName]);
+      }
+      stage.internInstance("default", activity.defaultElement);
+      stage.completeSetup(svg);
+      Make(id, stage.root);
+      internInstance = function(instanceName, symbolFn) {
         return symbolFns[instanceName] = symbolFn;
-      },
-      setupSvg: function(svg) {
-        var child, k, len, ref, root;
+      };
+      return completeSetup = function(svg) {
+        var child, l, len1, ref1, root;
         activity.internInstance("default", defaultElement);
         root = buildInstance("root", svg);
         Make("root", root);
@@ -333,67 +367,28 @@
         root.global = Global;
         root.root = root;
         root.children = [];
-        ref = getChildElements(svg);
-        for (k = 0, len = ref.length; k < len; k++) {
-          child = ref[k];
+        ref1 = getChildElements(svg);
+        for (l = 0, len1 = ref1.length; l < len1; l++) {
+          child = ref1[l];
           setupElement(root, child);
         }
         svg.style.transition = "opacity .7s .1s";
         svg.style.opacity = 1;
         return null;
-      }
+      };
     });
   });
 
-  Take([], function() {
-    var setupColorMatrix;
-    setupColorMatrix = function(defs, name, matrixValue) {
-      var colorMatrix, filter;
-      filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-      filter.setAttribute("id", name);
-      colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
-      colorMatrix.setAttribute("in", "SourceGraphic");
-      colorMatrix.setAttribute("type", "matrix");
-      colorMatrix.setAttribute("values", matrixValue);
-      filter.appendChild(colorMatrix);
-      return defs.appendChild(filter);
-    };
-    return Make("SetupGraphic", function(svg) {
-      var defs;
-      defs = svg.querySelector("defs");
-      setupColorMatrix(defs, "highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
-      setupColorMatrix(defs, "greyscaleMatrix", ".33 .33 .33  0   0 .33 .33 .33  0   0 .33 .33 .33  0   0 0   0   0    1   0");
-      setupColorMatrix(defs, "allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
-      return svg;
-    });
-  });
-
-  Take(["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "RootBuilder", "DOMContentLoaded"], function(Action, button, crank, defaultElement, Joystick, SetupGraphic, slider, RootBuilder) {
-    var SVGActivity, activities, err, initActivityElm, inited, waiting;
+  Take(["Action", "Stage", "DOMContentLoaded"], function(Action, Stage) {
+    var SVGActivity, activities, err, initActivityElm, stages, waiting;
     activities = {};
-    inited = {};
+    stages = {};
     waiting = [];
     initActivityElm = function(svgaElmData) {
-      var activity, id, k, len, ref, rootActivity, svg, sym;
+      var activity, id;
       activity = activities[svgaElmData.activityName];
       id = svgaElmData.id || svgaElmData.activityName;
-      activity.defaultElement = defaultElement;
-      activity.registerInstance("joystick", "joystick");
-      activity.crank = crank;
-      activity.button = button;
-      activity.slider = slider;
-      activity.joystick = Joystick;
-      svg = SetupGraphic(svgaElmData.objectElm.contentDocument.querySelector("svg"));
-      rootActivity = RootBuilder;
-      inited[id] = rootActivity;
-      ref = activity._waitingInstances;
-      for (k = 0, len = ref.length; k < len; k++) {
-        sym = ref[k];
-        rootActivity.internInstance(sym.name, activity[sym.instance]);
-      }
-      rootActivity.internInstance("default", activity.defaultElement);
-      rootActivity.setupSvg(svg);
-      Make(id, rootActivity.root);
+      stages[id] = Stage(activity);
       Action("setup");
       Action("schematicMode");
       return svgaElmData;
@@ -434,7 +429,7 @@
           id: svgActivityElm.getAttribute("id") || err(svgActivityElm, " ^ This <svg-activity> is missing an id attribute. Please add something like id=\"" + (svgActivityElm.getAttribute("name")) + "\"."),
           objectElm: svgActivityElm.querySelector("object") || err(svgActivityElm, ' ^ This <svg-activity> must contain an <object>.')
         };
-        if (inited[svgaElmData.id] != null) {
+        if (stages[svgaElmData.id] != null) {
 
         } else if (activities[svgaElmData.activityName] != null) {
           return initActivityElm(svgaElmData);

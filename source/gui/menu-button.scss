@@ -1,0 +1,30 @@
+// NOTE: This file is also used by svg-activity, via the Daily Command
+
+menu-button {
+  display: inline-block;
+  padding: 0 .5em;
+  margin: 0 .2em;
+  line-height: 3em;
+  color: white;
+  
+  &, * { cursor: pointer; }
+    
+  &:hover {
+    background: linear-gradient(to right, rgba(white, .08), rgba(white, .04));
+  }
+
+  img {
+    display: inline-block;
+    width: 44px;
+    vertical-align: middle;
+  }
+  
+  span {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: .8em;
+    line-height: 1;
+    letter-spacing: 1px;
+    text-align: left;
+  }
+}

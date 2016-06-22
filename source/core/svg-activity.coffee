@@ -1,35 +1,18 @@
-Take ["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic", "slider", "RootBuilder", "DOMContentLoaded"],
-(      Action ,  button ,  crank ,  defaultElement ,  Joystick ,  SetupGraphic ,  slider ,  RootBuilder)->
+Take ["Action", "Stage", "DOMContentLoaded"],
+(      Action ,  Stage)->
   
   activities = {} # Stores the `activity` code definition objects
-  inited = {} # Stores the roots of initialized instances, by id
+  stages = {} # Stores the Stages, by id
   waiting = [] # Stores svgaElms waiting for corresponding activity definiton object
-  
+
   
   initActivityElm = (svgaElmData)->
     activity = activities[svgaElmData.activityName]
     id = svgaElmData.id or svgaElmData.activityName
-    
-    activity.defaultElement = defaultElement
-    activity.registerInstance "joystick", "joystick"
-    activity.crank = crank
-    activity.button = button
-    activity.slider = slider
-    activity.joystick = Joystick
-    
-    svg = SetupGraphic svgaElmData.objectElm.contentDocument.querySelector "svg"
-    
-    rootActivity = RootBuilder
-    inited[id] = rootActivity
-    for sym in activity._waitingInstances
-      rootActivity.internInstance(sym.name, activity[sym.instance])
-    rootActivity.internInstance "default", activity.defaultElement
-    rootActivity.setupSvg svg
-    Make id, rootActivity.root
-    
+    stages[id] = Stage activity
+    # Uh oh — This is global to all Stages!
     Action "setup"
     Action "schematicMode"
-    
     svgaElmData # pass through
   
   
@@ -54,7 +37,8 @@ Take ["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic",
     
     getActivity: (activityID)->
       throw "DEPRECATED: getActivity"
-      # return inited[activityName]
+      # return stages[activityName]
+    
     
     start: (svgActivityElm)->
       svgaElmData =
@@ -63,7 +47,7 @@ Take ["Action", "button", "crank", "defaultElement", "Joystick", "SetupGraphic",
         objectElm: svgActivityElm.querySelector("object") or err svgActivityElm, ' ^ This <svg-activity> must contain an <object>.'
       
       # Already inited — Resume the activity if paused
-      if inited[svgaElmData.id]?
+      if stages[svgaElmData.id]?
         # TODO
       
       # Not yet inited — Init if possible

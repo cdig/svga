@@ -3,31 +3,6 @@
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  this.activity = {};
-
-  this.activity._waitingInstances = [];
-
-  this.activity.registerInstance = function(graphicName, symbolName) {
-    var k, len, ref, waitingInstance;
-    ref = this.activity._waitingInstances;
-    for (k = 0, len = ref.length; k < len; k++) {
-      waitingInstance = ref[k];
-      if (!(waitingInstance.graphicName === graphicName)) {
-        continue;
-      }
-      console.log("registerInstance(" + graphicName + ", " + symbolName + ") Warning: " + graphicName + " was already registered. Try picking a more unique instance name in your FLA. Please tell Ivan that you saw this error.");
-      return;
-    }
-    return this.activity._waitingInstances.push({
-      graphicName: graphicName,
-      symbolName: symbolName
-    });
-  };
-
-  Take("SVGActivity", function(SVGActivity) {
-    return SVGActivity.registerActivity(this.activity);
-  });
-
   Take([], function() {
     var cbs;
     cbs = [];
@@ -189,185 +164,74 @@
     });
   })();
 
-  Take(["button", "crank", "defaultElement", "FlowArrows", "Global", "Joystick", "PureDom", "Reaction", "SetupGraphic", "slider", "SVGStyle", "SVGTransform", "DOMContentLoaded"], function(button, crank, defaultElement, FlowArrows, Global, Joystick, PureDom, Reaction, SetupGraphic, slider, SVGStyle, SVGTransform) {
-    var buildInstance, getChildElements, setupColorMatrix, setupElement, setupGraphic;
-    setupColorMatrix = function(defs, name, matrixValue) {
-      var colorMatrix, filter;
-      filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-      filter.setAttribute("id", name);
-      colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
-      colorMatrix.setAttribute("in", "SourceGraphic");
-      colorMatrix.setAttribute("type", "matrix");
-      colorMatrix.setAttribute("values", matrixValue);
-      filter.appendChild(colorMatrix);
-      return defs.appendChild(filter);
-    };
-    setupGraphic = function(svg) {
-      var defs;
-      defs = svg.querySelector("defs");
-      setupColorMatrix(defs, "highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
-      setupColorMatrix(defs, "greyscaleMatrix", ".33 .33 .33  0   0 .33 .33 .33  0   0 .33 .33 .33  0   0 0   0   0    1   0");
-      return setupColorMatrix(defs, "allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
-    };
-    buildInstance = function(name, elm) {
-      var fn;
-      fn = symbolFns[name] || symbolFns["default"];
-      return fn(elm);
-    };
-    getChildElements = function(element) {
-      var child, childElements, childNum, childRef, children, k, len;
-      children = PureDom.querySelectorAllChildren(element, "g");
-      childElements = [];
-      childNum = 0;
-      for (k = 0, len = children.length; k < len; k++) {
-        child = children[k];
-        if (child.getAttribute("id") == null) {
-          childNum++;
-          childRef = "child" + childNum;
-          child.setAttribute("id", childRef);
-        }
-        childElements.push(child);
-      }
-      return childElements;
-    };
-    setupElement = function(parent, element) {
-      var child, id, instance, k, len, ref, ref1, results;
-      id = element.getAttribute("id").split("_")[0];
-      instance = buildInstance(id, element);
-      parent[id] = instance;
-      parent.children.push(instance);
-      instance.children = [];
-      instance.element = element;
-      instance.getElement = function() {
-        return element;
-      };
-      instance.global = Global;
-      instance.root = parent.root;
-      instance.style = SVGStyle(element);
-      instance.transform = SVGTransform(element);
-      if (((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1) {
-        Reaction("animateMode", function() {
-          return element.removeAttribute("filter");
-        });
-        Reaction("schematicMode", function() {
-          return element.setAttribute("filter", "url(#allblackMatrix)");
-        });
-      }
-      ref1 = getChildElements(element);
-      results = [];
-      for (k = 0, len = ref1.length; k < len; k++) {
-        child = ref1[k];
-        results.push(setupElement(instance, child));
-      }
-      return results;
-    };
-    return Make("Stage", function(activity) {
-      var completeSetup, instance, internInstance, k, len, ref, svg, symbolFns;
-      symbolFns = {};
-      activity.defaultElement = defaultElement;
-      activity.registerInstance("joystick", "joystick");
-      activity.crank = crank;
-      activity.button = button;
-      activity.slider = slider;
-      activity.joystick = Joystick;
-      svg = SetupGraphic(svgaElmData.objectElm.contentDocument.querySelector("svg"));
-      ref = activity._waitingInstances;
-      for (k = 0, len = ref.length; k < len; k++) {
-        instance = ref[k];
-        stage.internInstance(instance.graphicName, activity[instance.symbolName]);
-      }
-      stage.internInstance("default", activity.defaultElement);
-      stage.completeSetup(svg);
-      Make(id, stage.root);
-      internInstance = function(instanceName, symbolFn) {
-        return symbolFns[instanceName] = symbolFn;
-      };
-      return completeSetup = function(svg) {
-        var child, l, len1, ref1, root;
-        activity.internInstance("default", defaultElement);
-        root = buildInstance("root", svg);
-        Make("root", root);
-        root.FlowArrows = new FlowArrows();
-        root.getElement = function() {
-          return svg;
-        };
-        root.global = Global;
-        root.root = root;
-        root.children = [];
-        ref1 = getChildElements(svg);
-        for (l = 0, len1 = ref1.length; l < len1; l++) {
-          child = ref1[l];
-          setupElement(root, child);
-        }
+  Take(["Action", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"], function(Action, Reaction, SVGStyle, SVGTransform, Symbol) {
+    var addClass, makeScope, makeScopeTree;
+    setTimeout(function() {
+      var root, svg;
+      svg = document.rootElement;
+      root = makeScope("root", svg);
+      Take("root", function() {
+        makeScopeTree(root, svg);
         svg.style.transition = "opacity .7s .1s";
         svg.style.opacity = 1;
-        return null;
-      };
+        Action("setup");
+        return Action("schematicMode");
+      });
+      return Make("root", root);
     });
-  });
-
-  Take(["Action", "Stage", "DOMContentLoaded"], function(Action, Stage) {
-    var SVGActivity, activities, err, initActivityElm, stages, waiting;
-    activities = {};
-    stages = {};
-    waiting = [];
-    initActivityElm = function(svgaElmData) {
-      var activity, id;
-      activity = activities[svgaElmData.activityName];
-      id = svgaElmData.id || svgaElmData.activityName;
-      stages[id] = Stage(activity);
-      Action("setup");
-      Action("schematicMode");
-      return svgaElmData;
+    makeScope = function(instanceName, element, parentScope) {
+      var instance, symbol;
+      console.log(instanceName);
+      symbol = Symbol.forInstanceName(instanceName);
+      addClass(element, symbol.name);
+      instance = symbol.create(element);
+      if (instance.children == null) {
+        instance.children = [];
+      }
+      instance.element = element;
+      if (instance.getElement == null) {
+        instance.getElement = function() {
+          return element;
+        };
+      }
+      if (instance.root == null) {
+        instance.root = (parentScope != null ? parentScope.root : void 0) || instance;
+      }
+      if (instance.style == null) {
+        instance.style = SVGStyle(element);
+      }
+      if (instance.transform == null) {
+        instance.transform = SVGTransform(element);
+      }
+      if (parentScope != null) {
+        if (instanceName !== "defaultElement") {
+          parentScope[instanceName] = instance;
+        }
+        parentScope.children.push(instance);
+      }
+      return instance;
     };
-    err = function(elm, msg) {
-      console.log(elm);
-      throw msg;
-    };
-    return Make("SVGActivity", SVGActivity = {
-      registerActivity: function(activity) {
-        var i, k, len, results, svgaElmData, toRemove, v;
-        activities[activity._activityName] = activity;
-        toRemove = (function() {
-          var k, len, results;
-          results = [];
-          for (k = 0, len = waiting.length; k < len; k++) {
-            svgaElmData = waiting[k];
-            if (svgaElmData.activityName === activity._activityName) {
-              results.push(initActivityElm(svgaElmData));
-            }
-          }
-          return results;
-        })();
+    makeScopeTree = function(parentScope, parentElement) {
+      var childElement, childElements, childName, childScope, k, len, ref, results;
+      childElements = (ref = parentElement.childNodes) != null ? typeof ref.filter === "function" ? ref.filter(function(elm) {
+        return elm instanceof SVGGElement;
+      }) : void 0 : void 0;
+      if (childElements != null) {
         results = [];
-        for (i = k = 0, len = toRemove.length; k < len; i = ++k) {
-          v = toRemove[i];
-          results.push(waiting.splice(i, 1));
+        for (k = 0, len = childElements.length; k < len; k++) {
+          childElement = childElements[k];
+          childName = childElement.getAttribute("id").split("_")[0] || "defaultElement";
+          childScope = makeScope(childName, childElement, parentScope);
+          results.push(makeScopeTree(childScope, childElement));
         }
         return results;
-      },
-      getActivity: function(activityID) {
-        throw "DEPRECATED: getActivity";
-      },
-      start: function(svgActivityElm) {
-        var svgaElmData;
-        svgaElmData = {
-          activityName: svgActivityElm.getAttribute("name") || err(svgActivityElm, ' ^ This <svg-activity> is missing a name attribute. Please add something like name="special-delivery", where "special-delivery" is the name from your svg-activity.json file.'),
-          id: svgActivityElm.getAttribute("id") || err(svgActivityElm, " ^ This <svg-activity> is missing an id attribute. Please add something like id=\"" + (svgActivityElm.getAttribute("name")) + "\"."),
-          objectElm: svgActivityElm.querySelector("object") || err(svgActivityElm, ' ^ This <svg-activity> must contain an <object>.')
-        };
-        if (stages[svgaElmData.id] != null) {
-
-        } else if (activities[svgaElmData.activityName] != null) {
-          return initActivityElm(svgaElmData);
-        } else {
-          return waiting.push(svgaElmData);
-        }
-      },
-      stop: function(svgActivityElm) {
-        return console.log("TODO: Implement SVGActivity.stop()");
       }
-    });
+    };
+    return addClass = function(element, newClass) {
+      var className;
+      className = element.getAttribute("class");
+      return element.setAttribute("class", className === "" ? newClass : className + " " + newClass);
+    };
   });
 
   Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
@@ -809,6 +673,38 @@
     });
   });
 
+  Take([], function() {
+    var Symbol, byInstanceName, bySymbolName;
+    bySymbolName = {};
+    byInstanceName = {};
+    Make("Symbol", Symbol = function(symbolName, instanceNames, symbolFn) {
+      var instanceName, k, len, results, symbol;
+      if (bySymbolName[symbolName] != null) {
+        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
+      }
+      symbol = {
+        create: symbolFn,
+        name: symbolName
+      };
+      bySymbolName[symbolName] = symbol;
+      results = [];
+      for (k = 0, len = instanceNames.length; k < len; k++) {
+        instanceName = instanceNames[k];
+        if (byInstanceName[instanceName] != null) {
+          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
+        }
+        results.push(byInstanceName[instanceName] = symbol);
+      }
+      return results;
+    });
+    Symbol.forSymbolName = function(symbolName) {
+      return bySymbolName[symbolName];
+    };
+    return Symbol.forInstanceName = function(instanceName) {
+      return byInstanceName[instanceName];
+    };
+  });
+
   (function() {
     var Button;
     return Make("button", Button = function(svgElement) {
@@ -950,23 +846,17 @@
     });
   })();
 
-  (function() {
-    var defaultElement;
-    return Make("defaultElement", defaultElement = function(svgElement) {
-      var scope;
+  Take(["Symbol"], function(Symbol) {
+    return Symbol("defaultElement", [], function(svgElement) {
+      var scope, textElement;
+      textElement = svgElement.querySelector("text").querySelector("tspan");
       return scope = {
-        setup: function() {},
         setText: function(text) {
-          var textElement;
-          textElement = svgElement.querySelector("text").querySelector("tspan");
-          if (textElement != null) {
-            return textElement.textContent = text;
-          }
-        },
-        animate: function(dT, time) {}
+          return textElement != null ? textElement.textContent = text : void 0;
+        }
       };
     });
-  })();
+  });
 
   Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
     var Draggable, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
@@ -1330,7 +1220,8 @@
 
   Take(["Config", "DOMContentLoaded"], function(Config) {
     var cdHud, hud;
-    hud = document.querySelector("cd-hud");
+    hud = document.createElement("cd-hud");
+    document.rootElement.prepend(hud);
     if (Config("hide-hud")) {
       hud.style.display = "none";
     }

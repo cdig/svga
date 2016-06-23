@@ -1,13 +1,8 @@
-do ->
-  Make "defaultElement", defaultElement = (svgElement)->
-    return scope = 
-      setup: ()->
-
+Take ["Symbol"], (Symbol)->
+  Symbol "defaultElement", [], (svgElement)->
+    
+    textElement = svgElement.querySelector("text").querySelector("tspan")
+    
+    return scope =
       setText: (text)->
-        textElement = svgElement.querySelector("text").querySelector("tspan")
-        if textElement?
-          textElement.textContent=text
-
-      animate: (dT, time)->
-        
-
+        textElement?.textContent = text

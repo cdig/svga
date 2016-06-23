@@ -1,6 +1,9 @@
 Take ["Config", "DOMContentLoaded"], (Config)->
-  hud = document.querySelector "cd-hud"
   
+  hud = document.createElement "cd-hud"
+  document.rootElement.prepend hud
+  
+  # TODO: Detect if the app is running embedded
   if Config "hide-hud"
     hud.style.display = "none"
   

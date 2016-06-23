@@ -1,104 +1,57 @@
-Take ["button", "crank", "defaultElement", "FlowArrows", "Global", "Joystick", "PureDom", "Reaction", "SetupGraphic", "slider", "SVGStyle", "SVGTransform", "DOMContentLoaded"],
-(      button ,  crank ,  defaultElement ,  FlowArrows ,  Global ,  Joystick ,  PureDom ,  Reaction ,  SetupGraphic ,  slider ,  SVGStyle ,  SVGTransform)->
+Take ["Action", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"],
+(      Action ,  Reaction ,  SVGStyle ,  SVGTransform ,  Symbol)->
   
-  
-  setupColorMatrix = (defs, name, matrixValue)->
-    filter = document.createElementNS "http://www.w3.org/2000/svg", "filter"
-    filter.setAttribute "id", name
-    colorMatrix = document.createElementNS "http://www.w3.org/2000/svg", "feColorMatrix"
-    colorMatrix.setAttribute "in", "SourceGraphic"
-    colorMatrix.setAttribute "type", "matrix"
-    colorMatrix.setAttribute "values", matrixValue
-    filter.appendChild colorMatrix
-    defs.appendChild filter
-  
+  setTimeout ()->
+    svg = document.rootElement
+    root = makeScope "root", svg
     
-  setupGraphic = (svg)->
-    defs = svg.querySelector "defs"
-    
-    setupColorMatrix defs, "highlightMatrix", ".5  0   0    0   0
-                                               .5  1   .5   0  20
-                                               0   0   .5   0   0
-                                               0   0   0    1   0"
-
-    setupColorMatrix defs, "greyscaleMatrix", ".33 .33 .33  0   0
-                                               .33 .33 .33  0   0
-                                               .33 .33 .33  0   0
-                                               0   0   0    1   0"
-
-    setupColorMatrix defs, "allblackMatrix",  "0   0   0    0   0
-                                               0   0   0    0   0
-                                               0   0   0    0   0
-                                               0   0   0    1   0"
-  
-  
-  buildInstance = (name, elm)->
-    fn = symbolFns[name] or symbolFns["default"]
-    fn elm
-  
-  
-  getChildElements = (element)->
-    children = PureDom.querySelectorAllChildren(element, "g")
-    childElements = []
-    childNum = 0
-    for child in children
-      if not child.getAttribute("id")?
-        childNum++
-        childRef = "child" + childNum
-        child.setAttribute("id", childRef)
-      childElements.push child
-    return childElements
-  
-  
-  setupElement = (parent, element)->
-    id = element.getAttribute("id").split("_")[0]
-    instance = buildInstance id, element
-    parent[id] = instance
-    parent.children.push instance
-    instance.children = []
-    instance.element = element
-    instance.getElement = ()-> return element
-    instance.global = Global
-    instance.root = parent.root
-    instance.style = SVGStyle element
-    instance.transform = SVGTransform element
-    if element.getAttribute("id")?.indexOf("Line") > -1
-      Reaction "animateMode", ()-> element.removeAttribute "filter"
-      Reaction "schematicMode", ()-> element.setAttribute "filter", "url(#allblackMatrix)"
-    setupElement instance, child for child in getChildElements element
-  
-  Make "Stage", (activity)->
-    symbolFns = {}
-    
-    activity.defaultElement = defaultElement
-    activity.registerInstance "joystick", "joystick"
-    activity.crank = crank
-    activity.button = button
-    activity.slider = slider
-    activity.joystick = Joystick
-    
-    svg = SetupGraphic svgaElmData.objectElm.contentDocument.querySelector "svg"
-
-    
-    for instance in activity._waitingInstances
-      stage.internInstance(instance.graphicName, activity[instance.symbolName])
-    stage.internInstance "default", activity.defaultElement
-    stage.completeSetup svg
-    Make id, stage.root
-    
-    internInstance = (instanceName, symbolFn)->
-      symbolFns[instanceName] = symbolFn
-    
-    completeSetup = (svg)->
-      activity.internInstance "default", defaultElement # Why is this here?
-      root = buildInstance "root", svg
-      Make "root", root
-      root.FlowArrows = new FlowArrows()
-      root.getElement = ()-> svg
-      root.global = Global
-      root.root = root
-      root.children = []
-      setupElement root, child for child in getChildElements svg
+    Take "root", ()->
+      makeScopeTree root, svg
       svg.style.transition = "opacity .7s .1s"
       svg.style.opacity = 1
-      null
+      Action "setup"
+      Action "schematicMode"
+    
+    # This is useful for other systems that aren't part of the scope tree but that need access to it.
+    # We also need to wait for all of those systems to be ready before we finish setup.
+    Make "root", root
+  
+  
+  makeScope = (instanceName, element, parentScope)->
+    console.log instanceName
+    symbol = Symbol.forInstanceName instanceName
+    addClass element, symbol.name
+    instance = symbol.create element
+    instance.children ?= []
+    instance.element = element # LEGACY
+    instance.getElement ?= ()-> element # LEGACY
+    instance.root ?= parentScope?.root or instance # If there's no parent, this instance is the root
+    instance.style ?= SVGStyle element
+    instance.transform ?= SVGTransform element
+    if parentScope?
+      parentScope[instanceName] = instance if instanceName isnt "defaultElement"
+      parentScope.children.push instance
+    instance
+    
+    # We might want to add logic like this somewhere in this function. Not sure.
+    # Perhaps lines should be a specific Symbol instead?
+    # if element.getAttribute("id")?.indexOf("Line") > -1
+    #   addClass element, "dynamicLine"
+    #   Reaction "animateMode", ()-> element.removeAttribute "filter"
+    #   Reaction "schematicMode", ()-> element.setAttribute "filter", "url(#allblackMatrix)"
+  
+  
+  makeScopeTree = (parentScope, parentElement)->
+    childElements = parentElement.childNodes?.filter? (elm)-> elm instanceof SVGGElement
+    if childElements?
+      for childElement in childElements
+        childName = childElement.getAttribute("id").split("_")[0] or "defaultElement"
+        childScope = makeScope childName, childElement, parentScope
+        makeScopeTree childScope, childElement
+      
+
+  
+  addClass = (element, newClass)->
+    className = element.getAttribute "class"
+    # Unfortunately, we can't just use classList in SVG in IE
+    element.setAttribute "class", if className is "" then newClass else className + " " + newClass

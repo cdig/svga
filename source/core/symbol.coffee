@@ -1,8 +1,14 @@
 Take [], ()->
   bySymbolName = {}
   byInstanceName = {}
+  first = true
   
   Make "Symbol", Symbol = (symbolName, instanceNames, symbolFn)->
+    
+    # This will inform the rest of the system that we have started receiving symbols
+    Make("SymbolsReady") if first
+    first = false
+    
     if bySymbolName[symbolName]?
       throw "The symbol \"#{symbolName}\" is defined more than once. You'll need to change one of the definitions to use a more unique name."
     

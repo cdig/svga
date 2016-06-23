@@ -1,25 +1,22 @@
-Take ["Action", "FlowArrows", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"],
-(      Action ,  FlowArrows ,  Reaction ,  SVGStyle ,  SVGTransform ,  Symbol)->
+Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"],
+(      Action ,  FlowArrows ,  SVGStyle ,  SVGTransform ,  Symbol)->
   
-  setTimeout ()->
+  setTimeout ()-> # Allows forward references
     svg = document.rootElement
     root = makeScope "root", svg
     root.FlowArrows = FlowArrows()
+    # This is useful for other systems that aren't part of the scope tree but that need access to it.
+    Make "root", root
     
-    Take "root", ()->
+    Take "SymbolsReady", ()->
       makeScopeTree root, svg
-      svg.style.transition = "opacity .7s .1s"
       svg.style.opacity = 1
       Action "setup"
       Action "schematicMode"
     
-    # This is useful for other systems that aren't part of the scope tree but that need access to it.
-    # We also need to wait for all of those systems to be ready before we finish setup.
-    Make "root", root
-  
   
   makeScope = (instanceName, element, parentScope)->
-    symbol = Symbol.forInstanceName(instanceName) or Symbol.forSymbolName("defaultElement")
+    symbol = getSymbol instanceName
     addClass element, symbol.name
     instance = symbol.create element
     instance.children ?= []
@@ -29,17 +26,10 @@ Take ["Action", "FlowArrows", "Reaction", "SVGStyle", "SVGTransform", "Symbol", 
     instance.style ?= SVGStyle element
     instance.transform ?= SVGTransform element
     if parentScope?
-      parentScope[instanceName] = instance if instanceName isnt "defaultElement"
+      parentScope[instanceName] = instance if instanceName isnt "DefaultElement"
       parentScope.children.push instance
     instance
-    
-    # We might want to add logic like this somewhere in this function. Not sure.
-    # Perhaps lines should be a specific Symbol instead?
-    # if element.getAttribute("id")?.indexOf("Line") > -1
-    #   addClass element, "dynamicLine"
-    #   Reaction "animateMode", ()-> element.removeAttribute "filter"
-    #   Reaction "schematicMode", ()-> element.setAttribute "filter", "url(#allblackMatrix)"
-  
+
   
   makeScopeTree = (parentScope, parentElement)->
     for childElement in parentElement.childNodes when childElement instanceof SVGGElement
@@ -47,8 +37,17 @@ Take ["Action", "FlowArrows", "Reaction", "SVGStyle", "SVGTransform", "Symbol", 
       childScope = makeScope childName, childElement, parentScope
       makeScopeTree childScope, childElement
       
-
   
+  getSymbol = (instanceName)->
+    symbol = Symbol.forInstanceName(instanceName)
+    if symbol?
+      symbol
+    else if instanceName?.indexOf("Line") > -1
+      Symbol.forSymbolName "HydraulicLine"
+    else
+      Symbol.forSymbolName "DefaultElement"
+  
+    
   addClass = (element, newClass)->
     className = element.getAttribute "class"
     # Unfortunately, we can't just use classList in SVG in IE

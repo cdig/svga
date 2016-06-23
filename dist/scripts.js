@@ -3,25 +3,24 @@
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  Take(["Action", "FlowArrows", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"], function(Action, FlowArrows, Reaction, SVGStyle, SVGTransform, Symbol) {
-    var addClass, makeScope, makeScopeTree;
+  Take(["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"], function(Action, FlowArrows, SVGStyle, SVGTransform, Symbol) {
+    var addClass, getSymbol, makeScope, makeScopeTree;
     setTimeout(function() {
       var root, svg;
       svg = document.rootElement;
       root = makeScope("root", svg);
       root.FlowArrows = FlowArrows();
-      Take("root", function() {
+      Make("root", root);
+      return Take("SymbolsReady", function() {
         makeScopeTree(root, svg);
-        svg.style.transition = "opacity .7s .1s";
         svg.style.opacity = 1;
         Action("setup");
         return Action("schematicMode");
       });
-      return Make("root", root);
     });
     makeScope = function(instanceName, element, parentScope) {
       var instance, symbol;
-      symbol = Symbol.forInstanceName(instanceName) || Symbol.forSymbolName("defaultElement");
+      symbol = getSymbol(instanceName);
       addClass(element, symbol.name);
       instance = symbol.create(element);
       if (instance.children == null) {
@@ -43,7 +42,7 @@
         instance.transform = SVGTransform(element);
       }
       if (parentScope != null) {
-        if (instanceName !== "defaultElement") {
+        if (instanceName !== "DefaultElement") {
           parentScope[instanceName] = instance;
         }
         parentScope.children.push(instance);
@@ -64,6 +63,17 @@
         results.push(makeScopeTree(childScope, childElement));
       }
       return results;
+    };
+    getSymbol = function(instanceName) {
+      var symbol;
+      symbol = Symbol.forInstanceName(instanceName);
+      if (symbol != null) {
+        return symbol;
+      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicLine");
+      } else {
+        return Symbol.forSymbolName("DefaultElement");
+      }
     };
     return addClass = function(element, newClass) {
       var className;
@@ -673,11 +683,16 @@
   });
 
   Take([], function() {
-    var Symbol, byInstanceName, bySymbolName;
+    var Symbol, byInstanceName, bySymbolName, first;
     bySymbolName = {};
     byInstanceName = {};
+    first = true;
     Make("Symbol", Symbol = function(symbolName, instanceNames, symbolFn) {
       var instanceName, k, len, results, symbol;
+      if (first) {
+        Make("SymbolsReady");
+      }
+      first = false;
       if (bySymbolName[symbolName] != null) {
         throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
       }
@@ -702,6 +717,53 @@
     return Symbol.forInstanceName = function(instanceName) {
       return byInstanceName[instanceName];
     };
+  });
+
+  Take(["Config", "DOMContentLoaded"], function(Config) {
+    var cdHud, hud;
+    hud = document.createElement("cd-hud");
+    document.rootElement.prepend(hud);
+    if (Config("hide-hud")) {
+      hud.style.display = "none";
+    }
+    return Make("cdHUD", cdHud = {
+      addElement: function(element, clickHandler) {
+        var clone;
+        clone = element.cloneNode(true);
+        if (clickHandler != null) {
+          clone.addEventListener("click", clickHandler);
+        }
+        hud.appendChild(clone);
+        return clone;
+      },
+      addButton: function(options) {
+        var button;
+        button = document.createElement("div");
+        button.className = "button";
+        button.setAttribute("cd-hud-button", true);
+        if (options.attr != null) {
+          button.setAttribute(options.attr, true);
+        }
+        button.innerHTML = options.text;
+        button.style.order = options.order;
+        return cdHud.addElement(button, options.click);
+      }
+    });
+  });
+
+  Take(["cdHUD", "DOMContentLoaded"], function(cdHUD) {
+    var button, doClick, k, len, menuButton, ref;
+    doClick = function() {
+      return window.history.back();
+    };
+    ref = document.querySelectorAll("[menu-button]");
+    for (k = 0, len = ref.length; k < len; k++) {
+      button = ref[k];
+      button.addEventListener("click", doClick);
+    }
+    menuButton = document.createElement("menu-button");
+    menuButton.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"150\" fill=\"#FFF\" fill-opacity=\".85\" viewBox=\"0 0 200 150\">\n  <path d=\"M51 112q5.3 3 10 5l3.7-7q-8.7-3-15.1-7-4.6-2.6-9.1-6L10 107.7q-1.6-1.7-2.4-2.4Q6 104 5 102.4q-3-4-5-10.4 1 9 4 15 3 5 8 9.3l29-10.6q4 3.3 10 6.3M29 67L2.5 64.7 4 72l24 2v-3.3q.3-1.3 1-3.7m140.3 35.7l28.1 8.9 2.6-7.6-30.3-9q-5.7 7-16.7 12.5l5 5q4.4-2.8 7-5.2 2-1.9 4.3-4.6m5.1 26.9q-6.4 3.7-12.4 6-7 2.8-15.4 4.4L127 115.3q-9 1.2-15 1.4-7 .3-16.4-.4L85.3 142q-10.9-1-20.7-3.5-7.6-2-13.6-4.5l.3 8q8.3 3.5 16.7 5.3 6.7 1.7 17 2.7l10-25.6q18 1.3 31.5-.9L145 148q7.5-1.6 14-4 7.7-2.7 13-6l2.4-8.4M173 73l17-2 2-6.3-21 2.3q1 1.6 1.3 3 .7 1 .7 3zm-7-24l2-20-7-18h-15l-5-11H67l-5 11H47l-7 18 2 20h5l4 45h106l4-45h5M136 5l3 6H69l3-6h64M67 42h11l1 18H68l-1-18m63 0h11l-1 18h-11l1-18z\"/>\n  <path fill-opacity=\".3\" d=\"M166 49l2-20-7-18h-15l1 2h-7l-1-2H69l-1 2h-7l1-2H47l-7 18 2 20h25.4l-.4-7h11l.4 7h51.2l.4-7h11l-.4 7H166z\"/>\n</svg>";
+    return cdHUD.addElement(menuButton, doClick);
   });
 
   (function() {
@@ -845,8 +907,8 @@
     });
   })();
 
-  Take(["Symbol"], function(Symbol) {
-    return Symbol("defaultElement", [], function(svgElement) {
+  Take(["Symbol", "SymbolsReady"], function(Symbol) {
+    return Symbol("DefaultElement", [], function(svgElement) {
       var ref, scope, textElement;
       textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
       return scope = {
@@ -950,6 +1012,22 @@
         },
         mouseUp: function(e) {
           return scope.dragging = false;
+        }
+      };
+    });
+  });
+
+  Take(["Reaction", "Symbol", "SymbolsReady"], function(Reaction, Symbol) {
+    return Symbol("HydraulicLine", [], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          Reaction("animateMode", function() {
+            return svgElement.removeAttribute("filter");
+          });
+          return Reaction("schematicMode", function() {
+            return svgElement.setAttribute("filter", "url(#allblackMatrix)");
+          });
         }
       };
     });
@@ -1215,53 +1293,6 @@
         }
       };
     });
-  });
-
-  Take(["Config", "DOMContentLoaded"], function(Config) {
-    var cdHud, hud;
-    hud = document.createElement("cd-hud");
-    document.rootElement.prepend(hud);
-    if (Config("hide-hud")) {
-      hud.style.display = "none";
-    }
-    return Make("cdHUD", cdHud = {
-      addElement: function(element, clickHandler) {
-        var clone;
-        clone = element.cloneNode(true);
-        if (clickHandler != null) {
-          clone.addEventListener("click", clickHandler);
-        }
-        hud.appendChild(clone);
-        return clone;
-      },
-      addButton: function(options) {
-        var button;
-        button = document.createElement("div");
-        button.className = "button";
-        button.setAttribute("cd-hud-button", true);
-        if (options.attr != null) {
-          button.setAttribute(options.attr, true);
-        }
-        button.innerHTML = options.text;
-        button.style.order = options.order;
-        return cdHud.addElement(button, options.click);
-      }
-    });
-  });
-
-  Take(["cdHUD", "DOMContentLoaded"], function(cdHUD) {
-    var button, doClick, k, len, menuButton, ref;
-    doClick = function() {
-      return window.history.back();
-    };
-    ref = document.querySelectorAll("[menu-button]");
-    for (k = 0, len = ref.length; k < len; k++) {
-      button = ref[k];
-      button.addEventListener("click", doClick);
-    }
-    menuButton = document.createElement("menu-button");
-    menuButton.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"150\" fill=\"#FFF\" fill-opacity=\".85\" viewBox=\"0 0 200 150\">\n  <path d=\"M51 112q5.3 3 10 5l3.7-7q-8.7-3-15.1-7-4.6-2.6-9.1-6L10 107.7q-1.6-1.7-2.4-2.4Q6 104 5 102.4q-3-4-5-10.4 1 9 4 15 3 5 8 9.3l29-10.6q4 3.3 10 6.3M29 67L2.5 64.7 4 72l24 2v-3.3q.3-1.3 1-3.7m140.3 35.7l28.1 8.9 2.6-7.6-30.3-9q-5.7 7-16.7 12.5l5 5q4.4-2.8 7-5.2 2-1.9 4.3-4.6m5.1 26.9q-6.4 3.7-12.4 6-7 2.8-15.4 4.4L127 115.3q-9 1.2-15 1.4-7 .3-16.4-.4L85.3 142q-10.9-1-20.7-3.5-7.6-2-13.6-4.5l.3 8q8.3 3.5 16.7 5.3 6.7 1.7 17 2.7l10-25.6q18 1.3 31.5-.9L145 148q7.5-1.6 14-4 7.7-2.7 13-6l2.4-8.4M173 73l17-2 2-6.3-21 2.3q1 1.6 1.3 3 .7 1 .7 3zm-7-24l2-20-7-18h-15l-5-11H67l-5 11H47l-7 18 2 20h5l4 45h106l4-45h5M136 5l3 6H69l3-6h64M67 42h11l1 18H68l-1-18m63 0h11l-1 18h-11l1-18z\"/>\n  <path fill-opacity=\".3\" d=\"M166 49l2-20-7-18h-15l1 2h-7l-1-2H69l-1 2h-7l1-2H47l-7 18 2 20h25.4l-.4-7h11l.4 7h51.2l.4-7h11l-.4 7H166z\"/>\n</svg>";
-    return cdHUD.addElement(menuButton, doClick);
   });
 
   Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {

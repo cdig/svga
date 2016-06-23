@@ -50,11 +50,11 @@
       return instance;
     };
     makeScopeTree = function(parentScope, parentElement) {
-      var childElement, childName, childScope, k, len, ref, ref1, results;
+      var childElement, childName, childScope, len, m, ref, ref1, results;
       ref = parentElement.childNodes;
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        childElement = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        childElement = ref[m];
         if (!(childElement instanceof SVGGElement)) {
           continue;
         }
@@ -78,7 +78,7 @@
     return addClass = function(element, newClass) {
       var className;
       className = element.getAttribute("class");
-      return element.setAttribute("class", className === "" ? newClass : className + " " + newClass);
+      return element.setAttribute("class", className != null ? className + " " + newClass : newClass);
     };
   });
 
@@ -89,13 +89,13 @@
       return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
     });
     return Make("Action", function() {
-      var args, cb, k, len, name, ref, results;
+      var args, cb, len, m, name, ref, results;
       name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
       if (cbs[name] != null) {
         ref = cbs[name];
         results = [];
-        for (k = 0, len = ref.length; k < len; k++) {
-          cb = ref[k];
+        for (m = 0, len = ref.length; m < len; m++) {
+          cb = ref[m];
           results.push(cb.apply(null, args));
         }
         return results;
@@ -116,25 +116,25 @@
       }
     });
     dispatchString = function(node, fn, sub) {
-      var child, k, len, ref, results;
+      var child, len, m, ref, results;
       if (typeof node[fn] === "function") {
         node[fn]();
       }
       ref = node[sub];
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        child = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        child = ref[m];
         results.push(dispatchString(child, fn, sub));
       }
       return results;
     };
     return dispatchFn = function(node, fn, sub) {
-      var child, k, len, ref, results;
+      var child, len, m, ref, results;
       fn(node);
       ref = node[sub];
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        child = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        child = ref[m];
         results.push(dispatchFn(child, fn, sub));
       }
       return results;
@@ -168,39 +168,86 @@
     return readWrite("enableHydraulicLines");
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter, enabled;
+    enabled = true;
+    Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, len, m, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, len, m, results;
+          if (enabled) {
+            results = [];
+            for (m = 0, len = highlighted.length; m < len; m++) {
+              highlight = highlighted[m];
+              results.push(highlight.setAttribute("filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, len, m, results;
+          results = [];
+          for (m = 0, len = highlighted.length; m < len; m++) {
+            highlight = highlighted[m];
+            results.push(highlight.removeAttribute("filter"));
+          }
+          return results;
+        };
+        results = [];
+        for (m = 0, len = highlighted.length; m < len; m++) {
+          highlight = highlighted[m];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
+    });
+    return SVG.createColorMatrix("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
+  });
+
   (function() {
     var deferredCallbacks, rafCallbacks, requested, run;
     requested = false;
     rafCallbacks = [];
     deferredCallbacks = [];
     run = function(t) {
-      var _cbs, cb, k, l, len, len1, results;
+      var _cbs, cb, len, len1, m, n, results;
       requested = false;
       _cbs = rafCallbacks;
       rafCallbacks = [];
-      for (k = 0, len = _cbs.length; k < len; k++) {
-        cb = _cbs[k];
+      for (m = 0, len = _cbs.length; m < len; m++) {
+        cb = _cbs[m];
         cb(t);
       }
       _cbs = deferredCallbacks;
       deferredCallbacks = [];
       results = [];
-      for (l = 0, len1 = _cbs.length; l < len1; l++) {
-        cb = _cbs[l];
+      for (n = 0, len1 = _cbs.length; n < len1; n++) {
+        cb = _cbs[n];
         results.push(cb());
       }
       return results;
     };
     Make("RequestDeferredRender", function(cb, ignoreDuplicates) {
-      var c, k, len;
+      var c, len, m;
       if (ignoreDuplicates == null) {
         ignoreDuplicates = false;
       }
       if (cb == null) {
         return console.log("Warning: RequestDeferredRender(null)");
       }
-      for (k = 0, len = deferredCallbacks.length; k < len; k++) {
-        c = deferredCallbacks[k];
+      for (m = 0, len = deferredCallbacks.length; m < len; m++) {
+        c = deferredCallbacks[m];
         if (!(c === cb)) {
           continue;
         }
@@ -217,15 +264,15 @@
       }
     });
     return Make("RequestUniqueAnimation", function(cb, ignoreDuplicates) {
-      var c, k, len;
+      var c, len, m;
       if (ignoreDuplicates == null) {
         ignoreDuplicates = false;
       }
       if (cb == null) {
         return console.log("Warning: RequestUniqueAnimation(null)");
       }
-      for (k = 0, len = rafCallbacks.length; k < len; k++) {
-        c = rafCallbacks[k];
+      for (m = 0, len = rafCallbacks.length; m < len; m++) {
+        c = rafCallbacks[m];
         if (!(c === cb)) {
           continue;
         }
@@ -292,52 +339,6 @@
       };
     });
   });
-
-  (function() {
-    var Highlighter, enabled;
-    enabled = true;
-    return Make("Highlighter", Highlighter = {
-      setup: function(highlighted) {
-        var highlight, k, len, mouseLeave, mouseOver, results;
-        if (highlighted == null) {
-          highlighted = [];
-        }
-        mouseOver = function(e) {
-          var highlight, k, len, results;
-          if (enabled) {
-            results = [];
-            for (k = 0, len = highlighted.length; k < len; k++) {
-              highlight = highlighted[k];
-              results.push(highlight.setAttribute("filter", "url(#highlightMatrix)"));
-            }
-            return results;
-          }
-        };
-        mouseLeave = function(e) {
-          var highlight, k, len, results;
-          results = [];
-          for (k = 0, len = highlighted.length; k < len; k++) {
-            highlight = highlighted[k];
-            results.push(highlight.removeAttribute("filter"));
-          }
-          return results;
-        };
-        results = [];
-        for (k = 0, len = highlighted.length; k < len; k++) {
-          highlight = highlighted[k];
-          highlight.addEventListener("mouseover", mouseOver);
-          results.push(highlight.addEventListener("mouseleave", mouseLeave));
-        }
-        return results;
-      },
-      enable: function() {
-        return enabled = true;
-      },
-      disable: function() {
-        return enabled = true;
-      }
-    });
-  })();
 
   getParentInverseTransform = function(root, element, currentTransform) {
     var inv, inversion, matches, matrixString, newMatrix;
@@ -465,7 +466,7 @@
           }
         },
         linearGradient: function(stops, x1, y1, x2, y2) {
-          var fillUrl, gradient, gradientName, gradientStop, k, len, stop, useParent;
+          var fillUrl, gradient, gradientName, gradientStop, len, m, stop, useParent;
           if (x1 == null) {
             x1 = 0;
           }
@@ -493,8 +494,8 @@
           while (gradient.hasChildNodes()) {
             gradient.removeChild(gradient.firstChild);
           }
-          for (k = 0, len = stops.length; k < len; k++) {
-            stop = stops[k];
+          for (m = 0, len = stops.length; m < len; m++) {
+            stop = stops[m];
             gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
             gradientStop.setAttribute("offset", stop.offset);
             gradientStop.setAttribute("stop-color", stop.color);
@@ -504,7 +505,7 @@
           return scope.fill(fillUrl);
         },
         radialGradient: function(stops, cx, cy, radius) {
-          var fillUrl, gradient, gradientName, gradientStop, k, len, stop, useParent;
+          var fillUrl, gradient, gradientName, gradientStop, len, m, stop, useParent;
           useParent = PureDom.querySelectorParent(svgElement, "svg");
           gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id");
           gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
@@ -525,8 +526,8 @@
           while (gradient.hasChildNodes()) {
             gradient.removeChild(gradient.firstChild);
           }
-          for (k = 0, len = stops.length; k < len; k++) {
-            stop = stops[k];
+          for (m = 0, len = stops.length; m < len; m++) {
+            stop = stops[m];
             gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
             gradientStop.setAttribute("offset", stop.offset);
             gradientStop.setAttribute("stop-color", stop.color);
@@ -682,13 +683,167 @@
     });
   });
 
+  Take(["RequestDeferredRender", "DOMContentLoaded"], function(RequestDeferredRender) {
+    var SVG, createStops, defs, makePrivateProps, root, svgNS;
+    svgNS = "http://www.w3.org/2000/svg";
+    root = document.querySelector("svg");
+    defs = root.querySelector("defs");
+    Make("SVG", SVG = {
+      root: root,
+      defs: defs,
+      create: function(type, parent, attrs) {
+        var elm;
+        elm = document.createElementNS(svgNS, type);
+        makePrivateProps(elm);
+        SVG.attrs(elm, attrs);
+        if (parent != null) {
+          SVG.append(parent, elm);
+        }
+        return elm;
+      },
+      append: function(parent, child) {
+        parent.appendChild(child);
+        return child;
+      },
+      prepend: function(parent, child) {
+        if (parent.hasChildNodes()) {
+          parent.insertBefore(child, parent.firstChild);
+        } else {
+          parent.appendChild(child);
+        }
+        return child;
+      },
+      attrs: function(elm, attrs) {
+        var k, v;
+        for (k in attrs) {
+          v = attrs[k];
+          SVG.attr(elm, k, v);
+        }
+        return elm;
+      },
+      attr: function(elm, k, v) {
+        if (v == null) {
+          return elm.getAttribute(k);
+        }
+        if (elm._SVG[k] !== v) {
+          elm._SVG[k] = v;
+          elm.setAttribute(k, v);
+        }
+        return v;
+      },
+      move: function(elm, x, y) {
+        if (y == null) {
+          y = 0;
+        }
+        elm._SVG._tx = x;
+        elm._SVG._ty = y;
+        RequestDeferredRender(elm._SVG._applyTransform, true);
+        return elm;
+      },
+      rotate: function(elm, r, cx, cy) {
+        elm._SVG._r = r * 360;
+        if (cx != null) {
+          elm._SVG._cx = cx;
+        }
+        if (cy != null) {
+          elm._SVG._cy = cy;
+        }
+        RequestDeferredRender(elm._SVG._applyTransform, true);
+        return elm;
+      },
+      scale: function(elm, x, y) {
+        if (y == null) {
+          y = x;
+        }
+        elm._SVG._sx = x;
+        elm._SVG._sy = y;
+        RequestDeferredRender(elm._SVG._applyTransform, true);
+        return elm;
+      },
+      grey: function(elm, l) {
+        SVG.attr(elm, "fill", "hsl(0, 0%, " + (l * 100) + "%)");
+        return elm;
+      },
+      hsl: function(elm, h, s, l) {
+        SVG.attr(elm, "fill", "hsl(" + (h * 360) + ", " + (s * 100) + "%, " + (l * 100) + "%)");
+        return elm;
+      },
+      createGradient: function() {
+        var attrs, gradient, name, stops, vertical;
+        name = arguments[0], vertical = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
+        attrs = vertical ? {
+          id: name,
+          x2: 0,
+          y2: 1
+        } : {
+          id: name
+        };
+        gradient = SVG.create("linearGradient", defs, attrs);
+        createStops(gradient, stops);
+        return null;
+      },
+      createRadialGradient: function() {
+        var gradient, name, stops;
+        name = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+        gradient = SVG.create("radialGradient", defs, {
+          id: name
+        });
+        createStops(gradient, stops);
+        return null;
+      },
+      createColorMatrix: function(name, values) {
+        var attrs, filter;
+        filter = SVG.create("filter", defs, {
+          id: name
+        });
+        attrs = {
+          "in": "SourceGraphic",
+          type: "matrix",
+          values: values
+        };
+        SVG.create("feColorMatrix", filter, attrs);
+        return null;
+      }
+    });
+    createStops = function(gradient, stops) {
+      var attrs, i, len, m, stop;
+      stops = stops[0] instanceof Array ? stops[0] : stops;
+      for (i = m = 0, len = stops.length; m < len; i = ++m) {
+        stop = stops[i];
+        attrs = typeof stop === "string" ? {
+          "stop-color": stop,
+          offset: (100 * i / (stops.length - 1)) + "%"
+        } : {
+          "stop-color": stop.color,
+          offset: (100 * stop.offset) + "%"
+        };
+        SVG.create("stop", gradient, attrs);
+      }
+      return null;
+    };
+    return makePrivateProps = function(elm) {
+      return elm._SVG = {
+        _tx: 0,
+        _ty: 0,
+        _r: 0,
+        _cx: 0,
+        _cy: 0,
+        _sx: 1,
+        _sy: 1,
+        _applyTransform: function() {
+          return SVG.attr(elm, "transform", "translate(" + elm._SVG._tx + "," + elm._SVG._ty + ") rotate(" + elm._SVG._r + "," + elm._SVG._cx + "," + elm._SVG._cy + ") scale(" + elm._SVG._sx + "," + elm._SVG._sy + ")");
+        }
+      };
+    };
+  });
+
   Take([], function() {
     var Symbol, byInstanceName, bySymbolName, first;
     bySymbolName = {};
     byInstanceName = {};
     first = true;
     Make("Symbol", Symbol = function(symbolName, instanceNames, symbolFn) {
-      var instanceName, k, len, results, symbol;
+      var instanceName, len, m, results, symbol;
       if (first) {
         Make("SymbolsReady");
       }
@@ -702,8 +857,8 @@
       };
       bySymbolName[symbolName] = symbol;
       results = [];
-      for (k = 0, len = instanceNames.length; k < len; k++) {
-        instanceName = instanceNames[k];
+      for (m = 0, len = instanceNames.length; m < len; m++) {
+        instanceName = instanceNames[m];
         if (byInstanceName[instanceName] != null) {
           throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
         }
@@ -719,53 +874,6 @@
     };
   });
 
-  Take(["Config", "DOMContentLoaded"], function(Config) {
-    var cdHud, hud;
-    hud = document.createElement("cd-hud");
-    document.rootElement.prepend(hud);
-    if (Config("hide-hud")) {
-      hud.style.display = "none";
-    }
-    return Make("cdHUD", cdHud = {
-      addElement: function(element, clickHandler) {
-        var clone;
-        clone = element.cloneNode(true);
-        if (clickHandler != null) {
-          clone.addEventListener("click", clickHandler);
-        }
-        hud.appendChild(clone);
-        return clone;
-      },
-      addButton: function(options) {
-        var button;
-        button = document.createElement("div");
-        button.className = "button";
-        button.setAttribute("cd-hud-button", true);
-        if (options.attr != null) {
-          button.setAttribute(options.attr, true);
-        }
-        button.innerHTML = options.text;
-        button.style.order = options.order;
-        return cdHud.addElement(button, options.click);
-      }
-    });
-  });
-
-  Take(["cdHUD", "DOMContentLoaded"], function(cdHUD) {
-    var button, doClick, k, len, menuButton, ref;
-    doClick = function() {
-      return window.history.back();
-    };
-    ref = document.querySelectorAll("[menu-button]");
-    for (k = 0, len = ref.length; k < len; k++) {
-      button = ref[k];
-      button.addEventListener("click", doClick);
-    }
-    menuButton = document.createElement("menu-button");
-    menuButton.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"150\" fill=\"#FFF\" fill-opacity=\".85\" viewBox=\"0 0 200 150\">\n  <path d=\"M51 112q5.3 3 10 5l3.7-7q-8.7-3-15.1-7-4.6-2.6-9.1-6L10 107.7q-1.6-1.7-2.4-2.4Q6 104 5 102.4q-3-4-5-10.4 1 9 4 15 3 5 8 9.3l29-10.6q4 3.3 10 6.3M29 67L2.5 64.7 4 72l24 2v-3.3q.3-1.3 1-3.7m140.3 35.7l28.1 8.9 2.6-7.6-30.3-9q-5.7 7-16.7 12.5l5 5q4.4-2.8 7-5.2 2-1.9 4.3-4.6m5.1 26.9q-6.4 3.7-12.4 6-7 2.8-15.4 4.4L127 115.3q-9 1.2-15 1.4-7 .3-16.4-.4L85.3 142q-10.9-1-20.7-3.5-7.6-2-13.6-4.5l.3 8q8.3 3.5 16.7 5.3 6.7 1.7 17 2.7l10-25.6q18 1.3 31.5-.9L145 148q7.5-1.6 14-4 7.7-2.7 13-6l2.4-8.4M173 73l17-2 2-6.3-21 2.3q1 1.6 1.3 3 .7 1 .7 3zm-7-24l2-20-7-18h-15l-5-11H67l-5 11H47l-7 18 2 20h5l4 45h106l4-45h5M136 5l3 6H69l3-6h64M67 42h11l1 18H68l-1-18m63 0h11l-1 18h-11l1-18z\"/>\n  <path fill-opacity=\".3\" d=\"M166 49l2-20-7-18h-15l1 2h-7l-1-2H69l-1 2h-7l1-2H47l-7 18 2 20h25.4l-.4-7h11l.4 7h51.2l.4-7h11l-.4 7H166z\"/>\n</svg>";
-    return cdHUD.addElement(menuButton, doClick);
-  });
-
   (function() {
     var Button;
     return Make("button", Button = function(svgElement) {
@@ -779,11 +887,11 @@
           return scope.callbacks.push(callback);
         },
         clicked: function() {
-          var callback, k, len, ref, results;
+          var callback, len, m, ref, results;
           ref = scope.callbacks;
           results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            callback = ref[k];
+          for (m = 0, len = ref.length; m < len; m++) {
+            callback = ref[m];
             results.push(callback());
           }
           return results;
@@ -871,12 +979,12 @@
             return scope.update();
           },
           update: function() {
-            var band, k, len, ref, rotation;
+            var band, len, m, ref, rotation;
             scope.unmapped = Math.max(scope.domainMin, Math.min(scope.domainMax, scope.unmapped));
             rotation = scope.unmapped;
             ref = scope.deadbands;
-            for (k = 0, len = ref.length; k < len; k++) {
-              band = ref[k];
+            for (m = 0, len = ref.length; m < len; m++) {
+              band = ref[m];
               if (rotation > band.min && rotation < band.max) {
                 rotation = band.set;
               }
@@ -1017,8 +1125,8 @@
     });
   });
 
-  Take(["Reaction", "Symbol", "SymbolsReady"], function(Reaction, Symbol) {
-    return Symbol("HydraulicLine", [], function(svgElement) {
+  Take(["Reaction", "SVG", "Symbol", "SymbolsReady"], function(Reaction, SVG, Symbol) {
+    Symbol("HydraulicLine", [], function(svgElement) {
       var scope;
       return scope = {
         setup: function() {
@@ -1031,6 +1139,7 @@
         }
       };
     });
+    return SVG.createColorMatrix("allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
   });
 
   (function() {
@@ -1101,7 +1210,7 @@
             }
           },
           mouseMove: function(e) {
-            var callback, distance, k, len, newPos, ref, results;
+            var callback, distance, len, m, newPos, ref, results;
             if (scope.down && scope.enabled) {
               scope.moved = true;
               newPos = Vector.fromEventClient(e);
@@ -1116,15 +1225,15 @@
               scope.setTransforms();
               ref = scope.callbacks;
               results = [];
-              for (k = 0, len = ref.length; k < len; k++) {
-                callback = ref[k];
+              for (m = 0, len = ref.length; m < len; m++) {
+                callback = ref[m];
                 results.push(callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax)));
               }
               return results;
             }
           },
           mouseUp: function() {
-            var callback, k, len, ref;
+            var callback, len, m, ref;
             if (!scope.down) {
               return;
             }
@@ -1133,8 +1242,8 @@
               scope.movement = scope["default"];
               scope.setTransforms();
               ref = scope.callbacks;
-              for (k = 0, len = ref.length; k < len; k++) {
-                callback = ref[k];
+              for (m = 0, len = ref.length; m < len; m++) {
+                callback = ref[m];
                 callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax));
               }
             }
@@ -1293,6 +1402,56 @@
         }
       };
     });
+  });
+
+  Take(["PointerInput", "RequestUniqueAnimation", "SVG"], function(PointerInput, RequestUniqueAnimation, SVG) {
+    var bg, hud, menuButton, menuButtonBG, menuButtonInner, menuButtonLogo, resize, text;
+    SVG.createGradient("cdHudGradient", false, "#35488d", "#5175bd", "#35488d");
+    hud = SVG.create("g", SVG.root);
+    bg = SVG.create("rect", hud, {
+      height: 48,
+      fill: "url(#cdHudGradient)"
+    });
+    menuButton = SVG.create("g", SVG.root, {
+      "class": "ui menuButton"
+    });
+    PointerInput.addClick(menuButton, window.history.back);
+    menuButtonBG = SVG.create("rect", menuButton, {
+      x: -20,
+      width: 180,
+      height: 48,
+      "class": "menuButtonBG",
+      fill: "transparent"
+    });
+    menuButtonInner = SVG.create("g", menuButton);
+    SVG.move(menuButtonInner, 0, 9);
+    menuButtonLogo = SVG.create("g", menuButtonInner);
+    SVG.scale(menuButtonLogo, 44 / 200);
+    SVG.create("path", menuButtonLogo, {
+      fill: "#FFF",
+      "fill-opacity": .85,
+      d: "M51 112q5.3 3 10 5l3.7-7q-8.7-3-15.1-7-4.6-2.6-9.1-6L10 107.7q-1.6-1.7-2.4-2.4Q6 104 5 102.4q-3-4-5-10.4 1 9 4 15 3 5 8 9.3l29-10.6q4 3.3 10 6.3M29 67L2.5 64.7 4 72l24 2v-3.3q.3-1.3 1-3.7m140.3 35.7l28.1 8.9 2.6-7.6-30.3-9q-5.7 7-16.7 12.5l5 5q4.4-2.8 7-5.2 2-1.9 4.3-4.6m5.1 26.9q-6.4 3.7-12.4 6-7 2.8-15.4 4.4L127 115.3q-9 1.2-15 1.4-7 .3-16.4-.4L85.3 142q-10.9-1-20.7-3.5-7.6-2-13.6-4.5l.3 8q8.3 3.5 16.7 5.3 6.7 1.7 17 2.7l10-25.6q18 1.3 31.5-.9L145 148q7.5-1.6 14-4 7.7-2.7 13-6l2.4-8.4M173 73l17-2 2-6.3-21 2.3q1 1.6 1.3 3 .7 1 .7 3zm-7-24l2-20-7-18h-15l-5-11H67l-5 11H47l-7 18 2 20h5l4 45h106l4-45h5M136 5l3 6H69l3-6h64M67 42h11l1 18H68l-1-18m63 0h11l-1 18h-11l1-18z"
+    });
+    SVG.create("path", menuButtonLogo, {
+      fill: "#FFF",
+      "fill-opacity": .30,
+      d: "M166 49l2-20-7-18h-15l1 2h-7l-1-2H69l-1 2h-7l1-2H47l-7 18 2 20h25.4l-.4-7h11l.4 7h51.2l.4-7h11l-.4 7H166z"
+    });
+    text = SVG.create("text", menuButtonInner, {
+      "font-family": "Lato",
+      "font-size": 14,
+      fill: "#FFF"
+    });
+    text.textContent = "Back To Menu";
+    SVG.move(text, 50, 20);
+    resize = function() {
+      SVG.attr(bg, "width", window.innerWidth);
+      return SVG.move(menuButton, window.innerWidth / 2 - 70);
+    };
+    window.addEventListener("resize", function() {
+      return RequestUniqueAnimation(resize);
+    });
+    return resize();
   });
 
   Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
@@ -1489,11 +1648,11 @@
     };
 
     ArrowsContainer.prototype.visible = function(isVisible) {
-      var k, len, ref, results, segment;
+      var len, m, ref, results, segment;
       ref = this.segments;
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        segment = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        segment = ref[m];
         results.push(segment.visible(isVisible));
       }
       return results;
@@ -1504,23 +1663,23 @@
     };
 
     ArrowsContainer.prototype.setColor = function(fillColor) {
-      var k, len, ref, results, segment;
+      var len, m, ref, results, segment;
       ref = this.segments;
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        segment = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        segment = ref[m];
         results.push(segment.setColor(fillColor));
       }
       return results;
     };
 
     ArrowsContainer.prototype.update = function(deltaTime) {
-      var k, len, ref, results, segment;
+      var len, m, ref, results, segment;
       deltaTime *= this.direction;
       ref = this.segments;
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        segment = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        segment = ref[m];
         if (segment.visible) {
           results.push(segment.update(deltaTime, this.flow));
         } else {
@@ -1555,22 +1714,22 @@
       var currentTime, removeOriginalArrow, scope, update;
       currentTime = null;
       removeOriginalArrow = function(selectedSymbol) {
-        var child, children, k, l, len, len1, ref, results;
+        var child, children, len, len1, m, n, ref, results;
         children = [];
         ref = selectedSymbol.childNodes;
-        for (k = 0, len = ref.length; k < len; k++) {
-          child = ref[k];
+        for (m = 0, len = ref.length; m < len; m++) {
+          child = ref[m];
           children.push(child);
         }
         results = [];
-        for (l = 0, len1 = children.length; l < len1; l++) {
-          child = children[l];
+        for (n = 0, len1 = children.length; n < len1; n++) {
+          child = children[n];
           results.push(selectedSymbol.removeChild(child));
         }
         return results;
       };
       update = function(time) {
-        var arrowsContainer, dT, k, len, ref, results;
+        var arrowsContainer, dT, len, m, ref, results;
         RequestUniqueAnimation(update);
         if (currentTime == null) {
           currentTime = time;
@@ -1582,8 +1741,8 @@
         }
         ref = scope.arrowsContainers;
         results = [];
-        for (k = 0, len = ref.length; k < len; k++) {
-          arrowsContainer = ref[k];
+        for (m = 0, len = ref.length; m < len; m++) {
+          arrowsContainer = ref[m];
           results.push(arrowsContainer.update(dT));
         }
         return results;
@@ -1600,35 +1759,35 @@
         FADE_LENGTH: 50,
         arrowsContainers: [],
         setup: function(parent, selectedSymbol, linesData) {
-          var arrowsContainer, k, len, lineData;
+          var arrowsContainer, len, lineData, m;
           removeOriginalArrow(selectedSymbol);
           arrowsContainer = new ArrowsContainer(selectedSymbol);
           scope.arrowsContainers.push(arrowsContainer);
-          for (k = 0, len = linesData.length; k < len; k++) {
-            lineData = linesData[k];
+          for (m = 0, len = linesData.length; m < len; m++) {
+            lineData = linesData[m];
             Organizer.build(parent, lineData.edges, arrowsContainer, this);
           }
           RequestUniqueAnimation(update, true);
           return arrowsContainer;
         },
         show: function() {
-          var arrowsContainer, k, len, ref, results;
+          var arrowsContainer, len, m, ref, results;
           scope.isVisible = true;
           ref = scope.arrowsContainers;
           results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            arrowsContainer = ref[k];
+          for (m = 0, len = ref.length; m < len; m++) {
+            arrowsContainer = ref[m];
             results.push(arrowsContainer.visible(true));
           }
           return results;
         },
         hide: function() {
-          var arrowsContainer, k, len, ref, results;
+          var arrowsContainer, len, m, ref, results;
           scope.isVisible = false;
           ref = scope.arrowsContainers;
           results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            arrowsContainer = ref[k];
+          for (m = 0, len = ref.length; m < len; m++) {
+            arrowsContainer = ref[m];
             results.push(arrowsContainer.visible(false));
           }
           return results;
@@ -1643,20 +1802,20 @@
   (function() {
     var Organizer, angle, cullShortEdges, cullShortSegments, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
     edgesToLines = function(edgesData) {
-      var edge, i, k, linesData, ref;
+      var edge, i, linesData, m, ref;
       linesData = [];
       edge = [];
-      for (i = k = 0, ref = edgesData.length - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+      for (i = m = 0, ref = edgesData.length - 1; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
         edge = edgesData[i];
         linesData.push(edge[0], edge[2]);
       }
       return linesData;
     };
     formSegments = function(lineData, flowArrows) {
-      var i, k, pointA, pointB, ref, segmentEdges, segments;
+      var i, m, pointA, pointB, ref, segmentEdges, segments;
       segments = [];
       segmentEdges = null;
-      for (i = k = 0, ref = lineData.length - 1; k <= ref; i = k += 2) {
+      for (i = m = 0, ref = lineData.length - 1; m <= ref; i = m += 2) {
         pointA = lineData[i];
         pointB = lineData[i + 1];
         if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1], flowArrows)) {
@@ -1782,13 +1941,13 @@
       return segments;
     };
     finish = function(parent, segments, arrowsContainer, flowArrows) {
-      var edge, edges, i, j, k, l, ref, ref1, results, segPoints, segmentLength;
+      var edge, edges, i, j, m, n, ref, ref1, results, segPoints, segmentLength;
       results = [];
-      for (i = k = 0, ref = segments.length - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+      for (i = m = 0, ref = segments.length - 1; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
         segPoints = segments[i];
         segmentLength = 0;
         edges = [];
-        for (j = l = 0, ref1 = segPoints.length - 2; 0 <= ref1 ? l <= ref1 : l >= ref1; j = 0 <= ref1 ? ++l : --l) {
+        for (j = n = 0, ref1 = segPoints.length - 2; 0 <= ref1 ? n <= ref1 : n >= ref1; j = 0 <= ref1 ? ++n : --n) {
           edge = new Edge();
           edge.x = segPoints[j].x;
           edge.y = segPoints[j].y;
@@ -1863,7 +2022,7 @@
     Segment.prototype.fillColor = "transparent";
 
     function Segment(parent1, edges1, arrowsContainer1, segmentLength1, flowArrows1) {
-      var arrow, edge, edgeIndex, i, k, position, ref, segmentArrows, segmentSpacing, self;
+      var arrow, edge, edgeIndex, i, m, position, ref, segmentArrows, segmentSpacing, self;
       this.parent = parent1;
       this.edges = edges1;
       this.arrowsContainer = arrowsContainer1;
@@ -1882,7 +2041,7 @@
       position = 0;
       edgeIndex = 0;
       edge = self.edges[edgeIndex];
-      for (i = k = 0, ref = segmentArrows - 1; 0 <= ref ? k <= ref : k >= ref; i = 0 <= ref ? ++k : --k) {
+      for (i = m = 0, ref = segmentArrows - 1; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
         while (position > edge.length) {
           position -= edge.length;
           edge = self.edges[++edgeIndex];
@@ -1896,11 +2055,11 @@
     }
 
     Segment.prototype.visible = function(isVisible) {
-      var arrow, k, len, ref, results;
+      var arrow, len, m, ref, results;
       ref = this.arrows;
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        arrow = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        arrow = ref[m];
         results.push(arrow.setVisibility(isVisible));
       }
       return results;
@@ -1915,15 +2074,15 @@
     };
 
     Segment.prototype.update = function(deltaTime, ancestorFlow) {
-      var arrow, arrowFlow, k, len, ref, results;
+      var arrow, arrowFlow, len, m, ref, results;
       arrowFlow = this.flow != null ? this.flow : ancestorFlow;
       if (this.flowArrows) {
         arrowFlow *= deltaTime * this.direction * this.flowArrows.SPEED;
       }
       ref = this.arrows;
       results = [];
-      for (k = 0, len = ref.length; k < len; k++) {
-        arrow = ref[k];
+      for (m = 0, len = ref.length; m < len; m++) {
+        arrow = ref[m];
         arrow.setColor(this.fillColor);
         results.push(arrow.update(arrowFlow));
       }

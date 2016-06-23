@@ -5,6 +5,7 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentL
     svg = document.rootElement
     root = makeScope "root", svg
     root.FlowArrows = FlowArrows()
+    
     # This is useful for other systems that aren't part of the scope tree but that need access to it.
     Make "root", root
     
@@ -13,7 +14,7 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentL
       svg.style.opacity = 1
       Action "setup"
       Action "schematicMode"
-    
+  
   
   makeScope = (instanceName, element, parentScope)->
     symbol = getSymbol instanceName
@@ -29,7 +30,7 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentL
       parentScope[instanceName] = instance if instanceName isnt "DefaultElement"
       parentScope.children.push instance
     instance
-
+  
   
   makeScopeTree = (parentScope, parentElement)->
     for childElement in parentElement.childNodes when childElement instanceof SVGGElement
@@ -51,4 +52,4 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentL
   addClass = (element, newClass)->
     className = element.getAttribute "class"
     # Unfortunately, we can't just use classList in SVG in IE
-    element.setAttribute "class", if className is "" then newClass else className + " " + newClass
+    element.setAttribute "class", if className? then className + " " + newClass else newClass

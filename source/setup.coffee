@@ -1,9 +1,10 @@
-Take ["Action", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"],
-(      Action ,  Reaction ,  SVGStyle ,  SVGTransform ,  Symbol)->
+Take ["Action", "FlowArrows", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"],
+(      Action ,  FlowArrows ,  Reaction ,  SVGStyle ,  SVGTransform ,  Symbol)->
   
   setTimeout ()->
     svg = document.rootElement
     root = makeScope "root", svg
+    root.FlowArrows = FlowArrows()
     
     Take "root", ()->
       makeScopeTree root, svg
@@ -18,8 +19,7 @@ Take ["Action", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoa
   
   
   makeScope = (instanceName, element, parentScope)->
-    console.log instanceName
-    symbol = Symbol.forInstanceName instanceName
+    symbol = Symbol.forInstanceName(instanceName) or Symbol.forSymbolName("defaultElement")
     addClass element, symbol.name
     instance = symbol.create element
     instance.children ?= []
@@ -42,12 +42,10 @@ Take ["Action", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoa
   
   
   makeScopeTree = (parentScope, parentElement)->
-    childElements = parentElement.childNodes?.filter? (elm)-> elm instanceof SVGGElement
-    if childElements?
-      for childElement in childElements
-        childName = childElement.getAttribute("id").split("_")[0] or "defaultElement"
-        childScope = makeScope childName, childElement, parentScope
-        makeScopeTree childScope, childElement
+    for childElement in parentElement.childNodes when childElement instanceof SVGGElement
+      childName = childElement.getAttribute("id")?.split("_")[0]
+      childScope = makeScope childName, childElement, parentScope
+      makeScopeTree childScope, childElement
       
 
   

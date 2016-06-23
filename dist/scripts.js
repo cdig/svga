@@ -3,6 +3,75 @@
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
+  Take(["Action", "FlowArrows", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"], function(Action, FlowArrows, Reaction, SVGStyle, SVGTransform, Symbol) {
+    var addClass, makeScope, makeScopeTree;
+    setTimeout(function() {
+      var root, svg;
+      svg = document.rootElement;
+      root = makeScope("root", svg);
+      root.FlowArrows = FlowArrows();
+      Take("root", function() {
+        makeScopeTree(root, svg);
+        svg.style.transition = "opacity .7s .1s";
+        svg.style.opacity = 1;
+        Action("setup");
+        return Action("schematicMode");
+      });
+      return Make("root", root);
+    });
+    makeScope = function(instanceName, element, parentScope) {
+      var instance, symbol;
+      symbol = Symbol.forInstanceName(instanceName) || Symbol.forSymbolName("defaultElement");
+      addClass(element, symbol.name);
+      instance = symbol.create(element);
+      if (instance.children == null) {
+        instance.children = [];
+      }
+      instance.element = element;
+      if (instance.getElement == null) {
+        instance.getElement = function() {
+          return element;
+        };
+      }
+      if (instance.root == null) {
+        instance.root = (parentScope != null ? parentScope.root : void 0) || instance;
+      }
+      if (instance.style == null) {
+        instance.style = SVGStyle(element);
+      }
+      if (instance.transform == null) {
+        instance.transform = SVGTransform(element);
+      }
+      if (parentScope != null) {
+        if (instanceName !== "defaultElement") {
+          parentScope[instanceName] = instance;
+        }
+        parentScope.children.push(instance);
+      }
+      return instance;
+    };
+    makeScopeTree = function(parentScope, parentElement) {
+      var childElement, childName, childScope, k, len, ref, ref1, results;
+      ref = parentElement.childNodes;
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        childElement = ref[k];
+        if (!(childElement instanceof SVGGElement)) {
+          continue;
+        }
+        childName = (ref1 = childElement.getAttribute("id")) != null ? ref1.split("_")[0] : void 0;
+        childScope = makeScope(childName, childElement, parentScope);
+        results.push(makeScopeTree(childScope, childElement));
+      }
+      return results;
+    };
+    return addClass = function(element, newClass) {
+      var className;
+      className = element.getAttribute("class");
+      return element.setAttribute("class", className === "" ? newClass : className + " " + newClass);
+    };
+  });
+
   Take([], function() {
     var cbs;
     cbs = [];
@@ -163,76 +232,6 @@
       }
     });
   })();
-
-  Take(["Action", "Reaction", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"], function(Action, Reaction, SVGStyle, SVGTransform, Symbol) {
-    var addClass, makeScope, makeScopeTree;
-    setTimeout(function() {
-      var root, svg;
-      svg = document.rootElement;
-      root = makeScope("root", svg);
-      Take("root", function() {
-        makeScopeTree(root, svg);
-        svg.style.transition = "opacity .7s .1s";
-        svg.style.opacity = 1;
-        Action("setup");
-        return Action("schematicMode");
-      });
-      return Make("root", root);
-    });
-    makeScope = function(instanceName, element, parentScope) {
-      var instance, symbol;
-      console.log(instanceName);
-      symbol = Symbol.forInstanceName(instanceName);
-      addClass(element, symbol.name);
-      instance = symbol.create(element);
-      if (instance.children == null) {
-        instance.children = [];
-      }
-      instance.element = element;
-      if (instance.getElement == null) {
-        instance.getElement = function() {
-          return element;
-        };
-      }
-      if (instance.root == null) {
-        instance.root = (parentScope != null ? parentScope.root : void 0) || instance;
-      }
-      if (instance.style == null) {
-        instance.style = SVGStyle(element);
-      }
-      if (instance.transform == null) {
-        instance.transform = SVGTransform(element);
-      }
-      if (parentScope != null) {
-        if (instanceName !== "defaultElement") {
-          parentScope[instanceName] = instance;
-        }
-        parentScope.children.push(instance);
-      }
-      return instance;
-    };
-    makeScopeTree = function(parentScope, parentElement) {
-      var childElement, childElements, childName, childScope, k, len, ref, results;
-      childElements = (ref = parentElement.childNodes) != null ? typeof ref.filter === "function" ? ref.filter(function(elm) {
-        return elm instanceof SVGGElement;
-      }) : void 0 : void 0;
-      if (childElements != null) {
-        results = [];
-        for (k = 0, len = childElements.length; k < len; k++) {
-          childElement = childElements[k];
-          childName = childElement.getAttribute("id").split("_")[0] || "defaultElement";
-          childScope = makeScope(childName, childElement, parentScope);
-          results.push(makeScopeTree(childScope, childElement));
-        }
-        return results;
-      }
-    };
-    return addClass = function(element, newClass) {
-      var className;
-      className = element.getAttribute("class");
-      return element.setAttribute("class", className === "" ? newClass : className + " " + newClass);
-    };
-  });
 
   Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
     var SVGAnimation;
@@ -848,8 +847,8 @@
 
   Take(["Symbol"], function(Symbol) {
     return Symbol("defaultElement", [], function(svgElement) {
-      var scope, textElement;
-      textElement = svgElement.querySelector("text").querySelector("tspan");
+      var ref, scope, textElement;
+      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
       return scope = {
         setText: function(text) {
           return textElement != null ? textElement.textContent = text : void 0;

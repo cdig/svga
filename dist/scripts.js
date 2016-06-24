@@ -290,6 +290,16 @@
     });
   })();
 
+  Take(["RequestUniqueAnimation"], function(RequestUniqueAnimation) {
+    return Make("Resize", function(cb) {
+      var r;
+      (r = function() {
+        return RequestUniqueAnimation(cb, true);
+      })();
+      return window.addEventListener("resize", r);
+    });
+  });
+
   Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
     var SVGAnimation;
     return Make("SVGAnimation", SVGAnimation = function(callback) {

@@ -3,6 +3,7 @@
 
 Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
   svgNS = "http://www.w3.org/2000/svg"
+  xlinkNS = "http://www.w3.org/1999/xlink"
   root = document.querySelector "svg"
   defs = root.querySelector "defs"
   
@@ -36,7 +37,10 @@ Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
       return elm.getAttribute k unless v?
       if elm._SVG[k] isnt v
         elm._SVG[k] = v
-        elm.setAttribute k, v
+        if k is "xlink:href"
+          elm.setAttributeNS xlinkNS, k, v
+        else
+          elm.setAttribute k, v
       v
     
     move: (elm, x, y = 0)->

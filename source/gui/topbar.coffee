@@ -26,4 +26,4 @@ Take ["PointerInput", "RequestUniqueAnimation", "SVG"], (PointerInput, RequestUn
     SVG.move menuButton, window.innerWidth/2 - 70
   
   window.addEventListener "resize", ()-> RequestUniqueAnimation resize
-  resize()
+  RequestUniqueAnimation resize

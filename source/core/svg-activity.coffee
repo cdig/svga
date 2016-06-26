@@ -11,9 +11,10 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentL
     
     Take "SymbolsReady", ()->
       makeScopeTree root, svg
-      svg.style.opacity = 1
       Action "setup"
       Action "schematicMode"
+      setTimeout ()->
+        svg.style.opacity = 1
   
   
   makeScope = (instanceName, element, parentScope)->

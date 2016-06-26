@@ -1,5 +1,6 @@
 svg {
   opacity: 0;
+  transition: opacity .5s;
 }
 
 .ui, .ui * {

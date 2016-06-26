@@ -13,6 +13,7 @@ logAndKillError = (err)->
 
 paths =
   coffee: "source/**/*.coffee"
+  html: "source/wrapper/*.html"
   scss: "source/**/*.scss"
 
 
@@ -22,6 +23,11 @@ gulp.task "coffee", ()->
     .pipe gulp_coffee()
     # .pipe gulp_uglify()
     .on "error", logAndKillError
+    .pipe gulp.dest "dist"
+
+
+gulp.task "html", ()->
+  gulp.src paths.html
     .pipe gulp.dest "dist"
 
 
@@ -40,6 +46,7 @@ gulp.task "scss", ()->
     .pipe gulp.dest "dist"
 
 
-gulp.task "default", ["coffee", "scss"], ()->
+gulp.task "default", ["coffee", "html", "scss"], ()->
   gulp.watch paths.coffee, ["coffee"]
+  gulp.watch paths.html, ["html"]
   gulp.watch paths.scss, ["scss"]

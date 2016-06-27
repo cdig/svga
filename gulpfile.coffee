@@ -14,7 +14,10 @@ logAndKillError = (err)->
 paths =
   coffee: "source/**/*.coffee"
   html: "source/wrapper/*.html"
-  scss: "source/**/*.scss"
+  scss: [
+    "pack/vars.scss"
+    "source/**/*.scss"
+  ]
 
 
 gulp.task "coffee", ()->

@@ -6,6 +6,7 @@ Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
   xlinkNS = "http://www.w3.org/1999/xlink"
   root = document.querySelector "svg"
   defs = root.querySelector "defs"
+  props = textContent: true # additional props will be listed here as needed
   
   Make "SVG", SVG =
     root: root
@@ -39,6 +40,8 @@ Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
         elm._SVG[k] = v
         if k is "xlink:href"
           elm.setAttributeNS xlinkNS, k, v
+        else if props[k]?
+          elm[k] = v
         else
           elm.setAttribute k, v
       v

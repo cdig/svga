@@ -1,7 +1,6 @@
 (function() {
   var Arrow, ArrowsContainer, Edge, SVGMask, Segment, getParentInverseTransform,
     slice = [].slice,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Take([], function() {
@@ -697,11 +696,14 @@
   });
 
   Take(["RequestDeferredRender", "DOMContentLoaded"], function(RequestDeferredRender) {
-    var SVG, createStops, defs, makePrivateProps, root, svgNS, xlinkNS;
+    var SVG, createStops, defs, makePrivateProps, props, root, svgNS, xlinkNS;
     svgNS = "http://www.w3.org/2000/svg";
     xlinkNS = "http://www.w3.org/1999/xlink";
     root = document.querySelector("svg");
     defs = root.querySelector("defs");
+    props = {
+      textContent: true
+    };
     Make("SVG", SVG = {
       root: root,
       defs: defs,
@@ -743,6 +745,8 @@
           elm._SVG[k] = v;
           if (k === "xlink:href") {
             elm.setAttributeNS(xlinkNS, k, v);
+          } else if (props[k] != null) {
+            elm[k] = v;
           } else {
             elm.setAttribute(k, v);
           }
@@ -1423,182 +1427,143 @@
   });
 
   Take(["PointerInput", "Resize", "SVG"], function(PointerInput, Resize, SVG) {
-    var ControlPanel, construct, controlPanel, defs, elements, gridPad, iconPad, minColumns, minGridSize, panel, resize, supportedTypes, topbarHeight;
+    var ControlPanel, bg, construct, controlPanel, elements, resize, topbarHeight;
     topbarHeight = 48;
-    minGridSize = 50;
-    minColumns = 3;
-    gridPad = 2;
-    iconPad = 4;
-    supportedTypes = ["button", "gui"];
-    defs = {};
     elements = [];
     controlPanel = SVG.create("g", SVG.root, {
       "class": "ControlPanel"
     });
-    panel = SVG.create("rect", controlPanel, {
-      "class": "Panel"
+    bg = SVG.create("rect", controlPanel, {
+      "class": "BG"
     });
     Resize(resize = function() {
-      var columns, element, goalW, gridSize, len, m, offsetX, offsetY, panelW, results, rowHeight, scope, textRect;
-      goalW = window.innerWidth * .2;
-      columns = Math.max(minColumns, Math.floor(goalW / minGridSize));
-      gridSize = Math.ceil(goalW / columns);
-      SVG.attr(panel, "width", panelW = columns * (gridSize + gridPad));
-      SVG.attr(panel, "height", window.innerHeight - topbarHeight);
-      SVG.move(controlPanel, window.innerWidth - panelW + gridPad, topbarHeight);
-      offsetX = 0;
-      offsetY = 0;
-      rowHeight = 0;
-      results = [];
-      for (m = 0, len = elements.length; m < len; m++) {
-        element = elements[m];
-        scope = element.scope;
-        if (offsetX + scope.width > columns) {
-          offsetY += rowHeight;
-          rowHeight = 0;
-          offsetX = 0;
-        }
-        SVG.move(element.g, offsetX * (gridSize + gridPad), offsetY * (gridSize + gridPad));
-        switch (element.type) {
-          case "button":
-            SVG.attrs(scope.bg, {
-              width: (gridSize + gridPad) * scope.width - gridPad,
-              height: (gridSize + gridPad) * scope.height - gridPad
-            });
-            SVG.attrs(scope.icon, {
-              width: gridSize - iconPad * 2,
-              height: gridSize - iconPad * 2,
-              x: iconPad,
-              y: iconPad
-            });
-            textRect = scope.text.getBoundingClientRect();
-            SVG.move(scope.text, gridSize + iconPad * 2, gridSize * scope.height / 2 + textRect.height / 2);
-            break;
-          case "gui":
-            null;
-        }
-        if (typeof scope.resize === "function") {
-          scope.resize(gridSize, gridPad, iconPad);
-        }
-        rowHeight = Math.max(rowHeight, scope.height);
-        results.push(offsetX += scope.width);
-      }
-      return results;
+      var panelWidth;
+      panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
+      SVG.attr(bg, "width", panelWidth);
+      SVG.attr(bg, "height", window.innerHeight - topbarHeight);
+      return SVG.move(controlPanel, window.innerWidth - panelWidth, topbarHeight);
     });
-    construct = function(i, name, type, fn) {
-      var g, scope;
-      g = SVG.create("g", controlPanel, {
-        "class": type + " ui Element"
-      });
-      scope = fn(g);
-      switch (type) {
-        case "button":
-          scope.width = 3;
-          scope.height = 1;
-          scope.bg = SVG.create("rect", g, {
-            "class": "BG"
-          });
-          scope.icon = SVG.create("use", g, {
-            "xlink:href": "#" + name
-          });
-          scope.text = SVG.create("text", g, {
-            "font-family": "Lato",
-            "font-size": 14,
-            fill: "#FFF"
-          });
-          scope.text.textContent = name.toUpperCase();
-          if (scope.click != null) {
-            PointerInput.addClick(g, scope.click);
-          }
-          break;
-        case "gui":
-          null;
-      }
-      if (typeof scope.setup === "function") {
-        scope.setup();
-      }
-      return elements.push({
-        g: g,
-        i: i,
-        name: name,
-        scope: scope,
-        type: type
-      });
+    construct = function(name, fn) {
+      var i;
+      return i = elements.length;
     };
     return Make("ControlPanel", ControlPanel = {
-      define: function(type, name, fn) {
-        if (indexOf.call(supportedTypes, type) < 0) {
-          console.log("Warning: Unknown ControlPanel.define() type: '" + type + "'");
-        }
-        return defs[name] = {
-          fn: fn,
-          type: type
-        };
-      },
-      init: function() {
-        var def, elementNames, i, len, m, name;
-        elementNames = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        for (i = m = 0, len = elementNames.length; m < len; i = ++m) {
-          name = elementNames[i];
-          if ((def = defs[name]) != null) {
-            construct(i, name, def.type, def.fn);
-          } else {
-            console.log("Warning: Unknown ControlPanel.init() name: '" + name + "'");
-          }
-        }
-        return resize();
+      addControl: function(name, cb) {
+        return Take(name, function(fn) {
+          return construct(name, fn);
+        });
       }
     });
   });
 
-  Take(["PointerInput", "RequestUniqueAnimation", "SVG"], function(PointerInput, RequestUniqueAnimation, SVG) {
-    var bg, hud, menuButton, menuButtonBG, menuButtonInner, menuButtonLogo, resize, text;
-    SVG.createGradient("cdHudGradient", false, "#35488d", "#5175bd", "#35488d");
-    hud = SVG.create("g", SVG.root);
-    bg = SVG.create("rect", hud, {
+  Take(["PointerInput", "Resize", "SVG"], function(PointerInput, Resize, SVG) {
+    var TopBar, bg, buttonPad, computeLayout, construct, container, elements, iconPad, offsetX, resize, topBar, topBarHeight;
+    topBarHeight = 48;
+    buttonPad = 30;
+    iconPad = 4;
+    elements = {};
+    offsetX = 0;
+    topBar = SVG.create("g", SVG.root, {
+      "class": "TopBar"
+    });
+    bg = SVG.create("rect", topBar, {
       height: 48,
-      fill: "url(#cdHudGradient)"
+      fill: "url(#TopBarGradient)"
     });
-    menuButton = SVG.create("g", SVG.root, {
-      "class": "ui menuButton"
+    SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
+    container = SVG.create("g", topBar, {
+      "class": "Elements"
     });
-    PointerInput.addClick(menuButton, window.history.back);
-    menuButtonBG = SVG.create("rect", menuButton, {
-      x: -20,
-      width: 180,
-      height: 48,
-      "class": "menuButtonBG",
-      fill: "transparent"
-    });
-    menuButtonInner = SVG.create("g", menuButton);
-    SVG.move(menuButtonInner, 0, 9);
-    menuButtonLogo = SVG.create("g", menuButtonInner);
-    SVG.scale(menuButtonLogo, 44 / 200);
-    SVG.create("path", menuButtonLogo, {
-      fill: "#FFF",
-      "fill-opacity": .85,
-      d: "M51 112q5.3 3 10 5l3.7-7q-8.7-3-15.1-7-4.6-2.6-9.1-6L10 107.7q-1.6-1.7-2.4-2.4Q6 104 5 102.4q-3-4-5-10.4 1 9 4 15 3 5 8 9.3l29-10.6q4 3.3 10 6.3M29 67L2.5 64.7 4 72l24 2v-3.3q.3-1.3 1-3.7m140.3 35.7l28.1 8.9 2.6-7.6-30.3-9q-5.7 7-16.7 12.5l5 5q4.4-2.8 7-5.2 2-1.9 4.3-4.6m5.1 26.9q-6.4 3.7-12.4 6-7 2.8-15.4 4.4L127 115.3q-9 1.2-15 1.4-7 .3-16.4-.4L85.3 142q-10.9-1-20.7-3.5-7.6-2-13.6-4.5l.3 8q8.3 3.5 16.7 5.3 6.7 1.7 17 2.7l10-25.6q18 1.3 31.5-.9L145 148q7.5-1.6 14-4 7.7-2.7 13-6l2.4-8.4M173 73l17-2 2-6.3-21 2.3q1 1.6 1.3 3 .7 1 .7 3zm-7-24l2-20-7-18h-15l-5-11H67l-5 11H47l-7 18 2 20h5l4 45h106l4-45h5M136 5l3 6H69l3-6h64M67 42h11l1 18H68l-1-18m63 0h11l-1 18h-11l1-18z"
-    });
-    SVG.create("path", menuButtonLogo, {
-      fill: "#FFF",
-      "fill-opacity": .30,
-      d: "M166 49l2-20-7-18h-15l1 2h-7l-1-2H69l-1 2h-7l1-2H47l-7 18 2 20h25.4l-.4-7h11l.4 7h51.2l.4-7h11l-.4 7H166z"
-    });
-    text = SVG.create("text", menuButtonInner, {
-      "font-family": "Lato",
-      "font-size": 14,
-      fill: "#FFF"
-    });
-    text.textContent = "Back To Menu";
-    SVG.move(text, 50, 20);
     resize = function() {
-      SVG.attr(bg, "width", window.innerWidth);
-      return SVG.move(menuButton, window.innerWidth / 2 - 70);
+      var base, elm, len, m, results;
+      SVG.attrs(bg, {
+        width: window.innerWidth
+      });
+      SVG.move(container, window.innerWidth / 2 - offsetX / 2);
+      results = [];
+      for (m = 0, len = elements.length; m < len; m++) {
+        elm = elements[m];
+        results.push(typeof (base = elm.scope).resize === "function" ? base.resize() : void 0);
+      }
+      return results;
     };
-    window.addEventListener("resize", function() {
-      return RequestUniqueAnimation(resize);
+    construct = function(i, name, scope) {
+      name = name.replace("TB:", "");
+      scope.element = SVG.create("g", container, {
+        "class": "ui Element"
+      });
+      if (typeof scope.setup === "function") {
+        scope.setup(scope.element);
+      }
+      elements[name] = {
+        element: scope.element,
+        i: i,
+        name: name,
+        scope: scope
+      };
+      if (scope.resize != null) {
+        Resize(scope.resize);
+      }
+      if (scope.click != null) {
+        PointerInput.addClick(scope.element, scope.click);
+      }
+      if (scope.bg == null) {
+        scope.bg = SVG.create("rect", scope.element, {
+          "class": "BG",
+          height: topBarHeight
+        });
+      }
+      if (scope.icon == null) {
+        scope.icon = SVG.create("use", scope.element, {
+          "xlink:href": "#" + name.toLowerCase(),
+          height: topBarHeight - iconPad * 2,
+          width: topBarHeight - iconPad * 2,
+          y: iconPad
+        });
+      }
+      if (scope.text == null) {
+        scope.text = SVG.create("text", scope.element, {
+          "font-family": "Lato",
+          "font-size": 14,
+          fill: "#FFF",
+          textContent: name.toUpperCase()
+        });
+      }
+      return computeLayout(scope);
+    };
+    computeLayout = function(scope) {
+      var buttonWidth, iconRect, iconX, textRect, textX;
+      iconRect = scope.icon.getBoundingClientRect();
+      textRect = scope.text.getBoundingClientRect();
+      iconX = buttonPad - topBarHeight / 2 + iconRect.width / 2;
+      textX = buttonPad + iconRect.width + iconPad;
+      buttonWidth = textX + textRect.width + buttonPad;
+      SVG.move(scope.icon, iconX);
+      SVG.move(scope.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
+      SVG.attrs(scope.bg, {
+        width: buttonWidth
+      });
+      SVG.move(scope.element, offsetX);
+      return offsetX += buttonWidth;
+    };
+    return Make("TopBar", TopBar = {
+      init: function() {
+        var elementNames;
+        elementNames = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        Take(elementNames, function() {
+          var elementScopes, i, len, m, scope;
+          elementScopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          for (i = m = 0, len = elementScopes.length; m < len; i = ++m) {
+            scope = elementScopes[i];
+            construct(i, elementNames[i], scope);
+          }
+          return Resize(resize);
+        });
+        return TopBar.init = function() {
+          throw "TopBar.init was called more than once.";
+        };
+      }
     });
-    return RequestUniqueAnimation(resize);
   });
 
   Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {

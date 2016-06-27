@@ -1,0 +1,12 @@
+.TopBar {
+  .Elements {
+    .BG {
+      fill: transparent;
+    }
+    .Element:hover {
+      .BG {
+        fill: rgba(white, 0.08);
+      }
+    }
+  }
+}

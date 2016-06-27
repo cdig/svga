@@ -1,0 +1,10 @@
+.ControlPanel {
+  .Panel {
+    fill: $smoke;
+  }
+  
+  .Element {
+    .BG         { fill: $grey; }
+    &:hover .BG { fill: lighten($grey, 5%); }
+  }
+}

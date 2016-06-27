@@ -1,6 +1,7 @@
 (function() {
   var Arrow, ArrowsContainer, Edge, SVGMask, Segment, getParentInverseTransform,
     slice = [].slice,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Take([], function() {
@@ -1421,38 +1422,132 @@
     });
   });
 
-  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
-    Reaction("toggleAnimateMode", function() {
-      return Action(Global.animateMode ? "schematicMode" : "animateMode");
+  Take(["PointerInput", "Resize", "SVG"], function(PointerInput, Resize, SVG) {
+    var ControlPanel, construct, controlPanel, defs, elements, gridPad, iconPad, minColumns, minGridSize, panel, resize, supportedTypes, topbarHeight;
+    topbarHeight = 48;
+    minGridSize = 50;
+    minColumns = 3;
+    gridPad = 2;
+    iconPad = 4;
+    supportedTypes = ["button", "gui"];
+    defs = {};
+    elements = [];
+    controlPanel = SVG.create("g", SVG.root, {
+      "class": "ControlPanel"
     });
-    Reaction("animateMode", function() {
-      Global.animateMode = true;
-      return Dispatch(root, "animateMode");
+    panel = SVG.create("rect", controlPanel, {
+      "class": "Panel"
     });
-    return Reaction("schematicMode", function() {
-      Global.animateMode = false;
-      return Dispatch(root, "schematicMode");
+    Resize(resize = function() {
+      var columns, element, goalW, gridSize, len, m, offsetX, offsetY, panelW, results, rowHeight, scope, textRect;
+      goalW = window.innerWidth * .2;
+      columns = Math.max(minColumns, Math.floor(goalW / minGridSize));
+      gridSize = Math.ceil(goalW / columns);
+      SVG.attr(panel, "width", panelW = columns * (gridSize + gridPad));
+      SVG.attr(panel, "height", window.innerHeight - topbarHeight);
+      SVG.move(controlPanel, window.innerWidth - panelW + gridPad, topbarHeight);
+      offsetX = 0;
+      offsetY = 0;
+      rowHeight = 0;
+      results = [];
+      for (m = 0, len = elements.length; m < len; m++) {
+        element = elements[m];
+        scope = element.scope;
+        if (offsetX + scope.width > columns) {
+          offsetY += rowHeight;
+          rowHeight = 0;
+          offsetX = 0;
+        }
+        SVG.move(element.g, offsetX * (gridSize + gridPad), offsetY * (gridSize + gridPad));
+        switch (element.type) {
+          case "button":
+            SVG.attrs(scope.bg, {
+              width: (gridSize + gridPad) * scope.width - gridPad,
+              height: (gridSize + gridPad) * scope.height - gridPad
+            });
+            SVG.attrs(scope.icon, {
+              width: gridSize - iconPad * 2,
+              height: gridSize - iconPad * 2,
+              x: iconPad,
+              y: iconPad
+            });
+            textRect = scope.text.getBoundingClientRect();
+            SVG.move(scope.text, gridSize + iconPad * 2, gridSize * scope.height / 2 + textRect.height / 2);
+            break;
+          case "gui":
+            null;
+        }
+        if (typeof scope.resize === "function") {
+          scope.resize(gridSize, gridPad, iconPad);
+        }
+        rowHeight = Math.max(rowHeight, scope.height);
+        results.push(offsetX += scope.width);
+      }
+      return results;
     });
-  });
-
-  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return root.getElement().style["background-color"] = colors[index % colors.length];
+    construct = function(i, name, type, fn) {
+      var g, scope;
+      g = SVG.create("g", controlPanel, {
+        "class": type + " ui Element"
+      });
+      scope = fn(g);
+      switch (type) {
+        case "button":
+          scope.width = 3;
+          scope.height = 1;
+          scope.bg = SVG.create("rect", g, {
+            "class": "BG"
+          });
+          scope.icon = SVG.create("use", g, {
+            "xlink:href": "#" + name
+          });
+          scope.text = SVG.create("text", g, {
+            "font-family": "Lato",
+            "font-size": 14,
+            fill: "#FFF"
+          });
+          scope.text.textContent = name.toUpperCase();
+          if (scope.click != null) {
+            PointerInput.addClick(g, scope.click);
+          }
+          break;
+        case "gui":
+          null;
+      }
+      if (typeof scope.setup === "function") {
+        scope.setup();
+      }
+      return elements.push({
+        g: g,
+        i: i,
+        name: name,
+        scope: scope,
+        type: type
+      });
     };
-    Reaction("setup", function() {
-      return setColor(1);
-    });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
-    });
-  });
-
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
+    return Make("ControlPanel", ControlPanel = {
+      define: function(type, name, fn) {
+        if (indexOf.call(supportedTypes, type) < 0) {
+          console.log("Warning: Unknown ControlPanel.define() type: '" + type + "'");
+        }
+        return defs[name] = {
+          fn: fn,
+          type: type
+        };
+      },
+      init: function() {
+        var def, elementNames, i, len, m, name;
+        elementNames = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        for (i = m = 0, len = elementNames.length; m < len; i = ++m) {
+          name = elementNames[i];
+          if ((def = defs[name]) != null) {
+            construct(i, name, def.type, def.fn);
+          } else {
+            console.log("Warning: Unknown ControlPanel.init() name: '" + name + "'");
+          }
+        }
+        return resize();
+      }
     });
   });
 
@@ -1504,6 +1599,41 @@
       return RequestUniqueAnimation(resize);
     });
     return RequestUniqueAnimation(resize);
+  });
+
+  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
+    Reaction("toggleAnimateMode", function() {
+      return Action(Global.animateMode ? "schematicMode" : "animateMode");
+    });
+    Reaction("animateMode", function() {
+      Global.animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("schematicMode", function() {
+      Global.animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return root.getElement().style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
+    });
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
   });
 
   Arrow = (function() {

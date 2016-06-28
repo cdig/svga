@@ -3,530 +3,6 @@
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  Take([], function() {
-    var cbs;
-    cbs = [];
-    Make("Reaction", function(name, cb) {
-      return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
-    });
-    return Make("Action", function() {
-      var args, cb, len, m, name, ref, results;
-      name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      if (cbs[name] != null) {
-        ref = cbs[name];
-        results = [];
-        for (m = 0, len = ref.length; m < len; m++) {
-          cb = ref[m];
-          results.push(cb.apply(null, args));
-        }
-        return results;
-      }
-    });
-  });
-
-  Take([], function() {
-    var dispatchFn, dispatchString;
-    Make("Dispatch", function(node, fn, sub) {
-      if (sub == null) {
-        sub = "children";
-      }
-      if (typeof fn === "string") {
-        return dispatchString(node, fn, sub);
-      } else {
-        return dispatchFn(node, fn, sub);
-      }
-    });
-    dispatchString = function(node, fn, sub) {
-      var child, len, m, ref, results;
-      if (typeof node[fn] === "function") {
-        node[fn]();
-      }
-      ref = node[sub];
-      results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
-        results.push(dispatchString(child, fn, sub));
-      }
-      return results;
-    };
-    return dispatchFn = function(node, fn, sub) {
-      var child, len, m, ref, results;
-      fn(node);
-      ref = node[sub];
-      results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
-        results.push(dispatchFn(child, fn, sub));
-      }
-      return results;
-    };
-  });
-
-  Take([], function() {
-    var Global, internal, readWrite;
-    Make("Global", Global = {});
-    internal = {};
-    readWrite = function(name, initial) {
-      internal[name] = initial;
-      return Object.defineProperty(Global, name, {
-        get: function() {
-          return internal[name];
-        },
-        set: function(val) {
-          return internal[name] = val;
-        }
-      });
-    };
-    readWrite("animateMode", false);
-    Object.defineProperty(Global, "schematicMode", {
-      get: function() {
-        return !internal.animateMode;
-      },
-      set: function(val) {
-        return internal.animateMode = !val;
-      }
-    });
-    return readWrite("enableHydraulicLines");
-  });
-
-  (function() {
-    var deferredCallbacks, rafCallbacks, requested, run;
-    requested = false;
-    rafCallbacks = [];
-    deferredCallbacks = [];
-    run = function(t) {
-      var _cbs, cb, len, len1, m, n, results;
-      requested = false;
-      _cbs = rafCallbacks;
-      rafCallbacks = [];
-      for (m = 0, len = _cbs.length; m < len; m++) {
-        cb = _cbs[m];
-        cb(t);
-      }
-      _cbs = deferredCallbacks;
-      deferredCallbacks = [];
-      results = [];
-      for (n = 0, len1 = _cbs.length; n < len1; n++) {
-        cb = _cbs[n];
-        results.push(cb());
-      }
-      return results;
-    };
-    Make("RequestDeferredRender", function(cb, ignoreDuplicates) {
-      var c, len, m;
-      if (ignoreDuplicates == null) {
-        ignoreDuplicates = false;
-      }
-      if (cb == null) {
-        return console.log("Warning: RequestDeferredRender(null)");
-      }
-      for (m = 0, len = deferredCallbacks.length; m < len; m++) {
-        c = deferredCallbacks[m];
-        if (!(c === cb)) {
-          continue;
-        }
-        if (ignoreDuplicates) {
-          return;
-        }
-        this.RDRDuplicate = cb;
-        return console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
-      }
-      deferredCallbacks.push(cb);
-      if (!requested) {
-        requested = true;
-        return requestAnimationFrame(run);
-      }
-    });
-    return Make("RequestUniqueAnimation", function(cb, ignoreDuplicates) {
-      var c, len, m;
-      if (ignoreDuplicates == null) {
-        ignoreDuplicates = false;
-      }
-      if (cb == null) {
-        return console.log("Warning: RequestUniqueAnimation(null)");
-      }
-      for (m = 0, len = rafCallbacks.length; m < len; m++) {
-        c = rafCallbacks[m];
-        if (!(c === cb)) {
-          continue;
-        }
-        if (ignoreDuplicates) {
-          return;
-        }
-        this.RUADuplicate = cb;
-        return console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.");
-      }
-      rafCallbacks.push(cb);
-      if (!requested) {
-        requested = true;
-        return requestAnimationFrame(run);
-      }
-    });
-  })();
-
-  Take(["RequestUniqueAnimation"], function(RequestUniqueAnimation) {
-    return Make("Resize", function(cb) {
-      var r;
-      (r = function() {
-        return RequestUniqueAnimation(cb, true);
-      })();
-      return window.addEventListener("resize", r);
-    });
-  });
-
-  Take(["DOMContentLoaded"], function() {
-    var SVG, createStops, defs, namespaces, props, root;
-    namespaces = {
-      svg: "http://www.w3.org/2000/svg",
-      "xlink:href": "http://www.w3.org/1999/xlink"
-    };
-    props = {
-      textContent: true
-    };
-    root = document.querySelector("svg");
-    defs = root.querySelector("defs");
-    Make("SVG", SVG = {
-      root: root,
-      defs: defs,
-      move: function(elm, x, y) {
-        if (y == null) {
-          y = 0;
-        }
-        throw "MOVE";
-      },
-      rotate: function(elm, r) {
-        throw "ROTATE";
-      },
-      origin: function(elm, ox, oy) {
-        throw "ORIGIN";
-      },
-      scale: function(elm, x, y) {
-        if (y == null) {
-          y = x;
-        }
-        throw "SCALE";
-      },
-      create: function(type, parent, attrs) {
-        var elm;
-        elm = document.createElementNS(namespaces.svg, type);
-        SVG.attrs(elm, attrs);
-        if (parent != null) {
-          SVG.append(parent, elm);
-        }
-        return elm;
-      },
-      clone: function(source, parent, attrs) {
-        var attr, child, elm, len, len1, m, n, ref, ref1;
-        elm = document.createElementNS(namespaces.svg, "g");
-        ref = source.attributes;
-        for (m = 0, len = ref.length; m < len; m++) {
-          attr = ref[m];
-          SVG.attr(elm, attr.name, attr.value);
-        }
-        SVG.attrs(elm, {
-          id: null
-        });
-        SVG.attrs(elm, attrs);
-        ref1 = source.childNodes;
-        for (n = 0, len1 = ref1.length; n < len1; n++) {
-          child = ref1[n];
-          SVG.append(elm, child.cloneNode(true));
-        }
-        if (parent != null) {
-          SVG.append(parent, elm);
-        }
-        return elm;
-      },
-      append: function(parent, child) {
-        parent.appendChild(child);
-        return child;
-      },
-      prepend: function(parent, child) {
-        if (parent.hasChildNodes()) {
-          parent.insertBefore(child, parent.firstChild);
-        } else {
-          parent.appendChild(child);
-        }
-        return child;
-      },
-      attrs: function(elm, attrs) {
-        var k, v;
-        for (k in attrs) {
-          v = attrs[k];
-          SVG.attr(elm, k, v);
-        }
-        return elm;
-      },
-      attr: function(elm, k, v) {
-        if (v === void 0) {
-          return elm.getAttribute(k);
-        }
-        if (elm._SVG == null) {
-          elm._SVG = {};
-        }
-        if (elm._SVG[k] !== v) {
-          elm._SVG[k] = v;
-          if (props[k] != null) {
-            elm[k] = v;
-          } else if (v != null) {
-            elm.setAttributeNS(namespaces[k] || null, k, v);
-          } else {
-            elm.removeAttributeNS(namespaces[k] || null, k);
-          }
-        }
-        return v;
-      },
-      grey: function(elm, l) {
-        SVG.attr(elm, "fill", "hsl(0, 0%, " + (l * 100) + "%)");
-        return elm;
-      },
-      hsl: function(elm, h, s, l) {
-        SVG.attr(elm, "fill", "hsl(" + (h * 360) + ", " + (s * 100) + "%, " + (l * 100) + "%)");
-        return elm;
-      },
-      createGradient: function() {
-        var attrs, gradient, name, stops, vertical;
-        name = arguments[0], vertical = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
-        attrs = vertical ? {
-          id: name,
-          x2: 0,
-          y2: 1
-        } : {
-          id: name
-        };
-        gradient = SVG.create("linearGradient", defs, attrs);
-        createStops(gradient, stops);
-        return gradient;
-      },
-      createRadialGradient: function() {
-        var gradient, name, stops;
-        name = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-        gradient = SVG.create("radialGradient", defs, {
-          id: name
-        });
-        createStops(gradient, stops);
-        return gradient;
-      },
-      createColorMatrixFilter: function(name, values) {
-        var filter;
-        filter = SVG.create("filter", defs, {
-          id: name
-        });
-        SVG.create("feColorMatrix", filter, {
-          "in": "SourceGraphic",
-          type: "matrix",
-          values: values
-        });
-        return filter;
-      }
-    });
-    return createStops = function(gradient, stops) {
-      var attrs, i, len, m, stop;
-      stops = stops[0] instanceof Array ? stops[0] : stops;
-      for (i = m = 0, len = stops.length; m < len; i = ++m) {
-        stop = stops[i];
-        attrs = typeof stop === "string" ? {
-          "stop-color": stop,
-          offset: (100 * i / (stops.length - 1)) + "%"
-        } : {
-          "stop-color": stop.color,
-          offset: (100 * stop.offset) + "%"
-        };
-        SVG.create("stop", gradient, attrs);
-      }
-      return null;
-    };
-  });
-
-  Take([], function() {
-    var Symbol, byInstanceName, bySymbolName, first;
-    bySymbolName = {};
-    byInstanceName = {};
-    first = true;
-    Symbol = function(symbolName, instanceNames, symbolFn) {
-      var instanceName, len, m, results, symbol;
-      console.log("MAKE " + symbolName);
-      if (first) {
-        Make("SymbolsReady");
-      }
-      first = false;
-      if (bySymbolName[symbolName] != null) {
-        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
-      }
-      symbol = {
-        create: symbolFn,
-        name: symbolName
-      };
-      bySymbolName[symbolName] = symbol;
-      results = [];
-      for (m = 0, len = instanceNames.length; m < len; m++) {
-        instanceName = instanceNames[m];
-        if (byInstanceName[instanceName] != null) {
-          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
-        }
-        results.push(byInstanceName[instanceName] = symbol);
-      }
-      return results;
-    };
-    Symbol.forSymbolName = function(symbolName) {
-      return bySymbolName[symbolName];
-    };
-    Symbol.forInstanceName = function(instanceName) {
-      return byInstanceName[instanceName];
-    };
-    return Make("Symbol", Symbol);
-  });
-
-  Take(["RequestDeferredRender", "SVG"], function(RequestDeferredRender, SVG) {
-    var TRS, err, setup;
-    err = function(elm, message) {
-      console.log(elm);
-      throw "^ " + message;
-    };
-    setup = function(wrapper, elm) {
-      var v;
-      return elm._trs = v = {
-        x: 0,
-        y: 0,
-        r: 0,
-        sx: 1,
-        sy: 1,
-        ox: 0,
-        oy: 0,
-        apply: function() {
-          SVG.attr(wrapper, "transform", "translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")");
-          return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
-        }
-      };
-    };
-    TRS = function(elm) {
-      var wrapper;
-      if (elm == null) {
-        err(elm, "Null element passed to TRS(elm)");
-      }
-      if (elm.parentNode == null) {
-        err(elm, "Element passed to TRS(elm) must have a parentNode");
-      }
-      wrapper = SVG.create("g", elm.parentNode, {
-        "class": "TRS"
-      });
-      setup(wrapper, elm);
-      SVG.append(wrapper, elm);
-      return elm;
-    };
-    TRS.abs = function(elm, attrs) {
-      var delta;
-      if ((elm != null ? elm._trs : void 0) == null) {
-        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
-      }
-      if (attrs == null) {
-        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
-      }
-      if (attrs.scale != null) {
-        attrs.sx = attrs.sy = attrs.scale;
-      }
-      if (attrs.x != null) {
-        elm._trs.x = attrs.x;
-      }
-      if (attrs.y != null) {
-        elm._trs.y = attrs.y;
-      }
-      if (attrs.r != null) {
-        elm._trs.r = attrs.r;
-      }
-      if (attrs.sx != null) {
-        elm._trs.sx = attrs.sx;
-      }
-      if (attrs.sy != null) {
-        elm._trs.sy = attrs.sy;
-      }
-      if (attrs.ox != null) {
-        delta = attrs.ox - elm._trs.ox;
-        elm._trs.ox = attrs.ox;
-        elm._trs.x += delta;
-      }
-      if (attrs.oy != null) {
-        delta = attrs.oy - elm._trs.oy;
-        elm._trs.oy = attrs.oy;
-        elm._trs.y += delta;
-      }
-      RequestDeferredRender(elm._trs.apply, true);
-      return elm;
-    };
-    TRS.rel = function(elm, attrs) {
-      if ((elm != null ? elm._trs : void 0) == null) {
-        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
-      }
-      if (attrs == null) {
-        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
-      }
-      if (attrs.x != null) {
-        elm._trs.x += attrs.x;
-      }
-      if (attrs.y != null) {
-        elm._trs.y += attrs.y;
-      }
-      if (attrs.r != null) {
-        elm._trs.r += attrs.r;
-      }
-      if (attrs.sx != null) {
-        elm._trs.sx += attrs.sx;
-      }
-      if (attrs.sy != null) {
-        elm._trs.sy += attrs.sy;
-      }
-      if (attrs.ox != null) {
-        elm._trs.ox += attrs.ox;
-        elm._trs.x += attrs.ox;
-      }
-      if (attrs.oy != null) {
-        elm._trs.oy += attrs.oy;
-        elm._trs.y += attrs.oy;
-      }
-      RequestDeferredRender(elm._trs.apply, true);
-      return elm;
-    };
-    TRS.move = function(elm, x, y) {
-      if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.move");
-      }
-      return TRS.abs(elm, {
-        x: x,
-        y: y
-      });
-    };
-    TRS.rotate = function(elm, r) {
-      if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.rotate");
-      }
-      return TRS.abs(elm, {
-        r: r
-      });
-    };
-    TRS.scale = function(elm, sx, sy) {
-      if (sy == null) {
-        sy = x;
-      }
-      if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.scale");
-      }
-      return TRS.abs(elm, {
-        sx: sx,
-        sy: sy
-      });
-    };
-    TRS.origin = function(elm, ox, oy) {
-      if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.origin");
-      }
-      return TRS.abs(elm, {
-        ox: ox,
-        oy: oy
-      });
-    };
-    return Make("TRS", TRS);
-  });
-
   Make("button", Button = function(svgElement) {
     var scope;
     return scope = {
@@ -1717,6 +1193,530 @@
       });
       return scope;
     });
+  });
+
+  Take([], function() {
+    var cbs;
+    cbs = [];
+    Make("Reaction", function(name, cb) {
+      return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
+    });
+    return Make("Action", function() {
+      var args, cb, len, m, name, ref, results;
+      name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (cbs[name] != null) {
+        ref = cbs[name];
+        results = [];
+        for (m = 0, len = ref.length; m < len; m++) {
+          cb = ref[m];
+          results.push(cb.apply(null, args));
+        }
+        return results;
+      }
+    });
+  });
+
+  Take([], function() {
+    var dispatchFn, dispatchString;
+    Make("Dispatch", function(node, fn, sub) {
+      if (sub == null) {
+        sub = "children";
+      }
+      if (typeof fn === "string") {
+        return dispatchString(node, fn, sub);
+      } else {
+        return dispatchFn(node, fn, sub);
+      }
+    });
+    dispatchString = function(node, fn, sub) {
+      var child, len, m, ref, results;
+      if (typeof node[fn] === "function") {
+        node[fn]();
+      }
+      ref = node[sub];
+      results = [];
+      for (m = 0, len = ref.length; m < len; m++) {
+        child = ref[m];
+        results.push(dispatchString(child, fn, sub));
+      }
+      return results;
+    };
+    return dispatchFn = function(node, fn, sub) {
+      var child, len, m, ref, results;
+      fn(node);
+      ref = node[sub];
+      results = [];
+      for (m = 0, len = ref.length; m < len; m++) {
+        child = ref[m];
+        results.push(dispatchFn(child, fn, sub));
+      }
+      return results;
+    };
+  });
+
+  Take([], function() {
+    var Global, internal, readWrite;
+    Make("Global", Global = {});
+    internal = {};
+    readWrite = function(name, initial) {
+      internal[name] = initial;
+      return Object.defineProperty(Global, name, {
+        get: function() {
+          return internal[name];
+        },
+        set: function(val) {
+          return internal[name] = val;
+        }
+      });
+    };
+    readWrite("animateMode", false);
+    Object.defineProperty(Global, "schematicMode", {
+      get: function() {
+        return !internal.animateMode;
+      },
+      set: function(val) {
+        return internal.animateMode = !val;
+      }
+    });
+    return readWrite("enableHydraulicLines");
+  });
+
+  (function() {
+    var deferredCallbacks, rafCallbacks, requested, run;
+    requested = false;
+    rafCallbacks = [];
+    deferredCallbacks = [];
+    run = function(t) {
+      var _cbs, cb, len, len1, m, n, results;
+      requested = false;
+      _cbs = rafCallbacks;
+      rafCallbacks = [];
+      for (m = 0, len = _cbs.length; m < len; m++) {
+        cb = _cbs[m];
+        cb(t);
+      }
+      _cbs = deferredCallbacks;
+      deferredCallbacks = [];
+      results = [];
+      for (n = 0, len1 = _cbs.length; n < len1; n++) {
+        cb = _cbs[n];
+        results.push(cb());
+      }
+      return results;
+    };
+    Make("RequestDeferredRender", function(cb, ignoreDuplicates) {
+      var c, len, m;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
+      if (cb == null) {
+        return console.log("Warning: RequestDeferredRender(null)");
+      }
+      for (m = 0, len = deferredCallbacks.length; m < len; m++) {
+        c = deferredCallbacks[m];
+        if (!(c === cb)) {
+          continue;
+        }
+        if (ignoreDuplicates) {
+          return;
+        }
+        this.RDRDuplicate = cb;
+        return console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
+      }
+      deferredCallbacks.push(cb);
+      if (!requested) {
+        requested = true;
+        return requestAnimationFrame(run);
+      }
+    });
+    return Make("RequestUniqueAnimation", function(cb, ignoreDuplicates) {
+      var c, len, m;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
+      if (cb == null) {
+        return console.log("Warning: RequestUniqueAnimation(null)");
+      }
+      for (m = 0, len = rafCallbacks.length; m < len; m++) {
+        c = rafCallbacks[m];
+        if (!(c === cb)) {
+          continue;
+        }
+        if (ignoreDuplicates) {
+          return;
+        }
+        this.RUADuplicate = cb;
+        return console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.");
+      }
+      rafCallbacks.push(cb);
+      if (!requested) {
+        requested = true;
+        return requestAnimationFrame(run);
+      }
+    });
+  })();
+
+  Take(["RequestUniqueAnimation"], function(RequestUniqueAnimation) {
+    return Make("Resize", function(cb) {
+      var r;
+      (r = function() {
+        return RequestUniqueAnimation(cb, true);
+      })();
+      return window.addEventListener("resize", r);
+    });
+  });
+
+  Take(["DOMContentLoaded"], function() {
+    var SVG, createStops, defs, namespaces, props, root;
+    namespaces = {
+      svg: "http://www.w3.org/2000/svg",
+      "xlink:href": "http://www.w3.org/1999/xlink"
+    };
+    props = {
+      textContent: true
+    };
+    root = document.querySelector("svg");
+    defs = root.querySelector("defs");
+    Make("SVG", SVG = {
+      root: root,
+      defs: defs,
+      move: function(elm, x, y) {
+        if (y == null) {
+          y = 0;
+        }
+        throw "MOVE";
+      },
+      rotate: function(elm, r) {
+        throw "ROTATE";
+      },
+      origin: function(elm, ox, oy) {
+        throw "ORIGIN";
+      },
+      scale: function(elm, x, y) {
+        if (y == null) {
+          y = x;
+        }
+        throw "SCALE";
+      },
+      create: function(type, parent, attrs) {
+        var elm;
+        elm = document.createElementNS(namespaces.svg, type);
+        SVG.attrs(elm, attrs);
+        if (parent != null) {
+          SVG.append(parent, elm);
+        }
+        return elm;
+      },
+      clone: function(source, parent, attrs) {
+        var attr, child, elm, len, len1, m, n, ref, ref1;
+        elm = document.createElementNS(namespaces.svg, "g");
+        ref = source.attributes;
+        for (m = 0, len = ref.length; m < len; m++) {
+          attr = ref[m];
+          SVG.attr(elm, attr.name, attr.value);
+        }
+        SVG.attrs(elm, {
+          id: null
+        });
+        SVG.attrs(elm, attrs);
+        ref1 = source.childNodes;
+        for (n = 0, len1 = ref1.length; n < len1; n++) {
+          child = ref1[n];
+          SVG.append(elm, child.cloneNode(true));
+        }
+        if (parent != null) {
+          SVG.append(parent, elm);
+        }
+        return elm;
+      },
+      append: function(parent, child) {
+        parent.appendChild(child);
+        return child;
+      },
+      prepend: function(parent, child) {
+        if (parent.hasChildNodes()) {
+          parent.insertBefore(child, parent.firstChild);
+        } else {
+          parent.appendChild(child);
+        }
+        return child;
+      },
+      attrs: function(elm, attrs) {
+        var k, v;
+        for (k in attrs) {
+          v = attrs[k];
+          SVG.attr(elm, k, v);
+        }
+        return elm;
+      },
+      attr: function(elm, k, v) {
+        if (v === void 0) {
+          return elm.getAttribute(k);
+        }
+        if (elm._SVG == null) {
+          elm._SVG = {};
+        }
+        if (elm._SVG[k] !== v) {
+          elm._SVG[k] = v;
+          if (props[k] != null) {
+            elm[k] = v;
+          } else if (v != null) {
+            elm.setAttributeNS(namespaces[k] || null, k, v);
+          } else {
+            elm.removeAttributeNS(namespaces[k] || null, k);
+          }
+        }
+        return v;
+      },
+      grey: function(elm, l) {
+        SVG.attr(elm, "fill", "hsl(0, 0%, " + (l * 100) + "%)");
+        return elm;
+      },
+      hsl: function(elm, h, s, l) {
+        SVG.attr(elm, "fill", "hsl(" + (h * 360) + ", " + (s * 100) + "%, " + (l * 100) + "%)");
+        return elm;
+      },
+      createGradient: function() {
+        var attrs, gradient, name, stops, vertical;
+        name = arguments[0], vertical = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
+        attrs = vertical ? {
+          id: name,
+          x2: 0,
+          y2: 1
+        } : {
+          id: name
+        };
+        gradient = SVG.create("linearGradient", defs, attrs);
+        createStops(gradient, stops);
+        return gradient;
+      },
+      createRadialGradient: function() {
+        var gradient, name, stops;
+        name = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+        gradient = SVG.create("radialGradient", defs, {
+          id: name
+        });
+        createStops(gradient, stops);
+        return gradient;
+      },
+      createColorMatrixFilter: function(name, values) {
+        var filter;
+        filter = SVG.create("filter", defs, {
+          id: name
+        });
+        SVG.create("feColorMatrix", filter, {
+          "in": "SourceGraphic",
+          type: "matrix",
+          values: values
+        });
+        return filter;
+      }
+    });
+    return createStops = function(gradient, stops) {
+      var attrs, i, len, m, stop;
+      stops = stops[0] instanceof Array ? stops[0] : stops;
+      for (i = m = 0, len = stops.length; m < len; i = ++m) {
+        stop = stops[i];
+        attrs = typeof stop === "string" ? {
+          "stop-color": stop,
+          offset: (100 * i / (stops.length - 1)) + "%"
+        } : {
+          "stop-color": stop.color,
+          offset: (100 * stop.offset) + "%"
+        };
+        SVG.create("stop", gradient, attrs);
+      }
+      return null;
+    };
+  });
+
+  Take([], function() {
+    var Symbol, byInstanceName, bySymbolName, first;
+    bySymbolName = {};
+    byInstanceName = {};
+    first = true;
+    Symbol = function(symbolName, instanceNames, symbolFn) {
+      var instanceName, len, m, results, symbol;
+      console.log("MAKE " + symbolName);
+      if (first) {
+        Make("SymbolsReady");
+      }
+      first = false;
+      if (bySymbolName[symbolName] != null) {
+        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
+      }
+      symbol = {
+        create: symbolFn,
+        name: symbolName
+      };
+      bySymbolName[symbolName] = symbol;
+      results = [];
+      for (m = 0, len = instanceNames.length; m < len; m++) {
+        instanceName = instanceNames[m];
+        if (byInstanceName[instanceName] != null) {
+          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
+        }
+        results.push(byInstanceName[instanceName] = symbol);
+      }
+      return results;
+    };
+    Symbol.forSymbolName = function(symbolName) {
+      return bySymbolName[symbolName];
+    };
+    Symbol.forInstanceName = function(instanceName) {
+      return byInstanceName[instanceName];
+    };
+    return Make("Symbol", Symbol);
+  });
+
+  Take(["RequestDeferredRender", "SVG"], function(RequestDeferredRender, SVG) {
+    var TRS, err, setup;
+    err = function(elm, message) {
+      console.log(elm);
+      throw "^ " + message;
+    };
+    setup = function(wrapper, elm) {
+      var v;
+      return elm._trs = v = {
+        x: 0,
+        y: 0,
+        r: 0,
+        sx: 1,
+        sy: 1,
+        ox: 0,
+        oy: 0,
+        apply: function() {
+          SVG.attr(wrapper, "transform", "translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")");
+          return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
+        }
+      };
+    };
+    TRS = function(elm) {
+      var wrapper;
+      if (elm == null) {
+        err(elm, "Null element passed to TRS(elm)");
+      }
+      if (elm.parentNode == null) {
+        err(elm, "Element passed to TRS(elm) must have a parentNode");
+      }
+      wrapper = SVG.create("g", elm.parentNode, {
+        "class": "TRS"
+      });
+      setup(wrapper, elm);
+      SVG.append(wrapper, elm);
+      return elm;
+    };
+    TRS.abs = function(elm, attrs) {
+      var delta;
+      if ((elm != null ? elm._trs : void 0) == null) {
+        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs == null) {
+        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs.scale != null) {
+        attrs.sx = attrs.sy = attrs.scale;
+      }
+      if (attrs.x != null) {
+        elm._trs.x = attrs.x;
+      }
+      if (attrs.y != null) {
+        elm._trs.y = attrs.y;
+      }
+      if (attrs.r != null) {
+        elm._trs.r = attrs.r;
+      }
+      if (attrs.sx != null) {
+        elm._trs.sx = attrs.sx;
+      }
+      if (attrs.sy != null) {
+        elm._trs.sy = attrs.sy;
+      }
+      if (attrs.ox != null) {
+        delta = attrs.ox - elm._trs.ox;
+        elm._trs.ox = attrs.ox;
+        elm._trs.x += delta;
+      }
+      if (attrs.oy != null) {
+        delta = attrs.oy - elm._trs.oy;
+        elm._trs.oy = attrs.oy;
+        elm._trs.y += delta;
+      }
+      RequestDeferredRender(elm._trs.apply, true);
+      return elm;
+    };
+    TRS.rel = function(elm, attrs) {
+      if ((elm != null ? elm._trs : void 0) == null) {
+        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs == null) {
+        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs.x != null) {
+        elm._trs.x += attrs.x;
+      }
+      if (attrs.y != null) {
+        elm._trs.y += attrs.y;
+      }
+      if (attrs.r != null) {
+        elm._trs.r += attrs.r;
+      }
+      if (attrs.sx != null) {
+        elm._trs.sx += attrs.sx;
+      }
+      if (attrs.sy != null) {
+        elm._trs.sy += attrs.sy;
+      }
+      if (attrs.ox != null) {
+        elm._trs.ox += attrs.ox;
+        elm._trs.x += attrs.ox;
+      }
+      if (attrs.oy != null) {
+        elm._trs.oy += attrs.oy;
+        elm._trs.y += attrs.oy;
+      }
+      RequestDeferredRender(elm._trs.apply, true);
+      return elm;
+    };
+    TRS.move = function(elm, x, y) {
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.move");
+      }
+      return TRS.abs(elm, {
+        x: x,
+        y: y
+      });
+    };
+    TRS.rotate = function(elm, r) {
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.rotate");
+      }
+      return TRS.abs(elm, {
+        r: r
+      });
+    };
+    TRS.scale = function(elm, sx, sy) {
+      if (sy == null) {
+        sy = x;
+      }
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.scale");
+      }
+      return TRS.abs(elm, {
+        sx: sx,
+        sy: sy
+      });
+    };
+    TRS.origin = function(elm, ox, oy) {
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.origin");
+      }
+      return TRS.abs(elm, {
+        ox: ox,
+        oy: oy
+      });
+    };
+    return Make("TRS", TRS);
   });
 
   Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {

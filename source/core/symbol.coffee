@@ -3,7 +3,7 @@ Take [], ()->
   byInstanceName = {}
   first = true
   
-  Make "Symbol", Symbol = (symbolName, instanceNames, symbolFn)->
+  Symbol = (symbolName, instanceNames, symbolFn)->
     
     # This will inform the rest of the system that we have started receiving symbols
     Make("SymbolsReady") if first
@@ -25,3 +25,5 @@ Take [], ()->
   
   Symbol.forSymbolName = (symbolName)-> bySymbolName[symbolName]
   Symbol.forInstanceName = (instanceName)-> byInstanceName[instanceName]
+  
+  Make "Symbol", Symbol

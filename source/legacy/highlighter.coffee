@@ -23,7 +23,7 @@ Take "SVG", (SVG)->
     disable: ()->
       enabled = true
   
-  SVG.createColorMatrix "highlightMatrix", ".5  0   0    0   0
-                                            .5  1   .5   0  20
-                                            0   0   .5   0   0
-                                            0   0   0    1   0"
+  SVG.createColorMatrixFilter "highlightMatrix", ".5  0   0    0   0
+                                                  .5  1   .5   0  20
+                                                  0   0   .5   0   0
+                                                  0   0   0    1   0"

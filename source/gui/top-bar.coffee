@@ -13,7 +13,7 @@ Take ["PointerInput", "Resize", "SVG"], (PointerInput, Resize, SVG)->
   
   resize = ()->
     SVG.attrs bg, width: window.innerWidth
-    SVG.move container, window.innerWidth/2 - offsetX/2
+    # SVG.move container, window.innerWidth/2 - offsetX/2
     elm.scope.resize?() for elm in elements
   
   construct = (i, name, scope)->
@@ -25,7 +25,7 @@ Take ["PointerInput", "Resize", "SVG"], (PointerInput, Resize, SVG)->
     PointerInput.addClick scope.element, scope.click if scope.click?
     # setup() can disable these by setting the property to false, or providing its own values
     scope.bg ?= SVG.create "rect", scope.element, class: "BG", height: topBarHeight
-    scope.icon ?= SVG.create "use", scope.element, "xlink:href": "#" + name.toLowerCase(), height: topBarHeight - iconPad*2, width: topBarHeight - iconPad*2, y: iconPad
+    scope.icon ?= SVG.clone document.getElementById(name.toLowerCase()), scope.element, height: topBarHeight - iconPad*2, width: topBarHeight - iconPad*2
     scope.text ?= SVG.create "text", scope.element, "font-family": "Lato", "font-size": 14, fill: "#FFF", textContent: name.toUpperCase()
     computeLayout scope
   
@@ -35,10 +35,10 @@ Take ["PointerInput", "Resize", "SVG"], (PointerInput, Resize, SVG)->
     iconX = buttonPad - topBarHeight/2 + iconRect.width/2
     textX = buttonPad + iconRect.width + iconPad
     buttonWidth = textX + textRect.width + buttonPad
-    SVG.move scope.icon, iconX
-    SVG.move scope.text, textX, topBarHeight/2 + textRect.height/2 - 3
+    # SVG.move scope.icon, iconX
+    # SVG.move scope.text, textX, topBarHeight/2 + textRect.height/2 - 3
     SVG.attrs scope.bg, width: buttonWidth
-    SVG.move scope.element, offsetX
+    # SVG.move scope.element, offsetX
     offsetX += buttonWidth
 
   

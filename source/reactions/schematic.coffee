@@ -1,13 +1,13 @@
 Take ["Action", "Dispatch", "Global", "Reaction", "root"],
 (      Action ,  Dispatch ,  Global ,  Reaction ,  root)->
   
-  Reaction "toggleAnimateMode", ()->
-    Action if Global.animateMode then "schematicMode" else "animateMode"
+  Reaction "Schematic:Toggle", ()->
+    Action if Global.animateMode then "Schematic:Show" else "Schematic:Hide"
   
-  Reaction "animateMode", ()->
+  Reaction "Schematic:Hide", ()->
     Global.animateMode = true
     Dispatch root, "animateMode"
   
-  Reaction "schematicMode", ()->
+  Reaction "Schematic:Show", ()->
     Global.animateMode = false
     Dispatch root, "schematicMode"

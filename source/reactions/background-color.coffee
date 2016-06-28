@@ -4,7 +4,7 @@ Take ["Action", "Dispatch", "Global", "Reaction", "root"],
   current = 1
   
   setColor = (index)->
-    root.getElement().style["background-color"] = colors[index % colors.length]
+    root.element.style["background-color"] = colors[index % colors.length]
   
   Reaction "setup", ()->
     setColor 1

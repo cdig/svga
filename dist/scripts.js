@@ -89,53 +89,6 @@
     return readWrite("enableHydraulicLines");
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter, enabled;
-    enabled = true;
-    Make("Highlighter", Highlighter = {
-      setup: function(highlighted) {
-        var highlight, len, m, mouseLeave, mouseOver, results;
-        if (highlighted == null) {
-          highlighted = [];
-        }
-        mouseOver = function(e) {
-          var highlight, len, m, results;
-          if (enabled) {
-            results = [];
-            for (m = 0, len = highlighted.length; m < len; m++) {
-              highlight = highlighted[m];
-              results.push(highlight.setAttribute("filter", "url(#highlightMatrix)"));
-            }
-            return results;
-          }
-        };
-        mouseLeave = function(e) {
-          var highlight, len, m, results;
-          results = [];
-          for (m = 0, len = highlighted.length; m < len; m++) {
-            highlight = highlighted[m];
-            results.push(highlight.removeAttribute("filter"));
-          }
-          return results;
-        };
-        results = [];
-        for (m = 0, len = highlighted.length; m < len; m++) {
-          highlight = highlighted[m];
-          highlight.addEventListener("mouseover", mouseOver);
-          results.push(highlight.addEventListener("mouseleave", mouseLeave));
-        }
-        return results;
-      },
-      enable: function() {
-        return enabled = true;
-      },
-      disable: function() {
-        return enabled = true;
-      }
-    });
-    return SVG.createColorMatrix("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
-  });
-
   (function() {
     var deferredCallbacks, rafCallbacks, requested, run;
     requested = false;
@@ -221,23 +174,942 @@
     });
   });
 
-  Take(["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"], function(Action, FlowArrows, SVGStyle, SVGTransform, Symbol) {
-    var addClass, getSymbol, makeScope, makeScopeTree;
-    setTimeout(function() {
-      var root, svg;
-      svg = document.rootElement;
-      root = makeScope("root", svg);
-      root.FlowArrows = FlowArrows();
-      Make("root", root);
-      return Take("SymbolsReady", function() {
-        makeScopeTree(root, svg);
-        Action("setup");
-        Action("schematicMode");
-        return setTimeout(function() {
-          return svg.style.opacity = 1;
+  Take(["DOMContentLoaded"], function() {
+    var SVG, createStops, defs, makePrivateProps, namespaces, props, root;
+    namespaces = {
+      svg: "http://www.w3.org/2000/svg",
+      "xlink:href": "http://www.w3.org/1999/xlink"
+    };
+    props = {
+      textContent: true
+    };
+    root = document.querySelector("svg");
+    defs = root.querySelector("defs");
+    Make("SVG", SVG = {
+      root: root,
+      defs: defs,
+      move: function(elm, x, y) {
+        if (y == null) {
+          y = 0;
+        }
+        throw "MOVE";
+      },
+      rotate: function(elm, r) {
+        throw "ROTATE";
+      },
+      origin: function(elm, ox, oy) {
+        throw "ORIGIN";
+      },
+      scale: function(elm, x, y) {
+        if (y == null) {
+          y = x;
+        }
+        throw "SCALE";
+      },
+      create: function(type, parent, attrs) {
+        var elm;
+        elm = document.createElementNS(namespaces.svg, type);
+        makePrivateProps(elm);
+        SVG.attrs(elm, attrs);
+        if (parent != null) {
+          SVG.append(parent, elm);
+        }
+        return elm;
+      },
+      clone: function(source, parent, attrs) {
+        var attr, child, elm, len, len1, m, n, ref, ref1;
+        elm = document.createElementNS(namespaces.svg, "g");
+        makePrivateProps(elm);
+        ref = source.attributes;
+        for (m = 0, len = ref.length; m < len; m++) {
+          attr = ref[m];
+          SVG.attr(elm, attr.name, attr.value);
+        }
+        SVG.attrs(elm, {
+          id: null
         });
+        SVG.attrs(elm, attrs);
+        ref1 = source.childNodes;
+        for (n = 0, len1 = ref1.length; n < len1; n++) {
+          child = ref1[n];
+          SVG.append(elm, child.cloneNode(true));
+        }
+        if (parent != null) {
+          SVG.append(parent, elm);
+        }
+        return elm;
+      },
+      append: function(parent, child) {
+        parent.appendChild(child);
+        return child;
+      },
+      prepend: function(parent, child) {
+        if (parent.hasChildNodes()) {
+          parent.insertBefore(child, parent.firstChild);
+        } else {
+          parent.appendChild(child);
+        }
+        return child;
+      },
+      attrs: function(elm, attrs) {
+        var k, v;
+        for (k in attrs) {
+          v = attrs[k];
+          SVG.attr(elm, k, v);
+        }
+        return elm;
+      },
+      attr: function(elm, k, v) {
+        if (v === void 0) {
+          return elm.getAttribute(k);
+        }
+        if (elm._SVG[k] !== v) {
+          elm._SVG[k] = v;
+          if (props[k] != null) {
+            elm[k] = v;
+          } else if (v != null) {
+            elm.setAttributeNS(namespaces[k], k, v);
+          } else {
+            elm.removeAttributeNS(namespaces[k], k);
+          }
+        }
+        return v;
+      },
+      grey: function(elm, l) {
+        SVG.attr(elm, "fill", "hsl(0, 0%, " + (l * 100) + "%)");
+        return elm;
+      },
+      hsl: function(elm, h, s, l) {
+        SVG.attr(elm, "fill", "hsl(" + (h * 360) + ", " + (s * 100) + "%, " + (l * 100) + "%)");
+        return elm;
+      },
+      createGradient: function() {
+        var attrs, gradient, name, stops, vertical;
+        name = arguments[0], vertical = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
+        attrs = vertical ? {
+          id: name,
+          x2: 0,
+          y2: 1
+        } : {
+          id: name
+        };
+        gradient = SVG.create("linearGradient", defs, attrs);
+        createStops(gradient, stops);
+        return gradient;
+      },
+      createRadialGradient: function() {
+        var gradient, name, stops;
+        name = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+        gradient = SVG.create("radialGradient", defs, {
+          id: name
+        });
+        createStops(gradient, stops);
+        return gradient;
+      },
+      createColorMatrixFilter: function(name, values) {
+        var filter;
+        filter = SVG.create("filter", defs, {
+          id: name
+        });
+        SVG.create("feColorMatrix", filter, {
+          "in": "SourceGraphic",
+          type: "matrix",
+          values: values
+        });
+        return filter;
+      }
+    });
+    createStops = function(gradient, stops) {
+      var attrs, i, len, m, stop;
+      stops = stops[0] instanceof Array ? stops[0] : stops;
+      for (i = m = 0, len = stops.length; m < len; i = ++m) {
+        stop = stops[i];
+        attrs = typeof stop === "string" ? {
+          "stop-color": stop,
+          offset: (100 * i / (stops.length - 1)) + "%"
+        } : {
+          "stop-color": stop.color,
+          offset: (100 * stop.offset) + "%"
+        };
+        SVG.create("stop", gradient, attrs);
+      }
+      return null;
+    };
+    return makePrivateProps = function(elm) {
+      return elm._SVG = {};
+    };
+  });
+
+  Take([], function() {
+    var Symbol, byInstanceName, bySymbolName, first;
+    bySymbolName = {};
+    byInstanceName = {};
+    first = true;
+    Symbol = function(symbolName, instanceNames, symbolFn) {
+      var instanceName, len, m, results, symbol;
+      if (first) {
+        Make("SymbolsReady");
+      }
+      first = false;
+      if (bySymbolName[symbolName] != null) {
+        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
+      }
+      symbol = {
+        create: symbolFn,
+        name: symbolName
+      };
+      bySymbolName[symbolName] = symbol;
+      results = [];
+      for (m = 0, len = instanceNames.length; m < len; m++) {
+        instanceName = instanceNames[m];
+        if (byInstanceName[instanceName] != null) {
+          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
+        }
+        results.push(byInstanceName[instanceName] = symbol);
+      }
+      return results;
+    };
+    Symbol.forSymbolName = function(symbolName) {
+      return bySymbolName[symbolName];
+    };
+    Symbol.forInstanceName = function(instanceName) {
+      return byInstanceName[instanceName];
+    };
+    return Make("Symbol", Symbol);
+  });
+
+  Take(["RequestDeferredRender", "SVG"], function(RequestDeferredRender, SVG) {
+    var TRS, makeProps;
+    makeProps = function(p, c, props) {
+      var trs;
+      return c._trs = trs = {
+        x: 0,
+        y: 0,
+        r: 0,
+        sx: 1,
+        sy: 1,
+        ox: 0,
+        oy: 0,
+        go: function() {
+          SVG.attr(p, "transform", "translate(" + trs.ox + "," + trs.oy + ") rotate(" + trs.r + ")");
+          return SVG.attr(c, "transform", "translate(" + (trs.ox - trs.x) + "," + (trs.oy - trs.y) + ") scale(" + trs.sx + "," + trs.sy + ")");
+        }
+      };
+    };
+    return Make("TRS", TRS = {
+      create: function(parent) {
+        var c, p;
+        p = SVG.create("g", parent, {
+          "class": "TRS P"
+        });
+        c = SVG.create("g", p, {
+          "class": "TRS C"
+        });
+        makeProps(p, c);
+        return c;
+      },
+      move: function(elm, x, y) {
+        if (y == null) {
+          y = 0;
+        }
+        elm._trs.x = x;
+        elm._trs.y = y;
+        RequestDeferredRender(elm._trs.go, true);
+        return elm;
+      },
+      rotate: function(elm, r) {
+        elm._trs.r = r * 360;
+        RequestDeferredRender(elm._trs.go, true);
+        return elm;
+      },
+      origin: function(elm, ox, oy) {
+        if (ox != null) {
+          elm._trs.ox = ox;
+        }
+        if (oy != null) {
+          elm._trs.oy = oy;
+        }
+        RequestDeferredRender(elm._trs.go, true);
+        return elm;
+      },
+      scale: function(elm, x, y) {
+        if (y == null) {
+          y = x;
+        }
+        elm._trs.sx = x;
+        elm._trs.sy = y;
+        RequestDeferredRender(elm._trs.go, true);
+        return elm;
+      }
+    });
+  });
+
+  (function() {
+    var Button;
+    return Make("button", Button = function(svgElement) {
+      var scope;
+      return scope = {
+        callbacks: [],
+        setup: function() {
+          return svgElement.addEventListener("click", scope.clicked);
+        },
+        setCallback: function(callback) {
+          return scope.callbacks.push(callback);
+        },
+        clicked: function() {
+          var callback, len, m, ref, results;
+          ref = scope.callbacks;
+          results = [];
+          for (m = 0, len = ref.length; m < len; m++) {
+            callback = ref[m];
+            results.push(callback());
+          }
+          return results;
+        }
+      };
+    });
+  })();
+
+  (function() {
+    return Take(["Ease", "Vector", "PointerInput"], function(Ease, Vector, PointerInput) {
+      var Crank;
+      return Make("crank", Crank = function(svgElement) {
+        var scope;
+        return scope = {
+          deadbands: [],
+          unmapped: 0,
+          domainMin: 0,
+          domainMax: 359,
+          rangeMin: -1,
+          rangeMax: 1,
+          oldAngle: 0,
+          newAngle: 0,
+          progress: 0,
+          rotation: 0,
+          callback: function() {},
+          setup: function() {
+            return PointerInput.addDown(svgElement, scope.mouseDown);
+          },
+          setCallback: function(callBackFunction) {
+            return scope.callback = callBackFunction;
+          },
+          getValue: function() {
+            return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+          },
+          setValue: function(input) {
+            return scope.unmapped = Ease.linear(input, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+          },
+          setDomain: function(min, max) {
+            scope.domainMin = min;
+            scope.domainMax = max;
+            if (scope.transform.angle < scope.domainMin) {
+              return scope.transform.angle = scope.rotation = scope.unmapped = scope.domainMin;
+            } else if (scope.transform.angle > scope.domainMax) {
+              return scope.transform.angle = scope.rotation = scope.unmapped = scope.domainMax;
+            }
+          },
+          setRange: function(min, max) {
+            scope.rangeMin = min;
+            return scope.rangeMax = max;
+          },
+          addDeadband: function(min, set, max) {
+            var deadband;
+            deadband = {
+              min: min,
+              set: set,
+              max: max
+            };
+            scope.deadbands.push(deadband);
+            return deadband;
+          },
+          begin: function(e) {
+            var clientRect, mousePos;
+            clientRect = svgElement.getBoundingClientRect();
+            scope.position = Vector.fromRectPos(clientRect);
+            scope.position.x += clientRect.width / 2;
+            scope.position.y += clientRect.height / 2;
+            mousePos = Vector.fromEventClient(e);
+            return scope.oldAngle = Math.atan2(mousePos.y - scope.position.y, mousePos.x - scope.position.x);
+          },
+          compute: function(e) {
+            var mousePos, progress;
+            mousePos = Vector.fromEventClient(e);
+            scope.newAngle = Math.atan2(mousePos.y - scope.position.y, mousePos.x - scope.position.x);
+            progress = scope.newAngle - scope.oldAngle;
+            if (progress > Math.PI) {
+              progress += -2 * Math.PI;
+            } else {
+              if (progress < -Math.PI) {
+                progress += 2 * Math.PI;
+              } else {
+                progress += 0;
+              }
+            }
+            scope.unmapped += progress * 180 / Math.PI;
+            return scope.update();
+          },
+          update: function() {
+            var band, len, m, ref, rotation;
+            scope.unmapped = Math.max(scope.domainMin, Math.min(scope.domainMax, scope.unmapped));
+            rotation = scope.unmapped;
+            ref = scope.deadbands;
+            for (m = 0, len = ref.length; m < len; m++) {
+              band = ref[m];
+              if (rotation > band.min && rotation < band.max) {
+                rotation = band.set;
+              }
+            }
+            scope.transform.angle = rotation;
+            scope.oldAngle = scope.newAngle;
+            if (typeof callback !== "undefined" && callback !== null) {
+              return callback();
+            }
+          },
+          mouseDown: function(e) {
+            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+            PointerInput.addUp(window, scope.mouseUp);
+            scope.begin(e);
+            return scope.compute(e);
+          },
+          mouseMove: function(e) {
+            return scope.compute(e);
+          },
+          mouseUp: function(e) {
+            PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
+            return PointerInput.removeUp(window, scope.mouseUp);
+          }
+        };
       });
     });
+  })();
+
+  Take(["Symbol", "SymbolsReady"], function(Symbol) {
+    return Symbol("DefaultElement", [], function(svgElement) {
+      var ref, scope, textElement;
+      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
+      return scope = {
+        setText: function(text) {
+          return textElement != null ? textElement.textContent = text : void 0;
+        }
+      };
+    });
+  });
+
+  Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
+    var Draggable, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+    vecFromEventGlobal = function(e) {
+      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+    };
+    getParentRect = function(element) {
+      var height, parent, rect, width;
+      parent = PureDom.querySelectorParent(element, "svg");
+      rect = parent.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      return rect;
+    };
+    mouseConversion = function(instance, position, parentElement, width, height) {
+      var diff, parentRect, x, xDiff, y, yDiff;
+      parentRect = getParentRect(parentElement);
+      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
+      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
+      diff = Math.max(xDiff, yDiff);
+      x = position.x * diff;
+      y = position.y * diff;
+      return {
+        x: x,
+        y: y
+      };
+    };
+    updateMousePos = function(e, mouse) {
+      mouse.pos = vecFromEventGlobal(e);
+      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+      return mouse.last = mouse.pos;
+    };
+    return Make("Draggable", Draggable = function(instance, parent) {
+      var scope;
+      if (parent == null) {
+        parent = null;
+      }
+      return scope = {
+        mouse: null,
+        dragging: false,
+        setup: function() {
+          var properties;
+          if (parent != null) {
+            properties = parent.getElement().getAttribute("viewBox").split(" ");
+            scope.viewWidth = parseFloat(properties[2]);
+            scope.viewHeight = parseFloat(properties[3]);
+          }
+          scope.mouse = {};
+          scope.mouse.pos = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.delta = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.last = {
+            x: 0,
+            y: 0
+          };
+          PointerInput.addDown(instance.grabber.getElement(), scope.mouseDown);
+          PointerInput.addMove(instance.getElement(), scope.mouseMove);
+          if (parent != null) {
+            PointerInput.addMove(parent.getElement(), scope.mouseMove);
+          }
+          PointerInput.addUp(instance.getElement(), scope.mouseUp);
+          if (parent != null) {
+            return PointerInput.addUp(parent.getElement(), scope.mouseUp);
+          }
+        },
+        mouseDown: function(e) {
+          updateMousePos(e, scope.mouse);
+          if (e.button === 0) {
+            return scope.dragging = true;
+          }
+        },
+        mouseMove: function(e) {
+          var newMouse;
+          updateMousePos(e, scope.mouse);
+          if (scope.dragging) {
+            if (parent != null) {
+              newMouse = mouseConversion(instance, scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
+            } else {
+              newMouse = {
+                x: scope.mouse.x,
+                y: scope.mouse.y
+              };
+            }
+            instance.transform.x += newMouse.x;
+            return instance.transform.y += newMouse.y;
+          }
+        },
+        mouseUp: function(e) {
+          return scope.dragging = false;
+        }
+      };
+    });
+  });
+
+  Take(["Reaction", "SVG", "Symbol"], function(Reaction, SVG, Symbol) {
+    Symbol("HydraulicLine", [], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          Reaction("animateMode", function() {
+            return svgElement.removeAttribute("filter");
+          });
+          return Reaction("schematicMode", function() {
+            return svgElement.setAttribute("filter", "url(#allblackMatrix)");
+          });
+        }
+      };
+    });
+    return SVG.createColorMatrixFilter("allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
+  });
+
+  (function() {
+    return Take(["Ease", "PointerInput", "Vector"], function(Ease, PointerInput, Vector) {
+      var joystick, knobMaxScale, knobMaxY, middleMaxY, stemMaxY, topMaxY;
+      knobMaxY = -30.1;
+      knobMaxScale = 0.84;
+      stemMaxY = -7.1;
+      topMaxY = -8;
+      middleMaxY = -4;
+      return Make("Joystick", joystick = function(svgElement) {
+        var scope;
+        return scope = {
+          movement: 0.0,
+          "default": 0.0,
+          down: false,
+          mousePos: {
+            x: 0,
+            y: 0
+          },
+          moved: false,
+          callbacks: [],
+          rangeMin: 0,
+          rangeMax: 1,
+          enabled: true,
+          sticky: true,
+          setup: function() {
+            scope.setTransforms();
+            PointerInput.addDown(svgElement, scope.mouseDown);
+            PointerInput.addMove(svgElement, scope.mouseMove);
+            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+            PointerInput.addUp(svgElement, scope.mouseUp);
+            return PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+          },
+          schematicMode: function() {
+            return scope.enabled = false;
+          },
+          animateMode: function() {
+            return scope.enabled = true;
+          },
+          setDefault: function(pos) {
+            scope["default"] = Ease.linear(pos, scope.rangeMin, scope.rangeMax, 0, 1, true);
+            scope.movement = scope["default"];
+            return scope.setTransforms();
+          },
+          setTransforms: function() {
+            scope.knob.child5.transform.y = scope.movement * knobMaxY;
+            scope.knob.child5.transform.scaleY = (1.0 - scope.movement) + scope.movement * knobMaxScale;
+            scope.knob.child4.transform.y = scope.movement * stemMaxY;
+            scope.knob.child3.transform.y = scope.movement * topMaxY;
+            return scope.knob.child2.transform.y = scope.movement * middleMaxY;
+          },
+          setRange: function(rMin, rMax) {
+            scope.rangeMin = rMin;
+            return scope.rangeMax = rMax;
+          },
+          setSticky: function(sticky) {
+            return scope.sticky = sticky;
+          },
+          mouseClick: function(e) {
+            scope.movement = scope["default"];
+            return scope.setTransforms();
+          },
+          mouseDown: function(e) {
+            if (scope.enabled) {
+              scope.down = true;
+              return scope.mousePos = Vector.fromEventClient(e);
+            }
+          },
+          mouseMove: function(e) {
+            var callback, distance, len, m, newPos, ref, results;
+            if (scope.down && scope.enabled) {
+              scope.moved = true;
+              newPos = Vector.fromEventClient(e);
+              distance = (newPos.y - scope.mousePos.y) / 100;
+              scope.mousePos = newPos;
+              scope.movement -= distance;
+              if (scope.movement > 1.0) {
+                scope.movement = 1.0;
+              } else if (scope.movement < 0.0) {
+                scope.movement = 0.0;
+              }
+              scope.setTransforms();
+              ref = scope.callbacks;
+              results = [];
+              for (m = 0, len = ref.length; m < len; m++) {
+                callback = ref[m];
+                results.push(callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax)));
+              }
+              return results;
+            }
+          },
+          mouseUp: function() {
+            var callback, len, m, ref;
+            if (!scope.down) {
+              return;
+            }
+            scope.down = false;
+            if (!scope.moved || !scope.sticky) {
+              scope.movement = scope["default"];
+              scope.setTransforms();
+              ref = scope.callbacks;
+              for (m = 0, len = ref.length; m < len; m++) {
+                callback = ref[m];
+                callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax));
+              }
+            }
+            return scope.moved = false;
+          },
+          setCallback: function(callback) {
+            return scope.callbacks.push(callback);
+          }
+        };
+      });
+    });
+  })();
+
+  Take(["Ease", "PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(Ease, PointerInput, PureDom, SVGTransform, Vector) {
+    var Slider, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
+    vecFromEventGlobal = function(e) {
+      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
+    };
+    getParentRect = function(element) {
+      var height, parent, rect, width;
+      parent = PureDom.querySelectorParent(element, "svg");
+      rect = parent.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      return rect;
+    };
+    mouseConversion = function(instance, position, parentElement, width, height) {
+      var diff, parentRect, x, xDiff, y, yDiff;
+      parentRect = getParentRect(parentElement);
+      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
+      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
+      diff = Math.max(xDiff, yDiff);
+      x = position.x * diff;
+      y = position.y * diff;
+      return {
+        x: x,
+        y: y
+      };
+    };
+    updateMousePos = function(e, mouse) {
+      mouse.pos = vecFromEventGlobal(e);
+      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
+      return mouse.last = mouse.pos;
+    };
+    return Make("slider", Slider = function(svgElement) {
+      var scope;
+      return scope = {
+        mouse: null,
+        horizontalSlider: true,
+        domainMin: 0,
+        domainMax: 359,
+        transformX: 0,
+        transformY: 0,
+        rangeMin: -1,
+        rangeMax: 1,
+        progress: 0,
+        dragging: false,
+        callback: function() {},
+        setup: function() {
+          var properties;
+          scope.mouse = {};
+          scope.mouse.pos = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.delta = {
+            x: 0,
+            y: 0
+          };
+          scope.mouse.last = {
+            x: 0,
+            y: 0
+          };
+          properties = scope.root.getElement().getAttribute("viewBox").split(" ");
+          scope.viewWidth = parseFloat(properties[2]);
+          scope.viewHeight = parseFloat(properties[3]);
+          return PointerInput.addDown(svgElement, scope.mouseDown);
+        },
+        setVertical: function() {
+          return scope.horizontalSlider = false;
+        },
+        setHorizontal: function() {
+          return scope.horizontalSlider = true;
+        },
+        setCallback: function(callBackFunction) {
+          return scope.callback = callBackFunction;
+        },
+        getValue: function() {
+          return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+        },
+        setValue: function(input) {
+          return scope.unmapped = Ease.linear(input, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+        },
+        setDomain: function(min, max) {
+          scope.domainMin = min;
+          return scope.domainMax = max;
+        },
+        setRange: function(min, max) {
+          scope.rangeMin = min;
+          return scope.rangeMax = max;
+        },
+        update: function() {
+          if (typeof callback !== "undefined" && callback !== null) {
+            return callback();
+          }
+        },
+        mouseDown: function(e) {
+          PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
+          PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
+          PointerInput.addUp(window, scope.mouseUp);
+          scope.dragging = true;
+          return updateMousePos(e, scope.mouse);
+        },
+        mouseMove: function(e) {
+          var callbackValue, newMouse;
+          updateMousePos(e, scope.mouse);
+          if (scope.dragging) {
+            if (typeof parent !== "undefined" && parent !== null) {
+              newMouse = mouseConversion(scope, scope.mouse.delta, scope.root.getElement(), scope.viewWidth, scope.viewHeight);
+            } else {
+              newMouse = {
+                x: scope.mouse.pos.x,
+                y: scope.mouse.y
+              };
+            }
+            callbackValue = 0;
+            if (scope.horizontalSlider) {
+              scope.transformX += newMouse.x;
+              scope.transform.x = scope.transformX;
+              if (scope.transform.x < scope.domainMin) {
+                scope.transform.x = scope.domainMin;
+              }
+              if (scope.transform.x > scope.domainMax) {
+                scope.transform.x = scope.domainMax;
+              }
+              callbackValue = Ease.linear(scope.transform.x, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+            } else {
+              scope.transformY += newMouse.y;
+              scope.transform.y = scope.transformY;
+              if (scope.transform.y < scope.domainMin) {
+                scope.transform.y = scope.domainMin;
+              }
+              if (scope.transform.y > scope.domainMax) {
+                scope.transform.y = scope.domainMax;
+              }
+              callbackValue = Ease.linear(scope.transform.y, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
+            }
+            return scope.callback(callbackValue);
+          }
+        },
+        mouseUp: function(e) {
+          scope.dragging = true;
+          PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
+          PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
+          return PointerInput.removeUp(window, scope.mouseUp);
+        }
+      };
+    });
+  });
+
+  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
+    var ControlPanel, bg, construct, controlPanel, elements, resize, topbarHeight;
+    topbarHeight = 48;
+    elements = [];
+    controlPanel = TRS.create(SVG.root, {
+      "class": "ControlPanel"
+    });
+    bg = SVG.create("rect", controlPanel, {
+      "class": "BG"
+    });
+    Resize(resize = function() {
+      var panelWidth;
+      panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
+      SVG.attr(bg, "width", panelWidth);
+      SVG.attr(bg, "height", window.innerHeight - topbarHeight);
+      return TRS.move(controlPanel, window.innerWidth - panelWidth, topbarHeight);
+    });
+    construct = function(name, fn) {
+      var i;
+      return i = elements.length;
+    };
+    return Make("ControlPanel", ControlPanel = {
+      addControl: function(name, cb) {
+        return Take(name, function(fn) {
+          return construct(name, fn);
+        });
+      }
+    });
+  });
+
+  Take(["PointerInput", "Resize", "SVG"], function(PointerInput, Resize, SVG) {
+    var TopBar, bg, buttonPad, computeLayout, construct, container, elements, iconPad, offsetX, resize, topBar, topBarHeight;
+    topBarHeight = 48;
+    buttonPad = 30;
+    iconPad = 4;
+    elements = {};
+    offsetX = 0;
+    topBar = SVG.create("g", SVG.root, {
+      "class": "TopBar"
+    });
+    bg = SVG.create("rect", topBar, {
+      height: 48,
+      fill: "url(#TopBarGradient)"
+    });
+    SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
+    container = SVG.create("g", topBar, {
+      "class": "Elements"
+    });
+    resize = function() {
+      var base, elm, len, m, results;
+      SVG.attrs(bg, {
+        width: window.innerWidth
+      });
+      results = [];
+      for (m = 0, len = elements.length; m < len; m++) {
+        elm = elements[m];
+        results.push(typeof (base = elm.scope).resize === "function" ? base.resize() : void 0);
+      }
+      return results;
+    };
+    construct = function(i, name, scope) {
+      name = name.replace("TB:", "");
+      scope.element = SVG.create("g", container, {
+        "class": "ui Element"
+      });
+      if (typeof scope.setup === "function") {
+        scope.setup(scope.element);
+      }
+      elements[name] = {
+        element: scope.element,
+        i: i,
+        name: name,
+        scope: scope
+      };
+      if (scope.resize != null) {
+        Resize(scope.resize);
+      }
+      if (scope.click != null) {
+        PointerInput.addClick(scope.element, scope.click);
+      }
+      if (scope.bg == null) {
+        scope.bg = SVG.create("rect", scope.element, {
+          "class": "BG",
+          height: topBarHeight
+        });
+      }
+      if (scope.icon == null) {
+        scope.icon = SVG.clone(document.getElementById(name.toLowerCase()), scope.element, {
+          height: topBarHeight - iconPad * 2,
+          width: topBarHeight - iconPad * 2
+        });
+      }
+      if (scope.text == null) {
+        scope.text = SVG.create("text", scope.element, {
+          "font-family": "Lato",
+          "font-size": 14,
+          fill: "#FFF",
+          textContent: name.toUpperCase()
+        });
+      }
+      return computeLayout(scope);
+    };
+    computeLayout = function(scope) {
+      var buttonWidth, iconRect, iconX, textRect, textX;
+      iconRect = scope.icon.getBoundingClientRect();
+      textRect = scope.text.getBoundingClientRect();
+      iconX = buttonPad - topBarHeight / 2 + iconRect.width / 2;
+      textX = buttonPad + iconRect.width + iconPad;
+      buttonWidth = textX + textRect.width + buttonPad;
+      SVG.attrs(scope.bg, {
+        width: buttonWidth
+      });
+      return offsetX += buttonWidth;
+    };
+    return Make("TopBar", TopBar = {
+      init: function() {
+        var elementNames;
+        elementNames = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        Take(elementNames, function() {
+          var elementScopes, i, len, m, scope;
+          elementScopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          for (i = m = 0, len = elementScopes.length; m < len; i = ++m) {
+            scope = elementScopes[i];
+            construct(i, elementNames[i], scope);
+          }
+          return Resize(resize);
+        });
+        return TopBar.init = function() {
+          throw "TopBar.init was called more than once.";
+        };
+      }
+    });
+  });
+
+  Take(["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"], function(Action, FlowArrows, SVGStyle, SVGTransform, Symbol) {
+    var addClass, getSymbol, makeScope, makeScopeTree, root, svg;
     makeScope = function(instanceName, element, parentScope) {
       var instance, symbol;
       symbol = getSymbol(instanceName);
@@ -275,12 +1147,17 @@
       results = [];
       for (m = 0, len = ref.length; m < len; m++) {
         childElement = ref[m];
-        if (!(childElement instanceof SVGGElement)) {
-          continue;
+        if (childElement instanceof SVGGElement) {
+          if (childElement._SVG == null) {
+            childName = (ref1 = childElement.getAttribute("id")) != null ? ref1.split("_")[0] : void 0;
+            childScope = makeScope(childName, childElement, parentScope);
+            results.push(makeScopeTree(childScope, childElement));
+          } else {
+            results.push(void 0);
+          }
+        } else {
+          results.push(void 0);
         }
-        childName = (ref1 = childElement.getAttribute("id")) != null ? ref1.split("_")[0] : void 0;
-        childScope = makeScope(childName, childElement, parentScope);
-        results.push(makeScopeTree(childScope, childElement));
       }
       return results;
     };
@@ -295,11 +1172,25 @@
         return Symbol.forSymbolName("DefaultElement");
       }
     };
-    return addClass = function(element, newClass) {
+    addClass = function(element, newClass) {
       var className;
       className = element.getAttribute("class");
       return element.setAttribute("class", className != null ? className + " " + newClass : newClass);
     };
+    svg = document.rootElement;
+    root = makeScope("root", svg);
+    root.FlowArrows = FlowArrows();
+    Make("root", root);
+    return Take("SymbolsReady", function() {
+      makeScopeTree(root, svg);
+      Action("setup");
+      return setTimeout(function() {
+        Action("Schematic:Show");
+        return setTimeout(function() {
+          return svg.style.opacity = 1;
+        });
+      });
+    });
   });
 
   Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
@@ -350,6 +1241,53 @@
         }
       };
     });
+  });
+
+  Take("SVG", function(SVG) {
+    var Highlighter, enabled;
+    enabled = true;
+    Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, len, m, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, len, m, results;
+          if (enabled) {
+            results = [];
+            for (m = 0, len = highlighted.length; m < len; m++) {
+              highlight = highlighted[m];
+              results.push(highlight.setAttribute("filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, len, m, results;
+          results = [];
+          for (m = 0, len = highlighted.length; m < len; m++) {
+            highlight = highlighted[m];
+            results.push(highlight.removeAttribute("filter"));
+          }
+          return results;
+        };
+        results = [];
+        for (m = 0, len = highlighted.length; m < len; m++) {
+          highlight = highlighted[m];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
+    });
+    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
   });
 
   getParentInverseTransform = function(root, element, currentTransform) {
@@ -695,903 +1633,32 @@
     });
   });
 
-  Take(["RequestDeferredRender", "DOMContentLoaded"], function(RequestDeferredRender) {
-    var SVG, createStops, defs, makePrivateProps, props, root, svgNS, xlinkNS;
-    svgNS = "http://www.w3.org/2000/svg";
-    xlinkNS = "http://www.w3.org/1999/xlink";
-    root = document.querySelector("svg");
-    defs = root.querySelector("defs");
-    props = {
-      textContent: true
-    };
-    Make("SVG", SVG = {
-      root: root,
-      defs: defs,
-      create: function(type, parent, attrs) {
-        var elm;
-        elm = document.createElementNS(svgNS, type);
-        makePrivateProps(elm);
-        SVG.attrs(elm, attrs);
-        if (parent != null) {
-          SVG.append(parent, elm);
-        }
-        return elm;
-      },
-      append: function(parent, child) {
-        parent.appendChild(child);
-        return child;
-      },
-      prepend: function(parent, child) {
-        if (parent.hasChildNodes()) {
-          parent.insertBefore(child, parent.firstChild);
-        } else {
-          parent.appendChild(child);
-        }
-        return child;
-      },
-      attrs: function(elm, attrs) {
-        var k, v;
-        for (k in attrs) {
-          v = attrs[k];
-          SVG.attr(elm, k, v);
-        }
-        return elm;
-      },
-      attr: function(elm, k, v) {
-        if (v == null) {
-          return elm.getAttribute(k);
-        }
-        if (elm._SVG[k] !== v) {
-          elm._SVG[k] = v;
-          if (k === "xlink:href") {
-            elm.setAttributeNS(xlinkNS, k, v);
-          } else if (props[k] != null) {
-            elm[k] = v;
-          } else {
-            elm.setAttribute(k, v);
-          }
-        }
-        return v;
-      },
-      move: function(elm, x, y) {
-        if (y == null) {
-          y = 0;
-        }
-        elm._SVG._tx = x;
-        elm._SVG._ty = y;
-        RequestDeferredRender(elm._SVG._applyTransform, true);
-        return elm;
-      },
-      rotate: function(elm, r, cx, cy) {
-        elm._SVG._r = r * 360;
-        if (cx != null) {
-          elm._SVG._cx = cx;
-        }
-        if (cy != null) {
-          elm._SVG._cy = cy;
-        }
-        RequestDeferredRender(elm._SVG._applyTransform, true);
-        return elm;
-      },
-      scale: function(elm, x, y) {
-        if (y == null) {
-          y = x;
-        }
-        elm._SVG._sx = x;
-        elm._SVG._sy = y;
-        RequestDeferredRender(elm._SVG._applyTransform, true);
-        return elm;
-      },
-      grey: function(elm, l) {
-        SVG.attr(elm, "fill", "hsl(0, 0%, " + (l * 100) + "%)");
-        return elm;
-      },
-      hsl: function(elm, h, s, l) {
-        SVG.attr(elm, "fill", "hsl(" + (h * 360) + ", " + (s * 100) + "%, " + (l * 100) + "%)");
-        return elm;
-      },
-      createGradient: function() {
-        var attrs, gradient, name, stops, vertical;
-        name = arguments[0], vertical = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
-        attrs = vertical ? {
-          id: name,
-          x2: 0,
-          y2: 1
-        } : {
-          id: name
-        };
-        gradient = SVG.create("linearGradient", defs, attrs);
-        createStops(gradient, stops);
-        return null;
-      },
-      createRadialGradient: function() {
-        var gradient, name, stops;
-        name = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-        gradient = SVG.create("radialGradient", defs, {
-          id: name
-        });
-        createStops(gradient, stops);
-        return null;
-      },
-      createColorMatrix: function(name, values) {
-        var attrs, filter;
-        filter = SVG.create("filter", defs, {
-          id: name
-        });
-        attrs = {
-          "in": "SourceGraphic",
-          type: "matrix",
-          values: values
-        };
-        SVG.create("feColorMatrix", filter, attrs);
-        return null;
-      }
-    });
-    createStops = function(gradient, stops) {
-      var attrs, i, len, m, stop;
-      stops = stops[0] instanceof Array ? stops[0] : stops;
-      for (i = m = 0, len = stops.length; m < len; i = ++m) {
-        stop = stops[i];
-        attrs = typeof stop === "string" ? {
-          "stop-color": stop,
-          offset: (100 * i / (stops.length - 1)) + "%"
-        } : {
-          "stop-color": stop.color,
-          offset: (100 * stop.offset) + "%"
-        };
-        SVG.create("stop", gradient, attrs);
-      }
-      return null;
-    };
-    return makePrivateProps = function(elm) {
-      return elm._SVG = {
-        _tx: 0,
-        _ty: 0,
-        _r: 0,
-        _cx: 0,
-        _cy: 0,
-        _sx: 1,
-        _sy: 1,
-        _applyTransform: function() {
-          return SVG.attr(elm, "transform", "translate(" + elm._SVG._tx + "," + elm._SVG._ty + ") rotate(" + elm._SVG._r + "," + elm._SVG._cx + "," + elm._SVG._cy + ") scale(" + elm._SVG._sx + "," + elm._SVG._sy + ")");
-        }
-      };
-    };
-  });
-
-  Take([], function() {
-    var Symbol, byInstanceName, bySymbolName, first;
-    bySymbolName = {};
-    byInstanceName = {};
-    first = true;
-    Make("Symbol", Symbol = function(symbolName, instanceNames, symbolFn) {
-      var instanceName, len, m, results, symbol;
-      if (first) {
-        Make("SymbolsReady");
-      }
-      first = false;
-      if (bySymbolName[symbolName] != null) {
-        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
-      }
-      symbol = {
-        create: symbolFn,
-        name: symbolName
-      };
-      bySymbolName[symbolName] = symbol;
-      results = [];
-      for (m = 0, len = instanceNames.length; m < len; m++) {
-        instanceName = instanceNames[m];
-        if (byInstanceName[instanceName] != null) {
-          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
-        }
-        results.push(byInstanceName[instanceName] = symbol);
-      }
-      return results;
-    });
-    Symbol.forSymbolName = function(symbolName) {
-      return bySymbolName[symbolName];
-    };
-    return Symbol.forInstanceName = function(instanceName) {
-      return byInstanceName[instanceName];
-    };
-  });
-
-  (function() {
-    var Button;
-    return Make("button", Button = function(svgElement) {
-      var scope;
-      return scope = {
-        callbacks: [],
-        setup: function() {
-          return svgElement.addEventListener("click", scope.clicked);
-        },
-        setCallback: function(callback) {
-          return scope.callbacks.push(callback);
-        },
-        clicked: function() {
-          var callback, len, m, ref, results;
-          ref = scope.callbacks;
-          results = [];
-          for (m = 0, len = ref.length; m < len; m++) {
-            callback = ref[m];
-            results.push(callback());
-          }
-          return results;
-        }
-      };
-    });
-  })();
-
-  (function() {
-    return Take(["Ease", "Vector", "PointerInput"], function(Ease, Vector, PointerInput) {
-      var Crank;
-      return Make("crank", Crank = function(svgElement) {
-        var scope;
-        return scope = {
-          deadbands: [],
-          unmapped: 0,
-          domainMin: 0,
-          domainMax: 359,
-          rangeMin: -1,
-          rangeMax: 1,
-          oldAngle: 0,
-          newAngle: 0,
-          progress: 0,
-          rotation: 0,
-          callback: function() {},
-          setup: function() {
-            return PointerInput.addDown(svgElement, scope.mouseDown);
-          },
-          setCallback: function(callBackFunction) {
-            return scope.callback = callBackFunction;
-          },
-          getValue: function() {
-            return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
-          },
-          setValue: function(input) {
-            return scope.unmapped = Ease.linear(input, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
-          },
-          setDomain: function(min, max) {
-            scope.domainMin = min;
-            scope.domainMax = max;
-            if (scope.transform.angle < scope.domainMin) {
-              return scope.transform.angle = scope.rotation = scope.unmapped = scope.domainMin;
-            } else if (scope.transform.angle > scope.domainMax) {
-              return scope.transform.angle = scope.rotation = scope.unmapped = scope.domainMax;
-            }
-          },
-          setRange: function(min, max) {
-            scope.rangeMin = min;
-            return scope.rangeMax = max;
-          },
-          addDeadband: function(min, set, max) {
-            var deadband;
-            deadband = {
-              min: min,
-              set: set,
-              max: max
-            };
-            scope.deadbands.push(deadband);
-            return deadband;
-          },
-          begin: function(e) {
-            var clientRect, mousePos;
-            clientRect = svgElement.getBoundingClientRect();
-            scope.position = Vector.fromRectPos(clientRect);
-            scope.position.x += clientRect.width / 2;
-            scope.position.y += clientRect.height / 2;
-            mousePos = Vector.fromEventClient(e);
-            return scope.oldAngle = Math.atan2(mousePos.y - scope.position.y, mousePos.x - scope.position.x);
-          },
-          compute: function(e) {
-            var mousePos, progress;
-            mousePos = Vector.fromEventClient(e);
-            scope.newAngle = Math.atan2(mousePos.y - scope.position.y, mousePos.x - scope.position.x);
-            progress = scope.newAngle - scope.oldAngle;
-            if (progress > Math.PI) {
-              progress += -2 * Math.PI;
-            } else {
-              if (progress < -Math.PI) {
-                progress += 2 * Math.PI;
-              } else {
-                progress += 0;
-              }
-            }
-            scope.unmapped += progress * 180 / Math.PI;
-            return scope.update();
-          },
-          update: function() {
-            var band, len, m, ref, rotation;
-            scope.unmapped = Math.max(scope.domainMin, Math.min(scope.domainMax, scope.unmapped));
-            rotation = scope.unmapped;
-            ref = scope.deadbands;
-            for (m = 0, len = ref.length; m < len; m++) {
-              band = ref[m];
-              if (rotation > band.min && rotation < band.max) {
-                rotation = band.set;
-              }
-            }
-            scope.transform.angle = rotation;
-            scope.oldAngle = scope.newAngle;
-            if (typeof callback !== "undefined" && callback !== null) {
-              return callback();
-            }
-          },
-          mouseDown: function(e) {
-            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
-            PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
-            PointerInput.addUp(window, scope.mouseUp);
-            scope.begin(e);
-            return scope.compute(e);
-          },
-          mouseMove: function(e) {
-            return scope.compute(e);
-          },
-          mouseUp: function(e) {
-            PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
-            PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
-            return PointerInput.removeUp(window, scope.mouseUp);
-          }
-        };
-      });
-    });
-  })();
-
-  Take(["Symbol", "SymbolsReady"], function(Symbol) {
-    return Symbol("DefaultElement", [], function(svgElement) {
-      var ref, scope, textElement;
-      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
-      return scope = {
-        setText: function(text) {
-          return textElement != null ? textElement.textContent = text : void 0;
-        }
-      };
-    });
-  });
-
-  Take(["PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(PointerInput, PureDom, SVGTransform, Vector) {
-    var Draggable, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
-    vecFromEventGlobal = function(e) {
-      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
-    };
-    getParentRect = function(element) {
-      var height, parent, rect, width;
-      parent = PureDom.querySelectorParent(element, "svg");
-      rect = parent.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
-      return rect;
-    };
-    mouseConversion = function(instance, position, parentElement, width, height) {
-      var diff, parentRect, x, xDiff, y, yDiff;
-      parentRect = getParentRect(parentElement);
-      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
-      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
-      diff = Math.max(xDiff, yDiff);
-      x = position.x * diff;
-      y = position.y * diff;
-      return {
-        x: x,
-        y: y
-      };
-    };
-    updateMousePos = function(e, mouse) {
-      mouse.pos = vecFromEventGlobal(e);
-      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
-      return mouse.last = mouse.pos;
-    };
-    return Make("Draggable", Draggable = function(instance, parent) {
-      var scope;
-      if (parent == null) {
-        parent = null;
-      }
-      return scope = {
-        mouse: null,
-        dragging: false,
-        setup: function() {
-          var properties;
-          if (parent != null) {
-            properties = parent.getElement().getAttribute("viewBox").split(" ");
-            scope.viewWidth = parseFloat(properties[2]);
-            scope.viewHeight = parseFloat(properties[3]);
-          }
-          scope.mouse = {};
-          scope.mouse.pos = {
-            x: 0,
-            y: 0
-          };
-          scope.mouse.delta = {
-            x: 0,
-            y: 0
-          };
-          scope.mouse.last = {
-            x: 0,
-            y: 0
-          };
-          PointerInput.addDown(instance.grabber.getElement(), scope.mouseDown);
-          PointerInput.addMove(instance.getElement(), scope.mouseMove);
-          if (parent != null) {
-            PointerInput.addMove(parent.getElement(), scope.mouseMove);
-          }
-          PointerInput.addUp(instance.getElement(), scope.mouseUp);
-          if (parent != null) {
-            return PointerInput.addUp(parent.getElement(), scope.mouseUp);
-          }
-        },
-        mouseDown: function(e) {
-          updateMousePos(e, scope.mouse);
-          if (e.button === 0) {
-            return scope.dragging = true;
-          }
-        },
-        mouseMove: function(e) {
-          var newMouse;
-          updateMousePos(e, scope.mouse);
-          if (scope.dragging) {
-            if (parent != null) {
-              newMouse = mouseConversion(instance, scope.mouse.delta, parent.getElement(), scope.viewWidth, scope.viewHeight);
-            } else {
-              newMouse = {
-                x: scope.mouse.x,
-                y: scope.mouse.y
-              };
-            }
-            instance.transform.x += newMouse.x;
-            return instance.transform.y += newMouse.y;
-          }
-        },
-        mouseUp: function(e) {
-          return scope.dragging = false;
-        }
-      };
-    });
-  });
-
-  Take(["Reaction", "SVG", "Symbol", "SymbolsReady"], function(Reaction, SVG, Symbol) {
-    Symbol("HydraulicLine", [], function(svgElement) {
-      var scope;
-      return scope = {
-        setup: function() {
-          Reaction("animateMode", function() {
-            return svgElement.removeAttribute("filter");
-          });
-          return Reaction("schematicMode", function() {
-            return svgElement.setAttribute("filter", "url(#allblackMatrix)");
-          });
-        }
-      };
-    });
-    return SVG.createColorMatrix("allblackMatrix", "0   0   0    0   0 0   0   0    0   0 0   0   0    0   0 0   0   0    1   0");
-  });
-
-  (function() {
-    return Take(["Ease", "PointerInput", "Vector"], function(Ease, PointerInput, Vector) {
-      var joystick, knobMaxScale, knobMaxY, middleMaxY, stemMaxY, topMaxY;
-      knobMaxY = -30.1;
-      knobMaxScale = 0.84;
-      stemMaxY = -7.1;
-      topMaxY = -8;
-      middleMaxY = -4;
-      return Make("Joystick", joystick = function(svgElement) {
-        var scope;
-        return scope = {
-          movement: 0.0,
-          "default": 0.0,
-          down: false,
-          mousePos: {
-            x: 0,
-            y: 0
-          },
-          moved: false,
-          callbacks: [],
-          rangeMin: 0,
-          rangeMax: 1,
-          enabled: true,
-          sticky: true,
-          setup: function() {
-            scope.setTransforms();
-            PointerInput.addDown(svgElement, scope.mouseDown);
-            PointerInput.addMove(svgElement, scope.mouseMove);
-            PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
-            PointerInput.addUp(svgElement, scope.mouseUp);
-            return PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
-          },
-          schematicMode: function() {
-            return scope.enabled = false;
-          },
-          animateMode: function() {
-            return scope.enabled = true;
-          },
-          setDefault: function(pos) {
-            scope["default"] = Ease.linear(pos, scope.rangeMin, scope.rangeMax, 0, 1, true);
-            scope.movement = scope["default"];
-            return scope.setTransforms();
-          },
-          setTransforms: function() {
-            scope.knob.child5.transform.y = scope.movement * knobMaxY;
-            scope.knob.child5.transform.scaleY = (1.0 - scope.movement) + scope.movement * knobMaxScale;
-            scope.knob.child4.transform.y = scope.movement * stemMaxY;
-            scope.knob.child3.transform.y = scope.movement * topMaxY;
-            return scope.knob.child2.transform.y = scope.movement * middleMaxY;
-          },
-          setRange: function(rMin, rMax) {
-            scope.rangeMin = rMin;
-            return scope.rangeMax = rMax;
-          },
-          setSticky: function(sticky) {
-            return scope.sticky = sticky;
-          },
-          mouseClick: function(e) {
-            scope.movement = scope["default"];
-            return scope.setTransforms();
-          },
-          mouseDown: function(e) {
-            if (scope.enabled) {
-              scope.down = true;
-              return scope.mousePos = Vector.fromEventClient(e);
-            }
-          },
-          mouseMove: function(e) {
-            var callback, distance, len, m, newPos, ref, results;
-            if (scope.down && scope.enabled) {
-              scope.moved = true;
-              newPos = Vector.fromEventClient(e);
-              distance = (newPos.y - scope.mousePos.y) / 100;
-              scope.mousePos = newPos;
-              scope.movement -= distance;
-              if (scope.movement > 1.0) {
-                scope.movement = 1.0;
-              } else if (scope.movement < 0.0) {
-                scope.movement = 0.0;
-              }
-              scope.setTransforms();
-              ref = scope.callbacks;
-              results = [];
-              for (m = 0, len = ref.length; m < len; m++) {
-                callback = ref[m];
-                results.push(callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax)));
-              }
-              return results;
-            }
-          },
-          mouseUp: function() {
-            var callback, len, m, ref;
-            if (!scope.down) {
-              return;
-            }
-            scope.down = false;
-            if (!scope.moved || !scope.sticky) {
-              scope.movement = scope["default"];
-              scope.setTransforms();
-              ref = scope.callbacks;
-              for (m = 0, len = ref.length; m < len; m++) {
-                callback = ref[m];
-                callback(Ease.linear(scope.movement, 0, 1, scope.rangeMin, scope.rangeMax));
-              }
-            }
-            return scope.moved = false;
-          },
-          setCallback: function(callback) {
-            return scope.callbacks.push(callback);
-          }
-        };
-      });
-    });
-  })();
-
-  Take(["Ease", "PointerInput", "PureDom", "SVGTransform", "Vector", "DOMContentLoaded"], function(Ease, PointerInput, PureDom, SVGTransform, Vector) {
-    var Slider, getParentRect, mouseConversion, updateMousePos, vecFromEventGlobal;
-    vecFromEventGlobal = function(e) {
-      return Vector.add(Vector.create(e.clientX, e.clientY), Vector.fromPageOffset());
-    };
-    getParentRect = function(element) {
-      var height, parent, rect, width;
-      parent = PureDom.querySelectorParent(element, "svg");
-      rect = parent.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
-      return rect;
-    };
-    mouseConversion = function(instance, position, parentElement, width, height) {
-      var diff, parentRect, x, xDiff, y, yDiff;
-      parentRect = getParentRect(parentElement);
-      xDiff = width / parentElement.getBoundingClientRect().width / instance.transform.scale;
-      yDiff = height / parentElement.getBoundingClientRect().height / instance.transform.scale;
-      diff = Math.max(xDiff, yDiff);
-      x = position.x * diff;
-      y = position.y * diff;
-      return {
-        x: x,
-        y: y
-      };
-    };
-    updateMousePos = function(e, mouse) {
-      mouse.pos = vecFromEventGlobal(e);
-      mouse.delta = Vector.subtract(mouse.pos, mouse.last);
-      return mouse.last = mouse.pos;
-    };
-    return Make("slider", Slider = function(svgElement) {
-      var scope;
-      return scope = {
-        mouse: null,
-        horizontalSlider: true,
-        domainMin: 0,
-        domainMax: 359,
-        transformX: 0,
-        transformY: 0,
-        rangeMin: -1,
-        rangeMax: 1,
-        progress: 0,
-        dragging: false,
-        callback: function() {},
-        setup: function() {
-          var properties;
-          scope.mouse = {};
-          scope.mouse.pos = {
-            x: 0,
-            y: 0
-          };
-          scope.mouse.delta = {
-            x: 0,
-            y: 0
-          };
-          scope.mouse.last = {
-            x: 0,
-            y: 0
-          };
-          properties = scope.root.getElement().getAttribute("viewBox").split(" ");
-          scope.viewWidth = parseFloat(properties[2]);
-          scope.viewHeight = parseFloat(properties[3]);
-          return PointerInput.addDown(svgElement, scope.mouseDown);
-        },
-        setVertical: function() {
-          return scope.horizontalSlider = false;
-        },
-        setHorizontal: function() {
-          return scope.horizontalSlider = true;
-        },
-        setCallback: function(callBackFunction) {
-          return scope.callback = callBackFunction;
-        },
-        getValue: function() {
-          return Ease.linear(scope.transform.angle, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
-        },
-        setValue: function(input) {
-          return scope.unmapped = Ease.linear(input, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
-        },
-        setDomain: function(min, max) {
-          scope.domainMin = min;
-          return scope.domainMax = max;
-        },
-        setRange: function(min, max) {
-          scope.rangeMin = min;
-          return scope.rangeMax = max;
-        },
-        update: function() {
-          if (typeof callback !== "undefined" && callback !== null) {
-            return callback();
-          }
-        },
-        mouseDown: function(e) {
-          PointerInput.addMove(scope.root.getElement(), scope.mouseMove);
-          PointerInput.addUp(scope.root.getElement(), scope.mouseUp);
-          PointerInput.addUp(window, scope.mouseUp);
-          scope.dragging = true;
-          return updateMousePos(e, scope.mouse);
-        },
-        mouseMove: function(e) {
-          var callbackValue, newMouse;
-          updateMousePos(e, scope.mouse);
-          if (scope.dragging) {
-            if (typeof parent !== "undefined" && parent !== null) {
-              newMouse = mouseConversion(scope, scope.mouse.delta, scope.root.getElement(), scope.viewWidth, scope.viewHeight);
-            } else {
-              newMouse = {
-                x: scope.mouse.pos.x,
-                y: scope.mouse.y
-              };
-            }
-            callbackValue = 0;
-            if (scope.horizontalSlider) {
-              scope.transformX += newMouse.x;
-              scope.transform.x = scope.transformX;
-              if (scope.transform.x < scope.domainMin) {
-                scope.transform.x = scope.domainMin;
-              }
-              if (scope.transform.x > scope.domainMax) {
-                scope.transform.x = scope.domainMax;
-              }
-              callbackValue = Ease.linear(scope.transform.x, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
-            } else {
-              scope.transformY += newMouse.y;
-              scope.transform.y = scope.transformY;
-              if (scope.transform.y < scope.domainMin) {
-                scope.transform.y = scope.domainMin;
-              }
-              if (scope.transform.y > scope.domainMax) {
-                scope.transform.y = scope.domainMax;
-              }
-              callbackValue = Ease.linear(scope.transform.y, scope.domainMin, scope.domainMax, scope.rangeMin, scope.rangeMax);
-            }
-            return scope.callback(callbackValue);
-          }
-        },
-        mouseUp: function(e) {
-          scope.dragging = true;
-          PointerInput.removeMove(scope.root.getElement(), scope.mouseMove);
-          PointerInput.removeUp(scope.root.getElement(), scope.mouseUp);
-          return PointerInput.removeUp(window, scope.mouseUp);
-        }
-      };
-    });
-  });
-
-  Take(["PointerInput", "Resize", "SVG"], function(PointerInput, Resize, SVG) {
-    var ControlPanel, bg, construct, controlPanel, elements, resize, topbarHeight;
-    topbarHeight = 48;
-    elements = [];
-    controlPanel = SVG.create("g", SVG.root, {
-      "class": "ControlPanel"
-    });
-    bg = SVG.create("rect", controlPanel, {
-      "class": "BG"
-    });
-    Resize(resize = function() {
-      var panelWidth;
-      panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
-      SVG.attr(bg, "width", panelWidth);
-      SVG.attr(bg, "height", window.innerHeight - topbarHeight);
-      return SVG.move(controlPanel, window.innerWidth - panelWidth, topbarHeight);
-    });
-    construct = function(name, fn) {
-      var i;
-      return i = elements.length;
-    };
-    return Make("ControlPanel", ControlPanel = {
-      addControl: function(name, cb) {
-        return Take(name, function(fn) {
-          return construct(name, fn);
-        });
-      }
-    });
-  });
-
-  Take(["PointerInput", "Resize", "SVG"], function(PointerInput, Resize, SVG) {
-    var TopBar, bg, buttonPad, computeLayout, construct, container, elements, iconPad, offsetX, resize, topBar, topBarHeight;
-    topBarHeight = 48;
-    buttonPad = 30;
-    iconPad = 4;
-    elements = {};
-    offsetX = 0;
-    topBar = SVG.create("g", SVG.root, {
-      "class": "TopBar"
-    });
-    bg = SVG.create("rect", topBar, {
-      height: 48,
-      fill: "url(#TopBarGradient)"
-    });
-    SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
-    container = SVG.create("g", topBar, {
-      "class": "Elements"
-    });
-    resize = function() {
-      var base, elm, len, m, results;
-      SVG.attrs(bg, {
-        width: window.innerWidth
-      });
-      SVG.move(container, window.innerWidth / 2 - offsetX / 2);
-      results = [];
-      for (m = 0, len = elements.length; m < len; m++) {
-        elm = elements[m];
-        results.push(typeof (base = elm.scope).resize === "function" ? base.resize() : void 0);
-      }
-      return results;
-    };
-    construct = function(i, name, scope) {
-      name = name.replace("TB:", "");
-      scope.element = SVG.create("g", container, {
-        "class": "ui Element"
-      });
-      if (typeof scope.setup === "function") {
-        scope.setup(scope.element);
-      }
-      elements[name] = {
-        element: scope.element,
-        i: i,
-        name: name,
-        scope: scope
-      };
-      if (scope.resize != null) {
-        Resize(scope.resize);
-      }
-      if (scope.click != null) {
-        PointerInput.addClick(scope.element, scope.click);
-      }
-      if (scope.bg == null) {
-        scope.bg = SVG.create("rect", scope.element, {
-          "class": "BG",
-          height: topBarHeight
-        });
-      }
-      if (scope.icon == null) {
-        scope.icon = SVG.create("use", scope.element, {
-          "xlink:href": "#" + name.toLowerCase(),
-          height: topBarHeight - iconPad * 2,
-          width: topBarHeight - iconPad * 2,
-          y: iconPad
-        });
-      }
-      if (scope.text == null) {
-        scope.text = SVG.create("text", scope.element, {
-          "font-family": "Lato",
-          "font-size": 14,
-          fill: "#FFF",
-          textContent: name.toUpperCase()
-        });
-      }
-      return computeLayout(scope);
-    };
-    computeLayout = function(scope) {
-      var buttonWidth, iconRect, iconX, textRect, textX;
-      iconRect = scope.icon.getBoundingClientRect();
-      textRect = scope.text.getBoundingClientRect();
-      iconX = buttonPad - topBarHeight / 2 + iconRect.width / 2;
-      textX = buttonPad + iconRect.width + iconPad;
-      buttonWidth = textX + textRect.width + buttonPad;
-      SVG.move(scope.icon, iconX);
-      SVG.move(scope.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
-      SVG.attrs(scope.bg, {
-        width: buttonWidth
-      });
-      SVG.move(scope.element, offsetX);
-      return offsetX += buttonWidth;
-    };
-    return Make("TopBar", TopBar = {
-      init: function() {
-        var elementNames;
-        elementNames = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        Take(elementNames, function() {
-          var elementScopes, i, len, m, scope;
-          elementScopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          for (i = m = 0, len = elementScopes.length; m < len; i = ++m) {
-            scope = elementScopes[i];
-            construct(i, elementNames[i], scope);
-          }
-          return Resize(resize);
-        });
-        return TopBar.init = function() {
-          throw "TopBar.init was called more than once.";
-        };
-      }
-    });
-  });
-
-  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
-    Reaction("toggleAnimateMode", function() {
-      return Action(Global.animateMode ? "schematicMode" : "animateMode");
-    });
-    Reaction("animateMode", function() {
-      Global.animateMode = true;
-      return Dispatch(root, "animateMode");
-    });
-    return Reaction("schematicMode", function() {
-      Global.animateMode = false;
-      return Dispatch(root, "schematicMode");
-    });
-  });
-
   Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
     var colors, current, setColor;
     colors = ["#666", "#bbb", "#fff"];
     current = 1;
     setColor = function(index) {
-      return root.getElement().style["background-color"] = colors[index % colors.length];
+      return root.element.style["background-color"] = colors[index % colors.length];
     };
     Reaction("setup", function() {
       return setColor(1);
     });
     return Reaction("cycleBackgroundColor", function() {
       return setColor(++current);
+    });
+  });
+
+  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
+    Reaction("Schematic:Toggle", function() {
+      return Action(Global.animateMode ? "Schematic:Show" : "Schematic:Hide");
+    });
+    Reaction("Schematic:Hide", function() {
+      Global.animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("Schematic:Show", function() {
+      Global.animateMode = false;
+      return Dispatch(root, "schematicMode");
     });
   });
 

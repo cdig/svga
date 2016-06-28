@@ -1,94 +1,92 @@
 # These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
 # They're not to be used by content, since they might endure breaking changes at any time.
 
-Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
-  svgNS = "http://www.w3.org/2000/svg"
-  xlinkNS = "http://www.w3.org/1999/xlink"
+Take ["DOMContentLoaded"], ()->
+  namespaces =
+    svg: "http://www.w3.org/2000/svg"
+    "xlink:href": "http://www.w3.org/1999/xlink"
+  props =
+    textContent: true
+    # additional props will be listed here as needed
   root = document.querySelector "svg"
   defs = root.querySelector "defs"
-  props = textContent: true # additional props will be listed here as needed
   
   Make "SVG", SVG =
     root: root
     defs: defs
     
+    move: (elm, x, y = 0)-> throw "MOVE"
+    rotate: (elm, r)-> throw "ROTATE"
+    origin: (elm, ox, oy)-> throw "ORIGIN"
+    scale: (elm, x, y = x)-> throw "SCALE"
+    
     create: (type, parent, attrs)->
-      elm = document.createElementNS svgNS, type
+      elm = document.createElementNS namespaces.svg, type
       makePrivateProps elm
       SVG.attrs elm, attrs
       SVG.append parent, elm if parent?
-      elm # Chainable
+      elm # Composable
+    
+    clone: (source, parent, attrs)->
+      elm = document.createElementNS namespaces.svg, "g"
+      makePrivateProps elm
+      SVG.attr elm, attr.name, attr.value for attr in source.attributes
+      SVG.attrs elm, id: null
+      SVG.attrs elm, attrs
+      SVG.append elm, child.cloneNode true for child in source.childNodes
+      SVG.append parent, elm if parent?
+      elm # Composable
     
     append: (parent, child)->
       parent.appendChild child
-      child # Chainable
+      child # Composable
     
     prepend: (parent, child)->
       if parent.hasChildNodes()
         parent.insertBefore child, parent.firstChild
       else
         parent.appendChild child
-      child # Chainable
+      child # Composable
     
     attrs: (elm, attrs)->
       SVG.attr elm, k, v for k, v of attrs
-      elm # Chainable
+      elm # Composable
     
     attr: (elm, k, v)->
-      return elm.getAttribute k unless v?
+      return elm.getAttribute k if v is undefined
       if elm._SVG[k] isnt v
         elm._SVG[k] = v
-        if k is "xlink:href"
-          elm.setAttributeNS xlinkNS, k, v
-        else if props[k]?
+        if props[k]?
           elm[k] = v
+        else if v?
+          elm.setAttributeNS namespaces[k], k, v
         else
-          elm.setAttribute k, v
-      v
-    
-    move: (elm, x, y = 0)->
-      elm._SVG._tx = x
-      elm._SVG._ty = y
-      RequestDeferredRender elm._SVG._applyTransform, true
-      elm # Chainable
-    
-    rotate: (elm, r, cx, cy)->
-      elm._SVG._r = r * 360
-      elm._SVG._cx = cx if cx?
-      elm._SVG._cy = cy if cy?
-      RequestDeferredRender elm._SVG._applyTransform, true
-      elm # Chainable
-    
-    scale: (elm, x, y = x)->
-      elm._SVG._sx = x
-      elm._SVG._sy = y
-      RequestDeferredRender elm._SVG._applyTransform, true
-      elm # Chainable
+          elm.removeAttributeNS namespaces[k], k
+      v # Not Composable
     
     grey: (elm, l)->
       SVG.attr elm, "fill", "hsl(0, 0%, #{l*100}%)"
-      elm # Chainable
+      elm # Composable
 
     hsl: (elm, h, s, l)->
       SVG.attr elm, "fill", "hsl(#{h*360}, #{s*100}%, #{l*100}%)"
-      elm # Chainable
+      elm # Composable
     
     createGradient: (name, vertical, stops...)->
       attrs = if vertical then { id: name, x2: 0, y2: 1 } else { id: name }
       gradient = SVG.create "linearGradient", defs, attrs
       createStops gradient, stops
-      null # Not Chainable
+      gradient # Not Composable
     
     createRadialGradient: (name, stops...)->
       gradient = SVG.create "radialGradient", defs, id: name
       createStops gradient, stops
-      null # Not Chainable
+      gradient # Not Composable
     
-    createColorMatrix: (name, values)->
+    createColorMatrixFilter: (name, values)->
       filter = SVG.create "filter", defs, id: name
-      attrs = { in: "SourceGraphic", type: "matrix", values: values }
-      SVG.create "feColorMatrix", filter, attrs
-      null # Not Chainable
+      SVG.create "feColorMatrix", filter, in: "SourceGraphic", type: "matrix", values: values
+      filter # Not Composable
   
   
   createStops = (gradient, stops)->
@@ -99,11 +97,7 @@ Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
       else
         { "stop-color": stop.color, offset: (100 * stop.offset) + "%" }
       SVG.create "stop", gradient, attrs
-    null # Not Chainable
-  
+    null # Not Composable
   
   makePrivateProps = (elm)->
-    elm._SVG =
-      _tx:0, _ty:0, _r:0, _cx:0, _cy:0, _sx:1, _sy:1
-      _applyTransform: ()->
-        SVG.attr elm, "transform", "translate(#{elm._SVG._tx},#{elm._SVG._ty}) rotate(#{elm._SVG._r},#{elm._SVG._cx},#{elm._SVG._cy}) scale(#{elm._SVG._sx},#{elm._SVG._sy})"
+    elm._SVG = {}

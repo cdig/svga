@@ -1,22 +1,6 @@
 Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentLoaded"],
 (      Action ,  FlowArrows ,  SVGStyle ,  SVGTransform ,  Symbol)->
   
-  setTimeout ()-> # Allows forward references
-    svg = document.rootElement
-    root = makeScope "root", svg
-    root.FlowArrows = FlowArrows()
-    
-    # This is useful for other systems that aren't part of the scope tree but that need access to it.
-    Make "root", root
-    
-    Take "SymbolsReady", ()->
-      makeScopeTree root, svg
-      Action "setup"
-      Action "schematicMode"
-      setTimeout ()->
-        svg.style.opacity = 1
-  
-  
   makeScope = (instanceName, element, parentScope)->
     symbol = getSymbol instanceName
     addClass element, symbol.name
@@ -34,10 +18,12 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentL
   
   
   makeScopeTree = (parentScope, parentElement)->
-    for childElement in parentElement.childNodes when childElement instanceof SVGGElement
-      childName = childElement.getAttribute("id")?.split("_")[0]
-      childScope = makeScope childName, childElement, parentScope
-      makeScopeTree childScope, childElement
+    for childElement in parentElement.childNodes
+      if childElement instanceof SVGGElement # Only set up <g> elements
+        if not childElement._SVG? # Don't set up generated elements
+          childName = childElement.getAttribute("id")?.split("_")[0]
+          childScope = makeScope childName, childElement, parentScope
+          makeScopeTree childScope, childElement
       
   
   getSymbol = (instanceName)->
@@ -49,8 +35,26 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "Symbol", "DOMContentL
     else
       Symbol.forSymbolName "DefaultElement"
   
-    
+  
   addClass = (element, newClass)->
     className = element.getAttribute "class"
     # Unfortunately, we can't just use classList in SVG in IE
     element.setAttribute "class", if className? then className + " " + newClass else newClass
+
+  
+  # Begin Setup
+  
+  svg = document.rootElement
+  root = makeScope "root", svg
+  root.FlowArrows = FlowArrows()
+  
+  # This is useful for other systems that aren't part of the scope tree but that need access to it.
+  Make "root", root
+  
+  Take "SymbolsReady", ()->
+    makeScopeTree root, svg
+    Action "setup"
+    setTimeout ()-> # Wait for setup to finish
+      Action "Schematic:Show"
+      setTimeout ()-> # Wait for Schematic:Show to finish
+        svg.style.opacity = 1

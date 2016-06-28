@@ -58,9 +58,9 @@ Take ["DOMContentLoaded"], ()->
         if props[k]?
           elm[k] = v
         else if v?
-          elm.setAttributeNS namespaces[k], k, v
+          elm.setAttributeNS (namespaces[k] or null), k, v
         else
-          elm.removeAttributeNS namespaces[k], k
+          elm.removeAttributeNS (namespaces[k] or null), k
       v # Not Composable
     
     grey: (elm, l)->

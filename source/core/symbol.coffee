@@ -4,7 +4,7 @@ Take [], ()->
   first = true
   
   Symbol = (symbolName, instanceNames, symbolFn)->
-    
+    console.log "MAKE " + symbolName
     # This will inform the rest of the system that we have started receiving symbols
     Make("SymbolsReady") if first
     first = false

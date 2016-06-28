@@ -7,11 +7,11 @@ Take "SVG", (SVG)->
       mouseOver = (e)->
         if enabled
           for highlight in highlighted
-            highlight.setAttribute("filter", "url(#highlightMatrix)")
+            SVG.attr highlight, "filter", "url(#highlightMatrix)"
       
       mouseLeave = (e)->
         for highlight in highlighted
-          highlight.removeAttribute("filter")
+          SVG.attr highlight, "filter", null
       
       for highlight in highlighted
         highlight.addEventListener "mouseover", mouseOver

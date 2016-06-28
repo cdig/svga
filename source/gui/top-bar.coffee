@@ -12,6 +12,8 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
   container = TRS SVG.create "g", topBar, class: "Elements"
   
   resize = ()->
+    console.log "RESIZE"
+    console.log window.innerWidth
     SVG.attrs bg, width: window.innerWidth
     TRS.move container, window.innerWidth/2 - offsetX/2
     elm.scope.resize?() for elm in elements
@@ -22,9 +24,6 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     scope.element = TRS SVG.create "g", container, class: "ui Element"
     elements[name] = element:scope.element, i:i, name:name, scope:scope
     
-    Resize scope.resize if scope.resize?
-    PointerInput.addClick scope.element, scope.click if scope.click?
-    
     # The scope can disable these by setting the property to false, or providing its own values
     scope.bg ?= SVG.create "rect", scope.element, class: "BG", height: topBarHeight
     scope.icon ?= TRS SVG.clone document.getElementById(name.toLowerCase()), scope.element
@@ -33,7 +32,7 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     iconRect = scope.icon.getBoundingClientRect()
     textRect = scope.text.getBoundingClientRect()
     iconScale = Math.min (topBarHeight - iconPad*2)/iconRect.width, (topBarHeight - iconPad*2)/iconRect.height
-    iconX = buttonPad - topBarHeight/2 + iconRect.width*iconScale/2
+    iconX = buttonPad
     iconY = topBarHeight/2 - iconRect.height*iconScale/2
     textX = buttonPad + iconRect.width*iconScale + iconPad
     buttonWidth = textX + textRect.width + buttonPad
@@ -44,6 +43,10 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     offsetX += buttonWidth
     
     scope.setup? scope.element
+    
+    Resize scope.resize if scope.resize?
+    PointerInput.addClick scope.element, scope.click if scope.click?
+    
 
   
   Make "TopBar", TopBar =

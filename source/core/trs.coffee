@@ -23,7 +23,7 @@ Take ["RequestDeferredRender", "SVG"], (RequestDeferredRender, SVG)->
     if not elm.parentNode? then err elm, "Element passed to TRS(elm) must have a parentNode"
     wrapper = SVG.create "g", elm.parentNode, class: "TRS"
     # Uncomment for debug
-    # SVG.create "rect", wrapper, class: "Debug", x:-4, y:-4, width:8, height:8
+    # SVG.create "rect", wrapper, class: "Debug", x:-2, y:-2, width:4, height:4
     setup wrapper, elm
     SVG.append wrapper, elm
     elm # Composable

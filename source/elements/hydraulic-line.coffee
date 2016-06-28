@@ -1,4 +1,4 @@
-Take ["Reaction", "SVG", "Symbol", "SymbolsReady"], (Reaction, SVG, Symbol)->
+Take ["Reaction", "SVG", "Symbol"], (Reaction, SVG, Symbol)->
   Symbol "HydraulicLine", [], (svgElement)->
     return scope =
       setup: ()->

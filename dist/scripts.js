@@ -139,7 +139,7 @@
     });
   });
 
-  Take(["Symbol", "SymbolsReady"], function(Symbol) {
+  Take(["Symbol"], function(Symbol) {
     return Symbol("DefaultElement", [], function(svgElement) {
       var ref, scope, textElement;
       textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
@@ -249,7 +249,7 @@
     });
   });
 
-  Take(["Reaction", "SVG", "Symbol", "SymbolsReady"], function(Reaction, SVG, Symbol) {
+  Take(["Reaction", "SVG", "Symbol"], function(Reaction, SVG, Symbol) {
     Symbol("HydraulicLine", [], function(svgElement) {
       var scope;
       return scope = {
@@ -560,7 +560,7 @@
     var TopBar, bg, buttonPad, construct, container, elements, iconPad, offsetX, resize, topBar, topBarHeight;
     topBarHeight = 48;
     buttonPad = 30;
-    iconPad = 4;
+    iconPad = 6;
     elements = {};
     offsetX = 0;
     topBar = SVG.create("g", SVG.root, {
@@ -576,8 +576,6 @@
     }));
     resize = function() {
       var base, elm, len, m, results;
-      console.log("RESIZE");
-      console.log(window.innerWidth);
       SVG.attrs(bg, {
         width: window.innerWidth
       });
@@ -590,8 +588,11 @@
       return results;
     };
     construct = function(i, name, scope) {
-      var buttonWidth, iconRect, iconScale, iconX, iconY, textRect, textX;
-      name = name.replace("TB:", "");
+      var buttonWidth, iconRect, iconScale, iconX, iconY, source, textRect, textX;
+      source = document.getElementById(name.toLowerCase());
+      if (source == null) {
+        throw "TopBar icon not found for id: #" + name;
+      }
       scope.element = TRS(SVG.create("g", container, {
         "class": "ui Element"
       }));
@@ -608,7 +609,7 @@
         });
       }
       if (scope.icon == null) {
-        scope.icon = TRS(SVG.clone(document.getElementById(name.toLowerCase()), scope.element));
+        scope.icon = TRS(SVG.clone(source, scope.element));
       }
       if (scope.text == null) {
         scope.text = TRS(SVG.create("text", scope.element, {
@@ -639,23 +640,29 @@
       if (typeof scope.setup === "function") {
         scope.setup(scope.element);
       }
-      if (scope.resize != null) {
-        Resize(scope.resize);
-      }
       if (scope.click != null) {
         return PointerInput.addClick(scope.element, scope.click);
       }
     };
     return Make("TopBar", TopBar = {
       init: function() {
-        var elementNames;
-        elementNames = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        Take(elementNames, function() {
-          var elementScopes, i, len, m, scope;
-          elementScopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          for (i = m = 0, len = elementScopes.length; m < len; i = ++m) {
-            scope = elementScopes[i];
-            construct(i, elementNames[i], scope);
+        var name, names, prefixedNames;
+        names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        prefixedNames = (function() {
+          var len, m, results;
+          results = [];
+          for (m = 0, len = names.length; m < len; m++) {
+            name = names[m];
+            results.push("TopBar:" + name);
+          }
+          return results;
+        })();
+        Take(prefixedNames, function() {
+          var i, len, m, scopes;
+          scopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          for (i = m = 0, len = names.length; m < len; i = ++m) {
+            name = names[i];
+            construct(i, name, scopes[i]);
           }
           return Resize(resize);
         });
@@ -663,95 +670,6 @@
           throw "TopBar.init was called more than once.";
         };
       }
-    });
-  });
-
-  Take(["Action", "FlowArrows", "SVGStyle", "SVGTransform", "SVG", "Symbol", "DOMContentLoaded"], function(Action, FlowArrows, SVGStyle, SVGTransform, SVG, Symbol) {
-    var addClass, getSymbol, makeScope, makeScopeTree;
-    makeScope = function(instanceName, element, parentScope) {
-      var instance, symbol;
-      symbol = getSymbol(instanceName);
-      console.log(Object.assign({}, Take()));
-      addClass(element, symbol.name);
-      instance = symbol.create(element);
-      if (instance.children == null) {
-        instance.children = [];
-      }
-      instance.element = element;
-      if (instance.getElement == null) {
-        instance.getElement = function() {
-          return element;
-        };
-      }
-      if (instance.root == null) {
-        instance.root = (parentScope != null ? parentScope.root : void 0) || instance;
-      }
-      if (instance.style == null) {
-        instance.style = SVGStyle(element);
-      }
-      if (instance.transform == null) {
-        instance.transform = SVGTransform(element);
-      }
-      if (parentScope != null) {
-        if (instanceName !== "DefaultElement") {
-          parentScope[instanceName] = instance;
-        }
-        parentScope.children.push(instance);
-      }
-      return instance;
-    };
-    makeScopeTree = function(parentScope, parentElement) {
-      var childElement, childName, childScope, len, m, ref, ref1, results;
-      ref = parentElement.childNodes;
-      results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        childElement = ref[m];
-        if (childElement instanceof SVGGElement) {
-          if (childElement._SVG == null) {
-            childName = (ref1 = childElement.getAttribute("id")) != null ? ref1.split("_")[0] : void 0;
-            childScope = makeScope(childName, childElement, parentScope);
-            results.push(makeScopeTree(childScope, childElement));
-          } else {
-            results.push(void 0);
-          }
-        } else {
-          results.push(void 0);
-        }
-      }
-      return results;
-    };
-    getSymbol = function(instanceName) {
-      var symbol;
-      symbol = Symbol.forInstanceName(instanceName);
-      if (symbol != null) {
-        return symbol;
-      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicLine");
-      } else {
-        return Symbol.forSymbolName("DefaultElement");
-      }
-    };
-    addClass = function(element, newClass) {
-      var className;
-      className = element.getAttribute("class");
-      return SVG.attr(element, "class", className != null ? className + " " + newClass : newClass);
-    };
-    return Take("SymbolsReady", function() {
-      return setTimeout(function() {
-        var root, svg;
-        svg = document.rootElement;
-        root = makeScope("root", svg);
-        root.FlowArrows = FlowArrows();
-        Make("root", root);
-        makeScopeTree(root, svg);
-        Action("setup");
-        return setTimeout(function() {
-          Action("Schematic:Show");
-          return setTimeout(function() {
-            return svg.style.opacity = 1;
-          });
-        });
-      });
     });
   });
 
@@ -1216,6 +1134,92 @@
     });
   });
 
+  Take(["Action", "FlowArrows", "SVGStyle", "SVGTransform", "SVG", "Symbol", "load"], function(Action, FlowArrows, SVGStyle, SVGTransform, SVG, Symbol) {
+    var addClass, getSymbol, makeScope, makeScopeTree;
+    makeScope = function(instanceName, element, parentScope) {
+      var scope, symbol;
+      symbol = getSymbol(instanceName);
+      addClass(element, symbol.name);
+      scope = symbol.create(element);
+      if (scope.children == null) {
+        scope.children = [];
+      }
+      scope.element = element;
+      if (scope.getElement == null) {
+        scope.getElement = function() {
+          return element;
+        };
+      }
+      if (scope.root == null) {
+        scope.root = (parentScope != null ? parentScope.root : void 0) || scope;
+      }
+      if (scope.style == null) {
+        scope.style = SVGStyle(element);
+      }
+      if (scope.transform == null) {
+        scope.transform = SVGTransform(element);
+      }
+      if (parentScope != null) {
+        if (instanceName !== "DefaultElement") {
+          parentScope[instanceName] = scope;
+        }
+        parentScope.children.push(scope);
+      }
+      return scope;
+    };
+    makeScopeTree = function(parentScope, parentElement) {
+      var childElement, childName, childScope, len, m, ref, ref1, results;
+      ref = parentElement.childNodes;
+      results = [];
+      for (m = 0, len = ref.length; m < len; m++) {
+        childElement = ref[m];
+        if (childElement instanceof SVGGElement) {
+          if (childElement._SVG == null) {
+            childName = (ref1 = childElement.getAttribute("id")) != null ? ref1.split("_")[0] : void 0;
+            childScope = makeScope(childName, childElement, parentScope);
+            results.push(makeScopeTree(childScope, childElement));
+          } else {
+            results.push(void 0);
+          }
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
+    getSymbol = function(instanceName) {
+      var symbol;
+      symbol = Symbol.forInstanceName(instanceName);
+      if (symbol != null) {
+        return symbol;
+      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicLine");
+      } else {
+        return Symbol.forSymbolName("DefaultElement");
+      }
+    };
+    addClass = function(element, newClass) {
+      var className;
+      className = element.getAttribute("class");
+      return SVG.attr(element, "class", className != null ? className + " " + newClass : newClass);
+    };
+    return setTimeout(function() {
+      var root, svg;
+      svg = document.rootElement;
+      root = makeScope("root", svg);
+      root.FlowArrows = FlowArrows();
+      Make("root", root);
+      makeScopeTree(root, svg);
+      Action("setup");
+      return setTimeout(function() {
+        Action("Schematic:Show");
+        return setTimeout(function() {
+          return svg.style.opacity = 1;
+        });
+      });
+    });
+  });
+
   Take([], function() {
     var dispatchFn, dispatchString;
     Make("Dispatch", function(node, fn, sub) {
@@ -1409,6 +1413,9 @@
       },
       clone: function(source, parent, attrs) {
         var attr, child, elm, len, len1, m, n, ref, ref1;
+        if (source == null) {
+          throw "Clone source is undefined in SVG.clone(source, parent, attrs)";
+        }
         elm = document.createElementNS(namespaces.svg, "g");
         ref = source.attributes;
         for (m = 0, len = ref.length; m < len; m++) {
@@ -1530,20 +1537,18 @@
     };
   });
 
-  Take([], function() {
-    var Symbol, byInstanceName, bySymbolName, first;
+  (function() {
+    var Symbol, byInstanceName, bySymbolName, tooLate;
     bySymbolName = {};
     byInstanceName = {};
-    first = true;
+    tooLate = false;
     Symbol = function(symbolName, instanceNames, symbolFn) {
       var instanceName, len, m, results, symbol;
-      console.log("MAKE " + symbolName);
-      if (first) {
-        Make("SymbolsReady");
-      }
-      first = false;
       if (bySymbolName[symbolName] != null) {
         throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
+      }
+      if (tooLate) {
+        throw "The symbol \"" + symbolName + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
       }
       symbol = {
         create: symbolFn,
@@ -1561,13 +1566,15 @@
       return results;
     };
     Symbol.forSymbolName = function(symbolName) {
+      tooLate = true;
       return bySymbolName[symbolName];
     };
     Symbol.forInstanceName = function(instanceName) {
+      tooLate = true;
       return byInstanceName[instanceName];
     };
     return Make("Symbol", Symbol);
-  });
+  })();
 
   Take(["RequestDeferredRender", "SVG"], function(RequestDeferredRender, SVG) {
     var TRS, err, setup;

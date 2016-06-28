@@ -1,7 +1,7 @@
 Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)->
   topBarHeight = 48
   buttonPad = 30
-  iconPad = 4
+  iconPad = 6
   
   elements = {}
   offsetX = 0
@@ -12,21 +12,20 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
   container = TRS SVG.create "g", topBar, class: "Elements"
   
   resize = ()->
-    console.log "RESIZE"
-    console.log window.innerWidth
     SVG.attrs bg, width: window.innerWidth
     TRS.move container, window.innerWidth/2 - offsetX/2
     elm.scope.resize?() for elm in elements
   
   construct = (i, name, scope)->
-    name = name.replace "TB:", ""
+    source = document.getElementById(name.toLowerCase())
+    throw "TopBar icon not found for id: ##{name}" if not source?
     
     scope.element = TRS SVG.create "g", container, class: "ui Element"
     elements[name] = element:scope.element, i:i, name:name, scope:scope
     
     # The scope can disable these by setting the property to false, or providing its own values
     scope.bg ?= SVG.create "rect", scope.element, class: "BG", height: topBarHeight
-    scope.icon ?= TRS SVG.clone document.getElementById(name.toLowerCase()), scope.element
+    scope.icon ?= TRS SVG.clone source, scope.element
     scope.text ?= TRS SVG.create "text", scope.element, "font-family": "Lato", "font-size": 14, fill: "#FFF", textContent: name.toUpperCase()
     
     iconRect = scope.icon.getBoundingClientRect()
@@ -43,20 +42,18 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     offsetX += buttonWidth
     
     scope.setup? scope.element
-    
-    Resize scope.resize if scope.resize?
     PointerInput.addClick scope.element, scope.click if scope.click?
-    
-
+  
   
   Make "TopBar", TopBar =
     
     # This will be called by one of the Symbols (probably root)
-    init: (elementNames...)->
+    init: (names...)->
+      prefixedNames = ("TopBar:" + name for name in names)
       
       # Elements are defined using Make()
-      Take elementNames, (elementScopes...)->
-        construct i, elementNames[i], scope for scope, i in elementScopes
+      Take prefixedNames, (scopes...)->
+        construct i, name, scopes[i] for name, i in names
         Resize resize
       
       # Redefine init, so that if it's called more than once we throw an error

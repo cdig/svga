@@ -27,6 +27,7 @@ Take ["DOMContentLoaded"], ()->
       elm # Composable
     
     clone: (source, parent, attrs)->
+      throw "Clone source is undefined in SVG.clone(source, parent, attrs)" unless source?
       elm = document.createElementNS namespaces.svg, "g"
       SVG.attr elm, attr.name, attr.value for attr in source.attributes
       SVG.attrs elm, id: null

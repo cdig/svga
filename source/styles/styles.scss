@@ -1,6 +1,13 @@
+* {
+  user-select: none;
+  cursor: default;
+  touch-action: manipulation; // Safari
+  touch-action: none; // Chrome
+}
+
 svg {
   opacity: 0;
-  transition: opacity .5s;
+  transition: opacity .3s;
 }
 
 .ui, .ui * {

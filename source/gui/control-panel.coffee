@@ -22,7 +22,7 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     
     # This will be called by many symbols
     addControl: (name, cb)->
-
+      
       # Panel elements are defined using Make()
       Take name, (fn)->
         construct name, fn

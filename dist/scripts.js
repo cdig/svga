@@ -379,10 +379,14 @@
   });
 
   Take(["RequestDeferredRender", "SVG"], function(RequestDeferredRender, SVG) {
-    var TRS, makeProps;
-    makeProps = function(p, c, props) {
-      var trs;
-      return c._trs = trs = {
+    var TRS, err, setup;
+    err = function(elm, message) {
+      console.log(elm);
+      throw "^ " + message;
+    };
+    setup = function(wrapper, elm) {
+      var v;
+      return elm._trs = v = {
         x: 0,
         y: 0,
         r: 0,
@@ -390,58 +394,131 @@
         sy: 1,
         ox: 0,
         oy: 0,
-        go: function() {
-          SVG.attr(p, "transform", "translate(" + trs.ox + "," + trs.oy + ") rotate(" + trs.r + ")");
-          return SVG.attr(c, "transform", "translate(" + (trs.ox - trs.x) + "," + (trs.oy - trs.y) + ") scale(" + trs.sx + "," + trs.sy + ")");
+        apply: function() {
+          SVG.attr(wrapper, "transform", "translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")");
+          return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
         }
       };
     };
-    return Make("TRS", TRS = {
-      create: function(parent) {
-        var c, p;
-        p = SVG.create("g", parent, {
-          "class": "TRS P"
-        });
-        c = SVG.create("g", p, {
-          "class": "TRS C"
-        });
-        makeProps(p, c);
-        return c;
-      },
-      move: function(elm, x, y) {
-        if (y == null) {
-          y = 0;
-        }
-        elm._trs.x = x;
-        elm._trs.y = y;
-        RequestDeferredRender(elm._trs.go, true);
-        return elm;
-      },
-      rotate: function(elm, r) {
-        elm._trs.r = r * 360;
-        RequestDeferredRender(elm._trs.go, true);
-        return elm;
-      },
-      origin: function(elm, ox, oy) {
-        if (ox != null) {
-          elm._trs.ox = ox;
-        }
-        if (oy != null) {
-          elm._trs.oy = oy;
-        }
-        RequestDeferredRender(elm._trs.go, true);
-        return elm;
-      },
-      scale: function(elm, x, y) {
-        if (y == null) {
-          y = x;
-        }
-        elm._trs.sx = x;
-        elm._trs.sy = y;
-        RequestDeferredRender(elm._trs.go, true);
-        return elm;
+    TRS = function(elm, attrs) {
+      var wrapper;
+      if (elm == null) {
+        err(elm, "Null element passed to TRS(elm, attrs)");
       }
-    });
+      if (elm.parentNode == null) {
+        err(elm, "Element passed to TRS(elm, attrs) must have a parentNode");
+      }
+      wrapper = SVG.create("g", elm.parentNode, {
+        "class": "TRS"
+      });
+      setup(wrapper, elm);
+      SVG.append(wrapper, elm);
+      return elm;
+    };
+    TRS.abs = function(elm, attrs) {
+      if ((elm != null ? elm._trs : void 0) == null) {
+        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs == null) {
+        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs.scale != null) {
+        attrs.sx = attrs.sy = attrs.scale;
+      }
+      if (attrs.x != null) {
+        elm._trs.x = attrs.x;
+      }
+      if (attrs.y != null) {
+        elm._trs.y = attrs.y;
+      }
+      if (attrs.r != null) {
+        elm._trs.r = attrs.r;
+      }
+      if (attrs.sx != null) {
+        elm._trs.sx = attrs.sx;
+      }
+      if (attrs.sy != null) {
+        elm._trs.sy = attrs.sy;
+      }
+      if (attrs.ox != null) {
+        elm._trs.ox = attrs.ox;
+      }
+      if (attrs.oy != null) {
+        elm._trs.oy = attrs.oy;
+      }
+      RequestDeferredRender(elm._trs.apply, true);
+      return elm;
+    };
+    TRS.rel = function(elm, attrs) {
+      if ((elm != null ? elm._trs : void 0) == null) {
+        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs == null) {
+        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs.x != null) {
+        elm._trs.x += attrs.x;
+      }
+      if (attrs.y != null) {
+        elm._trs.y += attrs.y;
+      }
+      if (attrs.r != null) {
+        elm._trs.r += attrs.r;
+      }
+      if (attrs.sx != null) {
+        elm._trs.sx += attrs.sx;
+      }
+      if (attrs.sy != null) {
+        elm._trs.sy += attrs.sy;
+      }
+      if (attrs.ox != null) {
+        elm._trs.ox += attrs.ox;
+      }
+      if (attrs.oy != null) {
+        elm._trs.oy += attrs.oy;
+      }
+      RequestDeferredRender(elm._trs.apply, true);
+      return elm;
+    };
+    TRS.move = function(elm, x, y) {
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.move");
+      }
+      return TRS.abs(elm, {
+        x: x,
+        y: y
+      });
+    };
+    TRS.rotate = function(elm, r) {
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.rotate");
+      }
+      return TRS.abs(elm, {
+        r: r
+      });
+    };
+    TRS.scale = function(elm, sx, sy) {
+      if (sy == null) {
+        sy = x;
+      }
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.scale");
+      }
+      return TRS.abs(elm, {
+        sx: sx,
+        sy: sy
+      });
+    };
+    TRS.origin = function(elm, ox, oy) {
+      if (elm._trs == null) {
+        err(elm, "Non-TRS element passed to TRS.origin");
+      }
+      return TRS.abs(elm, {
+        ox: ox,
+        oy: oy
+      });
+    };
+    return Make("TRS", TRS);
   });
 
   (function() {
@@ -978,9 +1055,9 @@
     var ControlPanel, bg, construct, controlPanel, elements, resize, topbarHeight;
     topbarHeight = 48;
     elements = [];
-    controlPanel = TRS.create(SVG.root, {
+    controlPanel = TRS(SVG.create("g", SVG.root, {
       "class": "ControlPanel"
-    });
+    }));
     bg = SVG.create("rect", controlPanel, {
       "class": "BG"
     });
@@ -1004,7 +1081,7 @@
     });
   });
 
-  Take(["PointerInput", "Resize", "SVG"], function(PointerInput, Resize, SVG) {
+  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
     var TopBar, bg, buttonPad, computeLayout, construct, container, elements, iconPad, offsetX, resize, topBar, topBarHeight;
     topBarHeight = 48;
     buttonPad = 30;
@@ -1019,14 +1096,15 @@
       fill: "url(#TopBarGradient)"
     });
     SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
-    container = SVG.create("g", topBar, {
+    container = TRS(SVG.create("g", topBar, {
       "class": "Elements"
-    });
+    }));
     resize = function() {
       var base, elm, len, m, results;
       SVG.attrs(bg, {
         width: window.innerWidth
       });
+      TRS.move(container, window.innerWidth / 2 - offsetX / 2);
       results = [];
       for (m = 0, len = elements.length; m < len; m++) {
         elm = elements[m];
@@ -1036,9 +1114,9 @@
     };
     construct = function(i, name, scope) {
       name = name.replace("TB:", "");
-      scope.element = SVG.create("g", container, {
+      scope.element = TRS(SVG.create("g", container, {
         "class": "ui Element"
-      });
+      }));
       if (typeof scope.setup === "function") {
         scope.setup(scope.element);
       }
@@ -1061,31 +1139,37 @@
         });
       }
       if (scope.icon == null) {
-        scope.icon = SVG.clone(document.getElementById(name.toLowerCase()), scope.element, {
-          height: topBarHeight - iconPad * 2,
-          width: topBarHeight - iconPad * 2
-        });
+        scope.icon = TRS(SVG.clone(document.getElementById(name.toLowerCase()), scope.element));
       }
       if (scope.text == null) {
-        scope.text = SVG.create("text", scope.element, {
+        scope.text = TRS(SVG.create("text", scope.element, {
           "font-family": "Lato",
           "font-size": 14,
           fill: "#FFF",
           textContent: name.toUpperCase()
-        });
+        }));
       }
       return computeLayout(scope);
     };
     computeLayout = function(scope) {
-      var buttonWidth, iconRect, iconX, textRect, textX;
+      var buttonWidth, iconRect, iconScale, iconX, iconY, textRect, textX;
       iconRect = scope.icon.getBoundingClientRect();
       textRect = scope.text.getBoundingClientRect();
-      iconX = buttonPad - topBarHeight / 2 + iconRect.width / 2;
-      textX = buttonPad + iconRect.width + iconPad;
+      iconScale = Math.min((topBarHeight - iconPad * 2) / iconRect.width, (topBarHeight - iconPad * 2) / iconRect.height);
+      iconX = buttonPad - topBarHeight / 2 + iconRect.width * iconScale / 2;
+      iconY = topBarHeight / 2 - iconRect.height * iconScale / 2;
+      textX = buttonPad + iconRect.width * iconScale + iconPad;
       buttonWidth = textX + textRect.width + buttonPad;
+      TRS.abs(scope.icon, {
+        x: iconX,
+        y: iconY,
+        scale: iconScale
+      });
+      TRS.move(scope.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
       SVG.attrs(scope.bg, {
         width: buttonWidth
       });
+      TRS.move(scope.element, offsetX);
       return offsetX += buttonWidth;
     };
     return Make("TopBar", TopBar = {

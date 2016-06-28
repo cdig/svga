@@ -3,7 +3,7 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
   
   elements = []
   
-  controlPanel = TRS.create SVG.root, class: "ControlPanel"
+  controlPanel = TRS SVG.create "g", SVG.root, class: "ControlPanel"
   bg = SVG.create "rect", controlPanel, class: "BG"
   
   
@@ -11,7 +11,6 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     panelWidth = Math.ceil 5 * Math.sqrt window.innerWidth
     SVG.attr bg, "width", panelWidth
     SVG.attr bg, "height", window.innerHeight - topbarHeight
-    
     TRS.move controlPanel, window.innerWidth - panelWidth, topbarHeight
     
   

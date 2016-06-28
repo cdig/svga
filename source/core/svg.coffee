@@ -22,14 +22,12 @@ Take ["DOMContentLoaded"], ()->
     
     create: (type, parent, attrs)->
       elm = document.createElementNS namespaces.svg, type
-      makePrivateProps elm
       SVG.attrs elm, attrs
       SVG.append parent, elm if parent?
       elm # Composable
     
     clone: (source, parent, attrs)->
       elm = document.createElementNS namespaces.svg, "g"
-      makePrivateProps elm
       SVG.attr elm, attr.name, attr.value for attr in source.attributes
       SVG.attrs elm, id: null
       SVG.attrs elm, attrs
@@ -54,6 +52,7 @@ Take ["DOMContentLoaded"], ()->
     
     attr: (elm, k, v)->
       return elm.getAttribute k if v is undefined
+      elm._SVG ?= {}
       if elm._SVG[k] isnt v
         elm._SVG[k] = v
         if props[k]?
@@ -98,6 +97,3 @@ Take ["DOMContentLoaded"], ()->
         { "stop-color": stop.color, offset: (100 * stop.offset) + "%" }
       SVG.create "stop", gradient, attrs
     null # Not Composable
-  
-  makePrivateProps = (elm)->
-    elm._SVG = {}

@@ -175,7 +175,7 @@
   });
 
   Take(["DOMContentLoaded"], function() {
-    var SVG, createStops, defs, makePrivateProps, namespaces, props, root;
+    var SVG, createStops, defs, namespaces, props, root;
     namespaces = {
       svg: "http://www.w3.org/2000/svg",
       "xlink:href": "http://www.w3.org/1999/xlink"
@@ -209,7 +209,6 @@
       create: function(type, parent, attrs) {
         var elm;
         elm = document.createElementNS(namespaces.svg, type);
-        makePrivateProps(elm);
         SVG.attrs(elm, attrs);
         if (parent != null) {
           SVG.append(parent, elm);
@@ -219,7 +218,6 @@
       clone: function(source, parent, attrs) {
         var attr, child, elm, len, len1, m, n, ref, ref1;
         elm = document.createElementNS(namespaces.svg, "g");
-        makePrivateProps(elm);
         ref = source.attributes;
         for (m = 0, len = ref.length; m < len; m++) {
           attr = ref[m];
@@ -262,6 +260,9 @@
       attr: function(elm, k, v) {
         if (v === void 0) {
           return elm.getAttribute(k);
+        }
+        if (elm._SVG == null) {
+          elm._SVG = {};
         }
         if (elm._SVG[k] !== v) {
           elm._SVG[k] = v;
@@ -319,7 +320,7 @@
         return filter;
       }
     });
-    createStops = function(gradient, stops) {
+    return createStops = function(gradient, stops) {
       var attrs, i, len, m, stop;
       stops = stops[0] instanceof Array ? stops[0] : stops;
       for (i = m = 0, len = stops.length; m < len; i = ++m) {
@@ -334,9 +335,6 @@
         SVG.create("stop", gradient, attrs);
       }
       return null;
-    };
-    return makePrivateProps = function(elm) {
-      return elm._SVG = {};
     };
   });
 
@@ -400,13 +398,13 @@
         }
       };
     };
-    TRS = function(elm, attrs) {
+    TRS = function(elm) {
       var wrapper;
       if (elm == null) {
-        err(elm, "Null element passed to TRS(elm, attrs)");
+        err(elm, "Null element passed to TRS(elm)");
       }
       if (elm.parentNode == null) {
-        err(elm, "Element passed to TRS(elm, attrs) must have a parentNode");
+        err(elm, "Element passed to TRS(elm) must have a parentNode");
       }
       wrapper = SVG.create("g", elm.parentNode, {
         "class": "TRS"
@@ -416,6 +414,7 @@
       return elm;
     };
     TRS.abs = function(elm, attrs) {
+      var delta;
       if ((elm != null ? elm._trs : void 0) == null) {
         err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
       }
@@ -441,10 +440,14 @@
         elm._trs.sy = attrs.sy;
       }
       if (attrs.ox != null) {
+        delta = attrs.ox - elm._trs.ox;
         elm._trs.ox = attrs.ox;
+        elm._trs.x += delta;
       }
       if (attrs.oy != null) {
+        delta = attrs.oy - elm._trs.oy;
         elm._trs.oy = attrs.oy;
+        elm._trs.y += delta;
       }
       RequestDeferredRender(elm._trs.apply, true);
       return elm;
@@ -473,9 +476,11 @@
       }
       if (attrs.ox != null) {
         elm._trs.ox += attrs.ox;
+        elm._trs.x += attrs.ox;
       }
       if (attrs.oy != null) {
         elm._trs.oy += attrs.oy;
+        elm._trs.y += attrs.oy;
       }
       RequestDeferredRender(elm._trs.apply, true);
       return elm;
@@ -772,15 +777,15 @@
     });
   });
 
-  Take(["Reaction", "SVG", "Symbol"], function(Reaction, SVG, Symbol) {
+  Take(["Reaction", "SVG", "Symbol", "SymbolsReady"], function(Reaction, SVG, Symbol) {
     Symbol("HydraulicLine", [], function(svgElement) {
       var scope;
       return scope = {
         setup: function() {
-          Reaction("animateMode", function() {
+          Reaction("Schematic:Hide", function() {
             return svgElement.removeAttribute("filter");
           });
-          return Reaction("schematicMode", function() {
+          return Reaction("Schematic:Show", function() {
             return svgElement.setAttribute("filter", "url(#allblackMatrix)");
           });
         }
@@ -1082,7 +1087,7 @@
   });
 
   Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var TopBar, bg, buttonPad, computeLayout, construct, container, elements, iconPad, offsetX, resize, topBar, topBarHeight;
+    var TopBar, bg, buttonPad, construct, container, elements, iconPad, offsetX, resize, topBar, topBarHeight;
     topBarHeight = 48;
     buttonPad = 30;
     iconPad = 4;
@@ -1113,13 +1118,11 @@
       return results;
     };
     construct = function(i, name, scope) {
+      var buttonWidth, iconRect, iconScale, iconX, iconY, textRect, textX;
       name = name.replace("TB:", "");
       scope.element = TRS(SVG.create("g", container, {
         "class": "ui Element"
       }));
-      if (typeof scope.setup === "function") {
-        scope.setup(scope.element);
-      }
       elements[name] = {
         element: scope.element,
         i: i,
@@ -1149,10 +1152,6 @@
           textContent: name.toUpperCase()
         }));
       }
-      return computeLayout(scope);
-    };
-    computeLayout = function(scope) {
-      var buttonWidth, iconRect, iconScale, iconX, iconY, textRect, textX;
       iconRect = scope.icon.getBoundingClientRect();
       textRect = scope.text.getBoundingClientRect();
       iconScale = Math.min((topBarHeight - iconPad * 2) / iconRect.width, (topBarHeight - iconPad * 2) / iconRect.height);
@@ -1170,7 +1169,8 @@
         width: buttonWidth
       });
       TRS.move(scope.element, offsetX);
-      return offsetX += buttonWidth;
+      offsetX += buttonWidth;
+      return typeof scope.setup === "function" ? scope.setup(scope.element) : void 0;
     };
     return Make("TopBar", TopBar = {
       init: function() {

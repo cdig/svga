@@ -18,14 +18,12 @@ Take ["RequestDeferredRender", "SVG"], (RequestDeferredRender, SVG)->
         SVG.attr elm, "transform", "translate(#{-v.ox},#{-v.oy})"
   
   
-  TRS = (elm, attrs)->
-    if not elm? then err elm, "Null element passed to TRS(elm, attrs)"
-    if not elm.parentNode? then err elm, "Element passed to TRS(elm, attrs) must have a parentNode"
+  TRS = (elm)->
+    if not elm? then err elm, "Null element passed to TRS(elm)"
+    if not elm.parentNode? then err elm, "Element passed to TRS(elm) must have a parentNode"
     wrapper = SVG.create "g", elm.parentNode, class: "TRS"
-    
     # Uncomment for debug
     # SVG.create "rect", wrapper, class: "Debug", x:-4, y:-4, width:8, height:8
-    
     setup wrapper, elm
     SVG.append wrapper, elm
     elm # Composable
@@ -40,8 +38,14 @@ Take ["RequestDeferredRender", "SVG"], (RequestDeferredRender, SVG)->
     elm._trs.r = attrs.r if attrs.r?
     elm._trs.sx = attrs.sx if attrs.sx?
     elm._trs.sy = attrs.sy if attrs.sy?
-    elm._trs.ox = attrs.ox if attrs.ox?
-    elm._trs.oy = attrs.oy if attrs.oy?
+    if attrs.ox?
+      delta = attrs.ox - elm._trs.ox
+      elm._trs.ox = attrs.ox
+      elm._trs.x += delta
+    if attrs.oy?
+      delta = attrs.oy - elm._trs.oy
+      elm._trs.oy = attrs.oy
+      elm._trs.y += delta
     RequestDeferredRender elm._trs.apply, true
     elm # Composable
   
@@ -53,8 +57,12 @@ Take ["RequestDeferredRender", "SVG"], (RequestDeferredRender, SVG)->
     elm._trs.r += attrs.r if attrs.r?
     elm._trs.sx += attrs.sx if attrs.sx?
     elm._trs.sy += attrs.sy if attrs.sy?
-    elm._trs.ox += attrs.ox if attrs.ox?
-    elm._trs.oy += attrs.oy if attrs.oy?
+    if attrs.ox?
+      elm._trs.ox += attrs.ox
+      elm._trs.x += attrs.ox
+    if attrs.oy?
+      elm._trs.oy += attrs.oy
+      elm._trs.y += attrs.oy
     RequestDeferredRender elm._trs.apply, true
     elm # Composable
   

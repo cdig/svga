@@ -18,18 +18,18 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
   
   construct = (i, name, scope)->
     name = name.replace "TB:", ""
+    
     scope.element = TRS SVG.create "g", container, class: "ui Element"
-    scope.setup? scope.element
     elements[name] = element:scope.element, i:i, name:name, scope:scope
+    
     Resize scope.resize if scope.resize?
     PointerInput.addClick scope.element, scope.click if scope.click?
-    # setup() can disable these by setting the property to false, or providing its own values
+    
+    # The scope can disable these by setting the property to false, or providing its own values
     scope.bg ?= SVG.create "rect", scope.element, class: "BG", height: topBarHeight
     scope.icon ?= TRS SVG.clone document.getElementById(name.toLowerCase()), scope.element
     scope.text ?= TRS SVG.create "text", scope.element, "font-family": "Lato", "font-size": 14, fill: "#FFF", textContent: name.toUpperCase()
-    computeLayout scope
-  
-  computeLayout = (scope)->
+    
     iconRect = scope.icon.getBoundingClientRect()
     textRect = scope.text.getBoundingClientRect()
     iconScale = Math.min (topBarHeight - iconPad*2)/iconRect.width, (topBarHeight - iconPad*2)/iconRect.height
@@ -42,6 +42,8 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     SVG.attrs scope.bg, width: buttonWidth
     TRS.move scope.element, offsetX
     offsetX += buttonWidth
+    
+    scope.setup? scope.element
 
   
   Make "TopBar", TopBar =

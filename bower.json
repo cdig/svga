@@ -1,5 +1,5 @@
 {
-  "name": "svg-activity-components",
+  "name": "svga",
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
     "cd-library": "cdig/cd-library#v3",

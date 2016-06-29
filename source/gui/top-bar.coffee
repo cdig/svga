@@ -50,7 +50,7 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     
     # This will be called by one of the Symbols (probably root)
     init: (names...)->
-      throw "TopBar.init was called more than once." if inited?
+      throw "TopBar.init was called more than once." if inited
       inited = true
       
       prefixedNames = ("TopBar:" + name for name in names)

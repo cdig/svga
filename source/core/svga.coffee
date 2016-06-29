@@ -3,12 +3,19 @@
 Take ["Animation","Ease","FlowArrows","HydraulicPressure","Mask","PointerInput","Symbol","TopBar"],
 (      Animation , Ease , FlowArrows , HydraulicPressure , Mask , PointerInput , Symbol , TopBar)->
   
-  Make "SVGA", SVGA =
+  SVGA =
     animation: Animation
-    arrows: FlowArrows
+    arrows: FlowArrows()
     ease: Ease
     input: PointerInput
     mask: Mask
     pressure: HydraulicPressure
     symbol: Symbol
     topbar: TopBar.init
+  
+  # This is sugar for legacy Symbols, so that they don't have to update their takes right away
+  Make "SVGAnimation", SVGAnimation = Animation
+  Make "SVGMask", SVGMask = Mask
+  
+  # Ready, Aim, Fire!
+  Make "SVGA", SVGA

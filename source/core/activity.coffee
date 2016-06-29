@@ -1,6 +1,6 @@
 # Wait for "load" to give all the Symbols a chance to execute
-Take ["Action", "FlowArrows", "Style", "Transform", "SVG", "Symbol", "load"],
-(      Action ,  FlowArrows ,  Style ,  Transform ,  SVG ,  Symbol)->
+Take ["Action","Style","SVG","SVGA","Symbol","Transform","load"],
+(      Action , Style , SVG , SVGA , Symbol , Transform )->
   
   makeScope = (instanceName, element, parentScope)->
     symbol = getSymbol instanceName
@@ -49,9 +49,12 @@ Take ["Action", "FlowArrows", "Style", "Transform", "SVG", "Symbol", "load"],
     svg = document.rootElement
     root = makeScope "root", svg
     
+    # This is sugar for legacy Symbols, so that they don't have to update their takes right away
+    root.FlowArrows = SVGA.arrows
+
     # This is useful for other systems that aren't part of the scope tree but that need access to it.
     Make "root", root
-
+    
     makeScopeTree root, svg
     Action "setup"
     setTimeout ()-> # Wait for setup to finish

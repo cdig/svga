@@ -2,14 +2,18 @@
   "name": "svg-activity-components",
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
-    "take-and-make": "cdig/take-and-make#v3",
-    "cd-library": "cdig/cd-library#v3"
+    "cd-library": "cdig/cd-library#v3",
+    "take-and-make": "cdig/take-and-make#v3"
   },
   "main": [
-    "dist/styles.css",
-    "dist/scripts.js"
+    "dist/scripts.js",
+    "dist/styles.css"
   ],
-  "ignore": [],
+  "ignore": [
+    "**/*",
+    "!dist/**/*",
+    "!pack/**/*"
+  ],
   "license": "UNLICENSED",
   "private": true
 }

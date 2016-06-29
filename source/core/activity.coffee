@@ -1,6 +1,6 @@
 # Wait for "load" to give all the Symbols a chance to execute
-Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "SVG", "Symbol", "load"],
-(      Action ,  FlowArrows ,  SVGStyle ,  SVGTransform ,  SVG ,  Symbol)->
+Take ["Action", "FlowArrows", "Style", "Transform", "SVG", "Symbol", "load"],
+(      Action ,  FlowArrows ,  Style ,  Transform ,  SVG ,  Symbol)->
   
   makeScope = (instanceName, element, parentScope)->
     symbol = getSymbol instanceName
@@ -10,8 +10,8 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "SVG", "Symbol", "load
     scope.element = element # LEGACY
     scope.getElement ?= ()-> element # LEGACY
     scope.root ?= parentScope?.root or scope # If there's no parent, this scope is the root
-    scope.style ?= SVGStyle element
-    scope.transform ?= SVGTransform element
+    scope.style ?= Style element
+    scope.transform ?= Transform element
     if parentScope?
       parentScope[instanceName] = scope if instanceName isnt "DefaultElement"
       parentScope.children.push scope

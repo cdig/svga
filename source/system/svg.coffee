@@ -1,15 +1,18 @@
 # These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
 # They're not to be used by content, since they might endure breaking changes at any time.
 
-Take ["DOMContentLoaded"], ()->
-  namespaces =
-    svg: "http://www.w3.org/2000/svg"
-    "xlink:href": "http://www.w3.org/1999/xlink"
+# We wait for the SVGReady event, fired by core/main.coffee, to tell us that it's safe to mutate the DOM.
+Take ["SVGReady"], ()->
+  
+  root = document.rootElement
+  defs = root.querySelector "defs"
+  
+  svgNS = "http://www.w3.org/2000/svg"
+  xlinkNS = "http://www.w3.org/1999/xlink"
   props =
     textContent: true
     # additional props will be listed here as needed
-  root = document.querySelector "svg"
-  defs = root.querySelector "defs"
+  
   
   Make "SVG", SVG =
     root: root
@@ -21,14 +24,14 @@ Take ["DOMContentLoaded"], ()->
     scale: (elm, x, y = x)-> throw "SCALE"
     
     create: (type, parent, attrs)->
-      elm = document.createElementNS namespaces.svg, type
+      elm = document.createElementNS svgNS, type
       SVG.attrs elm, attrs
       SVG.append parent, elm if parent?
       elm # Composable
     
     clone: (source, parent, attrs)->
       throw "Clone source is undefined in SVG.clone(source, parent, attrs)" unless source?
-      elm = document.createElementNS namespaces.svg, "g"
+      elm = document.createElementNS svgNS, "g"
       SVG.attr elm, attr.name, attr.value for attr in source.attributes
       SVG.attrs elm, id: null
       SVG.attrs elm, attrs
@@ -59,9 +62,11 @@ Take ["DOMContentLoaded"], ()->
         if props[k]?
           elm[k] = v
         else if v?
-          elm.setAttributeNS (namespaces[k] or null), k, v
+          ns = if k is "xlink:href" then xlinkNS else null
+          elm.setAttributeNS ns, k, v
         else
-          elm.removeAttributeNS (namespaces[k] or null), k
+          ns = if k is "xlink:href" then xlinkNS else null
+          elm.removeAttributeNS ns, k
       v # Not Composable
     
     grey: (elm, l)->

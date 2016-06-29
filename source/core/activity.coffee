@@ -48,7 +48,6 @@ Take ["Action", "FlowArrows", "SVGStyle", "SVGTransform", "SVG", "Symbol", "load
   setTimeout ()-> # Give Symbols a bit more time to be defined, since some of them might be waiting on Take()s
     svg = document.rootElement
     root = makeScope "root", svg
-    root.FlowArrows = FlowArrows()
     
     # This is useful for other systems that aren't part of the scope tree but that need access to it.
     Make "root", root

@@ -5,6 +5,7 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
   
   elements = {}
   offsetX = 0
+  inited = false
   
   topBar = SVG.create "g", SVG.root, class: "TopBar"
   bg = SVG.create "rect", topBar, height: 48, fill: "url(#TopBarGradient)"
@@ -49,12 +50,12 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     
     # This will be called by one of the Symbols (probably root)
     init: (names...)->
+      throw "TopBar.init was called more than once." if inited?
+      inited = true
+      
       prefixedNames = ("TopBar:" + name for name in names)
       
       # Elements are defined using Make()
       Take prefixedNames, (scopes...)->
         construct i, name, scopes[i] for name, i in names
         Resize resize
-      
-      # Redefine init, so that if it's called more than once we throw an error
-      TopBar.init = ()-> throw "TopBar.init was called more than once."

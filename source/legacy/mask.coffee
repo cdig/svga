@@ -20,7 +20,7 @@ getParentInverseTransform = (root,element, currentTransform)->
   currentTransform = "#{currentTransform} #{inversion}"
   getParentInverseTransform(root,element.parentNode, currentTransform)
 
-Make "SVGMask", SVGMask = (root, maskInstance, maskedInstance, maskName)->
+Make "Mask", Mask = (root, maskInstance, maskedInstance, maskName)->
   maskElement = maskInstance.getElement()
   maskedElement = maskedInstance.getElement()
   rootElement = root.getElement()

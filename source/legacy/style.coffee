@@ -1,5 +1,5 @@
 Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Global)->
-  Make "SVGStyle", SVGStyle = (svgElement)->
+  Make "Style", Style = (svgElement)->
     styleCache = {}
     
     scope =

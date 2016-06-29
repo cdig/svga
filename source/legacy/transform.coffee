@@ -1,5 +1,5 @@
 Take "RequestDeferredRender", (RequestDeferredRender)->
-  Make "SVGTransform", SVGTransform = (svgElement)->
+  Make "Transform", Transform = (svgElement)->
     baseTransform = svgElement.getAttribute "transform"
     currentTransformString = null
     newTransformString = null

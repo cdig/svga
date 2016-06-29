@@ -1,12 +1,12 @@
 Take "RequestUniqueAnimation", (RequestUniqueAnimation)->
-  Make "SVGAnimation", SVGAnimation = (callback)->
+  Make "Animation", Animation = (callback)->
     return scope =
       running: false
       restart: false
       time: 0
       startTime: 0
       dT: 0
-
+      
       runAnimation: (currTime)->
         if not scope.running
           return

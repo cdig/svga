@@ -1,4 +1,4 @@
-Take ["Organizer", "RequestUniqueAnimation"], (Organizer, RequestUniqueAnimation)->
+Take ["Organizer", "Reaction", "RequestUniqueAnimation"], (Organizer, Reaction, RequestUniqueAnimation)->
   Make "FlowArrows", FlowArrows = ()->
     currentTime = null
     
@@ -18,7 +18,7 @@ Take ["Organizer", "RequestUniqueAnimation"], (Organizer, RequestUniqueAnimation
       for arrowsContainer in scope.arrowsContainers
         arrowsContainer.update dT
     
-    return scope =
+    scope =
       # state
       isVisible: false
       #constants please don't change
@@ -54,5 +54,19 @@ Take ["Organizer", "RequestUniqueAnimation"], (Organizer, RequestUniqueAnimation
         for arrowsContainer in scope.arrowsContainers
           arrowsContainer.visible(false)
       
+      animateMode: ()->
+        for arrowsContainer in scope.arrowsContainers
+          arrowsContainer.visible(scope.isVisible)
+      
+      schematicMode: ()->
+        for arrowsContainer in scope.arrowsContainers
+          arrowsContainer.visible(false)
+      
       start: ()->
         console.log "FlowArrows.start() is deprecated. Please remove it from your animation."
+      
+      
+    Reaction "Schematic:Show", scope.schematicMode
+    Reaction "Schematic:Hide", scope.animateMode
+
+    return scope

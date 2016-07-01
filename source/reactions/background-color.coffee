@@ -1,5 +1,5 @@
-Take ["Action", "Dispatch", "Global", "Reaction", "SVGReady"],
-(      Action ,  Dispatch ,  Global ,  Reaction)->
+Take ["Action", "Dispatch", "Reaction", "SVGReady"],
+(      Action ,  Dispatch ,  Reaction)->
   colors = ["#666", "#bbb", "#fff"]
   current = 1
   

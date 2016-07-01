@@ -1,16 +1,18 @@
-Take ["Action", "Dispatch", "Global", "Reaction", "root"],
-(      Action ,  Dispatch ,  Global ,  Reaction ,  root)->
+Take ["Action", "Dispatch", "Reaction", "root"],
+(      Action ,  Dispatch ,  Reaction ,  root)->
+  
+  animateMode = false
   
   Reaction "ScopeReady", ()->
     Action "Schematic:Show"
   
   Reaction "Schematic:Toggle", ()->
-    Action if Global.animateMode then "Schematic:Show" else "Schematic:Hide"
+    Action if animateMode then "Schematic:Show" else "Schematic:Hide"
   
   Reaction "Schematic:Hide", ()->
-    Global.animateMode = true
+    animateMode = true
     Dispatch root, "animateMode"
   
   Reaction "Schematic:Show", ()->
-    Global.animateMode = false
+    animateMode = false
     Dispatch root, "schematicMode"

@@ -1,4 +1,4 @@
-Take ["PureDom", "Pressure", "Global"], (PureDom, Pressure, Global)->
+Take ["PureDom", "Pressure"], (PureDom, Pressure)->
   Make "Style", Style = (scope)->
     element = scope.element
     styleCache = {}
@@ -31,7 +31,7 @@ Take ["PureDom", "Pressure", "Global"], (PureDom, Pressure, Global)->
       set: (val)->
         if pressure isnt val
           pressure = val
-          if isLine and not Global.legacyHydraulicLines
+          if isLine and not scope.root.legacyHydraulicLines
             scope.stroke Pressure scope.pressure, alpha
           else
             # console.log c = Pressure scope.pressure, alpha

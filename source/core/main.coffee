@@ -23,5 +23,6 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
     # Ready to rock!
     Action "setup"
     Action "ScopeReady"
+    
     Take ["TopBarReady", "ControlPanelReady"], ()->
       svg.style.opacity = 1

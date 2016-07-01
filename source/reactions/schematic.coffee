@@ -2,7 +2,7 @@ Take ["Action", "Dispatch", "Global", "Reaction", "root"],
 (      Action ,  Dispatch ,  Global ,  Reaction ,  root)->
   
   Reaction "ScopeReady", ()->
-    Action "Schematic:Hide"
+    Action "Schematic:Show"
   
   Reaction "Schematic:Toggle", ()->
     Action if Global.animateMode then "Schematic:Show" else "Schematic:Hide"

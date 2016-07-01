@@ -109,7 +109,7 @@
     });
   })();
 
-  Take(["Action", "ControlPanel", "Dispatch", "Ease", "FlowArrows", "HydraulicPressure", "Mask", "PointerInput", "Reaction", "Symbol", "TopBar"], function(Action, ControlPanel, Dispatch, Ease, FlowArrows, HydraulicPressure, Mask, PointerInput, Reaction, Symbol, TopBar) {
+  Take(["Action", "ControlPanel", "Dispatch", "Ease", "Global", "FlowArrows", "HydraulicPressure", "Mask", "PointerInput", "Reaction", "Symbol", "TopBar"], function(Action, ControlPanel, Dispatch, Ease, Global, FlowArrows, HydraulicPressure, Mask, PointerInput, Reaction, Symbol, TopBar) {
     var SVGA;
     Make("SVGAnimation", function() {
       throw "SVGAnimation is no longer a thing. Remove SVGAnimation from your Takes, and delete the word 'SVGAnimation' from your code. Stuff should work.";
@@ -117,18 +117,22 @@
     Make("SVGMask", function() {
       throw "SVGMask is no longer a thing. Please Take \"SVGA\" and use SVGA.mask instead.";
     });
-    return Make("SVGA", SVGA = {
+    Make("SVGA", SVGA = {
       action: Action,
       arrows: FlowArrows,
       control: ControlPanel.addControl,
       dispatch: Dispatch,
       ease: Ease,
+      global: Global,
       input: PointerInput,
       mask: Mask,
       pressure: HydraulicPressure,
       reaction: Reaction,
       symbol: Symbol,
       topbar: TopBar.init
+    });
+    return Take("root", function(root) {
+      return SVGA.root = root;
     });
   });
 
@@ -844,7 +848,7 @@
 
   Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
     Reaction("ScopeReady", function() {
-      return Action("Schematic:Hide");
+      return Action("Schematic:Show");
     });
     Reaction("Schematic:Toggle", function() {
       return Action(Global.animateMode ? "Schematic:Show" : "Schematic:Hide");

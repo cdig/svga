@@ -1,4 +1,4 @@
-Take ["Action", "RequestUniqueAnimation", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Action, RequestUniqueAnimation, ScopeBuilder, SVGCrawler)->
+Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Action, RAF, ScopeBuilder, SVGCrawler)->
   
   # This is the very first code that touches the DOM. It crawls the entire DOM tree and:
   # A) Does various transformations, to bring things to a more ideal arrangement for animating.

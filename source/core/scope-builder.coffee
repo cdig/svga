@@ -1,5 +1,5 @@
-Take ["FlowArrows","Style","Symbol","Transform"],
-(      FlowArrows , Style , Symbol , Transform )->
+Take ["Animation","FlowArrows","Style","Symbol","Transform"],
+(      Animation , FlowArrows , Style , Symbol , Transform )->
   
   Make "ScopeBuilder", ScopeBuilder = (target, parentScope = null)->
     scope = buildScope target.name, target.elm, parentScope
@@ -16,6 +16,7 @@ Take ["FlowArrows","Style","Symbol","Transform"],
     scope.getElement ?= ()-> throw "scope.getElement() has been removed from SVGA. Please use scope.element instead." # LEGACY
     scope.style ?= Style scope
     Transform scope
+    Animation scope
     
     if not parentScope? # If there's no parent, this scope is the root
       scope.root ?= scope

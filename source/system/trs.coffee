@@ -1,4 +1,4 @@
-Take ["RequestDeferredRender", "SVG"], (RequestDeferredRender, SVG)->
+Take ["RAF", "SVG"], (RAF, SVG)->
 
   err = (elm, message)->
     console.log elm
@@ -46,7 +46,7 @@ Take ["RequestDeferredRender", "SVG"], (RequestDeferredRender, SVG)->
       delta = attrs.oy - elm._trs.oy
       elm._trs.oy = attrs.oy
       elm._trs.y += delta
-    RequestDeferredRender elm._trs.apply, true
+    RAF elm._trs.apply, true, 1
     elm # Composable
   
   TRS.rel = (elm, attrs)->
@@ -63,7 +63,7 @@ Take ["RequestDeferredRender", "SVG"], (RequestDeferredRender, SVG)->
     if attrs.oy?
       elm._trs.oy += attrs.oy
       elm._trs.y += attrs.oy
-    RequestDeferredRender elm._trs.apply, true
+    RAF elm._trs.apply, true, 1
     elm # Composable
   
   TRS.move = (elm, x, y)->

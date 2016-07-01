@@ -3,7 +3,7 @@
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  Take(["Action", "RequestUniqueAnimation", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RequestUniqueAnimation, ScopeBuilder, SVGCrawler) {
+  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
     var crawlerData, svg;
     svg = document.rootElement;
     crawlerData = SVGCrawler(svg);
@@ -20,7 +20,7 @@
     });
   });
 
-  Take(["FlowArrows", "Style", "Symbol", "Transform"], function(FlowArrows, Style, Symbol, Transform) {
+  Take(["Animation", "FlowArrows", "Style", "Symbol", "Transform"], function(Animation, FlowArrows, Style, Symbol, Transform) {
     var ScopeBuilder, buildScope, getSymbol;
     Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
       var len, m, ref, scope, subTarget;
@@ -58,6 +58,7 @@
         scope.style = Style(scope);
       }
       Transform(scope);
+      Animation(scope);
       if (parentScope == null) {
         if (scope.root == null) {
           scope.root = scope;
@@ -90,30 +91,27 @@
   (function() {
     var SVGCrawler;
     return Make("SVGCrawler", SVGCrawler = function(elm) {
-      var childElm, len, m, name, ref, ref1, target;
+      var childElm, childNodes, len, m, name, ref, target;
       name = elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0;
       target = {
         name: name,
         elm: elm,
         sub: []
       };
-      ref1 = elm.childNodes;
-      for (m = 0, len = ref1.length; m < len; m++) {
-        childElm = ref1[m];
+      childNodes = Array.prototype.slice.call(elm.childNodes);
+      for (m = 0, len = childNodes.length; m < len; m++) {
+        childElm = childNodes[m];
         if (childElm instanceof SVGGElement) {
           target.sub.push(SVGCrawler(childElm));
-        } else if (childElm instanceof SVGUseElement) {
-          null;
         }
       }
       return target;
     });
   })();
 
-  Take(["Animation", "ControlPanel", "Ease", "FlowArrows", "HydraulicPressure", "Mask", "PointerInput", "Symbol", "TopBar"], function(Animation, ControlPanel, Ease, FlowArrows, HydraulicPressure, Mask, PointerInput, Symbol, TopBar) {
-    var SVGA, SVGAnimation, SVGMask;
+  Take(["ControlPanel", "Ease", "FlowArrows", "HydraulicPressure", "Mask", "PointerInput", "Symbol", "TopBar"], function(ControlPanel, Ease, FlowArrows, HydraulicPressure, Mask, PointerInput, Symbol, TopBar) {
+    var SVGA;
     SVGA = {
-      animation: Animation,
       arrows: FlowArrows,
       control: ControlPanel.addControl,
       ease: Ease,
@@ -123,8 +121,12 @@
       symbol: Symbol,
       topbar: TopBar.init
     };
-    Make("SVGAnimation", SVGAnimation = Animation);
-    Make("SVGMask", SVGMask = Mask);
+    Make("SVGAnimation", function() {
+      throw "SVGAnimation is no longer a thing. Remove SVGAnimation from your Takes, and delete the word 'SVGAnimation' from your code. Stuff should work.";
+    });
+    Make("SVGMask", function() {
+      throw "SVGMask is no longer a thing. Please Take \"SVGA\" and use SVGA.mask instead.";
+    });
     return Make("SVGA", SVGA);
   });
 
@@ -322,51 +324,83 @@
     });
   });
 
-  Take("RequestUniqueAnimation", function(RequestUniqueAnimation) {
+  Take(["Action", "Dispatch", "Global", "Reaction", "SVGReady"], function(Action, Dispatch, Global, Reaction) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return document.rootElement.style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
+    });
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
+    Reaction("Schematic:Toggle", function() {
+      return Action(Global.animateMode ? "Schematic:Show" : "Schematic:Hide");
+    });
+    Reaction("Schematic:Hide", function() {
+      Global.animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("Schematic:Show", function() {
+      Global.animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
+  });
+
+  Take("RAF", function(RAF) {
     var Animation;
-    return Make("Animation", Animation = function(callback) {
-      var scope;
-      return scope = {
-        running: false,
-        restart: false,
-        time: 0,
-        startTime: 0,
-        dT: 0,
-        runAnimation: function(currTime) {
-          var dT, newTime;
-          if (!scope.running) {
-            return;
-          }
-          if (scope.restart) {
-            scope.startTime = currTime;
-            scope.time = 0;
-            scope.restart = false;
-          } else {
-            newTime = currTime - scope.startTime;
-            dT = (newTime - scope.time) / 1000;
-            scope.time = newTime;
-            callback(dT, scope.time);
-          }
-          if (scope.running) {
-            return RequestUniqueAnimation(scope.runAnimation);
-          }
-        },
+    return Make("Animation", Animation = function(scope) {
+      var dt, restart, running, startTime, time, update;
+      if (scope.animation == null) {
+        return;
+      }
+      scope._callback = scope.animation;
+      running = false;
+      restart = false;
+      dt = 0;
+      time = 0;
+      startTime = 0;
+      update = function(t) {
+        var newTime;
+        if (!running) {
+          return;
+        }
+        if (restart) {
+          restart = false;
+          startTime = t / 1000;
+          time = 0;
+        } else {
+          newTime = t / 1000 - startTime;
+          dt = newTime - time;
+          time = newTime;
+          scope._callback(dt, time);
+        }
+        if (running) {
+          return RAF(update);
+        }
+      };
+      return scope.animation = {
         start: function() {
-          var startAnimation;
-          if (scope.running) {
-            scope.restart = true;
-            return;
+          if (!running) {
+            RAF(update);
           }
-          scope.running = true;
-          startAnimation = function(currTime) {
-            scope.startTime = currTime;
-            scope.time = 0;
-            return RequestUniqueAnimation(scope.runAnimation);
-          };
-          return RequestUniqueAnimation(startAnimation);
+          running = true;
+          return restart = true;
         },
         stop: function() {
-          return scope.running = false;
+          return running = false;
         }
       };
     });
@@ -664,7 +698,7 @@
     });
   });
 
-  Take(["RequestDeferredRender", "DOMContentLoaded"], function(RequestDeferredRender) {
+  Take(["RAF", "DOMContentLoaded"], function(RAF) {
     var Transform;
     return Make("Transform", Transform = function(scope) {
       var applyTransform, denom, element, len, m, matrix, prop, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
@@ -718,7 +752,7 @@
         set: function(val) {
           if (x !== val) {
             x = val;
-            return RequestDeferredRender(applyTransform, true);
+            return RAF(applyTransform, true, 1);
           }
         }
       });
@@ -729,7 +763,7 @@
         set: function(val) {
           if (y !== val) {
             y = val;
-            return RequestDeferredRender(applyTransform, true);
+            return RAF(applyTransform, true, 1);
           }
         }
       });
@@ -740,7 +774,7 @@
         set: function(val) {
           if (rotation !== val) {
             rotation = val;
-            return RequestDeferredRender(applyTransform, true);
+            return RAF(applyTransform, true, 1);
           }
         }
       });
@@ -751,7 +785,7 @@
         set: function(val) {
           if (scaleX !== val || scaleY !== val) {
             scaleX = scaleY = val;
-            return RequestDeferredRender(applyTransform, true);
+            return RAF(applyTransform, true, 1);
           }
         }
       });
@@ -762,7 +796,7 @@
         set: function(val) {
           if (scaleX !== val) {
             scaleX = val;
-            return RequestDeferredRender(applyTransform, true);
+            return RAF(applyTransform, true, 1);
           }
         }
       });
@@ -773,7 +807,7 @@
         set: function(val) {
           if (scaleY !== val) {
             scaleY = val;
-            return RequestDeferredRender(applyTransform, true);
+            return RAF(applyTransform, true, 1);
           }
         }
       });
@@ -814,41 +848,6 @@
           throw "scope.transform has been removed from SVGA. You can just delete the .transform and things should work.";
         }
       });
-    });
-  });
-
-  Take(["Action", "Dispatch", "Global", "Reaction", "SVGReady"], function(Action, Dispatch, Global, Reaction) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return document.rootElement.style["background-color"] = colors[index % colors.length];
-    };
-    Reaction("setup", function() {
-      return setColor(1);
-    });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
-    });
-  });
-
-  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
-    Reaction("Schematic:Toggle", function() {
-      return Action(Global.animateMode ? "Schematic:Show" : "Schematic:Hide");
-    });
-    Reaction("Schematic:Hide", function() {
-      Global.animateMode = true;
-      return Dispatch(root, "animateMode");
-    });
-    return Reaction("Schematic:Show", function() {
-      Global.animateMode = false;
-      return Dispatch(root, "schematicMode");
-    });
-  });
-
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
     });
   });
 
@@ -939,85 +938,68 @@
   })();
 
   (function() {
-    var deferredCallbacks, rafCallbacks, requested, run;
+    var callbacksByPriority, requested, run;
     requested = false;
-    rafCallbacks = [];
-    deferredCallbacks = [];
-    run = function(t) {
-      var _cbs, cb, len, len1, m, n, results;
+    callbacksByPriority = [[], []];
+    run = function(time) {
+      var callbacks, cb, len, m, p, results;
       requested = false;
-      _cbs = rafCallbacks;
-      rafCallbacks = [];
-      for (m = 0, len = _cbs.length; m < len; m++) {
-        cb = _cbs[m];
-        cb(t);
-      }
-      _cbs = deferredCallbacks;
-      deferredCallbacks = [];
       results = [];
-      for (n = 0, len1 = _cbs.length; n < len1; n++) {
-        cb = _cbs[n];
-        results.push(cb());
+      for (p = m = 0, len = callbacksByPriority.length; m < len; p = ++m) {
+        callbacks = callbacksByPriority[p];
+        if (!(callbacks != null)) {
+          continue;
+        }
+        callbacksByPriority[p] = [];
+        results.push((function() {
+          var len1, n, results1;
+          results1 = [];
+          for (n = 0, len1 = callbacks.length; n < len1; n++) {
+            cb = callbacks[n];
+            results1.push(cb(time));
+          }
+          return results1;
+        })());
       }
       return results;
     };
-    Make("RequestDeferredRender", function(cb, ignoreDuplicates) {
-      var c, len, m;
+    return Make("RAF", function(cb, ignoreDuplicates, p) {
+      var c, len, m, ref;
       if (ignoreDuplicates == null) {
         ignoreDuplicates = false;
       }
-      if (cb == null) {
-        return console.log("Warning: RequestDeferredRender(null)");
+      if (p == null) {
+        p = 0;
       }
-      for (m = 0, len = deferredCallbacks.length; m < len; m++) {
-        c = deferredCallbacks[m];
+      if (cb == null) {
+        throw "RAF(null)";
+      }
+      ref = callbacksByPriority[p];
+      for (m = 0, len = ref.length; m < len; m++) {
+        c = ref[m];
         if (!(c === cb)) {
           continue;
         }
         if (ignoreDuplicates) {
           return;
         }
-        this.RDRDuplicate = cb;
-        return console.log("Warning: RequestDeferredRender was called with the same function more than once. To figure out which function, please run `RDRDuplicate` in the browser console.");
+        console.log(cb);
+        throw "^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error.";
       }
-      deferredCallbacks.push(cb);
+      (callbacksByPriority[p] != null ? callbacksByPriority[p] : callbacksByPriority[p] = []).push(cb);
       if (!requested) {
         requested = true;
-        return requestAnimationFrame(run);
+        requestAnimationFrame(run);
       }
-    });
-    return Make("RequestUniqueAnimation", function(cb, ignoreDuplicates) {
-      var c, len, m;
-      if (ignoreDuplicates == null) {
-        ignoreDuplicates = false;
-      }
-      if (cb == null) {
-        return console.log("Warning: RequestUniqueAnimation(null)");
-      }
-      for (m = 0, len = rafCallbacks.length; m < len; m++) {
-        c = rafCallbacks[m];
-        if (!(c === cb)) {
-          continue;
-        }
-        if (ignoreDuplicates) {
-          return;
-        }
-        this.RUADuplicate = cb;
-        return console.log("Warning: RequestUniqueAnimation was called with the same function more than once.  To figure out which function, please run `RUADuplicate` in the browser console.");
-      }
-      rafCallbacks.push(cb);
-      if (!requested) {
-        requested = true;
-        return requestAnimationFrame(run);
-      }
+      return cb;
     });
   })();
 
-  Take(["RequestUniqueAnimation"], function(RequestUniqueAnimation) {
+  Take(["RAF"], function(RAF) {
     return Make("Resize", function(cb) {
       var r;
       (r = function() {
-        return RequestUniqueAnimation(cb, true);
+        return RAF(cb, true);
       })();
       return window.addEventListener("resize", r);
     });
@@ -1191,7 +1173,7 @@
     };
   });
 
-  Take(["RequestDeferredRender", "SVG"], function(RequestDeferredRender, SVG) {
+  Take(["RAF", "SVG"], function(RAF, SVG) {
     var TRS, err, setup;
     err = function(elm, message) {
       console.log(elm);
@@ -1264,7 +1246,7 @@
         elm._trs.oy = attrs.oy;
         elm._trs.y += delta;
       }
-      RequestDeferredRender(elm._trs.apply, true);
+      RAF(elm._trs.apply, true, 1);
       return elm;
     };
     TRS.rel = function(elm, attrs) {
@@ -1297,7 +1279,7 @@
         elm._trs.oy += attrs.oy;
         elm._trs.y += attrs.oy;
       }
-      RequestDeferredRender(elm._trs.apply, true);
+      RAF(elm._trs.apply, true, 1);
       return elm;
     };
     TRS.move = function(elm, x, y) {
@@ -1560,7 +1542,7 @@
 
   })();
 
-  Take(["Organizer", "Reaction", "RequestUniqueAnimation"], function(Organizer, Reaction, RequestUniqueAnimation) {
+  Take(["Organizer", "Reaction", "RAF"], function(Organizer, Reaction, RAF) {
     var FlowArrows, currentTime, removeOriginalArrow, update;
     currentTime = null;
     FlowArrows = {
@@ -1583,7 +1565,7 @@
           lineData = linesData[m];
           Organizer.build(parent, lineData.edges, arrowsContainer, this);
         }
-        RequestUniqueAnimation(update, true);
+        RAF(update, true);
         return arrowsContainer;
       },
       show: function() {
@@ -1649,7 +1631,7 @@
     };
     update = function(time) {
       var arrowsContainer, dT, len, m, ref, results;
-      RequestUniqueAnimation(update);
+      RAF(update);
       if (currentTime == null) {
         currentTime = time;
       }

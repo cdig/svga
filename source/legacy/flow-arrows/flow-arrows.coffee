@@ -1,4 +1,4 @@
-Take ["Organizer", "Reaction", "RequestUniqueAnimation"], (Organizer, Reaction, RequestUniqueAnimation)->
+Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
   currentTime = null
   
   FlowArrows =
@@ -27,7 +27,7 @@ Take ["Organizer", "Reaction", "RequestUniqueAnimation"], (Organizer, Reaction, 
       for lineData in linesData
         Organizer.build(parent,lineData.edges, arrowsContainer, this)
       
-      RequestUniqueAnimation update, true
+      RAF update, true
       
       return arrowsContainer
     
@@ -61,7 +61,7 @@ Take ["Organizer", "Reaction", "RequestUniqueAnimation"], (Organizer, Reaction, 
       selectedSymbol.removeChild(child)
   
   update = (time)->
-    RequestUniqueAnimation(update)
+    RAF(update)
     currentTime ?= time
     dT = (time - currentTime)/1000
     currentTime = time

@@ -1,4 +1,4 @@
-Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
+Take ["RAF", "DOMContentLoaded"], (RAF)->
   Make "Transform", Transform = (scope)->
     element = scope.element
     transformBaseVal = element.transform.baseVal
@@ -55,42 +55,42 @@ Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
       set: (val)->
         if x isnt val
           x = val
-          RequestDeferredRender applyTransform, true
+          RAF applyTransform, true, 1
     
     Object.defineProperty scope, 'y',
       get: ()-> y
       set: (val)->
         if y isnt val
           y = val
-          RequestDeferredRender applyTransform, true
+          RAF applyTransform, true, 1
     
     Object.defineProperty scope, 'rotation',
       get: ()-> rotation
       set: (val)->
         if rotation isnt val
           rotation = val
-          RequestDeferredRender applyTransform, true
+          RAF applyTransform, true, 1
     
     Object.defineProperty scope, 'scale',
       get: ()-> (scaleX + scaleY)/2
       set: (val)->
         if scaleX isnt val or scaleY isnt val
           scaleX = scaleY = val
-          RequestDeferredRender applyTransform, true
+          RAF applyTransform, true, 1
 
     Object.defineProperty scope, 'scaleX',
       get: ()-> scaleX
       set: (val)->
         if scaleX isnt val
           scaleX = val
-          RequestDeferredRender applyTransform, true
+          RAF applyTransform, true, 1
     
     Object.defineProperty scope, 'scaleY',
       get: ()-> scaleY
       set: (val)->
         if scaleY isnt val
           scaleY = val
-          RequestDeferredRender applyTransform, true
+          RAF applyTransform, true, 1
     
     
     # Not sure if we want to implement these
@@ -99,13 +99,13 @@ Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
     #   get: ()-> skewX
     #   set: (val)->
     #     skewX = val
-    #     RequestDeferredRender applyTransform, true
+    #     RAF applyTransform, true, 1
     #
     # Object.defineProperty scope, 'skewY',
     #   get: ()-> skewY
     #   set: (val)->
     #     rotation = val
-    #     RequestDeferredRender applyTransform, true
+    #     RAF applyTransform, true, 1
     
     
     # OBSOLETE ####################################################################################

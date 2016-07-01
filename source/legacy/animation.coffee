@@ -1,46 +1,45 @@
-Take "RequestUniqueAnimation", (RequestUniqueAnimation)->
-  Make "Animation", Animation = (callback)->
-    return scope =
-      running: false
-      restart: false
-      time: 0
-      startTime: 0
-      dT: 0
+Take "RAF", (RAF)->
+  Make "Animation", Animation = (scope)->
+    
+    # Don't setup if the animation property is null
+    return unless scope.animation?
+    
+    # We're about to overwrite the scope.animation property.
+    # Save the existing function so we can refer to it later.
+    # It must remain on the scope object, or else @foo won't work inside the function.
+    scope._callback = scope.animation
+    
+    running = false
+    restart = false
+    dt = 0
+    time = 0
+    startTime = 0
+    
+    
+    update = (t)->
+      return unless running
       
-      runAnimation: (currTime)->
-        if not scope.running
-          return
-        if scope.restart
-          scope.startTime = currTime
-          scope.time =  0
-          scope.restart = false
-        else
-          newTime = currTime - scope.startTime
-          dT = (newTime - scope.time)/1000
-          scope.time = newTime
-          callback(dT, scope.time)
-
-
-
-        if scope.running
-          RequestUniqueAnimation(scope.runAnimation)
-
-
-
+      if restart
+        restart = false
+        startTime = t/1000
+        time = 0
+      
+      else
+        newTime = t/1000 - startTime
+        dt = newTime - time
+        time = newTime
+        scope._callback dt, time
+      
+      RAF update if running
+    
+    
+    # Overwrite the animation property with our fancy API
+    scope.animation =
+      
       start: ()->
-        if scope.running
-          scope.restart = true
-          return
-
-        scope.running = true
-
-
-        startAnimation = (currTime)->
-          scope.startTime = currTime
-          scope.time = 0
-          RequestUniqueAnimation(scope.runAnimation)
-
-        RequestUniqueAnimation(startAnimation)
-
+        RAF update unless running
+        running = true
+        restart = true
+      
       stop: ()->
-        scope.running = false
+        running = false

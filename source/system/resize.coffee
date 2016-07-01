@@ -1,4 +1,4 @@
-Take ["RequestUniqueAnimation"], (RequestUniqueAnimation)->
+Take ["RAF"], (RAF)->
   Make "Resize", (cb)->
-    do r = ()-> RequestUniqueAnimation cb, true
+    do r = ()-> RAF cb, true
     window.addEventListener "resize", r

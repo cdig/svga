@@ -7,10 +7,10 @@ do ()->
       elm: elm
       sub: []
     
-    for childElm in elm.childNodes
-      if childElm instanceof SVGGElement
-        target.sub.push SVGCrawler childElm
-      else if childElm instanceof SVGUseElement
-        null # Inline. Recurse?
+    childNodes = Array.prototype.slice.call elm.childNodes
+    
+    for childElm in childNodes when childElm instanceof SVGGElement
+      target.sub.push SVGCrawler childElm
+        
     
     return target

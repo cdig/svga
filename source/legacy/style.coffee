@@ -1,22 +1,23 @@
 Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Global)->
-  Make "Style", Style = (svgElement)->
+  Make "Style", Style = (scope)->
+    element = scope.element
     styleCache = {}
     
     scope =
-      isLine: svgElement.getAttribute("id")?.indexOf("Line") > -1
+      isLine: element.getAttribute("id")?.indexOf("Line") > -1
       pressure: 0
       
       visible: (isVisible)->
         if isVisible
-          svgElement.style.opacity = 1.0
+          element.style.opacity = 1.0
         else
-          svgElement.style.opacity = 0.0
+          element.style.opacity = 0.0
       
       show: (showElement)->
         if showElement
-          svgElement.style.visibility = "visible"
+          element.style.visibility = "visible"
         else
-          svgElement.style.visibility = "hidden"
+          element.style.visibility = "hidden"
       
       setPressure: (val, alpha=1.0)->
         scope.pressure = val
@@ -32,38 +33,38 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
         return HydraulicPressure(pressure)
       
       stroke: (color)->
-        path = svgElement.querySelector("path")
-        use = svgElement.querySelector("use")
+        path = element.querySelector("path")
+        use = element.querySelector("use")
         if not path? and use?
           useParent = PureDom.querySelectorParent(use, "g")
-          parent = PureDom.querySelectorParent(svgElement, "svg")
+          parent = PureDom.querySelectorParent(element, "svg")
           defs = parent.querySelector("defs")
           link = defs.querySelector(use.getAttribute("xlink:href"))
           clone = link.cloneNode(true)
           useParent.appendChild(clone)
           useParent.removeChild(use)
-        path = svgElement.querySelector("path")
+        path = element.querySelector("path")
         if path?
           path.setAttributeNS(null, "stroke", color)
 
       fill: (color)->
-        path = svgElement.querySelector("path")
-        use = svgElement.querySelector("use")
+        path = element.querySelector("path")
+        use = element.querySelector("use")
         if not path? and use?
           useParent = PureDom.querySelectorParent(use, "g")
-          parent = PureDom.querySelectorParent(svgElement, "svg")
+          parent = PureDom.querySelectorParent(element, "svg")
           defs = parent.querySelector("defs")
           link = defs.querySelector(use.getAttribute("xlink:href"))
           clone = link.cloneNode(true)
           useParent.appendChild(clone)
           useParent.removeChild(use)
-        path = svgElement.querySelector("path")
+        path = element.querySelector("path")
         if path?
           path.setAttributeNS(null, "fill", color)
 
       linearGradient: (stops, x1=0, y1=0, x2=1, y2=0)->
-        useParent = PureDom.querySelectorParent(svgElement, "svg")
-        gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id")
+        useParent = PureDom.querySelectorParent(element, "svg")
+        gradientName = "Gradient_" + element.getAttributeNS(null, "id")
         gradient = useParent.querySelector("defs").querySelector("##{gradientName}")
         if not gradient?
           gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient")
@@ -84,8 +85,8 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
         scope.fill(fillUrl)
 
       radialGradient: (stops, cx, cy, radius)->
-        useParent = PureDom.querySelectorParent(svgElement, "svg")
-        gradientName = "Gradient_" + svgElement.getAttributeNS(null, "id")
+        useParent = PureDom.querySelectorParent(element, "svg")
+        gradientName = "Gradient_" + element.getAttributeNS(null, "id")
         gradient = useParent.querySelector("defs").querySelector("##{gradientName}")
         if not gradient?
           gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient")
@@ -105,14 +106,14 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
         scope.fill(fillUrl)
 
       setText: (text)->
-        textElement = svgElement.querySelector("text").querySelector("tspan")
+        textElement = element.querySelector("text").querySelector("tspan")
         if textElement?
           textElement.textContent=text
 
       setProperty: (key, val)->
         unless styleCache[key] is val
           styleCache[key] = val
-          svgElement.style[key] = val
+          element.style[key] = val
       
       getElement: ()->
-        return svgElement
+        throw "scope.style.getElement() has been removed from SVGA. Please use scope.element instead."

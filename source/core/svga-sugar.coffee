@@ -1,11 +1,12 @@
 # This is sugar for Symbol developers, so that they don't have to take a dozen things
 
-Take ["Animation","Ease","FlowArrows","HydraulicPressure","Mask","PointerInput","Symbol","TopBar"],
-(      Animation , Ease , FlowArrows , HydraulicPressure , Mask , PointerInput , Symbol , TopBar)->
+Take ["Animation","ControlPanel","Ease","FlowArrows","HydraulicPressure","Mask","PointerInput","Symbol","TopBar"],
+(      Animation , ControlPanel , Ease , FlowArrows , HydraulicPressure , Mask , PointerInput , Symbol , TopBar)->
   
   SVGA =
     animation: Animation
-    arrows: FlowArrows()
+    arrows: FlowArrows
+    control: ControlPanel.addControl
     ease: Ease
     input: PointerInput
     mask: Mask

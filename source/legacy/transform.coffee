@@ -1,86 +1,135 @@
-Take "RequestDeferredRender", (RequestDeferredRender)->
-  Make "Transform", Transform = (svgElement)->
-    baseTransform = svgElement.getAttribute "transform"
-    currentTransformString = null
-    newTransformString = null
-    translateString = ""
-    rotationString = ""
-    scaleString = ""
+Take ["RequestDeferredRender", "DOMContentLoaded"], (RequestDeferredRender)->
+  Make "Transform", Transform = (scope)->
+    element = scope.element
+    transformBaseVal = element.transform.baseVal
     
-    xVal = 0
-    yVal = 0
-    cxVal = 0
-    cyVal = 0
-    angleVal = 0
-    scaleVal = 1
-    scaleXVal = 1
-    scaleYVal = 1
-    
-    scope = {}
+    transform = document.rootElement.createSVGTransform()
+    matrix = document.rootElement.createSVGMatrix()
+    x = 0
+    y = 0
+    rotation = 0
+    scaleX = 1
+    scaleY = 1
+    # skewX = 0
+    # skewY = 0
     
     
-    # LEGACY
-    scope.setBaseIdentity = ()-> baseTransform = "matrix(1,0,0,1,0,0)"
-    scope.setBaseTransform = ()-> baseTransform = svgElement.getAttribute("transform")
+    # Check that we aren't about to clobber anything
+    for prop in ["x", "y", "rotation", "scale", "scaleX", "scaleY"] #, "skewX", "skewY"]
+      if scope[prop]?
+        console.log element
+        throw "^ Transform will clobber scope.#{prop} on this element. Please find a different name for your child/property \"#{prop}\"."
     
     
-    rotate = (angle, cx, cy)->
-      rotationString = "rotate(#{angle}, #{cx}, #{cy})"
-      setTransform()
-
-    translate = (x, y)->
-      translateString = "translate(#{x}, #{y})"
-      setTransform()
-
-    scaling = (scaleX, scaleY=scaleX)->
-      scaleString = "scale(#{scaleX}, #{scaleY})"
-      setTransform()
-
-    setTransform = ()->
-      newTransformString = "#{baseTransform} #{rotationString} #{scaleString} #{translateString}"
-      RequestDeferredRender applyTransform, true
+    # Extract the existing transform value from the element
+    if transformBaseVal.numberOfItems is 1
+      t = transformBaseVal.getItem 0
+      switch t.type
+        when SVGTransform.SVG_TRANSFORM_MATRIX
+          x = t.matrix.e
+          y = t.matrix.f
+          rotation = 180/Math.PI * Math.atan2 t.matrix.b, t.matrix.a
+          denom = Math.pow(t.matrix.a, 2) + Math.pow t.matrix.c, 2
+          scaleX = Math.sqrt denom
+          scaleY = (t.matrix.a * t.matrix.d - t.matrix.b * t.matrix.c) / scaleX
+          # skewX = 180/Math.PI * Math.atan2 t.matrix.a * t.matrix.b + t.matrix.c * t.matrix.d, denom
+        else
+          throw new Error "^ Transform encountered an SVG element with a non-matrix transform"
+    else if transformBaseVal.numberOfItems > 1
+      console.log element
+      throw new Error "^ Transform encountered an SVG element with more than one transform"
+    
     
     applyTransform = ()->
-      return if currentTransformString is newTransformString # Don't update unless the value is changing
-      currentTransformString = newTransformString
-      svgElement.setAttribute "transform", currentTransformString
+      # TODO: introduce a guard here to check if the value has changed
+      matrix.a = scaleX
+      matrix.d = scaleY
+      matrix.e = x
+      matrix.f = y
+      transform.setMatrix matrix.rotate rotation
+      element.transform.baseVal.initialize transform
     
     
     Object.defineProperty scope, 'x',
-      get: ()-> xVal
-      set: (val)-> translate xVal = val, yVal
-
+      get: ()-> x
+      set: (val)->
+        if x isnt val
+          x = val
+          RequestDeferredRender applyTransform, true
+    
     Object.defineProperty scope, 'y',
-      get: ()-> yVal
-      set: (val)-> translate xVal, yVal = val
+      get: ()-> y
+      set: (val)->
+        if y isnt val
+          y = val
+          RequestDeferredRender applyTransform, true
     
-    Object.defineProperty scope, 'cx',
-      get: ()-> cxVal
-      set: (val)-> rotate angleVal, cxVal = val, cyVal
-    
-    Object.defineProperty scope, 'cy',
-      get: ()-> cyVal
-      set: (val)-> rotate angleVal, cxVal, cyVal = val
-    
-    Object.defineProperty scope, 'angle',
-      get: ()-> angleVal
-      set: (val)-> rotate angleVal = val, cxVal, cyVal
-    
-    Object.defineProperty scope, 'turns',
-      get: ()-> scope.angle / 360
-      set: (val)-> scope.angle = val * 360
+    Object.defineProperty scope, 'rotation',
+      get: ()-> rotation
+      set: (val)->
+        if rotation isnt val
+          rotation = val
+          RequestDeferredRender applyTransform, true
     
     Object.defineProperty scope, 'scale',
-      get: ()-> scaleVal
-      set: (val)-> scaling scaleVal = val
+      get: ()-> (scaleX + scaleY)/2
+      set: (val)->
+        if scaleX isnt val or scaleY isnt val
+          scaleX = scaleY = val
+          RequestDeferredRender applyTransform, true
 
     Object.defineProperty scope, 'scaleX',
-      get: ()-> scaleXVal
-      set: (val)-> scaling scaleXVal = val, scaleYVal
+      get: ()-> scaleX
+      set: (val)->
+        if scaleX isnt val
+          scaleX = val
+          RequestDeferredRender applyTransform, true
     
     Object.defineProperty scope, 'scaleY',
-      get: ()-> scaleYVal
-      set: (val)-> scaling scaleXVal, scaleYVal = val
+      get: ()-> scaleY
+      set: (val)->
+        if scaleY isnt val
+          scaleY = val
+          RequestDeferredRender applyTransform, true
+    
+    
+    # Not sure if we want to implement these
+    #
+    # Object.defineProperty scope, 'skewX',
+    #   get: ()-> skewX
+    #   set: (val)->
+    #     skewX = val
+    #     RequestDeferredRender applyTransform, true
+    #
+    # Object.defineProperty scope, 'skewY',
+    #   get: ()-> skewY
+    #   set: (val)->
+    #     rotation = val
+    #     RequestDeferredRender applyTransform, true
+    
+    
+    # OBSOLETE ####################################################################################
+    
+    Object.defineProperty scope, 'cx',
+      get: ()-> throw "cx has been removed from the SVGA Transform system."
+      set: ()-> throw "cx has been removed from the SVGA Transform system."
+    
+    Object.defineProperty scope, 'cy',
+      get: ()-> throw "cy has been removed from the SVGA Transform system."
+      set: ()-> throw "cy has been removed from the SVGA Transform system."
+    
+    Object.defineProperty scope, 'angle',
+      get: ()-> throw "angle has been removed from the SVGA Transform system. Please use scope.rotation instead."
+      set: ()-> throw "angle has been removed from the SVGA Transform system. Please use scope.rotation instead."
+    
+    Object.defineProperty scope, 'turns',
+      get: ()-> throw "turns has been removed from the SVGA Transform system. Please use scope.rotation instead."
+      set: ()-> throw "turns has been removed from the SVGA Transform system. Please use scope.rotation instead."
 
-      
-    return scope
+    Object.defineProperty scope, "transform",
+      get: ()-> throw "scope.transform has been removed from SVGA. You can just delete the .transform and things should work."
+    
+    
+    # LEGACY
+    # api.setBaseIdentity = ()-> baseTransform = "matrix(1,0,0,1,0,0)"
+    # api.setBaseTransform = ()-> baseTransform = element.getAttribute("transform")

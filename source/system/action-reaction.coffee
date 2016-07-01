@@ -1,4 +1,4 @@
-Take [], ()->
+do ()->
   cbs = []
 
   Make "Reaction", (name, cb)->

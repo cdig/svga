@@ -1,4 +1,4 @@
-Take [], ()->
+do ()->
   Make "Global", Global = {}
   internal = {}
   

@@ -1,4 +1,4 @@
-Take [], ()->
+do ()->
   Make "Dispatch", (node, fn, sub = "children")->
     if typeof fn is "string"
       dispatchString node, fn, sub

@@ -12,10 +12,10 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     SVG.attr bg, "width", panelWidth
     SVG.attr bg, "height", window.innerHeight - topbarHeight
     TRS.move controlPanel, window.innerWidth - panelWidth, topbarHeight
-    
+    Make "ControlPanelReady" unless Take "ControlPanelReady"
   
   construct = (name, fn)->
-    i = elements.length
+    control = fn()
   
   
   Make "ControlPanel", ControlPanel =
@@ -24,5 +24,5 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     addControl: (name, cb)->
       
       # Panel elements are defined using Make()
-      Take name, (fn)->
+      Take "Controls:" + name, (fn)->
         construct name, fn

@@ -6,7 +6,7 @@
 getParentInverseTransform = (root,element, currentTransform)->
   if element.nodeName is "svg" or element.getAttribute("id") is "mainStage"
     return currentTransform
-  newMatrix = root.getElement().createSVGMatrix()
+  newMatrix = root.element.createSVGMatrix()
   matrixString = element.getAttribute("transform")
   matches = matrixString.match(/[+-]?\d+(\.\d+)?/g)
   newMatrix.a = matches[0]
@@ -21,9 +21,9 @@ getParentInverseTransform = (root,element, currentTransform)->
   getParentInverseTransform(root,element.parentNode, currentTransform)
 
 Make "Mask", Mask = (root, maskInstance, maskedInstance, maskName)->
-  maskElement = maskInstance.getElement()
-  maskedElement = maskedInstance.getElement()
-  rootElement = root.getElement()
+  maskElement = maskInstance.element
+  maskedElement = maskedInstance.element
+  rootElement = root.element
   mask = document.createElementNS("http://www.w3.org/2000/svg", "mask")
   mask.setAttribute("id", maskName)
   mask.setAttribute("maskContentUnits", "userSpaceOnUse")
@@ -50,5 +50,8 @@ Make "Mask", Mask = (root, maskInstance, maskedInstance, maskName)->
   else
     newStyle = "mask: url(##{maskName});"
   maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)")
-  maskedInstance.transform.setBaseTransform()
+  
+  # Disabled by Ivan
+  # maskedInstance.transform.setBaseTransform()
+  
   maskedParent.setAttribute("style", newStyle)

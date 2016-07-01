@@ -16,6 +16,7 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     SVG.attrs bg, width: window.innerWidth
     TRS.move container, window.innerWidth/2 - offsetX/2
     elm.scope.resize?() for elm in elements
+    Make "TopBarReady" unless Take "TopBarReady"
   
   construct = (i, name, scope)->
     source = document.getElementById(name.toLowerCase())

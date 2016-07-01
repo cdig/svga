@@ -127,7 +127,7 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
       set: ()-> throw "turns has been removed from the SVGA Transform system. Please use scope.rotation instead."
 
     Object.defineProperty scope, "transform",
-      get: ()-> throw "scope.transform has been removed from SVGA. You can just delete the .transform and things should work."
+      get: ()-> throw "scope.transform has been removed. You can just delete the .transform and things should work."
     
     
     # LEGACY

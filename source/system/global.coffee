@@ -16,4 +16,4 @@ do ()->
     get: ()->   !internal.animateMode
     set: (val)-> internal.animateMode = !val
   
-  readWrite "enableHydraulicLines"
+  readWrite "legacyHydraulicLines", false

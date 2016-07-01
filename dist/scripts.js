@@ -48,15 +48,17 @@
       if (scope.element == null) {
         scope.element = element;
       }
-      scope.FlowArrows = FlowArrows;
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
+        }
+      });
       if (scope.getElement == null) {
         scope.getElement = function() {
-          throw "scope.getElement() has been removed from SVGA. Please use scope.element instead.";
+          throw "scope.getElement() has been removed. Please use scope.element instead.";
         };
       }
-      if (scope.style == null) {
-        scope.style = Style(scope);
-      }
+      Style(scope);
       Transform(scope);
       Animation(scope);
       if (parentScope == null) {
@@ -514,166 +516,180 @@
   Take(["PureDom", "HydraulicPressure", "Global"], function(PureDom, HydraulicPressure, Global) {
     var Style;
     return Make("Style", Style = function(scope) {
-      var element, ref, styleCache;
+      var element, isLine, len, m, pressure, prop, ref, ref1, styleCache;
       element = scope.element;
       styleCache = {};
-      return scope = {
-        isLine: ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1,
-        pressure: 0,
-        visible: function(isVisible) {
-          if (isVisible) {
-            return element.style.opacity = 1.0;
-          } else {
-            return element.style.opacity = 0.0;
-          }
-        },
-        show: function(showElement) {
-          if (showElement) {
-            return element.style.visibility = "visible";
-          } else {
-            return element.style.visibility = "hidden";
-          }
-        },
-        setPressure: function(val, alpha) {
-          if (alpha == null) {
-            alpha = 1.0;
-          }
-          scope.pressure = val;
-          if (scope.isLine && Global.enableHydraulicLines) {
-            return scope.stroke(HydraulicPressure(scope.pressure, alpha));
-          } else {
-            return scope.fill(HydraulicPressure(scope.pressure, alpha));
-          }
-        },
-        getPressure: function() {
-          return scope.pressure;
-        },
-        getPressureColor: function(pressure) {
-          return HydraulicPressure(pressure);
-        },
-        stroke: function(color) {
-          var clone, defs, link, parent, path, use, useParent;
-          path = element.querySelector("path");
-          use = element.querySelector("use");
-          if ((path == null) && (use != null)) {
-            useParent = PureDom.querySelectorParent(use, "g");
-            parent = PureDom.querySelectorParent(element, "svg");
-            defs = parent.querySelector("defs");
-            link = defs.querySelector(use.getAttribute("xlink:href"));
-            clone = link.cloneNode(true);
-            useParent.appendChild(clone);
-            useParent.removeChild(use);
-          }
-          path = element.querySelector("path");
-          if (path != null) {
-            return path.setAttributeNS(null, "stroke", color);
-          }
-        },
-        fill: function(color) {
-          var clone, defs, link, parent, path, use, useParent;
-          path = element.querySelector("path");
-          use = element.querySelector("use");
-          if ((path == null) && (use != null)) {
-            useParent = PureDom.querySelectorParent(use, "g");
-            parent = PureDom.querySelectorParent(element, "svg");
-            defs = parent.querySelector("defs");
-            link = defs.querySelector(use.getAttribute("xlink:href"));
-            clone = link.cloneNode(true);
-            useParent.appendChild(clone);
-            useParent.removeChild(use);
-          }
-          path = element.querySelector("path");
-          if (path != null) {
-            return path.setAttributeNS(null, "fill", color);
-          }
-        },
-        linearGradient: function(stops, x1, y1, x2, y2) {
-          var fillUrl, gradient, gradientName, gradientStop, len, m, stop, useParent;
-          if (x1 == null) {
-            x1 = 0;
-          }
-          if (y1 == null) {
-            y1 = 0;
-          }
-          if (x2 == null) {
-            x2 = 1;
-          }
-          if (y2 == null) {
-            y2 = 0;
-          }
-          useParent = PureDom.querySelectorParent(element, "svg");
-          gradientName = "Gradient_" + element.getAttributeNS(null, "id");
-          gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
-          if (gradient == null) {
-            gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-            useParent.querySelector("defs").appendChild(gradient);
-          }
-          gradient.setAttribute("id", gradientName);
-          gradient.setAttributeNS(null, "x1", x1);
-          gradient.setAttributeNS(null, "y1", y1);
-          gradient.setAttributeNS(null, "x2", x2);
-          gradient.setAttributeNS(null, "y2", y2);
-          while (gradient.hasChildNodes()) {
-            gradient.removeChild(gradient.firstChild);
-          }
-          for (m = 0, len = stops.length; m < len; m++) {
-            stop = stops[m];
-            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-            gradientStop.setAttribute("offset", stop.offset);
-            gradientStop.setAttribute("stop-color", stop.color);
-            gradient.appendChild(gradientStop);
-          }
-          fillUrl = "url(#" + gradientName + ")";
-          return scope.fill(fillUrl);
-        },
-        radialGradient: function(stops, cx, cy, radius) {
-          var fillUrl, gradient, gradientName, gradientStop, len, m, stop, useParent;
-          useParent = PureDom.querySelectorParent(element, "svg");
-          gradientName = "Gradient_" + element.getAttributeNS(null, "id");
-          gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
-          if (gradient == null) {
-            gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
-            useParent.querySelector("defs").appendChild(gradient);
-          }
-          gradient.setAttribute("id", gradientName);
-          if (cx != null) {
-            gradient.setAttributeNS(null, "cx", cx);
-          }
-          if (cy != null) {
-            gradient.setAttributeNS(null, "cy", cy);
-          }
-          if (radius != null) {
-            gradient.setAttributeNS(null, "r", radius);
-          }
-          while (gradient.hasChildNodes()) {
-            gradient.removeChild(gradient.firstChild);
-          }
-          for (m = 0, len = stops.length; m < len; m++) {
-            stop = stops[m];
-            gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-            gradientStop.setAttribute("offset", stop.offset);
-            gradientStop.setAttribute("stop-color", stop.color);
-            gradient.appendChild(gradientStop);
-          }
-          fillUrl = "url(#" + gradientName + ")";
-          return scope.fill(fillUrl);
-        },
-        setText: function(text) {
-          var textElement;
-          textElement = element.querySelector("text").querySelector("tspan");
-          if (textElement != null) {
-            return textElement.textContent = text;
-          }
-        },
-        setProperty: function(key, val) {
-          if (styleCache[key] !== val) {
-            styleCache[key] = val;
-            return element.style[key] = val;
-          }
-        },
-        getElement: function() {
-          throw "scope.style.getElement() has been removed from SVGA. Please use scope.element instead.";
+      isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
+      ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        prop = ref1[m];
+        if (scope[prop] != null) {
+          console.log("ERROR ############################################");
+          console.log("scope:");
+          console.log(scope);
+          console.log("element:");
+          console.log(element);
+          throw "^ Transform will clobber scope." + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
         }
+      }
+      pressure = 0;
+      Object.defineProperty(scope, 'pressure', {
+        get: function() {
+          return pressure;
+        },
+        set: function(val) {
+          if (pressure !== val) {
+            pressure = val;
+            if (api.isLine && !Global.legacyHydraulicLines) {
+              return api.stroke(HydraulicPressure(api.pressure, alpha));
+            } else {
+              return api.fill(HydraulicPressure(api.pressure, alpha));
+            }
+          }
+        }
+      });
+      scope.style = function(key, val) {
+        if (styleCache[key] !== val) {
+          styleCache[key] = val;
+          return element.style[key] = val;
+        }
+      };
+      scope.visible = function(isVisible) {
+        if (isVisible) {
+          return element.style.opacity = 1.0;
+        } else {
+          return element.style.opacity = 0.0;
+        }
+      };
+      scope.show = function(showElement) {
+        if (showElement) {
+          return element.style.visibility = "visible";
+        } else {
+          return element.style.visibility = "hidden";
+        }
+      };
+      scope.getPressure = function() {
+        return api.pressure;
+      };
+      scope.getPressureColor = function(pressure) {
+        return HydraulicPressure(pressure);
+      };
+      scope.stroke = function(color) {
+        var clone, defs, link, parent, path, use, useParent;
+        path = element.querySelector("path");
+        use = element.querySelector("use");
+        if ((path == null) && (use != null)) {
+          useParent = PureDom.querySelectorParent(use, "g");
+          parent = PureDom.querySelectorParent(element, "svg");
+          defs = parent.querySelector("defs");
+          link = defs.querySelector(use.getAttribute("xlink:href"));
+          clone = link.cloneNode(true);
+          useParent.appendChild(clone);
+          useParent.removeChild(use);
+        }
+        path = element.querySelector("path");
+        if (path != null) {
+          return path.setAttributeNS(null, "stroke", color);
+        }
+      };
+      scope.fill = function(color) {
+        var clone, defs, link, parent, path, use, useParent;
+        path = element.querySelector("path");
+        use = element.querySelector("use");
+        if ((path == null) && (use != null)) {
+          useParent = PureDom.querySelectorParent(use, "g");
+          parent = PureDom.querySelectorParent(element, "svg");
+          defs = parent.querySelector("defs");
+          link = defs.querySelector(use.getAttribute("xlink:href"));
+          clone = link.cloneNode(true);
+          useParent.appendChild(clone);
+          useParent.removeChild(use);
+        }
+        path = element.querySelector("path");
+        if (path != null) {
+          return path.setAttributeNS(null, "fill", color);
+        }
+      };
+      scope.linearGradient = function(stops, x1, y1, x2, y2) {
+        var fillUrl, gradient, gradientName, gradientStop, len1, n, stop, useParent;
+        if (x1 == null) {
+          x1 = 0;
+        }
+        if (y1 == null) {
+          y1 = 0;
+        }
+        if (x2 == null) {
+          x2 = 1;
+        }
+        if (y2 == null) {
+          y2 = 0;
+        }
+        useParent = PureDom.querySelectorParent(element, "svg");
+        gradientName = "Gradient_" + element.getAttributeNS(null, "id");
+        gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
+        if (gradient == null) {
+          gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+          useParent.querySelector("defs").appendChild(gradient);
+        }
+        gradient.setAttribute("id", gradientName);
+        gradient.setAttributeNS(null, "x1", x1);
+        gradient.setAttributeNS(null, "y1", y1);
+        gradient.setAttributeNS(null, "x2", x2);
+        gradient.setAttributeNS(null, "y2", y2);
+        while (gradient.hasChildNodes()) {
+          gradient.removeChild(gradient.firstChild);
+        }
+        for (n = 0, len1 = stops.length; n < len1; n++) {
+          stop = stops[n];
+          gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+          gradientStop.setAttribute("offset", stop.offset);
+          gradientStop.setAttribute("stop-color", stop.color);
+          gradient.appendChild(gradientStop);
+        }
+        fillUrl = "url(#" + gradientName + ")";
+        return api.fill(fillUrl);
+      };
+      scope.radialGradient = function(stops, cx, cy, radius) {
+        var fillUrl, gradient, gradientName, gradientStop, len1, n, stop, useParent;
+        useParent = PureDom.querySelectorParent(element, "svg");
+        gradientName = "Gradient_" + element.getAttributeNS(null, "id");
+        gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
+        if (gradient == null) {
+          gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
+          useParent.querySelector("defs").appendChild(gradient);
+        }
+        gradient.setAttribute("id", gradientName);
+        if (cx != null) {
+          gradient.setAttributeNS(null, "cx", cx);
+        }
+        if (cy != null) {
+          gradient.setAttributeNS(null, "cy", cy);
+        }
+        if (radius != null) {
+          gradient.setAttributeNS(null, "r", radius);
+        }
+        while (gradient.hasChildNodes()) {
+          gradient.removeChild(gradient.firstChild);
+        }
+        for (n = 0, len1 = stops.length; n < len1; n++) {
+          stop = stops[n];
+          gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+          gradientStop.setAttribute("offset", stop.offset);
+          gradientStop.setAttribute("stop-color", stop.color);
+          gradient.appendChild(gradientStop);
+        }
+        fillUrl = "url(#" + gradientName + ")";
+        return api.fill(fillUrl);
+      };
+      scope.setText = function(text) {
+        var textElement;
+        textElement = element.querySelector("text").querySelector("tspan");
+        if (textElement != null) {
+          return textElement.textContent = text;
+        }
+      };
+      return scope.getElement = function() {
+        throw "scope.style.getElement() has been removed. Please use scope.element instead.";
       };
     });
   });
@@ -825,7 +841,7 @@
       });
       return Object.defineProperty(scope, "transform", {
         get: function() {
-          throw "scope.transform has been removed from SVGA. You can just delete the .transform and things should work.";
+          throw "scope.transform has been removed. You can just delete the .transform and things should work.";
         }
       });
     });
@@ -967,7 +983,7 @@
         return internal.animateMode = !val;
       }
     });
-    return readWrite("enableHydraulicLines");
+    return readWrite("legacyHydraulicLines", false);
   })();
 
   (function() {

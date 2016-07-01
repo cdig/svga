@@ -12,9 +12,9 @@ Take ["Animation","FlowArrows","Style","Symbol","Transform"],
     scope = symbol.create element
     scope.children ?= []
     scope.element ?= element
-    scope.FlowArrows = FlowArrows # LEGACY
-    scope.getElement ?= ()-> throw "scope.getElement() has been removed from SVGA. Please use scope.element instead." # LEGACY
-    scope.style ?= Style scope
+    Object.defineProperty scope, "FlowArrows", get: ()-> throw "root.FlowArrows has been removed. Please use SVGA.arrows instead."
+    scope.getElement ?= ()-> throw "scope.getElement() has been removed. Please use scope.element instead."
+    Style scope
     Transform scope
     Animation scope
     

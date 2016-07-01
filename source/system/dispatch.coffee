@@ -18,7 +18,7 @@ do ()->
       fn() for fn in cache[sub][action]
   
   buildSubCache = (node, name, sub, nameCache)->
-    nameCache.push node[name] if typeof node[name] is "function"
+    nameCache.push node[name].bind(node) if typeof node[name] is "function"
     buildSubCache child, name, sub, nameCache for child in node[sub]
   
   dispatchWithFn = (node, fn, sub)->

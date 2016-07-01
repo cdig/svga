@@ -171,6 +171,163 @@
     return Make("Symbol", Symbol);
   })();
 
+  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
+    var ControlPanel, bg, controlPanel, elements, resize, topbarHeight;
+    topbarHeight = 48;
+    elements = [];
+    controlPanel = TRS(SVG.create("g", SVG.root, {
+      "class": "ControlPanel"
+    }));
+    bg = SVG.create("rect", controlPanel, {
+      "class": "BG"
+    });
+    Resize(resize = function() {
+      var panelWidth;
+      panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
+      SVG.attr(bg, "width", panelWidth);
+      SVG.attr(bg, "height", window.innerHeight - topbarHeight);
+      TRS.move(controlPanel, window.innerWidth - panelWidth, topbarHeight);
+      if (!Take("ControlPanelReady")) {
+        return Make("ControlPanelReady");
+      }
+    });
+    return Make("ControlPanel", ControlPanel = {
+      addControl: function(props) {
+        if (props.type != null) {
+          return Take("Controls:" + props.type, function(fn) {
+            var control;
+            return control = fn(props);
+          });
+        } else {
+          console.log(props);
+          throw "^ You must include a 'type' property when creating an SVGA.control instance";
+        }
+      }
+    });
+  });
+
+  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
+    var TopBar, bg, buttonPad, construct, container, elements, iconPad, inited, offsetX, resize, topBar, topBarHeight;
+    topBarHeight = 48;
+    buttonPad = 30;
+    iconPad = 6;
+    elements = {};
+    offsetX = 0;
+    inited = false;
+    topBar = SVG.create("g", SVG.root, {
+      "class": "TopBar"
+    });
+    bg = SVG.create("rect", topBar, {
+      height: 48,
+      fill: "url(#TopBarGradient)"
+    });
+    SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
+    container = TRS(SVG.create("g", topBar, {
+      "class": "Elements"
+    }));
+    resize = function() {
+      var base, elm, len, m;
+      SVG.attrs(bg, {
+        width: window.innerWidth
+      });
+      TRS.move(container, window.innerWidth / 2 - offsetX / 2);
+      for (m = 0, len = elements.length; m < len; m++) {
+        elm = elements[m];
+        if (typeof (base = elm.scope).resize === "function") {
+          base.resize();
+        }
+      }
+      if (!Take("TopBarReady")) {
+        return Make("TopBarReady");
+      }
+    };
+    construct = function(i, name, scope) {
+      var buttonWidth, iconRect, iconScale, iconX, iconY, source, textRect, textX;
+      source = document.getElementById(name.toLowerCase());
+      if (source == null) {
+        throw "TopBar icon not found for id: #" + name;
+      }
+      scope.element = TRS(SVG.create("g", container, {
+        "class": "ui Element"
+      }));
+      elements[name] = {
+        element: scope.element,
+        i: i,
+        name: name,
+        scope: scope
+      };
+      if (scope.bg == null) {
+        scope.bg = SVG.create("rect", scope.element, {
+          "class": "BG",
+          height: topBarHeight
+        });
+      }
+      if (scope.icon == null) {
+        scope.icon = TRS(SVG.clone(source, scope.element));
+      }
+      if (scope.text == null) {
+        scope.text = TRS(SVG.create("text", scope.element, {
+          "font-family": "Lato",
+          "font-size": 14,
+          fill: "#FFF",
+          textContent: name.toUpperCase()
+        }));
+      }
+      iconRect = scope.icon.getBoundingClientRect();
+      textRect = scope.text.getBoundingClientRect();
+      iconScale = Math.min((topBarHeight - iconPad * 2) / iconRect.width, (topBarHeight - iconPad * 2) / iconRect.height);
+      iconX = buttonPad;
+      iconY = topBarHeight / 2 - iconRect.height * iconScale / 2;
+      textX = buttonPad + iconRect.width * iconScale + iconPad;
+      buttonWidth = textX + textRect.width + buttonPad;
+      TRS.abs(scope.icon, {
+        x: iconX,
+        y: iconY,
+        scale: iconScale
+      });
+      TRS.move(scope.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
+      SVG.attrs(scope.bg, {
+        width: buttonWidth
+      });
+      TRS.move(scope.element, offsetX);
+      offsetX += buttonWidth;
+      if (typeof scope.setup === "function") {
+        scope.setup(scope.element);
+      }
+      if (scope.click != null) {
+        return PointerInput.addClick(scope.element, scope.click);
+      }
+    };
+    return Make("TopBar", TopBar = {
+      init: function() {
+        var name, names, prefixedNames;
+        names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        if (inited) {
+          throw "TopBar.init was called more than once.";
+        }
+        inited = true;
+        prefixedNames = (function() {
+          var len, m, results;
+          results = [];
+          for (m = 0, len = names.length; m < len; m++) {
+            name = names[m];
+            results.push("TopBar:" + name);
+          }
+          return results;
+        })();
+        return Take(prefixedNames, function() {
+          var i, len, m, scopes;
+          scopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          for (i = m = 0, len = names.length; m < len; i = ++m) {
+            name = names[i];
+            construct(i, name, scopes[i]);
+          }
+          return Resize(resize);
+        });
+      }
+    });
+  });
+
   Take("RAF", function(RAF) {
     var Animation;
     return Make("Animation", Animation = function(scope) {
@@ -670,163 +827,6 @@
     });
   });
 
-  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var ControlPanel, bg, controlPanel, elements, resize, topbarHeight;
-    topbarHeight = 48;
-    elements = [];
-    controlPanel = TRS(SVG.create("g", SVG.root, {
-      "class": "ControlPanel"
-    }));
-    bg = SVG.create("rect", controlPanel, {
-      "class": "BG"
-    });
-    Resize(resize = function() {
-      var panelWidth;
-      panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
-      SVG.attr(bg, "width", panelWidth);
-      SVG.attr(bg, "height", window.innerHeight - topbarHeight);
-      TRS.move(controlPanel, window.innerWidth - panelWidth, topbarHeight);
-      if (!Take("ControlPanelReady")) {
-        return Make("ControlPanelReady");
-      }
-    });
-    return Make("ControlPanel", ControlPanel = {
-      addControl: function(props) {
-        if (props.type != null) {
-          return Take("Controls:" + props.type, function(fn) {
-            var control;
-            return control = fn(props);
-          });
-        } else {
-          console.log(props);
-          throw "^ You must include a 'type' property when creating an SVGA.control instance";
-        }
-      }
-    });
-  });
-
-  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var TopBar, bg, buttonPad, construct, container, elements, iconPad, inited, offsetX, resize, topBar, topBarHeight;
-    topBarHeight = 48;
-    buttonPad = 30;
-    iconPad = 6;
-    elements = {};
-    offsetX = 0;
-    inited = false;
-    topBar = SVG.create("g", SVG.root, {
-      "class": "TopBar"
-    });
-    bg = SVG.create("rect", topBar, {
-      height: 48,
-      fill: "url(#TopBarGradient)"
-    });
-    SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
-    container = TRS(SVG.create("g", topBar, {
-      "class": "Elements"
-    }));
-    resize = function() {
-      var base, elm, len, m;
-      SVG.attrs(bg, {
-        width: window.innerWidth
-      });
-      TRS.move(container, window.innerWidth / 2 - offsetX / 2);
-      for (m = 0, len = elements.length; m < len; m++) {
-        elm = elements[m];
-        if (typeof (base = elm.scope).resize === "function") {
-          base.resize();
-        }
-      }
-      if (!Take("TopBarReady")) {
-        return Make("TopBarReady");
-      }
-    };
-    construct = function(i, name, scope) {
-      var buttonWidth, iconRect, iconScale, iconX, iconY, source, textRect, textX;
-      source = document.getElementById(name.toLowerCase());
-      if (source == null) {
-        throw "TopBar icon not found for id: #" + name;
-      }
-      scope.element = TRS(SVG.create("g", container, {
-        "class": "ui Element"
-      }));
-      elements[name] = {
-        element: scope.element,
-        i: i,
-        name: name,
-        scope: scope
-      };
-      if (scope.bg == null) {
-        scope.bg = SVG.create("rect", scope.element, {
-          "class": "BG",
-          height: topBarHeight
-        });
-      }
-      if (scope.icon == null) {
-        scope.icon = TRS(SVG.clone(source, scope.element));
-      }
-      if (scope.text == null) {
-        scope.text = TRS(SVG.create("text", scope.element, {
-          "font-family": "Lato",
-          "font-size": 14,
-          fill: "#FFF",
-          textContent: name.toUpperCase()
-        }));
-      }
-      iconRect = scope.icon.getBoundingClientRect();
-      textRect = scope.text.getBoundingClientRect();
-      iconScale = Math.min((topBarHeight - iconPad * 2) / iconRect.width, (topBarHeight - iconPad * 2) / iconRect.height);
-      iconX = buttonPad;
-      iconY = topBarHeight / 2 - iconRect.height * iconScale / 2;
-      textX = buttonPad + iconRect.width * iconScale + iconPad;
-      buttonWidth = textX + textRect.width + buttonPad;
-      TRS.abs(scope.icon, {
-        x: iconX,
-        y: iconY,
-        scale: iconScale
-      });
-      TRS.move(scope.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
-      SVG.attrs(scope.bg, {
-        width: buttonWidth
-      });
-      TRS.move(scope.element, offsetX);
-      offsetX += buttonWidth;
-      if (typeof scope.setup === "function") {
-        scope.setup(scope.element);
-      }
-      if (scope.click != null) {
-        return PointerInput.addClick(scope.element, scope.click);
-      }
-    };
-    return Make("TopBar", TopBar = {
-      init: function() {
-        var name, names, prefixedNames;
-        names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        if (inited) {
-          throw "TopBar.init was called more than once.";
-        }
-        inited = true;
-        prefixedNames = (function() {
-          var len, m, results;
-          results = [];
-          for (m = 0, len = names.length; m < len; m++) {
-            name = names[m];
-            results.push("TopBar:" + name);
-          }
-          return results;
-        })();
-        return Take(prefixedNames, function() {
-          var i, len, m, scopes;
-          scopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          for (i = m = 0, len = names.length; m < len; i = ++m) {
-            name = names[i];
-            construct(i, name, scopes[i]);
-          }
-          return Resize(resize);
-        });
-      }
-    });
-  });
-
   Take(["Action", "Dispatch", "Global", "Reaction", "SVGReady"], function(Action, Dispatch, Global, Reaction) {
     var colors, current, setColor;
     colors = ["#666", "#bbb", "#fff"];
@@ -916,7 +916,7 @@
     buildSubCache = function(node, name, sub, nameCache) {
       var child, len, m, ref, results;
       if (typeof node[name] === "function") {
-        nameCache.push(node[name]);
+        nameCache.push(node[name].bind(node));
       }
       ref = node[sub];
       results = [];

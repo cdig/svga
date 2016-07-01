@@ -14,15 +14,18 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     TRS.move controlPanel, window.innerWidth - panelWidth, topbarHeight
     Make "ControlPanelReady" unless Take "ControlPanelReady"
   
-  construct = (name, fn)->
-    control = fn()
-  
   
   Make "ControlPanel", ControlPanel =
     
-    # This will be called by many symbols
-    addControl: (name, cb)->
+    # This is sugared as SVGA.control
+    addControl: (props)->
+
+      if props.type?
+        
+        # Panel components are defined using Make()
+        Take "Controls:" + props.type, (fn)->
+          control = fn props
       
-      # Panel elements are defined using Make()
-      Take "Controls:" + name, (fn)->
-        construct name, fn
+      else
+        console.log props
+        throw "^ You must include a 'type' property when creating an SVGA.control instance"

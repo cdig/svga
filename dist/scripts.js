@@ -13,7 +13,7 @@
       rootScope = ScopeBuilder(crawlerData);
       Make("root", rootScope);
       Action("setup");
-      Action("Schematic:Show");
+      Action("ScopeReady");
       return Take(["TopBarReady", "ControlPanelReady"], function() {
         return svg.style.opacity = 1;
       });
@@ -109,25 +109,27 @@
     });
   })();
 
-  Take(["ControlPanel", "Ease", "FlowArrows", "HydraulicPressure", "Mask", "PointerInput", "Symbol", "TopBar"], function(ControlPanel, Ease, FlowArrows, HydraulicPressure, Mask, PointerInput, Symbol, TopBar) {
+  Take(["Action", "ControlPanel", "Dispatch", "Ease", "FlowArrows", "HydraulicPressure", "Mask", "PointerInput", "Reaction", "Symbol", "TopBar"], function(Action, ControlPanel, Dispatch, Ease, FlowArrows, HydraulicPressure, Mask, PointerInput, Reaction, Symbol, TopBar) {
     var SVGA;
-    SVGA = {
-      arrows: FlowArrows,
-      control: ControlPanel.addControl,
-      ease: Ease,
-      input: PointerInput,
-      mask: Mask,
-      pressure: HydraulicPressure,
-      symbol: Symbol,
-      topbar: TopBar.init
-    };
     Make("SVGAnimation", function() {
       throw "SVGAnimation is no longer a thing. Remove SVGAnimation from your Takes, and delete the word 'SVGAnimation' from your code. Stuff should work.";
     });
     Make("SVGMask", function() {
       throw "SVGMask is no longer a thing. Please Take \"SVGA\" and use SVGA.mask instead.";
     });
-    return Make("SVGA", SVGA);
+    return Make("SVGA", SVGA = {
+      action: Action,
+      arrows: FlowArrows,
+      control: ControlPanel.addControl,
+      dispatch: Dispatch,
+      ease: Ease,
+      input: PointerInput,
+      mask: Mask,
+      pressure: HydraulicPressure,
+      reaction: Reaction,
+      symbol: Symbol,
+      topbar: TopBar.init
+    });
   });
 
   (function() {
@@ -170,7 +172,7 @@
   })();
 
   Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var ControlPanel, bg, construct, controlPanel, elements, resize, topbarHeight;
+    var ControlPanel, bg, controlPanel, elements, resize, topbarHeight;
     topbarHeight = 48;
     elements = [];
     controlPanel = TRS(SVG.create("g", SVG.root, {
@@ -189,15 +191,17 @@
         return Make("ControlPanelReady");
       }
     });
-    construct = function(name, fn) {
-      var control;
-      return control = fn();
-    };
     return Make("ControlPanel", ControlPanel = {
-      addControl: function(name, cb) {
-        return Take("Controls:" + name, function(fn) {
-          return construct(name, fn);
-        });
+      addControl: function(props) {
+        if (props.type != null) {
+          return Take("Controls:" + props.type, function(fn) {
+            var control;
+            return control = fn(props);
+          });
+        } else {
+          console.log(props);
+          throw "^ You must include a 'type' property when creating an SVGA.control instance";
+        }
       }
     });
   });
@@ -321,41 +325,6 @@
           return Resize(resize);
         });
       }
-    });
-  });
-
-  Take(["Action", "Dispatch", "Global", "Reaction", "SVGReady"], function(Action, Dispatch, Global, Reaction) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return document.rootElement.style["background-color"] = colors[index % colors.length];
-    };
-    Reaction("setup", function() {
-      return setColor(1);
-    });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
-    });
-  });
-
-  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
-    Reaction("Schematic:Toggle", function() {
-      return Action(Global.animateMode ? "Schematic:Show" : "Schematic:Hide");
-    });
-    Reaction("Schematic:Hide", function() {
-      Global.animateMode = true;
-      return Dispatch(root, "animateMode");
-    });
-    return Reaction("Schematic:Show", function() {
-      Global.animateMode = false;
-      return Dispatch(root, "schematicMode");
-    });
-  });
-
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
     });
   });
 
@@ -858,6 +827,44 @@
     });
   });
 
+  Take(["Action", "Dispatch", "Global", "Reaction", "SVGReady"], function(Action, Dispatch, Global, Reaction) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return document.rootElement.style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
+    });
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Action", "Dispatch", "Global", "Reaction", "root"], function(Action, Dispatch, Global, Reaction, root) {
+    Reaction("ScopeReady", function() {
+      return Action("Schematic:Hide");
+    });
+    Reaction("Schematic:Toggle", function() {
+      return Action(Global.animateMode ? "Schematic:Show" : "Schematic:Hide");
+    });
+    Reaction("Schematic:Hide", function() {
+      Global.animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("Schematic:Show", function() {
+      Global.animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
+  });
+
   (function() {
     var cbs;
     cbs = [];
@@ -880,38 +887,53 @@
   })();
 
   (function() {
-    var dispatchFn, dispatchString;
-    Make("Dispatch", function(node, fn, sub) {
+    var buildSubCache, cache, dispatchWithFn;
+    cache = {};
+    Make("Dispatch", function(node, action, sub) {
+      var base, fn, len, m, ref, results, subcache;
       if (sub == null) {
         sub = "children";
       }
-      if (typeof fn === "string") {
-        return dispatchString(node, fn, sub);
+      if (typeof action === "function") {
+        return dispatchWithFn(node, action, sub);
       } else {
-        return dispatchFn(node, fn, sub);
+        if (cache[sub] == null) {
+          cache[sub] = {};
+        }
+        if (cache[sub][action] == null) {
+          subcache = (base = cache[sub])[action] != null ? base[action] : base[action] = [];
+          buildSubCache(node, action, sub, subcache);
+        }
+        ref = cache[sub][action];
+        results = [];
+        for (m = 0, len = ref.length; m < len; m++) {
+          fn = ref[m];
+          results.push(fn());
+        }
+        return results;
       }
     });
-    dispatchString = function(node, fn, sub) {
+    buildSubCache = function(node, name, sub, subcache) {
       var child, len, m, ref, results;
-      if (typeof node[fn] === "function") {
-        node[fn]();
+      if (typeof node[name] === "function") {
+        subcache.push(node[name]);
       }
       ref = node[sub];
       results = [];
       for (m = 0, len = ref.length; m < len; m++) {
         child = ref[m];
-        results.push(dispatchString(child, fn, sub));
+        results.push(buildSubCache(child, name, sub, subcache));
       }
       return results;
     };
-    return dispatchFn = function(node, fn, sub) {
+    return dispatchWithFn = function(node, fn, sub) {
       var child, len, m, ref, results;
       fn(node);
       ref = node[sub];
       results = [];
       for (m = 0, len = ref.length; m < len; m++) {
         child = ref[m];
-        results.push(dispatchFn(child, fn, sub));
+        results.push(dispatchWithFn(child, fn, sub));
       }
       return results;
     };

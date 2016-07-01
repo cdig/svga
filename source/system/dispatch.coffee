@@ -13,13 +13,13 @@ do ()->
     else
       cache[sub] ?= {}
       unless cache[sub][action]?
-        subcache = cache[sub][action] ?= []
-        buildSubCache node, action, sub, subcache
+        nameCache = cache[sub][action] ?= []
+        buildSubCache node, action, sub, nameCache
       fn() for fn in cache[sub][action]
   
-  buildSubCache = (node, name, sub, subcache)->
-    subcache.push node[name] if typeof node[name] is "function"
-    buildSubCache child, name, sub, subcache for child in node[sub]
+  buildSubCache = (node, name, sub, nameCache)->
+    nameCache.push node[name] if typeof node[name] is "function"
+    buildSubCache child, name, sub, nameCache for child in node[sub]
   
   dispatchWithFn = (node, fn, sub)->
     fn node

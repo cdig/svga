@@ -1,9 +1,7 @@
-do ()->
+Take "DOMContentLoaded", ()->
   Make "SVGCrawler", SVGCrawler = (elm)->
-    name = if elm is document.rootElement then "root" else elm.getAttribute("id")?.split("_")[0]
-    
     target =
-      name: name
+      name: if elm is document.rootElement then "root" else elm.getAttribute("id")?.split("_")[0]
       elm: elm
       sub: []
     

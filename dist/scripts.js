@@ -3,14 +3,160 @@
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
+  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
+    var crawlerData, svg;
+    svg = document.rootElement;
+    crawlerData = SVGCrawler(svg);
+    Make("SVGReady");
+    return setTimeout(function() {
+      var rootScope;
+      rootScope = ScopeBuilder(crawlerData);
+      Make("root", rootScope);
+      Action("setup");
+      Action("ScopeReady");
+      return Take(["TopBarReady", "ControlsReady"], function() {
+        return svg.style.opacity = 1;
+      });
+    });
+  });
+
+  Take(["Animation", "FlowArrows", "Style", "Symbol", "Transform"], function(Animation, FlowArrows, Style, Symbol, Transform) {
+    var ScopeBuilder, buildScope, getSymbol;
+    Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
+      var len, m, ref, scope, subTarget;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      scope = buildScope(target.name, target.elm, parentScope);
+      ref = target.sub;
+      for (m = 0, len = ref.length; m < len; m++) {
+        subTarget = ref[m];
+        ScopeBuilder(subTarget, scope);
+      }
+      return scope;
+    });
+    buildScope = function(instanceName, element, parentScope) {
+      var scope, symbol;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      symbol = getSymbol(instanceName);
+      scope = symbol.create(element);
+      if (scope.children == null) {
+        scope.children = [];
+      }
+      if (scope.element == null) {
+        scope.element = element;
+      }
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
+        }
+      });
+      if (scope.getElement == null) {
+        scope.getElement = function() {
+          throw "scope.getElement() has been removed. Please use scope.element instead.";
+        };
+      }
+      Style(scope);
+      Transform(scope);
+      Animation(scope);
+      if (parentScope == null) {
+        if (scope.root == null) {
+          scope.root = scope;
+        }
+      } else {
+        if (scope.root == null) {
+          scope.root = parentScope.root;
+        }
+        if (instanceName !== "DefaultElement") {
+          if (parentScope[instanceName] == null) {
+            parentScope[instanceName] = scope;
+          }
+        }
+        parentScope.children.push(scope);
+      }
+      return scope;
+    };
+    return getSymbol = function(instanceName) {
+      var symbol;
+      if (symbol = Symbol.forInstanceName(instanceName)) {
+        return symbol;
+      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicLine");
+      } else {
+        return Symbol.forSymbolName("DefaultElement");
+      }
+    };
+  });
+
+  Take("DOMContentLoaded", function() {
+    var SVGCrawler;
+    return Make("SVGCrawler", SVGCrawler = function(elm) {
+      var childElm, childNodes, len, m, ref, target;
+      target = {
+        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
+        elm: elm,
+        sub: []
+      };
+      childNodes = Array.prototype.slice.call(elm.childNodes);
+      for (m = 0, len = childNodes.length; m < len; m++) {
+        childElm = childNodes[m];
+        if (childElm instanceof SVGGElement) {
+          target.sub.push(SVGCrawler(childElm));
+        }
+      }
+      return target;
+    });
+  });
+
+  (function() {
+    var Symbol, byInstanceName, bySymbolName, tooLate;
+    bySymbolName = {};
+    byInstanceName = {};
+    tooLate = false;
+    Symbol = function(symbolName, instanceNames, symbolFn) {
+      var instanceName, len, m, results, symbol;
+      if (bySymbolName[symbolName] != null) {
+        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
+      }
+      if (tooLate) {
+        throw "The symbol \"" + symbolName + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
+      }
+      symbol = {
+        create: symbolFn,
+        name: symbolName
+      };
+      bySymbolName[symbolName] = symbol;
+      results = [];
+      for (m = 0, len = instanceNames.length; m < len; m++) {
+        instanceName = instanceNames[m];
+        if (byInstanceName[instanceName] != null) {
+          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
+        }
+        results.push(byInstanceName[instanceName] = symbol);
+      }
+      return results;
+    };
+    Symbol.forSymbolName = function(symbolName) {
+      tooLate = true;
+      return bySymbolName[symbolName];
+    };
+    Symbol.forInstanceName = function(instanceName) {
+      tooLate = true;
+      return byInstanceName[instanceName];
+    };
+    return Make("Symbol", Symbol);
+  })();
+
   Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var bg, controlPanel, elements, resize, topbarHeight;
+    var bg, g, instances, resize, topbarHeight;
     topbarHeight = 48;
-    elements = [];
-    controlPanel = TRS(SVG.create("g", SVG.root, {
-      "class": "ControlPanel"
+    instances = [];
+    g = TRS(SVG.create("g", SVG.root, {
+      "class": "Controls"
     }));
-    bg = SVG.create("rect", controlPanel, {
+    bg = SVG.create("rect", g, {
       "class": "BG"
     });
     Resize(resize = function() {
@@ -18,21 +164,22 @@
       panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
       SVG.attr(bg, "width", panelWidth);
       SVG.attr(bg, "height", window.innerHeight - topbarHeight);
-      TRS.move(controlPanel, window.innerWidth - panelWidth, topbarHeight);
-      if (!Take("ControlPanelReady")) {
-        return Make("ControlPanelReady");
+      TRS.move(g, window.innerWidth - panelWidth, topbarHeight);
+      if (!Take("ControlsReady")) {
+        return Make("ControlsReady");
       }
     });
     return Make("Control", function(props) {
-      if (props.type != null) {
-        return Take("Controls:" + props.type, function(fn) {
-          var control;
-          return control = fn(props);
-        });
-      } else {
+      if (props.type == null) {
         console.log(props);
         throw "^ You must include a 'type' property when creating an SVGA.control instance";
       }
+      return Take("Controls:" + props.type, function(fn) {
+        if (props.parent == null) {
+          props.parent = g;
+        }
+        return instances.push(fn(props));
+      });
     });
   });
 
@@ -155,153 +302,6 @@
       });
     });
   });
-
-  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
-    var crawlerData, svg;
-    svg = document.rootElement;
-    crawlerData = SVGCrawler(svg);
-    Make("SVGReady");
-    return setTimeout(function() {
-      var rootScope;
-      rootScope = ScopeBuilder(crawlerData);
-      Make("root", rootScope);
-      Action("setup");
-      Action("ScopeReady");
-      return Take(["TopBarReady", "ControlPanelReady"], function() {
-        return svg.style.opacity = 1;
-      });
-    });
-  });
-
-  Take(["Animation", "FlowArrows", "Style", "Symbol", "Transform"], function(Animation, FlowArrows, Style, Symbol, Transform) {
-    var ScopeBuilder, buildScope, getSymbol;
-    Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
-      var len, m, ref, scope, subTarget;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      scope = buildScope(target.name, target.elm, parentScope);
-      ref = target.sub;
-      for (m = 0, len = ref.length; m < len; m++) {
-        subTarget = ref[m];
-        ScopeBuilder(subTarget, scope);
-      }
-      return scope;
-    });
-    buildScope = function(instanceName, element, parentScope) {
-      var scope, symbol;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      symbol = getSymbol(instanceName);
-      scope = symbol.create(element);
-      if (scope.children == null) {
-        scope.children = [];
-      }
-      if (scope.element == null) {
-        scope.element = element;
-      }
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
-        }
-      });
-      if (scope.getElement == null) {
-        scope.getElement = function() {
-          throw "scope.getElement() has been removed. Please use scope.element instead.";
-        };
-      }
-      Style(scope);
-      Transform(scope);
-      Animation(scope);
-      if (parentScope == null) {
-        if (scope.root == null) {
-          scope.root = scope;
-        }
-      } else {
-        if (scope.root == null) {
-          scope.root = parentScope.root;
-        }
-        if (instanceName !== "DefaultElement") {
-          if (parentScope[instanceName] == null) {
-            parentScope[instanceName] = scope;
-          }
-        }
-        parentScope.children.push(scope);
-      }
-      return scope;
-    };
-    return getSymbol = function(instanceName) {
-      var symbol;
-      if (symbol = Symbol.forInstanceName(instanceName)) {
-        return symbol;
-      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicLine");
-      } else {
-        return Symbol.forSymbolName("DefaultElement");
-      }
-    };
-  });
-
-  (function() {
-    var SVGCrawler;
-    return Make("SVGCrawler", SVGCrawler = function(elm) {
-      var childElm, childNodes, len, m, name, ref, target;
-      name = elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0;
-      target = {
-        name: name,
-        elm: elm,
-        sub: []
-      };
-      childNodes = Array.prototype.slice.call(elm.childNodes);
-      for (m = 0, len = childNodes.length; m < len; m++) {
-        childElm = childNodes[m];
-        if (childElm instanceof SVGGElement) {
-          target.sub.push(SVGCrawler(childElm));
-        }
-      }
-      return target;
-    });
-  })();
-
-  (function() {
-    var Symbol, byInstanceName, bySymbolName, tooLate;
-    bySymbolName = {};
-    byInstanceName = {};
-    tooLate = false;
-    Symbol = function(symbolName, instanceNames, symbolFn) {
-      var instanceName, len, m, results, symbol;
-      if (bySymbolName[symbolName] != null) {
-        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
-      }
-      if (tooLate) {
-        throw "The symbol \"" + symbolName + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
-      }
-      symbol = {
-        create: symbolFn,
-        name: symbolName
-      };
-      bySymbolName[symbolName] = symbol;
-      results = [];
-      for (m = 0, len = instanceNames.length; m < len; m++) {
-        instanceName = instanceNames[m];
-        if (byInstanceName[instanceName] != null) {
-          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
-        }
-        results.push(byInstanceName[instanceName] = symbol);
-      }
-      return results;
-    };
-    Symbol.forSymbolName = function(symbolName) {
-      tooLate = true;
-      return bySymbolName[symbolName];
-    };
-    Symbol.forInstanceName = function(instanceName) {
-      tooLate = true;
-      return byInstanceName[instanceName];
-    };
-    return Make("Symbol", Symbol);
-  })();
 
   Take("RAF", function(RAF) {
     var Animation;

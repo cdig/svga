@@ -401,6 +401,13 @@
         },
         stop: function() {
           return running = false;
+        },
+        toggle: function() {
+          if (running) {
+            return this.stop();
+          } else {
+            return this.start();
+          }
         }
       };
     });

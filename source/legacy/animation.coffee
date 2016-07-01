@@ -43,3 +43,6 @@ Take "RAF", (RAF)->
       
       stop: ()->
         running = false
+      
+      toggle: ()->
+        if running then @stop() else @start()

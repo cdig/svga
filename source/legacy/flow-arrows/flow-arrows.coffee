@@ -13,7 +13,7 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
     SPEED: 200 # The speed Arrows move when flow is 1
     MIN_EDGE_LENGTH: 8 # How long must an edge be to survive being culled?
     CONNECTED_DISTANCE: 1 # How close must two physically-disconnected points be to be treated as part of the same line?
-    ARROWS_PROPERTY: "arrows" # this must be the same as the property in HydraulicPressure for flow arrows
+    ARROWS_PROPERTY: "arrows" # this must be the same as the property in Pressure for flow arrows
     
     # STATE
     isVisible: false

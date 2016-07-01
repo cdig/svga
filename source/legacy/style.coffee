@@ -1,8 +1,11 @@
-Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Global)->
+Take ["PureDom", "Pressure", "Global"], (PureDom, Pressure, Global)->
   Make "Style", Style = (scope)->
     element = scope.element
     styleCache = {}
     isLine = element.getAttribute("id")?.indexOf("Line") > -1
+    
+    textElement = element.querySelector "text"
+    textElement = t if (t = textElement?.querySelector "tspan")?
     
     # Check that we aren't about to clobber anything
     for prop in ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"]
@@ -13,44 +16,53 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
         console.log "element:"
         console.log element
         throw "^ Transform will clobber scope.#{prop} on this element. Please find a different name for your child/property \"#{prop}\"."
+
+
+    # We need a better API for changing the element.style property. This sucks.
+    scope.style = (key, val)->
+      unless styleCache[key] is val
+        styleCache[key] = val
+        element.style[key] = val
     
     
-    pressure = 0
+    pressure = null
     Object.defineProperty scope, 'pressure',
       get: ()-> pressure
       set: (val)->
         if pressure isnt val
           pressure = val
-          if api.isLine and not Global.legacyHydraulicLines
-            api.stroke HydraulicPressure api.pressure, alpha
+          if isLine and not Global.legacyHydraulicLines
+            scope.stroke Pressure scope.pressure, alpha
           else
-            api.fill HydraulicPressure api.pressure, alpha
+            # console.log c = Pressure scope.pressure, alpha
+            scope.fill Pressure scope.pressure, alpha
 
     
+    text = textElement?.textContent
+    Object.defineProperty scope, 'text',
+      get: ()-> text
+      set: (val)->
+        if textElement? and text isnt val
+          textElement.textContent = text
     
-    scope.style = (key, val)->
-      unless styleCache[key] is val
-        styleCache[key] = val
-        element.style[key] = val
-
     
-    scope.visible = (isVisible)->
-      if isVisible
-        element.style.opacity = 1.0
-      else
-        element.style.opacity = 0.0
+    visible = true
+    Object.defineProperty scope, 'visible',
+      get: ()-> visible
+      set: (val)->
+        if visible isnt val
+          visible = val
+          element.style.opacity = if visible then alpha else 0
     
-    scope.show = (showElement)->
-      if showElement
-        element.style.visibility = "visible"
-      else
-        element.style.visibility = "hidden"
     
-    scope.getPressure = ()->
-      return api.pressure
-
-    scope.getPressureColor = (pressure)->
-      return HydraulicPressure(pressure)
+    alpha = 1
+    Object.defineProperty scope, 'alpha',
+      get: ()-> alpha
+      set: (val)->
+        if alpha isnt val
+          alpha = val
+          element.style.opacity = if visible then alpha else 0
+    
     
     scope.stroke = (color)->
       path = element.querySelector("path")
@@ -66,7 +78,8 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
       path = element.querySelector("path")
       if path?
         path.setAttributeNS(null, "stroke", color)
-
+    
+    
     scope.fill = (color)->
       path = element.querySelector("path")
       use = element.querySelector("use")
@@ -81,7 +94,8 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
       path = element.querySelector("path")
       if path?
         path.setAttributeNS(null, "fill", color)
-
+    
+    
     scope.linearGradient = (stops, x1=0, y1=0, x2=1, y2=0)->
       useParent = PureDom.querySelectorParent(element, "svg")
       gradientName = "Gradient_" + element.getAttributeNS(null, "id")
@@ -102,8 +116,9 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
         gradientStop.setAttribute("stop-color", stop.color)
         gradient.appendChild(gradientStop)
       fillUrl = "url(##{gradientName})"
-      api.fill(fillUrl)
-
+      scope.fill(fillUrl)
+    
+    
     scope.radialGradient = (stops, cx, cy, radius)->
       useParent = PureDom.querySelectorParent(element, "svg")
       gradientName = "Gradient_" + element.getAttributeNS(null, "id")
@@ -123,12 +138,19 @@ Take ["PureDom", "HydraulicPressure", "Global"], (PureDom, HydraulicPressure, Gl
         gradientStop.setAttribute("stop-color", stop.color)
         gradient.appendChild(gradientStop)
       fillUrl = "url(##{gradientName})"
-      api.fill(fillUrl)
-
-    scope.setText = (text)->
-      textElement = element.querySelector("text").querySelector("tspan")
-      if textElement?
-        textElement.textContent=text
+      scope.fill(fillUrl)
     
-    scope.getElement = ()->
-      throw "scope.style.getElement() has been removed. Please use scope.element instead."
+    
+    # REMOVED #####################################################################################
+    
+    scope.getPressure = ()->
+      throw "scope.getPressure() has been removed. Please use scope.pressure instead."
+
+    scope.setPressure = ()->
+      throw "scope.setPressure(x) has been removed. Please use scope.pressure = x instead."
+
+    scope.getPressureColor = (pressure)->
+      throw "scope.getPressureColor() has been removed. Please Take and use Pressure() instead."
+    
+    scope.setText = (text)->
+      throw "scope.setText(x) has been removed. Please scope.text = x instead."

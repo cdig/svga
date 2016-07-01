@@ -47,29 +47,27 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     PointerInput.addClick scope.element, scope.click if scope.click?
   
   
-  Make "TopBar", TopBar =
+  # This will be called by one of the Symbols (probably root)
+  Make "TopBar", TopBar = (names...)->
+    throw "TopBar.init was called more than once." if inited
+    inited = true
     
-    # This will be called by one of the Symbols (probably root)
-    init: (names...)->
-      throw "TopBar.init was called more than once." if inited
-      inited = true
-      
-      prefixedNames = ("TopBar:" + name for name in names)
-      
-      # Elements are defined using Make()
-      Take prefixedNames, (scopes...)->
-        construct i, name, scopes[i] for name, i in names
-        Resize resize
+    prefixedNames = ("TopBar:" + name for name in names)
+    
+    # Elements are defined using Make()
+    Take prefixedNames, (scopes...)->
+      construct i, name, scopes[i] for name, i in names
+      Resize resize
 
 
-      # else if childElm instanceof SVGUseElement
-      #   id = childElm.getAttribute "xlink:href"
-      #   if def = document.querySelector id
-      #     clone = def.cloneNode true
-      #     elm.replaceChild clone, childElm
-      #     childElm = clone
-      #     if childElm instanceof SVGGElement
-      #       target.sub.push SVGCrawler childElm
-      #   else
-      #     console.log childElm
-      #     throw "^ This <use> refers to id \"#{id}\", which doesn't exist."
+    # else if childElm instanceof SVGUseElement
+    #   id = childElm.getAttribute "xlink:href"
+    #   if def = document.querySelector id
+    #     clone = def.cloneNode true
+    #     elm.replaceChild clone, childElm
+    #     childElm = clone
+    #     if childElm instanceof SVGGElement
+    #       target.sub.push SVGCrawler childElm
+    #   else
+    #     console.log childElm
+    #     throw "^ This <use> refers to id \"#{id}\", which doesn't exist."

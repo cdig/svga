@@ -111,33 +111,6 @@
     });
   })();
 
-  Take(["Action", "ControlPanel", "Dispatch", "Ease", "Global", "FlowArrows", "HydraulicPressure", "Mask", "PointerInput", "Reaction", "Symbol", "TopBar"], function(Action, ControlPanel, Dispatch, Ease, Global, FlowArrows, HydraulicPressure, Mask, PointerInput, Reaction, Symbol, TopBar) {
-    var SVGA;
-    Make("SVGAnimation", function() {
-      throw "SVGAnimation is no longer a thing. Remove SVGAnimation from your Takes, and delete the word 'SVGAnimation' from your code. Stuff should work.";
-    });
-    Make("SVGMask", function() {
-      throw "SVGMask is no longer a thing. Please Take \"SVGA\" and use SVGA.mask instead.";
-    });
-    Make("SVGA", SVGA = {
-      action: Action,
-      arrows: FlowArrows,
-      control: ControlPanel.addControl,
-      dispatch: Dispatch,
-      ease: Ease,
-      global: Global,
-      input: PointerInput,
-      mask: Mask,
-      pressure: HydraulicPressure,
-      reaction: Reaction,
-      symbol: Symbol,
-      topbar: TopBar.init
-    });
-    return Take("root", function(root) {
-      return SVGA.root = root;
-    });
-  });
-
   (function() {
     var Symbol, byInstanceName, bySymbolName, tooLate;
     bySymbolName = {};
@@ -178,7 +151,7 @@
   })();
 
   Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var ControlPanel, bg, controlPanel, elements, resize, topbarHeight;
+    var bg, controlPanel, elements, resize, topbarHeight;
     topbarHeight = 48;
     elements = [];
     controlPanel = TRS(SVG.create("g", SVG.root, {
@@ -197,17 +170,15 @@
         return Make("ControlPanelReady");
       }
     });
-    return Make("ControlPanel", ControlPanel = {
-      addControl: function(props) {
-        if (props.type != null) {
-          return Take("Controls:" + props.type, function(fn) {
-            var control;
-            return control = fn(props);
-          });
-        } else {
-          console.log(props);
-          throw "^ You must include a 'type' property when creating an SVGA.control instance";
-        }
+    return Make("Control", function(props) {
+      if (props.type != null) {
+        return Take("Controls:" + props.type, function(fn) {
+          var control;
+          return control = fn(props);
+        });
+      } else {
+        console.log(props);
+        throw "^ You must include a 'type' property when creating an SVGA.control instance";
       }
     });
   });
@@ -304,33 +275,31 @@
         return PointerInput.addClick(scope.element, scope.click);
       }
     };
-    return Make("TopBar", TopBar = {
-      init: function() {
-        var name, names, prefixedNames;
-        names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        if (inited) {
-          throw "TopBar.init was called more than once.";
-        }
-        inited = true;
-        prefixedNames = (function() {
-          var len, m, results;
-          results = [];
-          for (m = 0, len = names.length; m < len; m++) {
-            name = names[m];
-            results.push("TopBar:" + name);
-          }
-          return results;
-        })();
-        return Take(prefixedNames, function() {
-          var i, len, m, scopes;
-          scopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          for (i = m = 0, len = names.length; m < len; i = ++m) {
-            name = names[i];
-            construct(i, name, scopes[i]);
-          }
-          return Resize(resize);
-        });
+    return Make("TopBar", TopBar = function() {
+      var name, names, prefixedNames;
+      names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (inited) {
+        throw "TopBar.init was called more than once.";
       }
+      inited = true;
+      prefixedNames = (function() {
+        var len, m, results;
+        results = [];
+        for (m = 0, len = names.length; m < len; m++) {
+          name = names[m];
+          results.push("TopBar:" + name);
+        }
+        return results;
+      })();
+      return Take(prefixedNames, function() {
+        var i, len, m, scopes;
+        scopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        for (i = m = 0, len = names.length; m < len; i = ++m) {
+          name = names[i];
+          construct(i, name, scopes[i]);
+        }
+        return Resize(resize);
+      });
     });
   });
 
@@ -513,13 +482,17 @@
     return maskedParent.setAttribute("style", newStyle);
   });
 
-  Take(["PureDom", "HydraulicPressure", "Global"], function(PureDom, HydraulicPressure, Global) {
+  Take(["PureDom", "Pressure", "Global"], function(PureDom, Pressure, Global) {
     var Style;
     return Make("Style", Style = function(scope) {
-      var element, isLine, len, m, pressure, prop, ref, ref1, styleCache;
+      var alpha, element, isLine, len, m, pressure, prop, ref, ref1, styleCache, t, text, textElement, visible;
       element = scope.element;
       styleCache = {};
       isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
+      textElement = element.querySelector("text");
+      if ((t = textElement != null ? textElement.querySelector("tspan") : void 0) != null) {
+        textElement = t;
+      }
       ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
       for (m = 0, len = ref1.length; m < len; m++) {
         prop = ref1[m];
@@ -532,7 +505,13 @@
           throw "^ Transform will clobber scope." + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
         }
       }
-      pressure = 0;
+      scope.style = function(key, val) {
+        if (styleCache[key] !== val) {
+          styleCache[key] = val;
+          return element.style[key] = val;
+        }
+      };
+      pressure = null;
       Object.defineProperty(scope, 'pressure', {
         get: function() {
           return pressure;
@@ -540,40 +519,49 @@
         set: function(val) {
           if (pressure !== val) {
             pressure = val;
-            if (api.isLine && !Global.legacyHydraulicLines) {
-              return api.stroke(HydraulicPressure(api.pressure, alpha));
+            if (isLine && !Global.legacyHydraulicLines) {
+              return scope.stroke(Pressure(scope.pressure, alpha));
             } else {
-              return api.fill(HydraulicPressure(api.pressure, alpha));
+              return scope.fill(Pressure(scope.pressure, alpha));
             }
           }
         }
       });
-      scope.style = function(key, val) {
-        if (styleCache[key] !== val) {
-          styleCache[key] = val;
-          return element.style[key] = val;
+      text = textElement != null ? textElement.textContent : void 0;
+      Object.defineProperty(scope, 'text', {
+        get: function() {
+          return text;
+        },
+        set: function(val) {
+          if ((textElement != null) && text !== val) {
+            return textElement.textContent = text;
+          }
         }
-      };
-      scope.visible = function(isVisible) {
-        if (isVisible) {
-          return element.style.opacity = 1.0;
-        } else {
-          return element.style.opacity = 0.0;
+      });
+      visible = true;
+      Object.defineProperty(scope, 'visible', {
+        get: function() {
+          return visible;
+        },
+        set: function(val) {
+          if (visible !== val) {
+            visible = val;
+            return element.style.opacity = visible ? alpha : 0;
+          }
         }
-      };
-      scope.show = function(showElement) {
-        if (showElement) {
-          return element.style.visibility = "visible";
-        } else {
-          return element.style.visibility = "hidden";
+      });
+      alpha = 1;
+      Object.defineProperty(scope, 'alpha', {
+        get: function() {
+          return alpha;
+        },
+        set: function(val) {
+          if (alpha !== val) {
+            alpha = val;
+            return element.style.opacity = visible ? alpha : 0;
+          }
         }
-      };
-      scope.getPressure = function() {
-        return api.pressure;
-      };
-      scope.getPressureColor = function(pressure) {
-        return HydraulicPressure(pressure);
-      };
+      });
       scope.stroke = function(color) {
         var clone, defs, link, parent, path, use, useParent;
         path = element.querySelector("path");
@@ -647,7 +635,7 @@
           gradient.appendChild(gradientStop);
         }
         fillUrl = "url(#" + gradientName + ")";
-        return api.fill(fillUrl);
+        return scope.fill(fillUrl);
       };
       scope.radialGradient = function(stops, cx, cy, radius) {
         var fillUrl, gradient, gradientName, gradientStop, len1, n, stop, useParent;
@@ -679,17 +667,19 @@
           gradient.appendChild(gradientStop);
         }
         fillUrl = "url(#" + gradientName + ")";
-        return api.fill(fillUrl);
+        return scope.fill(fillUrl);
       };
-      scope.setText = function(text) {
-        var textElement;
-        textElement = element.querySelector("text").querySelector("tspan");
-        if (textElement != null) {
-          return textElement.textContent = text;
-        }
+      scope.getPressure = function() {
+        throw "scope.getPressure() has been removed. Please use scope.pressure instead.";
       };
-      return scope.getElement = function() {
-        throw "scope.style.getElement() has been removed. Please use scope.element instead.";
+      scope.setPressure = function() {
+        throw "scope.setPressure(x) has been removed. Please use scope.pressure = x instead.";
+      };
+      scope.getPressureColor = function(pressure) {
+        throw "scope.getPressureColor() has been removed. Please Take and use Pressure() instead.";
+      };
+      return scope.setText = function(text) {
+        throw "scope.setText(x) has been removed. Please scope.text = x instead.";
       };
     });
   });

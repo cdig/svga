@@ -25,7 +25,7 @@ Take ["SVGReady"], ()->
     
     create: (type, parent, attrs)->
       elm = document.createElementNS svgNS, type
-      SVG.attrs elm, attrs
+      SVG.attrs elm, attrs if attrs?
       SVG.append parent, elm if parent?
       elm # Composable
     
@@ -34,7 +34,7 @@ Take ["SVGReady"], ()->
       elm = document.createElementNS svgNS, "g"
       SVG.attr elm, attr.name, attr.value for attr in source.attributes
       SVG.attrs elm, id: null
-      SVG.attrs elm, attrs
+      SVG.attrs elm, attrs if attrs?
       SVG.append elm, child.cloneNode true for child in source.childNodes
       SVG.append parent, elm if parent?
       elm # Composable

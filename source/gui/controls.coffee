@@ -1,10 +1,11 @@
 Take ["PointerInput", "Reaction", "Resize", "SVG", "TRS"], (PointerInput, Reaction, Resize, SVG, TRS)->
   topbarHeight = 48
+  pad = 5
   definitions = {}
   instancesByNameByType = {}
   instantiatedStarted = false
   
-  g = TRS SVG.create "g", SVG.root, class: "Controls"
+  g = TRS SVG.create "g", SVG.root, class: "Controls", "font-size": 20, "text-anchor": "middle"
   bg = SVG.create "rect", g, class: "BG"
   
   
@@ -14,17 +15,21 @@ Take ["PointerInput", "Reaction", "Resize", "SVG", "TRS"], (PointerInput, Reacti
     SVG.attr bg, "height", window.innerHeight - topbarHeight
     TRS.move g, window.innerWidth - panelWidth, topbarHeight
 
-    offset = 0
+    offset = pad
     for type, instancesByName of instancesByNameByType
       for name, control of instancesByName
-        height = control.api.resize panelWidth
+        height = control.api.resize panelWidth-pad*2
         if typeof height isnt "number" then console.log control; throw "Control api.resize() function must return a height"
-        TRS.move control.element, offset
-        offset += height
+        TRS.move control.element, pad, offset
+        offset += height + pad
+  
   
   Reaction "ScopeReady", ()->
     Resize resize
     Make "ControlsReady"
+
+  Reaction "Schematic:Show", ()-> SVG.attrs g, opacity: 0
+  Reaction "Schematic:Hide", ()-> SVG.attrs g, opacity: 1
   
   
   Make "Control", (args...)->

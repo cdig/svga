@@ -31,11 +31,10 @@ Take ["PureDom", "Pressure"], (PureDom, Pressure)->
       set: (val)->
         if pressure isnt val
           pressure = val
-          if isLine and not scope.root.legacyHydraulicLines
-            scope.stroke Pressure scope.pressure, alpha
+          if isLine and not scope.root.BROKEN_LINES
+            scope.stroke Pressure scope.pressure
           else
-            # console.log c = Pressure scope.pressure, alpha
-            scope.fill Pressure scope.pressure, alpha
+            scope.fill Pressure scope.pressure
 
     
     text = textElement?.textContent

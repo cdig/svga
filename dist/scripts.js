@@ -150,13 +150,16 @@
   })();
 
   Take(["PointerInput", "Reaction", "Resize", "SVG", "TRS"], function(PointerInput, Reaction, Resize, SVG, TRS) {
-    var bg, define, definitions, g, instancesByNameByType, instantiate, instantiatedStarted, resize, topbarHeight;
+    var bg, define, definitions, g, instancesByNameByType, instantiate, instantiatedStarted, pad, resize, topbarHeight;
     topbarHeight = 48;
+    pad = 5;
     definitions = {};
     instancesByNameByType = {};
     instantiatedStarted = false;
     g = TRS(SVG.create("g", SVG.root, {
-      "class": "Controls"
+      "class": "Controls",
+      "font-size": 20,
+      "text-anchor": "middle"
     }));
     bg = SVG.create("rect", g, {
       "class": "BG"
@@ -167,7 +170,7 @@
       SVG.attr(bg, "width", panelWidth);
       SVG.attr(bg, "height", window.innerHeight - topbarHeight);
       TRS.move(g, window.innerWidth - panelWidth, topbarHeight);
-      offset = 0;
+      offset = pad;
       results = [];
       for (type in instancesByNameByType) {
         instancesByName = instancesByNameByType[type];
@@ -176,13 +179,13 @@
           results1 = [];
           for (name in instancesByName) {
             control = instancesByName[name];
-            height = control.api.resize(panelWidth);
+            height = control.api.resize(panelWidth - pad * 2);
             if (typeof height !== "number") {
               console.log(control);
               throw "Control api.resize() function must return a height";
             }
-            TRS.move(control.element, offset);
-            results1.push(offset += height);
+            TRS.move(control.element, pad, offset);
+            results1.push(offset += height + pad);
           }
           return results1;
         })());
@@ -192,6 +195,16 @@
     Reaction("ScopeReady", function() {
       Resize(resize);
       return Make("ControlsReady");
+    });
+    Reaction("Schematic:Show", function() {
+      return SVG.attrs(g, {
+        opacity: 0
+      });
+    });
+    Reaction("Schematic:Hide", function() {
+      return SVG.attrs(g, {
+        opacity: 1
+      });
     });
     Make("Control", function() {
       var args;
@@ -246,13 +259,14 @@
   });
 
   Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var TopBar, bg, buttonPad, construct, container, elements, iconPad, inited, offsetX, resize, topBar, topBarHeight;
+    var bg, buttonPad, construct, container, define, definitions, iconPad, initialize, instances, instantiatedStarted, offsetX, resize, topBar, topBarHeight;
     topBarHeight = 48;
     buttonPad = 30;
     iconPad = 6;
-    elements = {};
+    definitions = {};
+    instances = {};
     offsetX = 0;
-    inited = false;
+    instantiatedStarted = false;
     topBar = SVG.create("g", SVG.root, {
       "class": "TopBar"
     });
@@ -265,14 +279,14 @@
       "class": "Elements"
     }));
     resize = function() {
-      var base, elm, len, m;
+      var base, instance, len, m;
       SVG.attrs(bg, {
         width: window.innerWidth
       });
       TRS.move(container, window.innerWidth / 2 - offsetX / 2);
-      for (m = 0, len = elements.length; m < len; m++) {
-        elm = elements[m];
-        if (typeof (base = elm.scope).resize === "function") {
+      for (m = 0, len = instances.length; m < len; m++) {
+        instance = instances[m];
+        if (typeof (base = instance.api).resize === "function") {
           base.resize();
         }
       }
@@ -280,89 +294,94 @@
         return Make("TopBarReady");
       }
     };
-    construct = function(i, name, scope) {
+    construct = function(i, name, api) {
       var buttonWidth, iconRect, iconScale, iconX, iconY, source, textRect, textX;
+      if (api == null) {
+        throw "Unknown TopBar button name: " + name;
+      }
       source = document.getElementById(name.toLowerCase());
       if (source == null) {
         throw "TopBar icon not found for id: #" + name;
       }
-      scope.element = TRS(SVG.create("g", container, {
-        "class": "ui Element"
+      api.element = TRS(SVG.create("g", container, {
+        "class": "Element",
+        ui: true
       }));
-      elements[name] = {
-        element: scope.element,
+      instances[name] = {
+        element: api.element,
         i: i,
         name: name,
-        scope: scope
+        api: api
       };
-      if (scope.bg == null) {
-        scope.bg = SVG.create("rect", scope.element, {
+      if (api.bg == null) {
+        api.bg = SVG.create("rect", api.element, {
           "class": "BG",
           height: topBarHeight
         });
       }
-      if (scope.icon == null) {
-        scope.icon = TRS(SVG.clone(source, scope.element));
+      if (api.icon == null) {
+        api.icon = TRS(SVG.clone(source, api.element));
       }
-      if (scope.text == null) {
-        scope.text = TRS(SVG.create("text", scope.element, {
-          "font-family": "Lato",
+      if (api.text == null) {
+        api.text = TRS(SVG.create("text", api.element, {
           "font-size": 14,
           fill: "#FFF",
           textContent: name.toUpperCase()
         }));
       }
-      iconRect = scope.icon.getBoundingClientRect();
-      textRect = scope.text.getBoundingClientRect();
+      iconRect = api.icon.getBoundingClientRect();
+      textRect = api.text.getBoundingClientRect();
       iconScale = Math.min((topBarHeight - iconPad * 2) / iconRect.width, (topBarHeight - iconPad * 2) / iconRect.height);
       iconX = buttonPad;
       iconY = topBarHeight / 2 - iconRect.height * iconScale / 2;
       textX = buttonPad + iconRect.width * iconScale + iconPad;
       buttonWidth = textX + textRect.width + buttonPad;
-      TRS.abs(scope.icon, {
+      TRS.abs(api.icon, {
         x: iconX,
         y: iconY,
         scale: iconScale
       });
-      TRS.move(scope.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
-      SVG.attrs(scope.bg, {
+      TRS.move(api.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
+      SVG.attrs(api.bg, {
         width: buttonWidth
       });
-      TRS.move(scope.element, offsetX);
+      TRS.move(api.element, offsetX);
       offsetX += buttonWidth;
-      if (typeof scope.setup === "function") {
-        scope.setup(scope.element);
+      if (typeof api.setup === "function") {
+        api.setup(api.element);
       }
-      if (scope.click != null) {
-        return PointerInput.addClick(scope.element, scope.click);
+      if (api.click != null) {
+        return PointerInput.addClick(api.element, api.click);
       }
     };
-    return Make("TopBar", TopBar = function() {
-      var name, names, prefixedNames;
-      names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      if (inited) {
-        throw "TopBar.init was called more than once.";
+    Make("TopBar", function() {
+      var args;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (typeof args[1] === "object") {
+        return define.apply(null, args);
+      } else {
+        return initialize.apply(null, args);
       }
-      inited = true;
-      prefixedNames = (function() {
-        var len, m, results;
-        results = [];
-        for (m = 0, len = names.length; m < len; m++) {
-          name = names[m];
-          results.push("TopBar:" + name);
-        }
-        return results;
-      })();
-      return Take(prefixedNames, function() {
-        var i, len, m, scopes;
-        scopes = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        for (i = m = 0, len = names.length; m < len; i = ++m) {
-          name = names[i];
-          construct(i, name, scopes[i]);
-        }
-        return Resize(resize);
-      });
     });
+    define = function(name, api) {
+      if (instantiatedStarted) {
+        throw "The TopBar element \"" + name + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
+      }
+      return definitions[name] = api;
+    };
+    return initialize = function() {
+      var i, len, m, name, names;
+      names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (instantiatedStarted) {
+        throw "TopBar may only be called once, but you're calling it more than once.";
+      }
+      instantiatedStarted = true;
+      for (i = m = 0, len = names.length; m < len; i = ++m) {
+        name = names[i];
+        construct(i, name, definitions[name]);
+      }
+      return Resize(resize);
+    };
   });
 
   Take("RAF", function(RAF) {
@@ -478,21 +497,17 @@
     return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
   });
 
-  Take(["Reaction", "SVG", "Symbol"], function(Reaction, SVG, Symbol) {
-    Symbol("HydraulicLine", [], function(svgElement) {
+  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
+    return Symbol("HydraulicLine", [], function(svgElement) {
       var scope;
       return scope = {
         setup: function() {
-          Reaction("Schematic:Hide", function() {
-            return SVG.attr(svgElement, "filter", null);
-          });
           return Reaction("Schematic:Show", function() {
-            return SVG.attr(svgElement, "filter", "url(#allblackMatrix)");
+            return scope.pressure = Pressure.black;
           });
         }
       };
     });
-    return SVG.createColorMatrixFilter("allblackMatrix", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0");
   });
 
   getParentInverseTransform = function(root, element, currentTransform) {
@@ -581,10 +596,10 @@
         set: function(val) {
           if (pressure !== val) {
             pressure = val;
-            if (isLine && !scope.root.legacyHydraulicLines) {
-              return scope.stroke(Pressure(scope.pressure, alpha));
+            if (isLine && !scope.root.BROKEN_LINES) {
+              return scope.stroke(Pressure(scope.pressure));
             } else {
-              return scope.fill(Pressure(scope.pressure, alpha));
+              return scope.fill(Pressure(scope.pressure));
             }
           }
         }
@@ -1114,7 +1129,9 @@
       create: function(type, parent, attrs) {
         var elm;
         elm = document.createElementNS(svgNS, type);
-        SVG.attrs(elm, attrs);
+        if (attrs != null) {
+          SVG.attrs(elm, attrs);
+        }
         if (parent != null) {
           SVG.append(parent, elm);
         }
@@ -1134,7 +1151,9 @@
         SVG.attrs(elm, {
           id: null
         });
-        SVG.attrs(elm, attrs);
+        if (attrs != null) {
+          SVG.attrs(elm, attrs);
+        }
         ref1 = source.childNodes;
         for (n = 0, len1 = ref1.length; n < len1; n++) {
           child = ref1[n];

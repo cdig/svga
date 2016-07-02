@@ -3,7 +3,7 @@
     .BG {
       fill: transparent;
     }
-    .Element:hover {
+    .Element[ui]:hover {
       .BG {
         fill: rgba(white, 0.08);
       }

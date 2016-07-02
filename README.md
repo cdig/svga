@@ -3,5 +3,21 @@ A framework for making activities/animations with SVGs. If looking to build an S
 
 Getting Started, Troubleshooting, and other documentation has been moved to the Wiki, under SVG Activity in the sidebar: https://github.com/cdig/lunchboxsessions/wiki
 
+
+## TODO
+
+TopBar & ControlPanel
+* POIs should be pins in the schematic. Tap and it'll nav you to that area.
+* Arrows & Pause should go in the control panel, because they're only useful when the animation is running
+* Labels — might be able to tuck this into a settings menu (with BG color)?
+* Help — don't need it if we kill all the other buttons
+* Mimic should be a picture-in-picture that sits in one of the 4 corners
+
+Perf
+* We don't need to use a black filter for schematic mode. Symbol logic should set the schematic mode colors.
+
+
+
+
 ## License
 Copyright (c) 2014-2016 CD Industrial Group Inc. http://www.cdiginc.com

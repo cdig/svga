@@ -9,6 +9,6 @@ svg {
   opacity: 0;
 }
 
-.ui, .ui * {
+.ui, .ui *, [ui], [ui] * {
   cursor: pointer;
 }

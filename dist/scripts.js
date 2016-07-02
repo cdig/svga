@@ -149,38 +149,100 @@
     return Make("Symbol", Symbol);
   })();
 
-  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var bg, g, instances, resize, topbarHeight;
+  Take(["PointerInput", "Reaction", "Resize", "SVG", "TRS"], function(PointerInput, Reaction, Resize, SVG, TRS) {
+    var bg, define, definitions, g, instancesByNameByType, instantiate, instantiatedStarted, resize, topbarHeight;
     topbarHeight = 48;
-    instances = [];
+    definitions = {};
+    instancesByNameByType = {};
+    instantiatedStarted = false;
     g = TRS(SVG.create("g", SVG.root, {
       "class": "Controls"
     }));
     bg = SVG.create("rect", g, {
       "class": "BG"
     });
-    Resize(resize = function() {
-      var panelWidth;
+    resize = function() {
+      var control, height, instancesByName, name, offset, panelWidth, results, type;
       panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
       SVG.attr(bg, "width", panelWidth);
       SVG.attr(bg, "height", window.innerHeight - topbarHeight);
       TRS.move(g, window.innerWidth - panelWidth, topbarHeight);
-      if (!Take("ControlsReady")) {
-        return Make("ControlsReady");
+      offset = 0;
+      results = [];
+      for (type in instancesByNameByType) {
+        instancesByName = instancesByNameByType[type];
+        results.push((function() {
+          var results1;
+          results1 = [];
+          for (name in instancesByName) {
+            control = instancesByName[name];
+            height = control.api.resize(panelWidth);
+            if (typeof height !== "number") {
+              console.log(control);
+              throw "Control api.resize() function must return a height";
+            }
+            TRS.move(control.element, offset);
+            results1.push(offset += height);
+          }
+          return results1;
+        })());
+      }
+      return results;
+    };
+    Reaction("ScopeReady", function() {
+      Resize(resize);
+      return Make("ControlsReady");
+    });
+    Make("Control", function() {
+      var args;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (typeof args[0] === "string") {
+        return define.apply(null, args);
+      } else {
+        return instantiate.apply(null, args);
       }
     });
-    return Make("Control", function(props) {
-      if (props.type == null) {
+    define = function(type, defn) {
+      if (instantiatedStarted) {
+        throw "The control \"" + type + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
+      }
+      return definitions[type] = defn;
+    };
+    return instantiate = function(props) {
+      var api, defn, element, instancesByName, name, type;
+      instantiatedStarted = true;
+      name = props.name;
+      type = props.type;
+      defn = definitions[type];
+      if (name == null) {
         console.log(props);
-        throw "^ You must include a 'type' property when creating an SVGA.control instance";
+        throw "^ You must include a \"name\" property when creating an SVGA.control instance";
       }
-      return Take("Controls:" + props.type, function(fn) {
-        if (props.parent == null) {
-          props.parent = g;
+      if (type == null) {
+        console.log(props);
+        throw "^ You must include a \"type\" property when creating an SVGA.control instance";
+      }
+      if (defn == null) {
+        console.log(props);
+        throw "^ Unknown Control type: \"" + type + "\". First, check for typos. If everything looks good, this Control may have failed to load on time, which would mean there's a bug in the Control component.";
+      }
+      instancesByName = instancesByNameByType[type] != null ? instancesByNameByType[type] : instancesByNameByType[type] = {};
+      if (!instancesByName[name]) {
+        element = TRS(SVG.create("g", g, {
+          "class": name + " " + type
+        }));
+        api = defn(name, element);
+        if (typeof api.setup === "function") {
+          api.setup();
         }
-        return instances.push(fn(props));
-      });
-    });
+        instancesByName[name] = {
+          element: element,
+          api: api
+        };
+      }
+      instancesByName[name].api.attach(props);
+      return instancesByName[name].api;
+    };
   });
 
   Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
@@ -1097,6 +1159,13 @@
       },
       attrs: function(elm, attrs) {
         var k, v;
+        if (!elm) {
+          throw "SVG.attrs was called with a null element";
+        }
+        if (typeof attrs !== "object") {
+          console.log(attrs);
+          throw "SVG.attrs requires an object as the second argument, got ^";
+        }
         for (k in attrs) {
           v = attrs[k];
           SVG.attr(elm, k, v);
@@ -1105,6 +1174,13 @@
       },
       attr: function(elm, k, v) {
         var ns;
+        if (!elm) {
+          throw "SVG.attr was called with a null element";
+        }
+        if (typeof k !== "string") {
+          console.log(k);
+          throw "SVG.attr requires a string as the second argument, got ^";
+        }
         if (v === void 0) {
           return elm.getAttribute(k);
         }

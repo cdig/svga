@@ -9,11 +9,11 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
   # Allow other systems that mutate the DOM to do their thing, now that we're done preprocessing
   Make "SVGReady"
   
-  # Give Symbols a bit more time to be defined, since some of them might be waiting on Takes
+  # Give Symbols & Controls a bit more time to be defined, since some of them might be waiting on Takes
   setTimeout ()->
-    # By now, we're assuming all Symbols are ready
+    # By now, we're assuming all Symbols & Controls are ready
     
-    # Use the references collected during preprocessing, and the Symbols, to build our Scope tree
+    # Use the references collected during preprocessing to build our Scope tree.
     rootScope = ScopeBuilder crawlerData
     
     # This is used by Reactions

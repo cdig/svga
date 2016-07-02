@@ -51,10 +51,14 @@ Take ["SVGReady"], ()->
       child # Composable
     
     attrs: (elm, attrs)->
+      unless elm then throw "SVG.attrs was called with a null element"
+      unless typeof attrs is "object" then console.log attrs; throw "SVG.attrs requires an object as the second argument, got ^"
       SVG.attr elm, k, v for k, v of attrs
       elm # Composable
     
     attr: (elm, k, v)->
+      unless elm then throw "SVG.attr was called with a null element"
+      unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^"
       return elm.getAttribute k if v is undefined
       elm._SVG ?= {}
       if elm._SVG[k] isnt v

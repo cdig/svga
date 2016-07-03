@@ -1,28 +1,19 @@
 Take ["RAF", "SVG"], (RAF, SVG)->
   
-  setup = (wrapper, elm)->
-    elm._trs = v =
-      x: 0
-      y: 0
-      r: 0
-      sx: 1
-      sy: 1
-      ox: 0
-      oy: 0
-      apply: ()->
-        SVG.attr wrapper, "transform", "translate(#{v.x},#{v.y}) rotate(#{v.r*360}) scale(#{v.sx},#{v.sy})"
-        SVG.attr elm, "transform", "translate(#{-v.ox},#{-v.oy})"
   
-  
-  TRS = (elm)->
+  TRS = (elm, debugColor)->
     if not elm? then console.log elm; throw "^ Null element passed to TRS(elm)"
     if not elm.parentNode? then console.log elm; throw "^ Element passed to TRS(elm) must have a parentNode"
     wrapper = SVG.create "g", elm.parentNode, class: "TRS"
-    SVG.create "rect", wrapper, class: "Debug", x:-2, y:-2, width:4, height:4, fill:"#0FF" # Uncomment for debug
-    setup wrapper, elm
     SVG.append wrapper, elm
+    if debugColor? then SVG.create "rect", wrapper, class: "Debug", x:-2, y:-2, width:4, height:4, fill:debugColor
+    elm._trs = v =
+      x: 0, y: 0, r: 0, sx: 1, sy: 1, ox: 0, oy: 0,
+      apply: ()->
+        SVG.attr wrapper, "transform", "translate(#{v.x},#{v.y}) rotate(#{v.r*360}) scale(#{v.sx},#{v.sy})"
+        SVG.attr elm, "transform", "translate(#{-v.ox},#{-v.oy})"
     elm # Composable
-  
+
   
   TRS.abs = (elm, attrs)->
     if not elm?._trs? then err elm, "Non-TRS element passed to TRS.abs(elm, attrs)"

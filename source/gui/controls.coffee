@@ -45,8 +45,8 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"]
       instancesByName[name] = element: element, api: api
     instancesByName[name].api.attach props
     instancesByName[name].api
-    
-    
+  
+  
   Reaction "Schematic:Show", ()-> SVG.attrs g, opacity: 0
   Reaction "Schematic:Hide", ()-> SVG.attrs g, opacity: 1
   Reaction "ScopeReady", ()->

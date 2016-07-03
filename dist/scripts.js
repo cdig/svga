@@ -111,32 +111,41 @@
   });
 
   Take(["Resize", "root", "SVG", "TRS", "SVGReady"], function(Resize, root, SVG, TRS) {
-    var g;
+    var g, show;
     g = TRS(SVG.create("g", SVG.root));
     SVG.create("rect", g, {
-      x: -400,
+      x: -420,
       y: -100,
-      width: 800,
+      width: 840,
       height: 200,
-      fill: "#aaa"
+      rx: 50,
+      ry: 50,
+      fill: "#222",
+      "fill-opacity": 0.9
     });
     SVG.create("text", g, {
-      textContent: "Click To Load",
-      "font-size": 100,
+      textContent: "Click To Activate",
+      "font-size": 80,
+      y: 5,
       fill: "#FFF",
       "alignment-baseline": "middle",
       "text-anchor": "middle"
     });
-    SVG.attrs(root.mainStage.element, {
-      style: "opacity: 0.05"
-    });
+    (show = function() {
+      SVG.attrs(g, {
+        style: "display: block"
+      });
+      return SVG.attrs(root.mainStage.element, {
+        style: "opacity: 0.4"
+      });
+    })();
     Resize(function() {
       return TRS.abs(g, {
         x: window.innerWidth / 2,
         y: window.innerHeight / 2
       });
     });
-    return Take("click", function() {
+    window.addEventListener("focus", function() {
       SVG.attrs(g, {
         style: "display: none"
       });
@@ -144,6 +153,7 @@
         style: "opacity: 1"
       });
     });
+    return window.addEventListener("blur", show);
   });
 
   Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"], function(Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS) {
@@ -287,16 +297,19 @@
       }
       return Resize(resize);
     });
+    Take("ControlsReady", function() {
+      return SVG.append(SVG.root, topBar);
+    });
     resize = function() {
-      var base, instance, len, m;
+      var base1, instance, len, m;
       SVG.attrs(bg, {
         width: window.innerWidth
       });
       TRS.move(container, window.innerWidth / 2 - offsetX / 2);
       for (m = 0, len = instances.length; m < len; m++) {
         instance = instances[m];
-        if (typeof (base = instance.api).resize === "function") {
-          base.resize();
+        if (typeof (base1 = instance.api).resize === "function") {
+          base1.resize();
         }
       }
       if (!Take("TopBarReady")) {
@@ -632,7 +645,7 @@
     var buildSubCache, cache, dispatchWithFn;
     cache = {};
     Make("Dispatch", function(node, action, sub) {
-      var base, fn, len, m, nameCache, ref, results;
+      var base1, fn, len, m, nameCache, ref, results;
       if (sub == null) {
         sub = "children";
       }
@@ -643,7 +656,7 @@
           cache[sub] = {};
         }
         if (cache[sub][action] == null) {
-          nameCache = (base = cache[sub])[action] != null ? base[action] : base[action] = [];
+          nameCache = (base1 = cache[sub])[action] != null ? base1[action] : base1[action] = [];
           buildSubCache(node, action, sub, nameCache);
         }
         ref = cache[sub][action];
@@ -781,39 +794,39 @@
         return results;
       }
     };
-    document.addEventListener("keydown", keyDown);
-    document.addEventListener("keyup", keyUp);
+    window.addEventListener("keydown", keyDown);
+    window.addEventListener("keyup", keyUp);
     return Make("KeyMe", KeyMe);
   });
 
   (function() {
     var KeyCodes, KeyNames, k, v;
     KeyCodes = {
-      CANCEL: 3,
-      HELP: 6,
-      BACK_SPACE: 8,
-      TAB: 9,
-      CLEAR: 12,
-      RETURN: 13,
-      ENTER: 14,
-      SHIFT: 16,
-      CONTROL: 17,
-      ALT: 18,
-      PAUSE: 19,
-      CAPS_LOCK: 20,
-      ESCAPE: 27,
-      SPACE: 32,
-      PAGE_UP: 33,
-      PAGE_DOWN: 34,
-      END: 35,
-      HOME: 36,
-      LEFT: 37,
-      UP: 38,
-      RIGHT: 39,
-      DOWN: 40,
-      PRINTSCREEN: 44,
-      INSERT: 45,
-      DELETE: 46,
+      cancel: 3,
+      help: 6,
+      back_space: 8,
+      tab: 9,
+      clear: 12,
+      "return": 13,
+      enter: 14,
+      shift: 16,
+      control: 17,
+      alt: 18,
+      pause: 19,
+      caps_lock: 20,
+      escape: 27,
+      space: 32,
+      page_up: 33,
+      page_down: 34,
+      end: 35,
+      home: 36,
+      left: 37,
+      up: 38,
+      right: 39,
+      down: 40,
+      printscreen: 44,
+      insert: 45,
+      "delete": 46,
       0: 48,
       1: 49,
       2: 50,
@@ -824,86 +837,87 @@
       7: 55,
       8: 56,
       9: 57,
-      SEMICOLON: 59,
-      EQUALS: 61,
-      A: 65,
-      B: 66,
-      C: 67,
-      D: 68,
-      E: 69,
-      F: 70,
-      G: 71,
-      H: 72,
-      I: 73,
-      J: 74,
-      K: 75,
-      L: 76,
-      M: 77,
-      N: 78,
-      O: 79,
-      P: 80,
-      Q: 81,
-      R: 82,
-      S: 83,
-      T: 84,
-      U: 85,
-      V: 86,
-      W: 87,
-      X: 88,
-      Y: 89,
-      Z: 90,
-      CONTEXT_MENU: 93,
-      NUMPAD0: 96,
-      NUMPAD1: 97,
-      NUMPAD2: 98,
-      NUMPAD3: 99,
-      NUMPAD4: 100,
-      NUMPAD5: 101,
-      NUMPAD6: 102,
-      NUMPAD7: 103,
-      NUMPAD8: 104,
-      NUMPAD9: 105,
-      MULTIPLY: 106,
-      ADD: 107,
-      SEPARATOR: 108,
-      SUBTRACT: 109,
-      DECIMAL: 110,
-      DIVIDE: 111,
-      F1: 112,
-      F2: 113,
-      F3: 114,
-      F4: 115,
-      F5: 116,
-      F6: 117,
-      F7: 118,
-      F8: 119,
-      F9: 120,
-      F10: 121,
-      F11: 122,
-      F12: 123,
-      F13: 124,
-      F14: 125,
-      F15: 126,
-      F16: 127,
-      F17: 128,
-      F18: 129,
-      F19: 130,
-      F20: 131,
-      F21: 132,
-      F22: 133,
-      F23: 134,
-      F24: 135,
-      NUM_LOCK: 144,
-      SCROLL_LOCK: 145,
-      COMMA: 188,
-      PERIOD: 190,
-      SLASH: 191,
-      BACK_QUOTE: 192,
-      OPEN_BRACKET: 219,
-      BACK_SLASH: 220,
-      CLOSE_BRACKET: 221,
-      QUOTE: 222,
-      META: 224
+      semicolon: 59,
+      a: 65,
+      b: 66,
+      c: 67,
+      d: 68,
+      e: 69,
+      f: 70,
+      g: 71,
+      h: 72,
+      i: 73,
+      j: 74,
+      k: 75,
+      l: 76,
+      m: 77,
+      n: 78,
+      o: 79,
+      p: 80,
+      q: 81,
+      r: 82,
+      s: 83,
+      t: 84,
+      u: 85,
+      v: 86,
+      w: 87,
+      x: 88,
+      y: 89,
+      z: 90,
+      context_menu: 93,
+      numpad0: 96,
+      numpad1: 97,
+      numpad2: 98,
+      numpad3: 99,
+      numpad4: 100,
+      numpad5: 101,
+      numpad6: 102,
+      numpad7: 103,
+      numpad8: 104,
+      numpad9: 105,
+      multiply: 106,
+      add: 107,
+      separator: 108,
+      subtract: 109,
+      decimal: 110,
+      divide: 111,
+      f1: 112,
+      f2: 113,
+      f3: 114,
+      f4: 115,
+      f5: 116,
+      f6: 117,
+      f7: 118,
+      f8: 119,
+      f9: 120,
+      f10: 121,
+      f11: 122,
+      f12: 123,
+      f13: 124,
+      f14: 125,
+      f15: 126,
+      f16: 127,
+      f17: 128,
+      f18: 129,
+      f19: 130,
+      f20: 131,
+      f21: 132,
+      f22: 133,
+      f23: 134,
+      f24: 135,
+      num_lock: 144,
+      scroll_lock: 145,
+      equals: 187,
+      comma: 188,
+      minus: 189,
+      period: 190,
+      slash: 191,
+      back_quote: 192,
+      open_bracket: 219,
+      back_slash: 220,
+      close_bracket: 221,
+      quote: 222,
+      meta: 224
     };
     KeyNames = {};
     for (k in KeyCodes) {
@@ -915,16 +929,29 @@
   })();
 
   Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS) {
-    var alreadyRan, getAccel, initialSize, input, maxVel, ms, nav, pos, rerun, resize, run, vel;
-    maxVel = 10;
-    input = {
-      x: 0,
-      y: 0,
+    var accel, alreadyRan, base, decel, getAccel, initialSize, maxBounds, maxVel, minBounds, minVel, ms, nav, pos, registrationOffset, rerun, resize, run, vel, zoom;
+    accel = {
+      xy: 5,
+      z: 0.01
+    };
+    decel = {
+      xy: 1.25,
+      z: 1.25
+    };
+    maxVel = {
+      xy: 10,
+      z: 0.2
+    };
+    minVel = 0.1;
+    minBounds = {
       z: 0
     };
+    maxBounds = {
+      z: 3
+    };
     vel = {
-      x: 0,
-      y: 0,
+      a: 0,
+      d: 0,
       z: 0
     };
     pos = {
@@ -932,25 +959,55 @@
       y: 0,
       z: 0
     };
+    registrationOffset = {
+      x: 0,
+      y: 0
+    };
+    base = {
+      x: 0,
+      y: 0,
+      z: 0
+    };
     ms = null;
     nav = null;
+    zoom = null;
     initialSize = null;
     alreadyRan = false;
     Reaction("ScopeReady", function() {
-      var msx, msy;
+      var mid;
       if (ms = root.mainStage) {
         nav = TRS(ms.element);
-        msx = ms.x;
-        msy = ms.y;
-        initialSize = ms.element.getBoundingClientRect();
-        TRS.abs(nav, {
-          ox: -msx + initialSize.left + initialSize.width / 2,
-          oy: -msy + initialSize.top + initialSize.height / 2,
-          now: true
+        mid = SVG.create("g", SVG.root);
+        SVG.append(mid, nav.parentNode);
+        zoom = TRS(mid);
+        SVG.prepend(SVG.root, zoom.parentNode);
+        SVG.create("rect", nav, {
+          x: -4,
+          y: -4,
+          width: 8,
+          height: 8,
+          fill: "#F00"
         });
+        SVG.create("rect", nav.parentNode, {
+          x: -3,
+          y: -3,
+          width: 6,
+          height: 6,
+          fill: "#FF0"
+        });
+        SVG.create("rect", zoom.parentNode, {
+          x: -2,
+          y: -2,
+          width: 4,
+          height: 4,
+          fill: "#F70"
+        });
+        initialSize = ms.element.getBoundingClientRect();
+        registrationOffset.x = -ms.x + initialSize.left + initialSize.width / 2;
+        registrationOffset.y = -ms.y + initialSize.top + initialSize.height / 2;
         TRS.abs(nav, {
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2,
+          ox: registrationOffset.x,
+          oy: registrationOffset.y,
           now: true
         });
         Resize(resize);
@@ -966,7 +1023,7 @@
         KeyMe("right", {
           down: run
         });
-        KeyMe("plus", {
+        KeyMe("equals", {
           down: run
         });
         KeyMe("minus", {
@@ -976,21 +1033,24 @@
       return Make("NavReady");
     });
     resize = function() {
-      var frac, hFrac, height, wFrac, width;
+      var hFrac, height, wFrac, width;
       width = window.innerWidth - Control.panelWidth();
       height = window.innerHeight - TopBar.height;
       wFrac = width / initialSize.width;
       hFrac = height / initialSize.height;
-      frac = .9 * Math.min(wFrac, hFrac);
-      return TRS.abs(nav, {
-        x: width / 2,
-        y: TopBar.height + height / 2,
-        sx: frac,
-        sy: frac
+      base.x = width / 2;
+      base.y = TopBar.height + height / 2;
+      base.z = .9 * Math.min(wFrac, hFrac);
+      TRS.abs(zoom, {
+        x: base.x,
+        y: base.y,
+        scale: base.z,
+        now: true
       });
+      return run();
     };
     run = function() {
-      var down, left, minus, plus, right, up;
+      var down, inputX, inputY, inputZ, left, minus, plus, right, up;
       if (alreadyRan) {
         return;
       }
@@ -1001,18 +1061,39 @@
       up = KeyMe.pressing["up"];
       down = KeyMe.pressing["down"];
       minus = KeyMe.pressing["minus"];
-      plus = KeyMe.pressing["plus"];
-      input.x = getAccel(left, right);
-      input.y = getAccel(up, down);
-      input.z = getAccel(minus, plus);
-      return console.log(input);
+      plus = KeyMe.pressing["equals"];
+      inputX = getAccel(right, left);
+      inputY = getAccel(down, up);
+      inputZ = getAccel(minus, plus);
+      if (inputX === 0 && inputY === 0) {
+        vel.d /= decel.xy;
+      }
+      vel.z /= decel.z;
+      if (inputY || inputX) {
+        vel.a = Math.atan2(inputY, inputX);
+      }
+      vel.d = Math.min(maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY)));
+      vel.z = Math.min(maxVel.z, vel.z + accel.z * inputZ);
+      pos.x += Math.cos(vel.a) * vel.d;
+      pos.y += Math.sin(vel.a) * vel.d;
+      pos.z += vel.z;
+      pos.z = Math.min(maxBounds.z, Math.max(minBounds.z, pos.z));
+      TRS.abs(nav, {
+        x: pos.x,
+        y: pos.y
+      });
+      return TRS.abs(zoom, {
+        scale: base.z * Math.pow(2, pos.z)
+      });
     };
     rerun = function() {
       var p;
       alreadyRan = false;
       p = KeyMe.pressing;
-      if (p["left"] || p["right"] || p["up"] || p["down"] || p["plus"] || p["minus"]) {
+      if (vel.d > minVel || vel.z > minVel || p["left"] || p["right"] || p["up"] || p["down"] || p["equals"] || p["minus"]) {
         return run();
+      } else {
+        return vel.d = vel.z = 0;
       }
     };
     return getAccel = function(neg, pos) {
@@ -1675,10 +1756,32 @@
   });
 
   Take(["RAF", "SVG"], function(RAF, SVG) {
-    var TRS, setup;
-    setup = function(wrapper, elm) {
-      var v;
-      return elm._trs = v = {
+    var TRS;
+    TRS = function(elm, debugColor) {
+      var v, wrapper;
+      if (elm == null) {
+        console.log(elm);
+        throw "^ Null element passed to TRS(elm)";
+      }
+      if (elm.parentNode == null) {
+        console.log(elm);
+        throw "^ Element passed to TRS(elm) must have a parentNode";
+      }
+      wrapper = SVG.create("g", elm.parentNode, {
+        "class": "TRS"
+      });
+      SVG.append(wrapper, elm);
+      if (debugColor != null) {
+        SVG.create("rect", wrapper, {
+          "class": "Debug",
+          x: -2,
+          y: -2,
+          width: 4,
+          height: 4,
+          fill: debugColor
+        });
+      }
+      elm._trs = v = {
         x: 0,
         y: 0,
         r: 0,
@@ -1691,30 +1794,6 @@
           return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
         }
       };
-    };
-    TRS = function(elm) {
-      var wrapper;
-      if (elm == null) {
-        console.log(elm);
-        throw "^ Null element passed to TRS(elm)";
-      }
-      if (elm.parentNode == null) {
-        console.log(elm);
-        throw "^ Element passed to TRS(elm) must have a parentNode";
-      }
-      wrapper = SVG.create("g", elm.parentNode, {
-        "class": "TRS"
-      });
-      SVG.create("rect", wrapper, {
-        "class": "Debug",
-        x: -2,
-        y: -2,
-        width: 4,
-        height: 4,
-        fill: "#0FF"
-      });
-      setup(wrapper, elm);
-      SVG.append(wrapper, elm);
       return elm;
     };
     TRS.abs = function(elm, attrs) {

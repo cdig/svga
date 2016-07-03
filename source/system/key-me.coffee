@@ -82,7 +82,7 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
       for command in callbacks when command.modifier is modifier
         command.callback()
   
-  document.addEventListener "keydown", keyDown
-  document.addEventListener "keyup", keyUp
-
+  window.addEventListener "keydown", keyDown
+  window.addEventListener "keyup", keyUp
+  
   Make "KeyMe", KeyMe

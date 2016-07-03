@@ -31,6 +31,8 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     construct i, name, definitions[name] for name, i in requested
     Resize resize
   
+  Take "ControlsReady", ()->
+    SVG.append SVG.root, topBar # Put the topbar on top of the Control Panel
   
   resize = ()->
     SVG.attrs bg, width: window.innerWidth

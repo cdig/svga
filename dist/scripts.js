@@ -110,6 +110,42 @@
     });
   });
 
+  Take(["Resize", "root", "SVG", "TRS", "SVGReady"], function(Resize, root, SVG, TRS) {
+    var g;
+    g = TRS(SVG.create("g", SVG.root));
+    SVG.create("rect", g, {
+      x: -400,
+      y: -100,
+      width: 800,
+      height: 200,
+      fill: "#aaa"
+    });
+    SVG.create("text", g, {
+      textContent: "Click To Load",
+      "font-size": 100,
+      fill: "#FFF",
+      "alignment-baseline": "middle",
+      "text-anchor": "middle"
+    });
+    SVG.attrs(root.mainStage.element, {
+      style: "opacity: 0.05"
+    });
+    Resize(function() {
+      return TRS.abs(g, {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2
+      });
+    });
+    return Take("click", function() {
+      SVG.attrs(g, {
+        style: "display: none"
+      });
+      return SVG.attrs(root.mainStage.element, {
+        style: "opacity: 1"
+      });
+    });
+  });
+
   Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"], function(Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS) {
     var Control, bg, g, instancesByNameByType, instantiate, pad, resize;
     pad = 5;
@@ -330,46 +366,6 @@
     return Make("TopBar", TopBar);
   });
 
-  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return document.rootElement.style["background-color"] = colors[index % colors.length];
-    };
-    Reaction("setup", function() {
-      return setColor(1);
-    });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
-    });
-  });
-
-  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
-    var animateMode;
-    animateMode = false;
-    Reaction("ScopeReady", function() {
-      return Action("Schematic:Show");
-    });
-    Reaction("Schematic:Toggle", function() {
-      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
-    });
-    Reaction("Schematic:Hide", function() {
-      animateMode = true;
-      return Dispatch(root, "animateMode");
-    });
-    return Reaction("Schematic:Show", function() {
-      animateMode = false;
-      return Dispatch(root, "schematicMode");
-    });
-  });
-
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
-    });
-  });
-
   Take("SVG", function(SVG) {
     var Highlighter, enabled;
     enabled = true;
@@ -464,6 +460,46 @@
     }
     maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
     return maskedParent.setAttribute("style", newStyle);
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return document.rootElement.style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
+    });
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
+    var animateMode;
+    animateMode = false;
+    Reaction("ScopeReady", function() {
+      return Action("Schematic:Show");
+    });
+    Reaction("Schematic:Toggle", function() {
+      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
+    });
+    Reaction("Schematic:Hide", function() {
+      animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("Schematic:Show", function() {
+      animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
   });
 
   Take(["Symbol"], function(Symbol) {
@@ -649,10 +685,14 @@
     var KeyMe, actionize, downHandlers, getModifier, handleKey, keyDown, keyUp, runCallbacks, upHandlers;
     downHandlers = {};
     upHandlers = {};
-    window.addEventListener("keydown", keyDown);
-    window.addEventListener("keyup", keyUp);
     KeyMe = function(key, opts) {
       var name;
+      if (key == null) {
+        throw "You must provide a key name or code for KeyMe(key, options)";
+      }
+      if (typeof opts !== "object") {
+        throw "You must provide an options object for KeyMe(key, options)";
+      }
       name = typeof key === "string" ? key : KeyNames[key];
       return actionize(opts.down, opts.up, name, opts.modifier);
     };
@@ -664,30 +704,6 @@
     };
     KeyMe.shortcut = function(modifier, char, down, up) {
       return actionize(down, up, char, modifier);
-    };
-    KeyMe.up = function(down, up) {
-      return actionize(down, up, "up");
-    };
-    KeyMe.down = function(down, up) {
-      return actionize(down, up, "down");
-    };
-    KeyMe.left = function(down, up) {
-      return actionize(down, up, "left");
-    };
-    KeyMe.right = function(down, up) {
-      return actionize(down, up, "right");
-    };
-    KeyMe.space = function(down, up) {
-      return actionize(down, up, "space");
-    };
-    KeyMe.escape = function(down, up) {
-      return actionize(down, up, "escape");
-    };
-    KeyMe.enter = function(down, up) {
-      return actionize(down, up, "enter");
-    };
-    KeyMe.shift = function(down, up) {
-      return actionize(down, up, "shift");
     };
     KeyMe.pressing = {};
     KeyMe.lastPressed = null;
@@ -708,7 +724,7 @@
     keyDown = function(e) {
       var code, name;
       code = e.keyCode;
-      name = KeyNames(code);
+      name = KeyNames[code];
       if (name == null) {
         return;
       }
@@ -725,7 +741,7 @@
     keyUp = function(e) {
       var code, name;
       code = e.keyCode;
-      name = KeyNames(code);
+      name = KeyNames[code];
       if (name == null) {
         return;
       }
@@ -765,6 +781,8 @@
         return results;
       }
     };
+    document.addEventListener("keydown", keyDown);
+    document.addEventListener("keyup", keyUp);
     return Make("KeyMe", KeyMe);
   });
 
@@ -896,13 +914,13 @@
     return Make("KeyNames", KeyNames);
   })();
 
-  Take(["Control", "Reaction", "Resize", "root", "SVG", "TopBar", "TRS"], function(Control, Reaction, Resize, root, SVG, TopBar, TRS) {
-    var accel, initialSize, maxVel, ms, nav, pos, resize, vel;
+  Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS) {
+    var alreadyRan, getAccel, initialSize, input, maxVel, ms, nav, pos, rerun, resize, run, vel;
     maxVel = 10;
-    accel = {
-      x: 1,
-      y: 1,
-      z: 1
+    input = {
+      x: 0,
+      y: 0,
+      z: 0
     };
     vel = {
       x: 0,
@@ -917,6 +935,7 @@
     ms = null;
     nav = null;
     initialSize = null;
+    alreadyRan = false;
     Reaction("ScopeReady", function() {
       var msx, msy;
       if (ms = root.mainStage) {
@@ -935,10 +954,28 @@
           now: true
         });
         Resize(resize);
+        KeyMe("up", {
+          down: run
+        });
+        KeyMe("down", {
+          down: run
+        });
+        KeyMe("left", {
+          down: run
+        });
+        KeyMe("right", {
+          down: run
+        });
+        KeyMe("plus", {
+          down: run
+        });
+        KeyMe("minus", {
+          down: run
+        });
       }
       return Make("NavReady");
     });
-    return resize = function() {
+    resize = function() {
       var frac, hFrac, height, wFrac, width;
       width = window.innerWidth - Control.panelWidth();
       height = window.innerHeight - TopBar.height;
@@ -951,6 +988,41 @@
         sx: frac,
         sy: frac
       });
+    };
+    run = function() {
+      var down, left, minus, plus, right, up;
+      if (alreadyRan) {
+        return;
+      }
+      alreadyRan = true;
+      RAF(rerun);
+      left = KeyMe.pressing["left"];
+      right = KeyMe.pressing["right"];
+      up = KeyMe.pressing["up"];
+      down = KeyMe.pressing["down"];
+      minus = KeyMe.pressing["minus"];
+      plus = KeyMe.pressing["plus"];
+      input.x = getAccel(left, right);
+      input.y = getAccel(up, down);
+      input.z = getAccel(minus, plus);
+      return console.log(input);
+    };
+    rerun = function() {
+      var p;
+      alreadyRan = false;
+      p = KeyMe.pressing;
+      if (p["left"] || p["right"] || p["up"] || p["down"] || p["plus"] || p["minus"]) {
+        return run();
+      }
+    };
+    return getAccel = function(neg, pos) {
+      if (neg && !pos) {
+        return -1;
+      }
+      if (pos && !neg) {
+        return 1;
+      }
+      return 0;
     };
   });
 

@@ -10,11 +10,10 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
   downHandlers = {}
   upHandlers = {}
   
-  window.addEventListener "keydown", keyDown
-  window.addEventListener "keyup", keyUp
-
   # Give a keyname or keycode, and an options object with props for down, up, and/or modifier
   KeyMe = (key, opts)->
+    if not key? then throw "You must provide a key name or code for KeyMe(key, options)"
+    if typeof opts isnt "object" then throw "You must provide an options object for KeyMe(key, options)"
     name = if typeof key is "string" then key else KeyNames[key]
     actionize opts.down, opts.up, name, opts.modifier
   
@@ -27,16 +26,6 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
   # Register a down/up handler for a given modifier+character
   KeyMe.shortcut = (modifier, char, down, up)-> actionize down, up, char, modifier
   
-  # Register a down/up handler for one of these super common keys
-  KeyMe.up =	     (down, up)->                 actionize down, up, "up"
-  KeyMe.down =	   (down, up)->                 actionize down, up, "down"
-  KeyMe.left =	   (down, up)->                 actionize down, up, "left"
-  KeyMe.right =	   (down, up)->                 actionize down, up, "right"
-  KeyMe.space =	   (down, up)->                 actionize down, up, "space"
-  KeyMe.escape =	 (down, up)->                 actionize down, up, "escape"
-  KeyMe.enter =	   (down, up)->                 actionize down, up, "enter"
-  KeyMe.shift =	   (down, up)->                 actionize down, up, "shift"
-  
   KeyMe.pressing = {}
   KeyMe.lastPressed = null
   
@@ -48,7 +37,7 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
   
   keyDown = (e)->
     code = e.keyCode
-    name = KeyNames code
+    name = KeyNames[code]
     return unless name?
     return if KeyMe.pressing[name] # Swallow key repeat
     
@@ -66,7 +55,7 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
 
   keyUp = (e)->
     code = e.keyCode
-    name = KeyNames code
+    name = KeyNames[code]
     return unless name?
     
     delete KeyMe.pressing[name]
@@ -92,6 +81,8 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
     if callbacks?
       for command in callbacks when command.modifier is modifier
         command.callback()
-
   
+  document.addEventListener "keydown", keyDown
+  document.addEventListener "keyup", keyUp
+
   Make "KeyMe", KeyMe

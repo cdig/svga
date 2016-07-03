@@ -1,23 +1,43 @@
-Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)->
+Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Component, PointerInput, Reaction, Resize, SVG, TRS)->
   topBarHeight = 48
   buttonPad = 30
   iconPad = 6
   
-  definitions = {}
+  requested = ["Menu"] # We always include the Menu button
   instances = {}
   offsetX = 0
-  instantiatedStarted = false
-
+  
+  
   topBar = SVG.create "g", SVG.root, class: "TopBar"
   bg = SVG.create "rect", topBar, height: 48, fill: "url(#TopBarGradient)"
   SVG.createGradient "TopBarGradient", false, "#35488d", "#5175bd", "#35488d"
   container = TRS SVG.create "g", topBar, class: "Elements"
+  
+  
+  TopBar = (args...)->
+    # This is used by TopBar definitions
+    if typeof args[1] is "object"
+      Component.make "TopBar", args...
+    
+    # Called by, most likely, the setup function in the content creator's "root" symbol
+    else
+      requested.push args...
+  
+  TopBar.height = topBarHeight
+
+  
+  Reaction "ScopeReady", ()->
+    definitions = Component.take "TopBar"
+    construct i, name, definitions[name] for name, i in requested
+    Resize resize
+  
   
   resize = ()->
     SVG.attrs bg, width: window.innerWidth
     TRS.move container, window.innerWidth/2 - offsetX/2
     instance.api.resize?() for instance in instances
     Make "TopBarReady" unless Take "TopBarReady"
+  
   
   construct = (i, name, api)->
     throw "Unknown TopBar button name: #{name}" unless api?
@@ -31,7 +51,7 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     # The api can disable these by setting the property to false, or providing its own values
     api.bg ?= SVG.create "rect", api.element, class: "BG", height: topBarHeight
     api.icon ?= TRS SVG.clone source, api.element
-    api.text ?= TRS SVG.create "text", api.element, "font-size": 14, fill: "#FFF", textContent: name.toUpperCase()
+    api.text ?= TRS SVG.create "text", api.element, "font-size": 14, fill: "#FFF", textContent: api.label or name.toUpperCase()
     
     iconRect = api.icon.getBoundingClientRect()
     textRect = api.text.getBoundingClientRect()
@@ -45,37 +65,8 @@ Take ["PointerInput", "Resize", "SVG", "TRS"], (PointerInput, Resize, SVG, TRS)-
     SVG.attrs api.bg, width: buttonWidth
     TRS.move api.element, offsetX
     offsetX += buttonWidth
-    
     api.setup? api.element
     PointerInput.addClick api.element, api.click if api.click?
   
   
-  Make "TopBar", (args...)->
-    if typeof args[1] is "object"
-      define args...
-    else
-      initialize args...
-
-  define = (name, api)->
-    if instantiatedStarted then throw "The TopBar element \"#{name}\" arrived after setup started. Please figure out a way to make it initialize faster."
-    definitions[name] = api
-  
-  
-  initialize = (names...)->
-    throw "TopBar may only be called once, but you're calling it more than once." if instantiatedStarted
-    instantiatedStarted = true
-    construct i, name, definitions[name] for name, i in names
-    Resize resize
-
-
-    # else if childElm instanceof SVGUseElement
-    #   id = childElm.getAttribute "xlink:href"
-    #   if def = document.querySelector id
-    #     clone = def.cloneNode true
-    #     instance.replaceChild clone, childElm
-    #     childElm = clone
-    #     if childElm instanceof SVGGElement
-    #       target.sub.push SVGCrawler childElm
-    #   else
-    #     console.log childElm
-    #     throw "^ This <use> refers to id \"#{id}\", which doesn't exist."
+  Make "TopBar", TopBar

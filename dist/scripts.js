@@ -14,7 +14,7 @@
       Make("root", rootScope);
       Action("setup");
       Action("ScopeReady");
-      return Take(["TopBarReady", "ControlsReady"], function() {
+      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
         return svg.style.opacity = 1;
       });
     });
@@ -110,13 +110,10 @@
     });
   });
 
-  Take(["PointerInput", "Reaction", "Resize", "SVG", "TRS"], function(PointerInput, Reaction, Resize, SVG, TRS) {
-    var bg, define, definitions, g, instancesByNameByType, instantiate, instantiatedStarted, pad, resize, topbarHeight;
-    topbarHeight = 48;
+  Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"], function(Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS) {
+    var Control, bg, g, instancesByNameByType, instantiate, pad, resize;
     pad = 5;
-    definitions = {};
     instancesByNameByType = {};
-    instantiatedStarted = false;
     g = TRS(SVG.create("g", SVG.root, {
       "class": "Controls",
       "font-size": 20,
@@ -125,12 +122,24 @@
     bg = SVG.create("rect", g, {
       "class": "BG"
     });
+    Control = function() {
+      var args;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (typeof args[0] === "string") {
+        return Component.make.apply(Component, ["Control"].concat(slice.call(args)));
+      } else {
+        return instantiate.apply(null, args);
+      }
+    };
+    Control.panelWidth = function() {
+      return Math.ceil(5 * Math.sqrt(window.innerWidth));
+    };
     resize = function() {
       var control, height, instancesByName, name, offset, panelWidth, results, type;
-      panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
+      panelWidth = Control.panelWidth();
       SVG.attr(bg, "width", panelWidth);
-      SVG.attr(bg, "height", window.innerHeight - topbarHeight);
-      TRS.move(g, window.innerWidth - panelWidth, topbarHeight);
+      SVG.attr(bg, "height", window.innerHeight - TopBar.height);
+      TRS.move(g, window.innerWidth - panelWidth, TopBar.height);
       offset = pad;
       results = [];
       for (type in instancesByNameByType) {
@@ -153,41 +162,11 @@
       }
       return results;
     };
-    Reaction("ScopeReady", function() {
-      Resize(resize);
-      return Make("ControlsReady");
-    });
-    Reaction("Schematic:Show", function() {
-      return SVG.attrs(g, {
-        opacity: 0
-      });
-    });
-    Reaction("Schematic:Hide", function() {
-      return SVG.attrs(g, {
-        opacity: 1
-      });
-    });
-    Make("Control", function() {
-      var args;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      if (typeof args[0] === "string") {
-        return define.apply(null, args);
-      } else {
-        return instantiate.apply(null, args);
-      }
-    });
-    define = function(type, defn) {
-      if (instantiatedStarted) {
-        throw "The control \"" + type + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
-      }
-      return definitions[type] = defn;
-    };
-    return instantiate = function(props) {
+    instantiate = function(props) {
       var api, defn, element, instancesByName, name, type;
-      instantiatedStarted = true;
       name = props.name;
       type = props.type;
-      defn = definitions[type];
+      defn = Component.take("Control", type);
       if (name == null) {
         console.log(props);
         throw "^ You must include a \"name\" property when creating an SVGA.control instance";
@@ -217,17 +196,31 @@
       instancesByName[name].api.attach(props);
       return instancesByName[name].api;
     };
+    Reaction("Schematic:Show", function() {
+      return SVG.attrs(g, {
+        opacity: 0
+      });
+    });
+    Reaction("Schematic:Hide", function() {
+      return SVG.attrs(g, {
+        opacity: 1
+      });
+    });
+    Reaction("ScopeReady", function() {
+      Resize(resize);
+      return Make("ControlsReady");
+    });
+    return Make("Control", Control);
   });
 
-  Take(["PointerInput", "Resize", "SVG", "TRS"], function(PointerInput, Resize, SVG, TRS) {
-    var bg, buttonPad, construct, container, define, definitions, iconPad, initialize, instances, instantiatedStarted, offsetX, resize, topBar, topBarHeight;
+  Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], function(Component, PointerInput, Reaction, Resize, SVG, TRS) {
+    var TopBar, bg, buttonPad, construct, container, iconPad, instances, offsetX, requested, resize, topBar, topBarHeight;
     topBarHeight = 48;
     buttonPad = 30;
     iconPad = 6;
-    definitions = {};
+    requested = ["Menu"];
     instances = {};
     offsetX = 0;
-    instantiatedStarted = false;
     topBar = SVG.create("g", SVG.root, {
       "class": "TopBar"
     });
@@ -239,6 +232,25 @@
     container = TRS(SVG.create("g", topBar, {
       "class": "Elements"
     }));
+    TopBar = function() {
+      var args;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (typeof args[1] === "object") {
+        return Component.make.apply(Component, ["TopBar"].concat(slice.call(args)));
+      } else {
+        return requested.push.apply(requested, args);
+      }
+    };
+    TopBar.height = topBarHeight;
+    Reaction("ScopeReady", function() {
+      var definitions, i, len, m, name;
+      definitions = Component.take("TopBar");
+      for (i = m = 0, len = requested.length; m < len; i = ++m) {
+        name = requested[i];
+        construct(i, name, definitions[name]);
+      }
+      return Resize(resize);
+    });
     resize = function() {
       var base, instance, len, m;
       SVG.attrs(bg, {
@@ -287,7 +299,7 @@
         api.text = TRS(SVG.create("text", api.element, {
           "font-size": 14,
           fill: "#FFF",
-          textContent: name.toUpperCase()
+          textContent: api.label || name.toUpperCase()
         }));
       }
       iconRect = api.icon.getBoundingClientRect();
@@ -315,34 +327,47 @@
         return PointerInput.addClick(api.element, api.click);
       }
     };
-    Make("TopBar", function() {
-      var args;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      if (typeof args[1] === "object") {
-        return define.apply(null, args);
-      } else {
-        return initialize.apply(null, args);
-      }
+    return Make("TopBar", TopBar);
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return document.rootElement.style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
     });
-    define = function(name, api) {
-      if (instantiatedStarted) {
-        throw "The TopBar element \"" + name + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
-      }
-      return definitions[name] = api;
-    };
-    return initialize = function() {
-      var i, len, m, name, names;
-      names = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      if (instantiatedStarted) {
-        throw "TopBar may only be called once, but you're calling it more than once.";
-      }
-      instantiatedStarted = true;
-      for (i = m = 0, len = names.length; m < len; i = ++m) {
-        name = names[i];
-        construct(i, name, definitions[name]);
-      }
-      return Resize(resize);
-    };
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
+    var animateMode;
+    animateMode = false;
+    Reaction("ScopeReady", function() {
+      return Action("Schematic:Show");
+    });
+    Reaction("Schematic:Toggle", function() {
+      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
+    });
+    Reaction("Schematic:Hide", function() {
+      animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("Schematic:Show", function() {
+      animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
   });
 
   Take("SVG", function(SVG) {
@@ -439,46 +464,6 @@
     }
     maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
     return maskedParent.setAttribute("style", newStyle);
-  });
-
-  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return document.rootElement.style["background-color"] = colors[index % colors.length];
-    };
-    Reaction("setup", function() {
-      return setColor(1);
-    });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
-    });
-  });
-
-  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
-    var animateMode;
-    animateMode = false;
-    Reaction("ScopeReady", function() {
-      return Action("Schematic:Show");
-    });
-    Reaction("Schematic:Toggle", function() {
-      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
-    });
-    Reaction("Schematic:Hide", function() {
-      animateMode = true;
-      return Dispatch(root, "animateMode");
-    });
-    return Reaction("Schematic:Show", function() {
-      animateMode = false;
-      return Dispatch(root, "schematicMode");
-    });
-  });
-
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
-    });
   });
 
   Take(["Symbol"], function(Symbol) {
@@ -581,6 +566,32 @@
     });
   });
 
+  Take(["Reaction"], function(Reaction) {
+    var Component, definitions, instantiatedStarted;
+    definitions = {};
+    instantiatedStarted = false;
+    return Make("Component", Component = {
+      make: function() {
+        var args, name, type;
+        type = arguments[0], name = arguments[1], args = 3 <= arguments.length ? slice.call(arguments, 2) : [];
+        if (instantiatedStarted) {
+          throw "The component \"" + name + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
+        }
+        return (definitions[type] != null ? definitions[type] : definitions[type] = {})[name] = args.length === 1 ? args[0] : args;
+      },
+      take: function(type, name) {
+        var ofType;
+        instantiatedStarted = true;
+        ofType = definitions[type] || {};
+        if (name != null) {
+          return ofType[name];
+        } else {
+          return ofType;
+        }
+      }
+    });
+  });
+
   (function() {
     var buildSubCache, cache, dispatchWithFn;
     cache = {};
@@ -633,6 +644,315 @@
       return results;
     };
   })();
+
+  Take(["KeyCodes", "KeyNames"], function(KeyCodes, KeyNames) {
+    var KeyMe, actionize, downHandlers, getModifier, handleKey, keyDown, keyUp, runCallbacks, upHandlers;
+    downHandlers = {};
+    upHandlers = {};
+    window.addEventListener("keydown", keyDown);
+    window.addEventListener("keyup", keyUp);
+    KeyMe = function(key, opts) {
+      var name;
+      name = typeof key === "string" ? key : KeyNames[key];
+      return actionize(opts.down, opts.up, name, opts.modifier);
+    };
+    KeyMe.any = function(down, up) {
+      return actionize(down, up, "any");
+    };
+    KeyMe.char = function(char, down, up) {
+      return actionize(down, up, char);
+    };
+    KeyMe.shortcut = function(modifier, char, down, up) {
+      return actionize(down, up, char, modifier);
+    };
+    KeyMe.up = function(down, up) {
+      return actionize(down, up, "up");
+    };
+    KeyMe.down = function(down, up) {
+      return actionize(down, up, "down");
+    };
+    KeyMe.left = function(down, up) {
+      return actionize(down, up, "left");
+    };
+    KeyMe.right = function(down, up) {
+      return actionize(down, up, "right");
+    };
+    KeyMe.space = function(down, up) {
+      return actionize(down, up, "space");
+    };
+    KeyMe.escape = function(down, up) {
+      return actionize(down, up, "escape");
+    };
+    KeyMe.enter = function(down, up) {
+      return actionize(down, up, "enter");
+    };
+    KeyMe.shift = function(down, up) {
+      return actionize(down, up, "shift");
+    };
+    KeyMe.pressing = {};
+    KeyMe.lastPressed = null;
+    actionize = function(down, up, name, modifier) {
+      if (down != null) {
+        (downHandlers[name] != null ? downHandlers[name] : downHandlers[name] = []).push({
+          callback: down,
+          modifier: modifier
+        });
+      }
+      if (up != null) {
+        return (upHandlers[name] != null ? upHandlers[name] : upHandlers[name] = []).push({
+          callback: up,
+          modifier: modifier
+        });
+      }
+    };
+    keyDown = function(e) {
+      var code, name;
+      code = e.keyCode;
+      name = KeyNames(code);
+      if (name == null) {
+        return;
+      }
+      if (KeyMe.pressing[name]) {
+        return;
+      }
+      KeyMe.pressing[name] = true;
+      KeyMe.lastPressed = {
+        name: name,
+        code: code
+      };
+      return handleKey(name, e, downHandlers);
+    };
+    keyUp = function(e) {
+      var code, name;
+      code = e.keyCode;
+      name = KeyNames(code);
+      if (name == null) {
+        return;
+      }
+      delete KeyMe.pressing[name];
+      return handleKey(name, e, upHandlers);
+    };
+    handleKey = function(name, e, handlers) {
+      var modifier;
+      modifier = getModifier(e);
+      if (name === modifier) {
+        modifier = null;
+      }
+      runCallbacks(handlers.any, modifier);
+      return runCallbacks(handlers[name], modifier);
+    };
+    getModifier = function(e) {
+      if (e.ctrlKey) {
+        return "meta";
+      }
+      if (e.altKey) {
+        return "alt";
+      }
+      if (e.shiftKey) {
+        return "shift";
+      }
+    };
+    runCallbacks = function(callbacks, modifier) {
+      var command, len, m, results;
+      if (callbacks != null) {
+        results = [];
+        for (m = 0, len = callbacks.length; m < len; m++) {
+          command = callbacks[m];
+          if (command.modifier === modifier) {
+            results.push(command.callback());
+          }
+        }
+        return results;
+      }
+    };
+    return Make("KeyMe", KeyMe);
+  });
+
+  (function() {
+    var KeyCodes, KeyNames, k, v;
+    KeyCodes = {
+      CANCEL: 3,
+      HELP: 6,
+      BACK_SPACE: 8,
+      TAB: 9,
+      CLEAR: 12,
+      RETURN: 13,
+      ENTER: 14,
+      SHIFT: 16,
+      CONTROL: 17,
+      ALT: 18,
+      PAUSE: 19,
+      CAPS_LOCK: 20,
+      ESCAPE: 27,
+      SPACE: 32,
+      PAGE_UP: 33,
+      PAGE_DOWN: 34,
+      END: 35,
+      HOME: 36,
+      LEFT: 37,
+      UP: 38,
+      RIGHT: 39,
+      DOWN: 40,
+      PRINTSCREEN: 44,
+      INSERT: 45,
+      DELETE: 46,
+      0: 48,
+      1: 49,
+      2: 50,
+      3: 51,
+      4: 52,
+      5: 53,
+      6: 54,
+      7: 55,
+      8: 56,
+      9: 57,
+      SEMICOLON: 59,
+      EQUALS: 61,
+      A: 65,
+      B: 66,
+      C: 67,
+      D: 68,
+      E: 69,
+      F: 70,
+      G: 71,
+      H: 72,
+      I: 73,
+      J: 74,
+      K: 75,
+      L: 76,
+      M: 77,
+      N: 78,
+      O: 79,
+      P: 80,
+      Q: 81,
+      R: 82,
+      S: 83,
+      T: 84,
+      U: 85,
+      V: 86,
+      W: 87,
+      X: 88,
+      Y: 89,
+      Z: 90,
+      CONTEXT_MENU: 93,
+      NUMPAD0: 96,
+      NUMPAD1: 97,
+      NUMPAD2: 98,
+      NUMPAD3: 99,
+      NUMPAD4: 100,
+      NUMPAD5: 101,
+      NUMPAD6: 102,
+      NUMPAD7: 103,
+      NUMPAD8: 104,
+      NUMPAD9: 105,
+      MULTIPLY: 106,
+      ADD: 107,
+      SEPARATOR: 108,
+      SUBTRACT: 109,
+      DECIMAL: 110,
+      DIVIDE: 111,
+      F1: 112,
+      F2: 113,
+      F3: 114,
+      F4: 115,
+      F5: 116,
+      F6: 117,
+      F7: 118,
+      F8: 119,
+      F9: 120,
+      F10: 121,
+      F11: 122,
+      F12: 123,
+      F13: 124,
+      F14: 125,
+      F15: 126,
+      F16: 127,
+      F17: 128,
+      F18: 129,
+      F19: 130,
+      F20: 131,
+      F21: 132,
+      F22: 133,
+      F23: 134,
+      F24: 135,
+      NUM_LOCK: 144,
+      SCROLL_LOCK: 145,
+      COMMA: 188,
+      PERIOD: 190,
+      SLASH: 191,
+      BACK_QUOTE: 192,
+      OPEN_BRACKET: 219,
+      BACK_SLASH: 220,
+      CLOSE_BRACKET: 221,
+      QUOTE: 222,
+      META: 224
+    };
+    KeyNames = {};
+    for (k in KeyCodes) {
+      v = KeyCodes[k];
+      KeyNames[v] = k;
+    }
+    Make("KeyCodes", KeyCodes);
+    return Make("KeyNames", KeyNames);
+  })();
+
+  Take(["Control", "Reaction", "Resize", "root", "SVG", "TopBar", "TRS"], function(Control, Reaction, Resize, root, SVG, TopBar, TRS) {
+    var accel, initialSize, maxVel, ms, nav, pos, resize, vel;
+    maxVel = 10;
+    accel = {
+      x: 1,
+      y: 1,
+      z: 1
+    };
+    vel = {
+      x: 0,
+      y: 0,
+      z: 0
+    };
+    pos = {
+      x: 0,
+      y: 0,
+      z: 0
+    };
+    ms = null;
+    nav = null;
+    initialSize = null;
+    Reaction("ScopeReady", function() {
+      var msx, msy;
+      if (ms = root.mainStage) {
+        nav = TRS(ms.element);
+        msx = ms.x;
+        msy = ms.y;
+        initialSize = ms.element.getBoundingClientRect();
+        TRS.abs(nav, {
+          ox: -msx + initialSize.left + initialSize.width / 2,
+          oy: -msy + initialSize.top + initialSize.height / 2,
+          now: true
+        });
+        TRS.abs(nav, {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+          now: true
+        });
+        Resize(resize);
+      }
+      return Make("NavReady");
+    });
+    return resize = function() {
+      var frac, hFrac, height, wFrac, width;
+      width = window.innerWidth - Control.panelWidth();
+      height = window.innerHeight - TopBar.height;
+      wFrac = width / initialSize.width;
+      hFrac = height / initialSize.height;
+      frac = .9 * Math.min(wFrac, hFrac);
+      return TRS.abs(nav, {
+        x: width / 2,
+        y: TopBar.height + height / 2,
+        sx: frac,
+        sy: frac
+      });
+    };
+  });
 
   (function() {
     var callbacksByPriority, requested, run;
@@ -1283,11 +1603,7 @@
   });
 
   Take(["RAF", "SVG"], function(RAF, SVG) {
-    var TRS, err, setup;
-    err = function(elm, message) {
-      console.log(elm);
-      throw "^ " + message;
-    };
+    var TRS, setup;
     setup = function(wrapper, elm) {
       var v;
       return elm._trs = v = {
@@ -1307,13 +1623,23 @@
     TRS = function(elm) {
       var wrapper;
       if (elm == null) {
-        err(elm, "Null element passed to TRS(elm)");
+        console.log(elm);
+        throw "^ Null element passed to TRS(elm)";
       }
       if (elm.parentNode == null) {
-        err(elm, "Element passed to TRS(elm) must have a parentNode");
+        console.log(elm);
+        throw "^ Element passed to TRS(elm) must have a parentNode";
       }
       wrapper = SVG.create("g", elm.parentNode, {
         "class": "TRS"
+      });
+      SVG.create("rect", wrapper, {
+        "class": "Debug",
+        x: -2,
+        y: -2,
+        width: 4,
+        height: 4,
+        fill: "#0FF"
       });
       setup(wrapper, elm);
       SVG.append(wrapper, elm);
@@ -1355,7 +1681,11 @@
         elm._trs.oy = attrs.oy;
         elm._trs.y += delta;
       }
-      RAF(elm._trs.apply, true, 1);
+      if (attrs.now) {
+        elm._trs.apply();
+      } else {
+        RAF(elm._trs.apply, true, 1);
+      }
       return elm;
     };
     TRS.rel = function(elm, attrs) {
@@ -1388,10 +1718,20 @@
         elm._trs.oy += attrs.oy;
         elm._trs.y += attrs.oy;
       }
-      RAF(elm._trs.apply, true, 1);
+      if (attrs.now) {
+        elm._trs.apply();
+      } else {
+        RAF(elm._trs.apply, true, 1);
+      }
       return elm;
     };
     TRS.move = function(elm, x, y) {
+      if (x == null) {
+        x = 0;
+      }
+      if (y == null) {
+        y = 0;
+      }
       if (elm._trs == null) {
         err(elm, "Non-TRS element passed to TRS.move");
       }
@@ -1401,6 +1741,9 @@
       });
     };
     TRS.rotate = function(elm, r) {
+      if (r == null) {
+        r = 0;
+      }
       if (elm._trs == null) {
         err(elm, "Non-TRS element passed to TRS.rotate");
       }
@@ -1409,8 +1752,11 @@
       });
     };
     TRS.scale = function(elm, sx, sy) {
+      if (sx == null) {
+        sx = 1;
+      }
       if (sy == null) {
-        sy = x;
+        sy = sx;
       }
       if (elm._trs == null) {
         err(elm, "Non-TRS element passed to TRS.scale");
@@ -1421,6 +1767,12 @@
       });
     };
     TRS.origin = function(elm, ox, oy) {
+      if (ox == null) {
+        ox = 0;
+      }
+      if (oy == null) {
+        oy = 0;
+      }
       if (elm._trs == null) {
         err(elm, "Non-TRS element passed to TRS.origin");
       }

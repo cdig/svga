@@ -24,5 +24,5 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
     Action "setup"
     Action "ScopeReady"
     
-    Take ["TopBarReady", "ControlsReady"], ()->
+    Take ["ControlsReady", "TopBarReady", "NavReady"], ()->
       svg.style.opacity = 1

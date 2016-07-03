@@ -25,14 +25,14 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
       SVG.prepend SVG.root, zoom.parentNode
       
       # Debug points
-      SVG.create "rect", nav, x:-4, y:-4, width:8, height:8, fill:"#F00"
-      SVG.create "rect", nav.parentNode, x:-3, y:-3, width:6, height:6, fill:"#FF0"
-      SVG.create "rect", zoom.parentNode, x:-2, y:-2, width:4, height:4, fill:"#F70"
+      # SVG.create "rect", nav, x:-4, y:-4, width:8, height:8, fill:"#F00"
+      # SVG.create "rect", nav.parentNode, x:-3, y:-3, width:6, height:6, fill:"#FF0"
+      # SVG.create "rect", zoom.parentNode, x:-2, y:-2, width:4, height:4, fill:"#F70"
       
       initialSize = ms.element.getBoundingClientRect()
       registrationOffset.x = -ms.x + initialSize.left + initialSize.width/2
       registrationOffset.y = -ms.y + initialSize.top + initialSize.height/2
-      TRS.abs nav, ox: registrationOffset.x, oy: registrationOffset.y, now:true
+      TRS.abs nav, ox: registrationOffset.x, oy: registrationOffset.y
       
       Resize resize
       
@@ -53,7 +53,7 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
     base.x = width/2
     base.y = TopBar.height + height/2
     base.z = .9 * Math.min wFrac, hFrac
-    TRS.abs zoom, x: base.x, y: base.y, scale: base.z, now:true
+    TRS.abs zoom, x: base.x, y: base.y, scale: base.z
     run()
   
   

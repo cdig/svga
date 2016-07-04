@@ -45,7 +45,8 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
       window.addEventListener "touchstart", touchStart
       window.addEventListener "touchmove", touchMove
       window.addEventListener "dblclick", dblclick
-      
+      window.addEventListener "wheel", wheel
+    
     Make "NavReady"
   
   resize = ()->
@@ -100,6 +101,7 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
       vel.d = vel.z = 0
   
   render = ()->
+    pos.z = Math.min maxZoom, Math.max minZoom, pos.z
     TRS.abs nav, x: pos.x, y: pos.y
     TRS.abs zoom, scale: base.z * Math.pow 2, pos.z
 
@@ -109,6 +111,16 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
     return  1 if pos and !neg
     return  0
   
+  
+  wheel = (e)->
+    e.preventDefault()
+    if e.ctrlKey
+      pos.z -= e.deltaY / 100
+    else
+      pos.x -= e.deltaX / (base.z * Math.pow 2, pos.z)
+      pos.y -= e.deltaY / (base.z * Math.pow 2, pos.z)
+      pos.z -= e.deltaZ
+    RAF render, true
   
   touches = null
   
@@ -139,6 +151,7 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
       clientY: t.clientY
   
   dblclick = (e)->
+    e.preventDefault()
     if e.clientX < window.innerWidth - Control.panelWidth or !Control.panelShowing
       if e.clientY > TopBar.height
         to 0, 0, 0
@@ -158,11 +171,13 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
     b = touches[1]
     dx = a.clientX - b.clientX
     dy = a.clientY - b.clientY
-    Math.sqrt dx*dx + dy*dy
-  
+    dist dx, dy
   
   distTo = (a, b)->
     dx = a.x - b.x
     dy = a.y - b.y
     dz = 200 * a.z - b.z
-    Math.sqrt dx*dx + dy*dy + dz*dz
+    dist dx, dy, dz
+  
+  dist = (x, y, z = 0)->
+    Math.sqrt x*x + y*y + z*z

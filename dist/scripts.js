@@ -447,9 +447,9 @@
     maskElement = maskInstance.element;
     maskedElement = maskedInstance.element;
     rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
     mask.setAttribute("id", maskName);
-    mask.setAttribute("clipPathUnits", "userSpaceOnUse");
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
     maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
     maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
     maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
@@ -463,9 +463,9 @@
     maskElement.setAttribute('transform', transString);
     origStyle = maskedElement.getAttribute('style');
     if (origStyle != null) {
-      newStyle = origStyle + ("; clip-path: url(#" + maskName + ");");
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
     } else {
-      newStyle = "clip-path: url(#" + maskName + ");";
+      newStyle = "mask: url(#" + maskName + ");";
     }
     maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
     return maskedParent.setAttribute("style", newStyle);

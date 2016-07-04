@@ -42,6 +42,9 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
       KeyMe "right", down: run
       KeyMe "equals", down: run
       KeyMe "minus", down: run
+      window.addEventListener "touchstart", touchStart
+      window.addEventListener "touchmove", touchMove
+      window.addEventListener "touchend", touchEnd
       
     Make "NavReady"
   
@@ -85,11 +88,8 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
     pos.y += Math.sin(vel.a) * vel.d
     pos.z += vel.z
     
-    pos.z = Math.min maxZoom, Math.max minZoom, pos.z
-    
-    TRS.abs nav, x: pos.x, y: pos.y
-    TRS.abs zoom, scale: base.z * Math.pow 2, pos.z
-    
+    render()
+  
   rerun = ()->
     alreadyRan = false
     p = KeyMe.pressing
@@ -98,9 +98,51 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
     else
       vel.d = vel.z = 0
   
+  render = ()->
+    pos.z = Math.min maxZoom, Math.max minZoom, pos.z
+    TRS.abs nav, x: pos.x, y: pos.y
+    TRS.abs zoom, scale: base.z * Math.pow 2, pos.z
+
   
   getAccel = (neg, pos)->
     return -1 if neg and !pos
     return  1 if pos and !neg
     return  0
   
+  
+  touches = null
+  
+  
+  touchStart = (e)->
+    e.preventDefault()
+    touches = cloneTouches e
+    vel.d = vel.z = 0
+    
+  touchMove = (e)->
+    e.preventDefault()
+    if e.touches.length isnt touches.length
+      # noop
+    else if e.touches.length > 1
+      a = dist(touches)
+      b = dist(e.touches)
+      pos.z += (b - a) / 100
+    else
+      pos.x += (e.touches[0].clientX - touches[0].clientX) / (base.z * Math.pow 2, pos.z)
+      pos.y += (e.touches[0].clientY - touches[0].clientY) / (base.z * Math.pow 2, pos.z)
+    touches = cloneTouches e
+    RAF render, true
+  
+  dist = (touches)->
+    a = touches[0]
+    b = touches[1]
+    dx = (a.clientX-b.clientX)
+    dy = (a.clientY-b.clientY)
+    Math.sqrt dx*dx + dy+dy
+  
+  cloneTouches = (e)->
+    for t in e.touches
+      clientX: t.clientX
+      clientY: t.clientY
+  
+  touchEnd = ()->
+    

@@ -148,6 +148,7 @@
       });
     });
     window.addEventListener("focus", hide);
+    window.addEventListener("touchstart", hide);
     window.addEventListener("blur", show);
     return show();
   });
@@ -925,7 +926,7 @@
   })();
 
   Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS) {
-    var accel, alreadyRan, base, decel, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, rerun, resize, run, vel, zoom;
+    var accel, alreadyRan, base, cloneTouches, decel, dist, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, touchEnd, touchMove, touchStart, touches, vel, zoom;
     minVel = 0.1;
     maxVel = {
       xy: 10,
@@ -999,6 +1000,9 @@
         KeyMe("minus", {
           down: run
         });
+        window.addEventListener("touchstart", touchStart);
+        window.addEventListener("touchmove", touchMove);
+        window.addEventListener("touchend", touchEnd);
       }
       return Make("NavReady");
     });
@@ -1048,14 +1052,7 @@
       pos.x += Math.cos(vel.a) * vel.d;
       pos.y += Math.sin(vel.a) * vel.d;
       pos.z += vel.z;
-      pos.z = Math.min(maxZoom, Math.max(minZoom, pos.z));
-      TRS.abs(nav, {
-        x: pos.x,
-        y: pos.y
-      });
-      return TRS.abs(zoom, {
-        scale: base.z * Math.pow(2, pos.z)
-      });
+      return render();
     };
     rerun = function() {
       var p;
@@ -1067,7 +1064,17 @@
         return vel.d = vel.z = 0;
       }
     };
-    return getAccel = function(neg, pos) {
+    render = function() {
+      pos.z = Math.min(maxZoom, Math.max(minZoom, pos.z));
+      TRS.abs(nav, {
+        x: pos.x,
+        y: pos.y
+      });
+      return TRS.abs(zoom, {
+        scale: base.z * Math.pow(2, pos.z)
+      });
+    };
+    getAccel = function(neg, pos) {
       if (neg && !pos) {
         return -1;
       }
@@ -1076,6 +1083,50 @@
       }
       return 0;
     };
+    touches = null;
+    touchStart = function(e) {
+      e.preventDefault();
+      touches = cloneTouches(e);
+      return vel.d = vel.z = 0;
+    };
+    touchMove = function(e) {
+      var a, b;
+      e.preventDefault();
+      if (e.touches.length !== touches.length) {
+
+      } else if (e.touches.length > 1) {
+        a = dist(touches);
+        b = dist(e.touches);
+        pos.z += (b - a) / 100;
+      } else {
+        pos.x += (e.touches[0].clientX - touches[0].clientX) / (base.z * Math.pow(2, pos.z));
+        pos.y += (e.touches[0].clientY - touches[0].clientY) / (base.z * Math.pow(2, pos.z));
+      }
+      touches = cloneTouches(e);
+      return RAF(render, true);
+    };
+    dist = function(touches) {
+      var a, b, dx, dy;
+      a = touches[0];
+      b = touches[1];
+      dx = a.clientX - b.clientX;
+      dy = a.clientY - b.clientY;
+      return Math.sqrt(dx * dx + dy + dy);
+    };
+    cloneTouches = function(e) {
+      var len, m, ref, results, t;
+      ref = e.touches;
+      results = [];
+      for (m = 0, len = ref.length; m < len; m++) {
+        t = ref[m];
+        results.push({
+          clientX: t.clientX,
+          clientY: t.clientY
+        });
+      }
+      return results;
+    };
+    return touchEnd = function() {};
   });
 
   (function() {

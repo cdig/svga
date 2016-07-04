@@ -9,5 +9,6 @@ Take ["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], (Resize, root, SVG,
   Resize ()-> TRS.abs g, x: window.innerWidth/2, y: TopBar.height
   
   window.addEventListener "focus", hide
+  window.addEventListener "touchstart", hide
   window.addEventListener "blur", show
   show()

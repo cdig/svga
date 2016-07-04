@@ -61,6 +61,7 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
       selectedSymbol.removeChild child
   
   update = (time)->
+    return
     RAF update
     currentTime ?= time
     dT = (time - currentTime)/1000

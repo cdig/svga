@@ -178,7 +178,7 @@
     Control.panelShowing = false;
     resize = function() {
       var control, height, instancesByName, name, offset, panelWidth, results, type;
-      panelWidth = Control.panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
+      panelWidth = Control.panelWidth = Math.ceil(3 * Math.sqrt(window.innerWidth));
       SVG.attr(bg, "width", panelWidth);
       SVG.attr(bg, "height", window.innerHeight - TopBar.height);
       TRS.move(g, window.innerWidth - panelWidth, TopBar.height);
@@ -927,7 +927,7 @@
   })();
 
   Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS", "Tween"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS, Tween) {
-    var accel, alreadyRan, base, cloneTouches, dblclick, decel, dist, distTo, distTouches, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchMove, touchStart, touches, vel, wheel, zoom;
+    var accel, alreadyRan, base, cloneTouches, dblclick, decel, dist, distTo, distTouches, eventInside, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchEnd, touchMove, touchStart, touches, vel, wheel, zoom;
     minVel = 0.1;
     maxVel = {
       xy: 10,
@@ -1002,7 +1002,6 @@
           down: run
         });
         window.addEventListener("touchstart", touchStart);
-        window.addEventListener("touchmove", touchMove);
         window.addEventListener("dblclick", dblclick);
         window.addEventListener("wheel", wheel);
       }
@@ -1087,6 +1086,9 @@
       return 0;
     };
     wheel = function(e) {
+      if (!eventInside(e.clientX, e.clientY)) {
+        return;
+      }
       e.preventDefault();
       if (e.ctrlKey) {
         pos.z -= e.deltaY / 100;
@@ -1099,9 +1101,14 @@
     };
     touches = null;
     touchStart = function(e) {
+      if (!eventInside(e.touches[0].clientX, e.touches[0].clientY)) {
+        return;
+      }
       e.preventDefault();
       touches = cloneTouches(e);
-      return vel.d = vel.z = 0;
+      vel.d = vel.z = 0;
+      window.addEventListener("touchmove", touchMove);
+      return window.addEventListener("touchend", touchEnd);
     };
     touchMove = function(e) {
       var a, b;
@@ -1111,7 +1118,7 @@
       } else if (e.touches.length > 1) {
         a = distTouches(touches);
         b = distTouches(e.touches);
-        pos.z += (b - a) / 100;
+        pos.z += (b - a) / 200;
         pos.z = Math.min(maxZoom, Math.max(minZoom, pos.z));
       } else {
         pos.x += (e.touches[0].clientX - touches[0].clientX) / (base.z * Math.pow(2, pos.z));
@@ -1119,6 +1126,12 @@
       }
       touches = cloneTouches(e);
       return RAF(render, true);
+    };
+    touchEnd = function(e) {
+      if (touches.length <= 1) {
+        window.removeEventListener("touchmove", touchMove);
+        return window.removeEventListener("touchend", touchEnd);
+      }
     };
     cloneTouches = function(e) {
       var len, m, ref, results, t;
@@ -1134,11 +1147,9 @@
       return results;
     };
     dblclick = function(e) {
-      e.preventDefault();
-      if (e.clientX < window.innerWidth - Control.panelWidth || !Control.panelShowing) {
-        if (e.clientY > TopBar.height) {
-          return to(0, 0, 0);
-        }
+      if (eventInside(e.clientX, e.clientY)) {
+        e.preventDefault();
+        return to(0, 0, 0);
       }
     };
     to = function(x, y, z) {
@@ -1173,11 +1184,18 @@
       dz = 200 * a.z - b.z;
       return dist(dx, dy, dz);
     };
-    return dist = function(x, y, z) {
+    dist = function(x, y, z) {
       if (z == null) {
         z = 0;
       }
       return Math.sqrt(x * x + y * y + z * z);
+    };
+    return eventInside = function(x, y) {
+      var insidePanel, insideTopBar, panelHidden;
+      panelHidden = !Control.panelShowing;
+      insidePanel = x < window.innerWidth - Control.panelWidth;
+      insideTopBar = y > TopBar.height;
+      return insideTopBar && (panelHidden || insidePanel);
     };
   });
 
@@ -2385,6 +2403,7 @@
     };
     update = function(time) {
       var arrowsContainer, dT, len, m, ref, results;
+      return;
       RAF(update);
       if (currentTime == null) {
         currentTime = time;

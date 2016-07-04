@@ -16,7 +16,7 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"]
   Control.panelShowing = false
   
   resize = ()->
-    panelWidth = Control.panelWidth = Math.ceil 5 * Math.sqrt window.innerWidth
+    panelWidth = Control.panelWidth = Math.ceil 3 * Math.sqrt window.innerWidth
     SVG.attr bg, "width", panelWidth
     SVG.attr bg, "height", window.innerHeight - TopBar.height
     TRS.move g, window.innerWidth - panelWidth, TopBar.height

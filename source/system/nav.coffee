@@ -23,7 +23,6 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
       SVG.append mid, nav.parentNode
       zoom = TRS mid
       SVG.prepend SVG.root, zoom.parentNode
-      
       # Debug points
       # SVG.create "rect", nav, x:-4, y:-4, width:8, height:8, fill:"#F00"
       # SVG.create "rect", nav.parentNode, x:-3, y:-3, width:6, height:6, fill:"#FF0"
@@ -43,7 +42,6 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
       KeyMe "equals", down: run
       KeyMe "minus", down: run
       window.addEventListener "touchstart", touchStart
-      window.addEventListener "touchmove", touchMove
       window.addEventListener "dblclick", dblclick
       window.addEventListener "wheel", wheel
     
@@ -113,6 +111,7 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
   
   
   wheel = (e)->
+    return unless eventInside e.clientX, e.clientY
     e.preventDefault()
     if e.ctrlKey
       pos.z -= e.deltaY / 100
@@ -122,13 +121,17 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
       pos.z -= e.deltaZ
     RAF render, true
   
+  
   touches = null
   
-  
   touchStart = (e)->
+    return unless eventInside e.touches[0].clientX, e.touches[0].clientY
     e.preventDefault()
     touches = cloneTouches e
     vel.d = vel.z = 0
+    window.addEventListener "touchmove", touchMove
+    window.addEventListener "touchend", touchEnd
+    
     
   touchMove = (e)->
     e.preventDefault()
@@ -137,7 +140,7 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
     else if e.touches.length > 1
       a = distTouches touches
       b = distTouches e.touches
-      pos.z += (b - a) / 100
+      pos.z += (b - a) / 200
       pos.z = Math.min maxZoom, Math.max minZoom, pos.z
     else
       pos.x += (e.touches[0].clientX - touches[0].clientX) / (base.z * Math.pow 2, pos.z)
@@ -145,16 +148,23 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
     touches = cloneTouches e
     RAF render, true
   
+  touchEnd = (e)->
+    if touches.length <= 1
+      window.removeEventListener "touchmove", touchMove
+      window.removeEventListener "touchend", touchEnd
+
+  
   cloneTouches = (e)->
     for t in e.touches
       clientX: t.clientX
       clientY: t.clientY
   
+  
   dblclick = (e)->
-    e.preventDefault()
-    if e.clientX < window.innerWidth - Control.panelWidth or !Control.panelShowing
-      if e.clientY > TopBar.height
-        to 0, 0, 0
+    if eventInside e.clientX, e.clientY
+      e.preventDefault()
+      to 0, 0, 0
+  
   
   to = (x, y, z)->
     target =
@@ -181,3 +191,10 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
   
   dist = (x, y, z = 0)->
     Math.sqrt x*x + y*y + z*z
+  
+  
+  eventInside = (x, y)->
+    panelHidden = !Control.panelShowing
+    insidePanel = x < window.innerWidth - Control.panelWidth
+    insideTopBar = y > TopBar.height
+    return insideTopBar and (panelHidden or insidePanel)

@@ -50,7 +50,7 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
         arrowsContainer.visible(false)
     
     start: ()->
-      console.log "FlowArrows.start() is deprecated. Please remove it from your animation."
+      throw "FlowArrows.start() has been removed. Just delete it."
   
   
   removeOriginalArrow = (selectedSymbol)->
@@ -58,10 +58,10 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
     for child in selectedSymbol.childNodes
       children.push child
     for child in children
-      selectedSymbol.removeChild(child)
+      selectedSymbol.removeChild child
   
   update = (time)->
-    RAF(update)
+    RAF update
     currentTime ?= time
     dT = (time - currentTime)/1000
     currentTime = time

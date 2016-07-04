@@ -1,12 +1,12 @@
-Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
-(      Control , KeyMe , Reaction , RAF , Resize , root , SVG , TopBar , TRS)->
+Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","Tween"],
+(      Control , KeyMe , Reaction , RAF , Resize , root , SVG , TopBar , TRS , Tween)->
   minVel = 0.1
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
   minZoom = 0
   maxZoom = 3
   accel = xy: 0.7, z: 0.004 # xy polar, z cartesian
   decel = xy: 1.25, z: 1.001 # xy polar, z cartesian
-  vel = a: 0, d: 0, z: 0 # xy polar (angle, dist), z cartesian
+  vel = a: 0, d: 0, z: 0 # xy polar (angle, displacement), z cartesian
   pos = x: 0, y: 0, z: 0 # x, y, z cartesian
   registrationOffset = x:0, y:0
   base = x: 0, y: 0, z: 0
@@ -44,12 +44,12 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
       KeyMe "minus", down: run
       window.addEventListener "touchstart", touchStart
       window.addEventListener "touchmove", touchMove
-      window.addEventListener "touchend", touchEnd
+      window.addEventListener "dblclick", dblclick
       
     Make "NavReady"
   
   resize = ()->
-    width = window.innerWidth - Control.panelWidth()
+    width = window.innerWidth - Control.panelWidth
     height = window.innerHeight - TopBar.height
     wFrac = width / initialSize.width
     hFrac = height / initialSize.height
@@ -77,16 +77,17 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
     inputY = getAccel down, up
     inputZ = getAccel minus, plus
     
-    vel.d /= decel.xy if inputX is 0 and inputY is 0
+    # Do z first, so we can scale xy based on z
     vel.z /= decel.z if inputZ is 0
+    vel.z = Math.max -maxVel.z, Math.min maxVel.z, vel.z + accel.z * inputZ
+    pos.z += vel.z
+    pos.z = Math.min maxZoom, Math.max minZoom, pos.z
     
+    vel.d /= decel.xy if inputX is 0 and inputY is 0
     vel.a = Math.atan2 inputY, inputX if inputY or inputX
     vel.d = Math.min maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY))
-    vel.z = Math.max -maxVel.z, Math.min maxVel.z, vel.z + accel.z * inputZ
-    
-    pos.x += Math.cos(vel.a) * vel.d
-    pos.y += Math.sin(vel.a) * vel.d
-    pos.z += vel.z
+    pos.x += Math.cos(vel.a) * vel.d / (1+pos.z)
+    pos.y += Math.sin(vel.a) * vel.d / (1+pos.z)
     
     render()
   
@@ -99,7 +100,6 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
       vel.d = vel.z = 0
   
   render = ()->
-    pos.z = Math.min maxZoom, Math.max minZoom, pos.z
     TRS.abs nav, x: pos.x, y: pos.y
     TRS.abs zoom, scale: base.z * Math.pow 2, pos.z
 
@@ -123,26 +123,46 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
     if e.touches.length isnt touches.length
       # noop
     else if e.touches.length > 1
-      a = dist(touches)
-      b = dist(e.touches)
+      a = distTouches touches
+      b = distTouches e.touches
       pos.z += (b - a) / 100
+      pos.z = Math.min maxZoom, Math.max minZoom, pos.z
     else
       pos.x += (e.touches[0].clientX - touches[0].clientX) / (base.z * Math.pow 2, pos.z)
       pos.y += (e.touches[0].clientY - touches[0].clientY) / (base.z * Math.pow 2, pos.z)
     touches = cloneTouches e
     RAF render, true
   
-  dist = (touches)->
-    a = touches[0]
-    b = touches[1]
-    dx = (a.clientX-b.clientX)
-    dy = (a.clientY-b.clientY)
-    Math.sqrt dx*dx + dy+dy
-  
   cloneTouches = (e)->
     for t in e.touches
       clientX: t.clientX
       clientY: t.clientY
   
-  touchEnd = ()->
-    
+  dblclick = (e)->
+    if e.clientX < window.innerWidth - Control.panelWidth or !Control.panelShowing
+      if e.clientY > TopBar.height
+        to 0, 0, 0
+  
+  to = (x, y, z)->
+    target =
+      x: if x? then x else pos.x
+      y: if y? then y else pos.y
+      z: if z? then z else pos.z
+    time = Math.sqrt(distTo pos, target) / 30
+    if time > 0
+      Tween on:pos, to:target, time: time, tick: render
+  
+  
+  distTouches = (touches)->
+    a = touches[0]
+    b = touches[1]
+    dx = a.clientX - b.clientX
+    dy = a.clientY - b.clientY
+    Math.sqrt dx*dx + dy*dy
+  
+  
+  distTo = (a, b)->
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dz = 200 * a.z - b.z
+    Math.sqrt dx*dx + dy*dy + dz*dz

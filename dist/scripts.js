@@ -110,6 +110,102 @@
     });
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter, enabled;
+    enabled = true;
+    Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, len, m, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, len, m, results;
+          if (enabled) {
+            results = [];
+            for (m = 0, len = highlighted.length; m < len; m++) {
+              highlight = highlighted[m];
+              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, len, m, results;
+          results = [];
+          for (m = 0, len = highlighted.length; m < len; m++) {
+            highlight = highlighted[m];
+            results.push(SVG.attr(highlight, "filter", null));
+          }
+          return results;
+        };
+        results = [];
+        for (m = 0, len = highlighted.length; m < len; m++) {
+          highlight = highlighted[m];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
+    });
+    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
+  });
+
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.element.createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.element;
+    maskedElement = maskedInstance.element;
+    rootElement = root.element;
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
+    } else {
+      newStyle = "mask: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    return maskedParent.setAttribute("style", newStyle);
+  });
+
   Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", SVG.root));
@@ -174,12 +270,11 @@
         return instantiate.apply(null, args);
       }
     };
-    Control.panelWidth = function() {
-      return Math.ceil(5 * Math.sqrt(window.innerWidth));
-    };
+    Control.panelWidth = 0;
+    Control.panelShowing = false;
     resize = function() {
       var control, height, instancesByName, name, offset, panelWidth, results, type;
-      panelWidth = Control.panelWidth();
+      panelWidth = Control.panelWidth = Math.ceil(5 * Math.sqrt(window.innerWidth));
       SVG.attr(bg, "width", panelWidth);
       SVG.attr(bg, "height", window.innerHeight - TopBar.height);
       TRS.move(g, window.innerWidth - panelWidth, TopBar.height);
@@ -240,14 +335,16 @@
       return instancesByName[name].api;
     };
     Reaction("Schematic:Show", function() {
-      return SVG.attrs(g, {
+      SVG.attrs(g, {
         opacity: 0
       });
+      return Control.panelShowing = false;
     });
     Reaction("Schematic:Hide", function() {
-      return SVG.attrs(g, {
+      SVG.attrs(g, {
         opacity: 1
       });
+      return Control.panelShowing = true;
     });
     Reaction("ScopeReady", function() {
       Resize(resize);
@@ -374,102 +471,6 @@
       }
     };
     return Make("TopBar", TopBar);
-  });
-
-  Take("SVG", function(SVG) {
-    var Highlighter, enabled;
-    enabled = true;
-    Make("Highlighter", Highlighter = {
-      setup: function(highlighted) {
-        var highlight, len, m, mouseLeave, mouseOver, results;
-        if (highlighted == null) {
-          highlighted = [];
-        }
-        mouseOver = function(e) {
-          var highlight, len, m, results;
-          if (enabled) {
-            results = [];
-            for (m = 0, len = highlighted.length; m < len; m++) {
-              highlight = highlighted[m];
-              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
-            }
-            return results;
-          }
-        };
-        mouseLeave = function(e) {
-          var highlight, len, m, results;
-          results = [];
-          for (m = 0, len = highlighted.length; m < len; m++) {
-            highlight = highlighted[m];
-            results.push(SVG.attr(highlight, "filter", null));
-          }
-          return results;
-        };
-        results = [];
-        for (m = 0, len = highlighted.length; m < len; m++) {
-          highlight = highlighted[m];
-          highlight.addEventListener("mouseover", mouseOver);
-          results.push(highlight.addEventListener("mouseleave", mouseLeave));
-        }
-        return results;
-      },
-      enable: function() {
-        return enabled = true;
-      },
-      disable: function() {
-        return enabled = true;
-      }
-    });
-    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
-  });
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.element.createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.element;
-    maskedElement = maskedInstance.element;
-    rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    return maskedParent.setAttribute("style", newStyle);
   });
 
   Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
@@ -925,8 +926,8 @@
     return Make("KeyNames", KeyNames);
   })();
 
-  Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS) {
-    var accel, alreadyRan, base, cloneTouches, decel, dist, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, touchEnd, touchMove, touchStart, touches, vel, zoom;
+  Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS", "Tween"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS, Tween) {
+    var accel, alreadyRan, base, cloneTouches, dblclick, decel, distTo, distTouches, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchMove, touchStart, touches, vel, zoom;
     minVel = 0.1;
     maxVel = {
       xy: 10,
@@ -1002,13 +1003,13 @@
         });
         window.addEventListener("touchstart", touchStart);
         window.addEventListener("touchmove", touchMove);
-        window.addEventListener("touchend", touchEnd);
+        window.addEventListener("dblclick", dblclick);
       }
       return Make("NavReady");
     });
     resize = function() {
       var hFrac, height, wFrac, width;
-      width = window.innerWidth - Control.panelWidth();
+      width = window.innerWidth - Control.panelWidth;
       height = window.innerHeight - TopBar.height;
       wFrac = width / initialSize.width;
       hFrac = height / initialSize.height;
@@ -1038,20 +1039,21 @@
       inputX = getAccel(right, left);
       inputY = getAccel(down, up);
       inputZ = getAccel(minus, plus);
-      if (inputX === 0 && inputY === 0) {
-        vel.d /= decel.xy;
-      }
       if (inputZ === 0) {
         vel.z /= decel.z;
+      }
+      vel.z = Math.max(-maxVel.z, Math.min(maxVel.z, vel.z + accel.z * inputZ));
+      pos.z += vel.z;
+      pos.z = Math.min(maxZoom, Math.max(minZoom, pos.z));
+      if (inputX === 0 && inputY === 0) {
+        vel.d /= decel.xy;
       }
       if (inputY || inputX) {
         vel.a = Math.atan2(inputY, inputX);
       }
       vel.d = Math.min(maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY)));
-      vel.z = Math.max(-maxVel.z, Math.min(maxVel.z, vel.z + accel.z * inputZ));
-      pos.x += Math.cos(vel.a) * vel.d;
-      pos.y += Math.sin(vel.a) * vel.d;
-      pos.z += vel.z;
+      pos.x += Math.cos(vel.a) * vel.d / (1 + pos.z);
+      pos.y += Math.sin(vel.a) * vel.d / (1 + pos.z);
       return render();
     };
     rerun = function() {
@@ -1065,7 +1067,6 @@
       }
     };
     render = function() {
-      pos.z = Math.min(maxZoom, Math.max(minZoom, pos.z));
       TRS.abs(nav, {
         x: pos.x,
         y: pos.y
@@ -1095,23 +1096,16 @@
       if (e.touches.length !== touches.length) {
 
       } else if (e.touches.length > 1) {
-        a = dist(touches);
-        b = dist(e.touches);
+        a = distTouches(touches);
+        b = distTouches(e.touches);
         pos.z += (b - a) / 100;
+        pos.z = Math.min(maxZoom, Math.max(minZoom, pos.z));
       } else {
         pos.x += (e.touches[0].clientX - touches[0].clientX) / (base.z * Math.pow(2, pos.z));
         pos.y += (e.touches[0].clientY - touches[0].clientY) / (base.z * Math.pow(2, pos.z));
       }
       touches = cloneTouches(e);
       return RAF(render, true);
-    };
-    dist = function(touches) {
-      var a, b, dx, dy;
-      a = touches[0];
-      b = touches[1];
-      dx = a.clientX - b.clientX;
-      dy = a.clientY - b.clientY;
-      return Math.sqrt(dx * dx + dy + dy);
     };
     cloneTouches = function(e) {
       var len, m, ref, results, t;
@@ -1126,7 +1120,45 @@
       }
       return results;
     };
-    return touchEnd = function() {};
+    dblclick = function(e) {
+      if (e.clientX < window.innerWidth - Control.panelWidth || !Control.panelShowing) {
+        if (e.clientY > TopBar.height) {
+          return to(0, 0, 0);
+        }
+      }
+    };
+    to = function(x, y, z) {
+      var target, time;
+      target = {
+        x: x != null ? x : pos.x,
+        y: y != null ? y : pos.y,
+        z: z != null ? z : pos.z
+      };
+      time = Math.sqrt(distTo(pos, target)) / 30;
+      if (time > 0) {
+        return Tween({
+          on: pos,
+          to: target,
+          time: time,
+          tick: render
+        });
+      }
+    };
+    distTouches = function(touches) {
+      var a, b, dx, dy;
+      a = touches[0];
+      b = touches[1];
+      dx = a.clientX - b.clientX;
+      dy = a.clientY - b.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    return distTo = function(a, b) {
+      var dx, dy, dz;
+      dx = a.x - b.x;
+      dy = a.y - b.y;
+      dz = 200 * a.z - b.z;
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    };
   });
 
   (function() {
@@ -1957,6 +1989,74 @@
     return Make("TRS", TRS);
   });
 
+  Take(["Ease", "RAF"], function(Ease, RAF) {
+    var Tween, cloneObj, diffObj, tweens, update, updateTween;
+    tweens = [];
+    Tween = function(tween) {
+      if (tween.from == null) {
+        tween.from = cloneObj(tween.on);
+      }
+      tween.delta = diffObj(tween.to, tween.from);
+      console.log(tween.delta);
+      tweens.push(tween);
+      return RAF(update, true);
+    };
+    update = function(t) {
+      var tween;
+      tweens = ((function() {
+        var len, m, results;
+        results = [];
+        for (m = 0, len = tweens.length; m < len; m++) {
+          tween = tweens[m];
+          results.push(updateTween(tween, t / 1000));
+        }
+        return results;
+      })()).filter(function(t) {
+        return t != null;
+      });
+      if (tweens.length > 0) {
+        return RAF(update, true);
+      }
+    };
+    updateTween = function(tween, time) {
+      var k, pos, ref, v;
+      if (tween.started == null) {
+        tween.started = time;
+      }
+      pos = Math.min(1, (time - tween.started) / tween.time);
+      ref = tween.delta;
+      for (k in ref) {
+        v = ref[k];
+        tween.on[k] = v * Ease.cubic(pos) + tween.from[k];
+      }
+      if (typeof tween.tick === "function") {
+        tween.tick();
+      }
+      if (pos < 1) {
+        return tween;
+      }
+    };
+    cloneObj = function(obj) {
+      var k, out, v;
+      out = {};
+      for (k in obj) {
+        v = obj[k];
+        out[k] = obj[k];
+      }
+      return out;
+    };
+    diffObj = function(a, b) {
+      var diff, k, v;
+      diff = {};
+      for (k in a) {
+        v = a[k];
+        diff[k] = a[k] - b[k];
+      }
+      return diff;
+    };
+    return Make("Tween", Tween);
+  });
+
   Arrow = (function() {
     var getScaleFactor;
 
@@ -2245,7 +2345,7 @@
         return results;
       },
       start: function() {
-        return console.log("FlowArrows.start() is deprecated. Please remove it from your animation.");
+        throw "FlowArrows.start() has been removed. Just delete it.";
       }
     };
     removeOriginalArrow = function(selectedSymbol) {

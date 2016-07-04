@@ -12,12 +12,11 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"]
     else
       instantiate args...
   
-  Control.panelWidth = ()->
-    Math.ceil 5 * Math.sqrt window.innerWidth
-  
+  Control.panelWidth = 0
+  Control.panelShowing = false
   
   resize = ()->
-    panelWidth = Control.panelWidth()
+    panelWidth = Control.panelWidth = Math.ceil 5 * Math.sqrt window.innerWidth
     SVG.attr bg, "width", panelWidth
     SVG.attr bg, "height", window.innerHeight - TopBar.height
     TRS.move g, window.innerWidth - panelWidth, TopBar.height
@@ -47,8 +46,14 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"]
     instancesByName[name].api
   
   
-  Reaction "Schematic:Show", ()-> SVG.attrs g, opacity: 0
-  Reaction "Schematic:Hide", ()-> SVG.attrs g, opacity: 1
+  Reaction "Schematic:Show", ()->
+    SVG.attrs g, opacity: 0
+    Control.panelShowing = false
+  
+  Reaction "Schematic:Hide", ()->
+    SVG.attrs g, opacity: 1
+    Control.panelShowing = true
+  
   Reaction "ScopeReady", ()->
     Resize resize
     Make "ControlsReady"

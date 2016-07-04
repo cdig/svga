@@ -110,104 +110,8 @@
     });
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter, enabled;
-    enabled = true;
-    Make("Highlighter", Highlighter = {
-      setup: function(highlighted) {
-        var highlight, len, m, mouseLeave, mouseOver, results;
-        if (highlighted == null) {
-          highlighted = [];
-        }
-        mouseOver = function(e) {
-          var highlight, len, m, results;
-          if (enabled) {
-            results = [];
-            for (m = 0, len = highlighted.length; m < len; m++) {
-              highlight = highlighted[m];
-              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
-            }
-            return results;
-          }
-        };
-        mouseLeave = function(e) {
-          var highlight, len, m, results;
-          results = [];
-          for (m = 0, len = highlighted.length; m < len; m++) {
-            highlight = highlighted[m];
-            results.push(SVG.attr(highlight, "filter", null));
-          }
-          return results;
-        };
-        results = [];
-        for (m = 0, len = highlighted.length; m < len; m++) {
-          highlight = highlighted[m];
-          highlight.addEventListener("mouseover", mouseOver);
-          results.push(highlight.addEventListener("mouseleave", mouseLeave));
-        }
-        return results;
-      },
-      enable: function() {
-        return enabled = true;
-      },
-      disable: function() {
-        return enabled = true;
-      }
-    });
-    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
-  });
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.element.createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.element;
-    maskedElement = maskedInstance.element;
-    rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    return maskedParent.setAttribute("style", newStyle);
-  });
-
   Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
-    var g, show;
+    var g, hide, show;
     g = TRS(SVG.create("g", SVG.root));
     SVG.create("rect", g, {
       x: -200,
@@ -227,23 +131,25 @@
       "alignment-baseline": "middle",
       "text-anchor": "middle"
     });
-    (show = function() {
+    show = function() {
       return SVG.attrs(g, {
         style: "display: block"
       });
-    })();
+    };
+    hide = function() {
+      return SVG.attrs(g, {
+        style: "display: none"
+      });
+    };
     Resize(function() {
       return TRS.abs(g, {
         x: window.innerWidth / 2,
         y: TopBar.height
       });
     });
-    window.addEventListener("focus", function() {
-      return SVG.attrs(g, {
-        style: "display: none"
-      });
-    });
-    return window.addEventListener("blur", show);
+    window.addEventListener("focus", hide);
+    window.addEventListener("blur", show);
+    return show();
   });
 
   Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"], function(Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS) {
@@ -467,6 +373,102 @@
       }
     };
     return Make("TopBar", TopBar);
+  });
+
+  Take("SVG", function(SVG) {
+    var Highlighter, enabled;
+    enabled = true;
+    Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, len, m, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, len, m, results;
+          if (enabled) {
+            results = [];
+            for (m = 0, len = highlighted.length; m < len; m++) {
+              highlight = highlighted[m];
+              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, len, m, results;
+          results = [];
+          for (m = 0, len = highlighted.length; m < len; m++) {
+            highlight = highlighted[m];
+            results.push(SVG.attr(highlight, "filter", null));
+          }
+          return results;
+        };
+        results = [];
+        for (m = 0, len = highlighted.length; m < len; m++) {
+          highlight = highlighted[m];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
+    });
+    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
+  });
+
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.element.createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.element;
+    maskedElement = maskedInstance.element;
+    rootElement = root.element;
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("clipPathUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; clip-path: url(#" + maskName + ");");
+    } else {
+      newStyle = "clip-path: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    return maskedParent.setAttribute("style", newStyle);
   });
 
   Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
@@ -923,25 +925,21 @@
   })();
 
   Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS) {
-    var accel, alreadyRan, base, decel, getAccel, initialSize, maxBounds, maxVel, minBounds, minVel, ms, nav, pos, registrationOffset, rerun, resize, run, vel, zoom;
+    var accel, alreadyRan, base, decel, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, rerun, resize, run, vel, zoom;
+    minVel = 0.1;
+    maxVel = {
+      xy: 10,
+      z: 0.05
+    };
+    minZoom = 0;
+    maxZoom = 3;
     accel = {
-      xy: 5,
-      z: 0.01
+      xy: 0.7,
+      z: 0.004
     };
     decel = {
       xy: 1.25,
-      z: 1.25
-    };
-    maxVel = {
-      xy: 10,
-      z: 0.2
-    };
-    minVel = 0.1;
-    minBounds = {
-      z: 0
-    };
-    maxBounds = {
-      z: 3
+      z: 1.001
     };
     vel = {
       a: 0,
@@ -1039,16 +1037,18 @@
       if (inputX === 0 && inputY === 0) {
         vel.d /= decel.xy;
       }
-      vel.z /= decel.z;
+      if (inputZ === 0) {
+        vel.z /= decel.z;
+      }
       if (inputY || inputX) {
         vel.a = Math.atan2(inputY, inputX);
       }
       vel.d = Math.min(maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY)));
-      vel.z = Math.min(maxVel.z, vel.z + accel.z * inputZ);
+      vel.z = Math.max(-maxVel.z, Math.min(maxVel.z, vel.z + accel.z * inputZ));
       pos.x += Math.cos(vel.a) * vel.d;
       pos.y += Math.sin(vel.a) * vel.d;
       pos.z += vel.z;
-      pos.z = Math.min(maxBounds.z, Math.max(minBounds.z, pos.z));
+      pos.z = Math.min(maxZoom, Math.max(minZoom, pos.z));
       TRS.abs(nav, {
         x: pos.x,
         y: pos.y

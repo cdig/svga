@@ -1,11 +1,11 @@
 Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
 (      Control , KeyMe , Reaction , RAF , Resize , root , SVG , TopBar , TRS)->
-  accel = xy: 5, z: 0.01 # xy polar, z cartesian
-  decel = xy: 1.25, z: 1.25 # xy polar, z cartesian
-  maxVel = xy: 10, z: 0.2 # xy polar, z cartesian
   minVel = 0.1
-  minBounds = z: 0
-  maxBounds = z: 3
+  maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
+  minZoom = 0
+  maxZoom = 3
+  accel = xy: 0.7, z: 0.004 # xy polar, z cartesian
+  decel = xy: 1.25, z: 1.001 # xy polar, z cartesian
   vel = a: 0, d: 0, z: 0 # xy polar (angle, dist), z cartesian
   pos = x: 0, y: 0, z: 0 # x, y, z cartesian
   registrationOffset = x:0, y:0
@@ -70,27 +70,22 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS"],
     minus = KeyMe.pressing["minus"]
     plus = KeyMe.pressing["equals"]
     
-    # input = x: 0, y: 0, z: 0 # x, y, z cartesian
-    # accel = xy: 0.1, z: 0.1 # xy polar, z cartesian
-    # vel = a: 0, d: 0, z: 0 # xy polar
-    # pos = x: 0, y: 0, z: 0 # x, y, z cartesian
-    
     inputX = getAccel right, left
     inputY = getAccel down, up
     inputZ = getAccel minus, plus
     
     vel.d /= decel.xy if inputX is 0 and inputY is 0
-    vel.z /= decel.z
+    vel.z /= decel.z if inputZ is 0
     
     vel.a = Math.atan2 inputY, inputX if inputY or inputX
     vel.d = Math.min maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY))
-    vel.z = Math.min maxVel.z, vel.z + accel.z * inputZ
+    vel.z = Math.max -maxVel.z, Math.min maxVel.z, vel.z + accel.z * inputZ
     
     pos.x += Math.cos(vel.a) * vel.d
     pos.y += Math.sin(vel.a) * vel.d
     pos.z += vel.z
     
-    pos.z = Math.min maxBounds.z, Math.max minBounds.z, pos.z
+    pos.z = Math.min maxZoom, Math.max minZoom, pos.z
     
     TRS.abs nav, x: pos.x, y: pos.y
     TRS.abs zoom, scale: base.z * Math.pow 2, pos.z

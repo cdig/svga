@@ -1,5 +1,6 @@
 (function() {
   var Arrow, ArrowsContainer, Edge, Mask, Segment, getParentInverseTransform,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
@@ -91,9 +92,10 @@
   });
 
   Take("DOMContentLoaded", function() {
-    var SVGCrawler;
+    var SVGCrawler, deprecations;
+    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     return Make("SVGCrawler", SVGCrawler = function(elm) {
-      var childElm, childNodes, len, m, ref, target;
+      var childElm, childNodes, len, m, ref, ref1, target;
       target = {
         name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
         elm: elm,
@@ -103,7 +105,12 @@
       for (m = 0, len = childNodes.length; m < len; m++) {
         childElm = childNodes[m];
         if (childElm instanceof SVGGElement) {
-          target.sub.push(SVGCrawler(childElm));
+          if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
+            console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
+            elm.removeChild(childElm);
+          } else {
+            target.sub.push(SVGCrawler(childElm));
+          }
         }
       }
       return target;

@@ -1,13 +1,13 @@
 Take "RAF", (RAF)->
   Make "Animation", Animation = (scope)->
     
-    # Don't setup if the animation property is null
-    return unless scope.animation?
+    # Don't setup if the update property is null
+    return unless scope.update?
     
-    # We're about to overwrite the scope.animation property.
+    # We're about to overwrite the scope.update property.
     # Save the existing function so we can refer to it later.
     # It must remain on the scope object, or else @foo won't work inside the function.
-    scope._callback = scope.animation
+    scope._callback = scope.update
     
     running = false
     restart = false

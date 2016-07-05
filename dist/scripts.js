@@ -570,10 +570,10 @@
     var Animation;
     return Make("Animation", Animation = function(scope) {
       var dt, restart, running, startTime, time, update;
-      if (scope.animation == null) {
+      if (scope.update == null) {
         return;
       }
-      scope._callback = scope.animation;
+      scope._callback = scope.update;
       running = false;
       restart = false;
       dt = 0;

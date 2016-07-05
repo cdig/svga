@@ -113,8 +113,10 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
   wheel = (e)->
     return unless eventInside e.clientX, e.clientY
     e.preventDefault()
-    if e.ctrlKey
+    if e.ctrlKey # Chrome, pinch-to-zoom
       pos.z -= e.deltaY / 100
+    else if e.metaKey # Other browsers, meta+scroll zoom
+      pos.z -= e.deltaY / 200
     else
       pos.x -= e.deltaX / (base.z * Math.pow 2, pos.z)
       pos.y -= e.deltaY / (base.z * Math.pow 2, pos.z)

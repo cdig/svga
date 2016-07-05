@@ -1099,6 +1099,8 @@
       e.preventDefault();
       if (e.ctrlKey) {
         pos.z -= e.deltaY / 100;
+      } else if (e.metaKey) {
+        pos.z -= e.deltaY / 200;
       } else {
         pos.x -= e.deltaX / (base.z * Math.pow(2, pos.z));
         pos.y -= e.deltaY / (base.z * Math.pow(2, pos.z));

@@ -29,19 +29,19 @@ class Arrow
     @element.setAttributeNS(null, "fill", fillColor)
     @element.setAttributeNS(null, "stroke", fillColor)
   
-  updateVisibility: ()=>
-    if @visible and @deltaFlow isnt 0
-      @element.style.visibility = "visible" if @element.style.visibility isnt "visible"
-    else
-      @element.style.visibility = "hidden" if @element.style.visibility isnt "hidden"
-  
   setVisibility: (isVisible)=>
     @visible = isVisible
-    @updateVisibility()
+    if !@visible
+      @element.style.opacity = 0 if @element.style.opacity isnt 0
   
   update: (deltaFlow)=>
     @deltaFlow = deltaFlow
-    @updateVisibility()
+
+    if @visible and @deltaFlow isnt 0
+      @element.style.opacity = 1 if @element.style.opacity isnt 1
+    else
+      @element.style.opacity = 0 if @element.style.opacity isnt 0
+
     
     @position += deltaFlow
     while @position > @edge.length

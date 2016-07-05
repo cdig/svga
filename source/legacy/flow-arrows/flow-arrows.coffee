@@ -16,7 +16,8 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
     ARROWS_PROPERTY: "arrows" # this must be the same as the property in Pressure for flow arrows
     
     # STATE
-    isVisible: false
+    isVisible: true
+    running: false
     arrowsContainers: []
     
     
@@ -42,10 +43,12 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
         arrowsContainer.visible(false)
     
     animateMode: ()->
+      @running = true
       for arrowsContainer in FlowArrows.arrowsContainers
         arrowsContainer.visible(FlowArrows.isVisible)
     
     schematicMode: ()->
+      @running = false
       for arrowsContainer in FlowArrows.arrowsContainers
         arrowsContainer.visible(false)
     
@@ -61,12 +64,11 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
       selectedSymbol.removeChild child
   
   update = (time)->
-    return
     RAF update
     currentTime ?= time
     dT = (time - currentTime)/1000
     currentTime = time
-    return unless FlowArrows.isVisible
+    return unless FlowArrows.isVisible and @running
     for arrowsContainer in FlowArrows.arrowsContainers
       arrowsContainer.update dT
   

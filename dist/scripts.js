@@ -2127,7 +2127,6 @@
       this.flowArrows = flowArrows1;
       this.update = bind(this.update, this);
       this.setVisibility = bind(this.setVisibility, this);
-      this.updateVisibility = bind(this.updateVisibility, this);
       this.setColor = bind(this.setColor, this);
       this.createArrow = bind(this.createArrow, this);
       this.createArrow();
@@ -2156,27 +2155,27 @@
       return this.element.setAttributeNS(null, "stroke", fillColor);
     };
 
-    Arrow.prototype.updateVisibility = function() {
-      if (this.visible && this.deltaFlow !== 0) {
-        if (this.element.style.visibility !== "visible") {
-          return this.element.style.visibility = "visible";
-        }
-      } else {
-        if (this.element.style.visibility !== "hidden") {
-          return this.element.style.visibility = "hidden";
-        }
-      }
-    };
-
     Arrow.prototype.setVisibility = function(isVisible) {
       this.visible = isVisible;
-      return this.updateVisibility();
+      if (!this.visible) {
+        if (this.element.style.opacity !== 0) {
+          return this.element.style.opacity = 0;
+        }
+      }
     };
 
     Arrow.prototype.update = function(deltaFlow) {
       var angle, currentPosition, fadeLength, scaleFactor, scalingFactor, transString;
       this.deltaFlow = deltaFlow;
-      this.updateVisibility();
+      if (this.visible && this.deltaFlow !== 0) {
+        if (this.element.style.opacity !== 1) {
+          this.element.style.opacity = 1;
+        }
+      } else {
+        if (this.element.style.opacity !== 0) {
+          this.element.style.opacity = 0;
+        }
+      }
       this.position += deltaFlow;
       while (this.position > this.edge.length) {
         this.edgeIndex++;
@@ -2335,7 +2334,8 @@
       MIN_EDGE_LENGTH: 8,
       CONNECTED_DISTANCE: 1,
       ARROWS_PROPERTY: "arrows",
-      isVisible: false,
+      isVisible: true,
+      running: false,
       arrowsContainers: [],
       setup: function(parent, selectedSymbol, linesData) {
         var arrowsContainer, len, lineData, m;
@@ -2373,6 +2373,7 @@
       },
       animateMode: function() {
         var arrowsContainer, len, m, ref, results;
+        this.running = true;
         ref = FlowArrows.arrowsContainers;
         results = [];
         for (m = 0, len = ref.length; m < len; m++) {
@@ -2383,6 +2384,7 @@
       },
       schematicMode: function() {
         var arrowsContainer, len, m, ref, results;
+        this.running = false;
         ref = FlowArrows.arrowsContainers;
         results = [];
         for (m = 0, len = ref.length; m < len; m++) {
@@ -2412,14 +2414,13 @@
     };
     update = function(time) {
       var arrowsContainer, dT, len, m, ref, results;
-      return;
       RAF(update);
       if (currentTime == null) {
         currentTime = time;
       }
       dT = (time - currentTime) / 1000;
       currentTime = time;
-      if (!FlowArrows.isVisible) {
+      if (!(FlowArrows.isVisible && this.running)) {
         return;
       }
       ref = FlowArrows.arrowsContainers;

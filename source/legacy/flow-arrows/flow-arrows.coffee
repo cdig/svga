@@ -75,6 +75,8 @@ Take ["Organizer", "Reaction", "RAF"], (Organizer, Reaction, RAF)->
     
   Reaction "Schematic:Show", FlowArrows.schematicMode
   Reaction "Schematic:Hide", FlowArrows.animateMode
+  Reaction "FlowArrows:Show", FlowArrows.show
+  Reaction "FlowArrows:Hide", FlowArrows.hide
 
   
   Make "FlowArrows", FlowArrows

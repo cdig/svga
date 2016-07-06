@@ -480,6 +480,23 @@
     return maskedParent.setAttribute("style", newStyle);
   });
 
+  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+    var showing;
+    showing = false;
+    Reaction("ScopeReady", function() {
+      return Action("FlowArrows:Show");
+    });
+    Reaction("FlowArrows:Toggle", function() {
+      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
+    });
+    Reaction("FlowArrows:Hide", function() {
+      return showing = true;
+    });
+    return Reaction("FlowArrows:Show", function() {
+      return showing = false;
+    });
+  });
+
   Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
     var colors, current, setColor;
     colors = ["#666", "#bbb", "#fff"];
@@ -517,31 +534,6 @@
   Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
     return Reaction("setup", function() {
       return Dispatch(root, "setup");
-    });
-  });
-
-  Take(["Symbol"], function(Symbol) {
-    return Symbol("DefaultElement", [], function(svgElement) {
-      var ref, scope, textElement;
-      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
-      return scope = {
-        setText: function(text) {
-          return textElement != null ? textElement.textContent = text : void 0;
-        }
-      };
-    });
-  });
-
-  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
-    return Symbol("HydraulicLine", [], function(svgElement) {
-      var scope;
-      return scope = {
-        setup: function() {
-          return Reaction("Schematic:Show", function() {
-            return scope.pressure = Pressure.black;
-          });
-        }
-      };
     });
   });
 
@@ -2104,6 +2096,31 @@
     return Make("Tween", Tween);
   });
 
+  Take(["Symbol"], function(Symbol) {
+    return Symbol("DefaultElement", [], function(svgElement) {
+      var ref, scope, textElement;
+      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
+      return scope = {
+        setText: function(text) {
+          return textElement != null ? textElement.textContent = text : void 0;
+        }
+      };
+    });
+  });
+
+  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
+    return Symbol("HydraulicLine", [], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          return Reaction("Schematic:Show", function() {
+            return scope.pressure = Pressure.black;
+          });
+        }
+      };
+    });
+  });
+
   Arrow = (function() {
     var getScaleFactor;
 
@@ -2433,6 +2450,8 @@
     };
     Reaction("Schematic:Show", FlowArrows.schematicMode);
     Reaction("Schematic:Hide", FlowArrows.animateMode);
+    Reaction("FlowArrows:Show", FlowArrows.show);
+    Reaction("FlowArrows:Hide", FlowArrows.hide);
     return Make("FlowArrows", FlowArrows);
   });
 

@@ -117,6 +117,102 @@
     });
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter, enabled;
+    enabled = true;
+    Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, len, m, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, len, m, results;
+          if (enabled) {
+            results = [];
+            for (m = 0, len = highlighted.length; m < len; m++) {
+              highlight = highlighted[m];
+              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, len, m, results;
+          results = [];
+          for (m = 0, len = highlighted.length; m < len; m++) {
+            highlight = highlighted[m];
+            results.push(SVG.attr(highlight, "filter", null));
+          }
+          return results;
+        };
+        results = [];
+        for (m = 0, len = highlighted.length; m < len; m++) {
+          highlight = highlighted[m];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
+    });
+    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
+  });
+
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.element.createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.element;
+    maskedElement = maskedInstance.element;
+    rootElement = root.element;
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
+    } else {
+      newStyle = "mask: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    return maskedParent.setAttribute("style", newStyle);
+  });
+
   Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", SVG.root));
@@ -384,102 +480,6 @@
     return Make("TopBar", TopBar);
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter, enabled;
-    enabled = true;
-    Make("Highlighter", Highlighter = {
-      setup: function(highlighted) {
-        var highlight, len, m, mouseLeave, mouseOver, results;
-        if (highlighted == null) {
-          highlighted = [];
-        }
-        mouseOver = function(e) {
-          var highlight, len, m, results;
-          if (enabled) {
-            results = [];
-            for (m = 0, len = highlighted.length; m < len; m++) {
-              highlight = highlighted[m];
-              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
-            }
-            return results;
-          }
-        };
-        mouseLeave = function(e) {
-          var highlight, len, m, results;
-          results = [];
-          for (m = 0, len = highlighted.length; m < len; m++) {
-            highlight = highlighted[m];
-            results.push(SVG.attr(highlight, "filter", null));
-          }
-          return results;
-        };
-        results = [];
-        for (m = 0, len = highlighted.length; m < len; m++) {
-          highlight = highlighted[m];
-          highlight.addEventListener("mouseover", mouseOver);
-          results.push(highlight.addEventListener("mouseleave", mouseLeave));
-        }
-        return results;
-      },
-      enable: function() {
-        return enabled = true;
-      },
-      disable: function() {
-        return enabled = true;
-      }
-    });
-    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
-  });
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.element.createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.element;
-    maskedElement = maskedInstance.element;
-    rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    return maskedParent.setAttribute("style", newStyle);
-  });
-
   Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
     var showing;
     showing = false;
@@ -534,6 +534,31 @@
   Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
     return Reaction("setup", function() {
       return Dispatch(root, "setup");
+    });
+  });
+
+  Take(["Symbol"], function(Symbol) {
+    return Symbol("DefaultElement", [], function(svgElement) {
+      var ref, scope, textElement;
+      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
+      return scope = {
+        setText: function(text) {
+          return textElement != null ? textElement.textContent = text : void 0;
+        }
+      };
+    });
+  });
+
+  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
+    return Symbol("HydraulicLine", [], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          return Reaction("Schematic:Show", function() {
+            return scope.pressure = Pressure.black;
+          });
+        }
+      };
     });
   });
 
@@ -2094,31 +2119,6 @@
       return diff;
     };
     return Make("Tween", Tween);
-  });
-
-  Take(["Symbol"], function(Symbol) {
-    return Symbol("DefaultElement", [], function(svgElement) {
-      var ref, scope, textElement;
-      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
-      return scope = {
-        setText: function(text) {
-          return textElement != null ? textElement.textContent = text : void 0;
-        }
-      };
-    });
-  });
-
-  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
-    return Symbol("HydraulicLine", [], function(svgElement) {
-      var scope;
-      return scope = {
-        setup: function() {
-          return Reaction("Schematic:Show", function() {
-            return scope.pressure = Pressure.black;
-          });
-        }
-      };
-    });
   });
 
   Arrow = (function() {

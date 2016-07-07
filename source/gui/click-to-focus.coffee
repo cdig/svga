@@ -12,3 +12,5 @@ Take ["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], (Resize, root, SVG,
   window.addEventListener "touchstart", hide
   window.addEventListener "blur", show
   show()
+  
+  window.focus() # Focus by default

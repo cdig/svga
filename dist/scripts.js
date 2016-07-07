@@ -1648,9 +1648,9 @@
   Take(["RAF", "DOMContentLoaded"], function(RAF) {
     var Transform;
     return Make("Transform", Transform = function(scope) {
-      var applyTransform, denom, element, len, m, matrix, prop, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
+      var applyTransform, denom, element, len, m, matrix, prop, ref, ref1, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
       element = scope.element;
-      transformBaseVal = element.transform.baseVal;
+      transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
       transform = document.rootElement.createSVGTransform();
       matrix = document.rootElement.createSVGMatrix();
       x = 0;
@@ -1658,15 +1658,15 @@
       rotation = 0;
       scaleX = 1;
       scaleY = 1;
-      ref = ["x", "y", "rotation", "scale", "scaleX", "scaleY"];
-      for (m = 0, len = ref.length; m < len; m++) {
-        prop = ref[m];
+      ref1 = ["x", "y", "rotation", "scale", "scaleX", "scaleY"];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        prop = ref1[m];
         if (scope[prop] != null) {
           console.log(element);
           throw "^ Transform will clobber @" + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
         }
       }
-      if (transformBaseVal.numberOfItems === 1) {
+      if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
         t = transformBaseVal.getItem(0);
         switch (t.type) {
           case SVGTransform.SVG_TRANSFORM_MATRIX:
@@ -1680,7 +1680,7 @@
           default:
             throw new Error("^ Transform encountered an SVG element with a non-matrix transform");
         }
-      } else if (transformBaseVal.numberOfItems > 1) {
+      } else if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) > 1) {
         console.log(element);
         throw new Error("^ Transform encountered an SVG element with more than one transform");
       }
@@ -2043,147 +2043,6 @@
       return diff;
     };
     return Make("Tween", Tween);
-  });
-
-  Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
-    return ScopeBuilder.process(function(scope) {
-      var animate, running, startTime;
-      if (scope.animate == null) {
-        return;
-      }
-      running = false;
-      startTime = 0;
-      animate = scope.animate;
-      scope.animate = function() {
-        throw "@animate() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return animate.call(scope, dt, time - startTime);
-      });
-      Reaction("Schematic:Hide", function() {
-        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        return running = true;
-      });
-      return Reaction("Schematic:Show", function() {
-        return running = false;
-      });
-    });
-  });
-
-  Take(["ScopeBuilder", "Tick"], function(ScopeBuilder, Tick) {
-    return ScopeBuilder.process(function(scope) {
-      var running, startTime, update;
-      if (scope.update == null) {
-        return;
-      }
-      running = false;
-      startTime = null;
-      update = scope.update;
-      scope.update = function() {
-        throw "@update() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return update.call(scope, dt, time - startTime);
-      });
-      scope.update.start = function() {
-        if (startTime == null) {
-          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        }
-        return running = true;
-      };
-      scope.update.stop = function() {
-        return running = false;
-      };
-      scope.update.toggle = function() {
-        if (running) {
-          return scope.update.stop();
-        } else {
-          return scope.update.start();
-        }
-      };
-      return scope.update.restart = function() {
-        return startTime = null;
-      };
-    });
-  });
-
-  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
-    var showing;
-    showing = false;
-    Reaction("ScopeReady", function() {
-      return Action("FlowArrows:Show");
-    });
-    Reaction("FlowArrows:Toggle", function() {
-      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
-    });
-    Reaction("FlowArrows:Hide", function() {
-      return showing = true;
-    });
-    return Reaction("FlowArrows:Show", function() {
-      return showing = false;
-    });
-  });
-
-  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return document.rootElement.style["background-color"] = colors[index % colors.length];
-    };
-    Reaction("setup", function() {
-      return setColor(1);
-    });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
-    });
-  });
-
-  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
-    var labels, ref;
-    if (!(labels = (ref = root.mainStage) != null ? ref.labelsContainer : void 0)) {
-      return;
-    }
-    Reaction("Labels:Hide", function() {
-      return labels.visible = false;
-    });
-    Reaction("Labels:Show", function() {
-      return labels.visible = true;
-    });
-    return Reaction("Labels:Toggle", function() {
-      return Action(labels.visible ? "Labels:Hide" : "Labels:Show");
-    });
-  });
-
-  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
-    var animateMode;
-    animateMode = false;
-    Reaction("ScopeReady", function() {
-      return Action("Schematic:Show");
-    });
-    Reaction("Schematic:Toggle", function() {
-      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
-    });
-    Reaction("Schematic:Hide", function() {
-      animateMode = true;
-      return Dispatch(root, "animateMode");
-    });
-    return Reaction("Schematic:Show", function() {
-      animateMode = false;
-      return Dispatch(root, "schematicMode");
-    });
-  });
-
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
-    });
   });
 
   Arrow = (function() {
@@ -2801,5 +2660,146 @@
     return Segment;
 
   })();
+
+  Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
+    return ScopeBuilder.process(function(scope) {
+      var animate, running, startTime;
+      if (scope.animate == null) {
+        return;
+      }
+      running = false;
+      startTime = 0;
+      animate = scope.animate;
+      scope.animate = function() {
+        throw "@animate() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return animate.call(scope, dt, time - startTime);
+      });
+      Reaction("Schematic:Hide", function() {
+        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        return running = true;
+      });
+      return Reaction("Schematic:Show", function() {
+        return running = false;
+      });
+    });
+  });
+
+  Take(["ScopeBuilder", "Tick"], function(ScopeBuilder, Tick) {
+    return ScopeBuilder.process(function(scope) {
+      var running, startTime, update;
+      if (scope.update == null) {
+        return;
+      }
+      running = false;
+      startTime = null;
+      update = scope.update;
+      scope.update = function() {
+        throw "@update() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return update.call(scope, dt, time - startTime);
+      });
+      scope.update.start = function() {
+        if (startTime == null) {
+          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        }
+        return running = true;
+      };
+      scope.update.stop = function() {
+        return running = false;
+      };
+      scope.update.toggle = function() {
+        if (running) {
+          return scope.update.stop();
+        } else {
+          return scope.update.start();
+        }
+      };
+      return scope.update.restart = function() {
+        return startTime = null;
+      };
+    });
+  });
+
+  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+    var showing;
+    showing = false;
+    Reaction("ScopeReady", function() {
+      return Action("FlowArrows:Show");
+    });
+    Reaction("FlowArrows:Toggle", function() {
+      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
+    });
+    Reaction("FlowArrows:Hide", function() {
+      return showing = true;
+    });
+    return Reaction("FlowArrows:Show", function() {
+      return showing = false;
+    });
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return document.rootElement.style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
+    });
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+    var labels, ref;
+    if (!(labels = (ref = root.mainStage) != null ? ref.labelsContainer : void 0)) {
+      return;
+    }
+    Reaction("Labels:Hide", function() {
+      return labels.visible = false;
+    });
+    Reaction("Labels:Show", function() {
+      return labels.visible = true;
+    });
+    return Reaction("Labels:Toggle", function() {
+      return Action(labels.visible ? "Labels:Hide" : "Labels:Show");
+    });
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
+    var animateMode;
+    animateMode = false;
+    Reaction("ScopeReady", function() {
+      return Action("Schematic:Show");
+    });
+    Reaction("Schematic:Toggle", function() {
+      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
+    });
+    Reaction("Schematic:Hide", function() {
+      animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("Schematic:Show", function() {
+      animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
+  });
 
 }).call(this);

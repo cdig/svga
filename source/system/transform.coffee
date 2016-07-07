@@ -1,7 +1,7 @@
 Take ["RAF", "DOMContentLoaded"], (RAF)->
   Make "Transform", Transform = (scope)->
     element = scope.element
-    transformBaseVal = element.transform.baseVal
+    transformBaseVal = element.transform?.baseVal
     
     transform = document.rootElement.createSVGTransform()
     matrix = document.rootElement.createSVGMatrix()
@@ -22,7 +22,7 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
     
     
     # Extract the existing transform value from the element
-    if transformBaseVal.numberOfItems is 1
+    if transformBaseVal?.numberOfItems is 1
       t = transformBaseVal.getItem 0
       switch t.type
         when SVGTransform.SVG_TRANSFORM_MATRIX
@@ -35,7 +35,7 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
           # skewX = 180/Math.PI * Math.atan2 t.matrix.a * t.matrix.b + t.matrix.c * t.matrix.d, denom
         else
           throw new Error "^ Transform encountered an SVG element with a non-matrix transform"
-    else if transformBaseVal.numberOfItems > 1
+    else if transformBaseVal?.numberOfItems > 1
       console.log element
       throw new Error "^ Transform encountered an SVG element with more than one transform"
     

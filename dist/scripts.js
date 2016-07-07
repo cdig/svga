@@ -2661,74 +2661,6 @@
 
   })();
 
-  Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
-    return ScopeBuilder.process(function(scope) {
-      var animate, running, startTime;
-      if (scope.animate == null) {
-        return;
-      }
-      running = false;
-      startTime = 0;
-      animate = scope.animate;
-      scope.animate = function() {
-        throw "@animate() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return animate.call(scope, dt, time - startTime);
-      });
-      Reaction("Schematic:Hide", function() {
-        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        return running = true;
-      });
-      return Reaction("Schematic:Show", function() {
-        return running = false;
-      });
-    });
-  });
-
-  Take(["ScopeBuilder", "Tick"], function(ScopeBuilder, Tick) {
-    return ScopeBuilder.process(function(scope) {
-      var running, startTime, update;
-      if (scope.update == null) {
-        return;
-      }
-      running = false;
-      startTime = null;
-      update = scope.update;
-      scope.update = function() {
-        throw "@update() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return update.call(scope, dt, time - startTime);
-      });
-      scope.update.start = function() {
-        if (startTime == null) {
-          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        }
-        return running = true;
-      };
-      scope.update.stop = function() {
-        return running = false;
-      };
-      scope.update.toggle = function() {
-        if (running) {
-          return scope.update.stop();
-        } else {
-          return scope.update.start();
-        }
-      };
-      return scope.update.restart = function() {
-        return startTime = null;
-      };
-    });
-  });
-
   Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
     var showing;
     showing = false;
@@ -2799,6 +2731,74 @@
   Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
     return Reaction("setup", function() {
       return Dispatch(root, "setup");
+    });
+  });
+
+  Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
+    return ScopeBuilder.process(function(scope) {
+      var animate, running, startTime;
+      if (scope.animate == null) {
+        return;
+      }
+      running = false;
+      startTime = 0;
+      animate = scope.animate;
+      scope.animate = function() {
+        throw "@animate() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return animate.call(scope, dt, time - startTime);
+      });
+      Reaction("Schematic:Hide", function() {
+        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        return running = true;
+      });
+      return Reaction("Schematic:Show", function() {
+        return running = false;
+      });
+    });
+  });
+
+  Take(["ScopeBuilder", "Tick"], function(ScopeBuilder, Tick) {
+    return ScopeBuilder.process(function(scope) {
+      var running, startTime, update;
+      if (scope.update == null) {
+        return;
+      }
+      running = false;
+      startTime = null;
+      update = scope.update;
+      scope.update = function() {
+        throw "@update() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return update.call(scope, dt, time - startTime);
+      });
+      scope.update.start = function() {
+        if (startTime == null) {
+          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        }
+        return running = true;
+      };
+      scope.update.stop = function() {
+        return running = false;
+      };
+      scope.update.toggle = function() {
+        if (running) {
+          return scope.update.stop();
+        } else {
+          return scope.update.start();
+        }
+      };
+      return scope.update.restart = function() {
+        return startTime = null;
+      };
     });
   });
 

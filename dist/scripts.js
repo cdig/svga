@@ -2694,6 +2694,22 @@
     });
   });
 
+  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+    var labels, ref;
+    if (!(labels = (ref = root.mainStage) != null ? ref.labelsContainer : void 0)) {
+      return;
+    }
+    Reaction("Labels:Hide", function() {
+      return labels.visible = false;
+    });
+    Reaction("Labels:Show", function() {
+      return labels.visible = true;
+    });
+    return Reaction("Labels:Toggle", function() {
+      return Action(labels.visible ? "Labels:Hide" : "Labels:Show");
+    });
+  });
+
   Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
     var animateMode;
     animateMode = false;

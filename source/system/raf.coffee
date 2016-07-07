@@ -1,3 +1,6 @@
+# RAF is used for 1-time requestAnimationFrame callbacks.
+# For every-frame requestAnimationFrame callbacks, use system/tick.coffee
+
 do ()->
   requested = false
   callbacksByPriority = [[],[]] # Assume 2 priorities will be used in most cases

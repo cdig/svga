@@ -1,217 +1,8 @@
 (function() {
   var Arrow, ArrowsContainer, Edge, Mask, Segment, getParentInverseTransform,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
-    var crawlerData, svg;
-    svg = document.rootElement;
-    crawlerData = SVGCrawler(svg);
-    Make("SVGReady");
-    return setTimeout(function() {
-      var rootScope;
-      rootScope = ScopeBuilder(crawlerData);
-      Make("root", rootScope);
-      Action("setup");
-      Action("ScopeReady");
-      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
-        return svg.style.opacity = 1;
-      });
-    });
-  });
-
-  Take(["Animation", "FlowArrows", "Style", "Symbol", "Transform"], function(Animation, FlowArrows, Style, Symbol, Transform) {
-    var ScopeBuilder, buildScope, getSymbol;
-    Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
-      var len, m, ref, scope, subTarget;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      scope = buildScope(target.name, target.elm, parentScope);
-      ref = target.sub;
-      for (m = 0, len = ref.length; m < len; m++) {
-        subTarget = ref[m];
-        ScopeBuilder(subTarget, scope);
-      }
-      return scope;
-    });
-    buildScope = function(instanceName, element, parentScope) {
-      var scope, symbol;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      symbol = getSymbol(instanceName);
-      scope = symbol.create(element);
-      if (scope.children == null) {
-        scope.children = [];
-      }
-      if (scope.element == null) {
-        scope.element = element;
-      }
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
-        }
-      });
-      if (scope.getElement == null) {
-        scope.getElement = function() {
-          throw "scope.getElement() has been removed. Please use scope.element instead.";
-        };
-      }
-      Style(scope);
-      Transform(scope);
-      Animation(scope);
-      if (parentScope == null) {
-        if (scope.root == null) {
-          scope.root = scope;
-        }
-      } else {
-        if (scope.root == null) {
-          scope.root = parentScope.root;
-        }
-        if (instanceName !== "DefaultElement") {
-          if (parentScope[instanceName] == null) {
-            parentScope[instanceName] = scope;
-          }
-        }
-        parentScope.children.push(scope);
-      }
-      return scope;
-    };
-    return getSymbol = function(instanceName) {
-      var symbol;
-      if (symbol = Symbol.forInstanceName(instanceName)) {
-        return symbol;
-      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicLine");
-      } else {
-        return Symbol.forSymbolName("DefaultElement");
-      }
-    };
-  });
-
-  Take("DOMContentLoaded", function() {
-    var SVGCrawler, deprecations;
-    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
-    return Make("SVGCrawler", SVGCrawler = function(elm) {
-      var childElm, childNodes, len, m, ref, ref1, target;
-      target = {
-        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
-        elm: elm,
-        sub: []
-      };
-      childNodes = Array.prototype.slice.call(elm.childNodes);
-      for (m = 0, len = childNodes.length; m < len; m++) {
-        childElm = childNodes[m];
-        if (childElm instanceof SVGGElement) {
-          if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
-            console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
-            elm.removeChild(childElm);
-          } else {
-            target.sub.push(SVGCrawler(childElm));
-          }
-        }
-      }
-      return target;
-    });
-  });
-
-  Take("SVG", function(SVG) {
-    var Highlighter, enabled;
-    enabled = true;
-    Make("Highlighter", Highlighter = {
-      setup: function(highlighted) {
-        var highlight, len, m, mouseLeave, mouseOver, results;
-        if (highlighted == null) {
-          highlighted = [];
-        }
-        mouseOver = function(e) {
-          var highlight, len, m, results;
-          if (enabled) {
-            results = [];
-            for (m = 0, len = highlighted.length; m < len; m++) {
-              highlight = highlighted[m];
-              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
-            }
-            return results;
-          }
-        };
-        mouseLeave = function(e) {
-          var highlight, len, m, results;
-          results = [];
-          for (m = 0, len = highlighted.length; m < len; m++) {
-            highlight = highlighted[m];
-            results.push(SVG.attr(highlight, "filter", null));
-          }
-          return results;
-        };
-        results = [];
-        for (m = 0, len = highlighted.length; m < len; m++) {
-          highlight = highlighted[m];
-          highlight.addEventListener("mouseover", mouseOver);
-          results.push(highlight.addEventListener("mouseleave", mouseLeave));
-        }
-        return results;
-      },
-      enable: function() {
-        return enabled = true;
-      },
-      disable: function() {
-        return enabled = true;
-      }
-    });
-    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
-  });
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.element.createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.element;
-    maskedElement = maskedInstance.element;
-    rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    return maskedParent.setAttribute("style", newStyle);
-  });
 
   Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
     var g, hide, show;
@@ -480,61 +271,227 @@
     return Make("TopBar", TopBar);
   });
 
-  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
-    var showing;
-    showing = false;
-    Reaction("ScopeReady", function() {
-      return Action("FlowArrows:Show");
-    });
-    Reaction("FlowArrows:Toggle", function() {
-      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
-    });
-    Reaction("FlowArrows:Hide", function() {
-      return showing = true;
-    });
-    return Reaction("FlowArrows:Show", function() {
-      return showing = false;
+  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
+    var crawlerData, svg;
+    svg = document.rootElement;
+    crawlerData = SVGCrawler(svg);
+    Make("SVGReady");
+    return setTimeout(function() {
+      var rootScope;
+      rootScope = ScopeBuilder(crawlerData);
+      Make("root", rootScope);
+      Action("setup");
+      Action("ScopeReady");
+      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
+        return svg.style.opacity = 1;
+      });
     });
   });
 
-  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return document.rootElement.style["background-color"] = colors[index % colors.length];
+  Take(["FlowArrows", "Style", "Symbol", "Transform"], function(FlowArrows, Style, Symbol, Transform) {
+    var ScopeBuilder, buildScope, getSymbol, processors, tooLate;
+    processors = [];
+    tooLate = false;
+    ScopeBuilder = function(target, parentScope) {
+      var len, m, ref, scope, subTarget;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      tooLate = true;
+      scope = buildScope(target.name, target.elm, parentScope);
+      ref = target.sub;
+      for (m = 0, len = ref.length; m < len; m++) {
+        subTarget = ref[m];
+        ScopeBuilder(subTarget, scope);
+      }
+      return scope;
     };
-    Reaction("setup", function() {
-      return setColor(1);
-    });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
+    ScopeBuilder.process = function(fn) {
+      if (tooLate) {
+        console.log(fn);
+        throw "^ ScopeBuilder.process fn was too late. Please make it init faster.";
+      }
+      return processors.push(fn);
+    };
+    Make("ScopeBuilder", ScopeBuilder);
+    buildScope = function(instanceName, element, parentScope) {
+      var fn, len, m, scope, symbol;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      symbol = getSymbol(instanceName);
+      scope = symbol.create(element);
+      if (scope.children == null) {
+        scope.children = [];
+      }
+      if (scope.element == null) {
+        scope.element = element;
+      }
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
+        }
+      });
+      if (scope.getElement == null) {
+        scope.getElement = function() {
+          throw "scope.getElement() has been removed. Please use scope.element instead.";
+        };
+      }
+      Style(scope);
+      Transform(scope);
+      for (m = 0, len = processors.length; m < len; m++) {
+        fn = processors[m];
+        fn(scope);
+      }
+      if (parentScope == null) {
+        if (scope.root == null) {
+          scope.root = scope;
+        }
+      } else {
+        if (scope.root == null) {
+          scope.root = parentScope.root;
+        }
+        if (instanceName !== "DefaultElement") {
+          if (parentScope[instanceName] == null) {
+            parentScope[instanceName] = scope;
+          }
+        }
+        parentScope.children.push(scope);
+      }
+      return scope;
+    };
+    return getSymbol = function(instanceName) {
+      var symbol;
+      if (symbol = Symbol.forInstanceName(instanceName)) {
+        return symbol;
+      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicLine");
+      } else {
+        return Symbol.forSymbolName("DefaultElement");
+      }
+    };
+  });
+
+  Take("DOMContentLoaded", function() {
+    var SVGCrawler, deprecations;
+    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
+    return Make("SVGCrawler", SVGCrawler = function(elm) {
+      var childElm, childNodes, len, m, ref, ref1, target;
+      target = {
+        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
+        elm: elm,
+        sub: []
+      };
+      childNodes = Array.prototype.slice.call(elm.childNodes);
+      for (m = 0, len = childNodes.length; m < len; m++) {
+        childElm = childNodes[m];
+        if (childElm instanceof SVGGElement) {
+          if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
+            console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
+            elm.removeChild(childElm);
+          } else {
+            target.sub.push(SVGCrawler(childElm));
+          }
+        }
+      }
+      return target;
     });
   });
 
-  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
-    var animateMode;
-    animateMode = false;
-    Reaction("ScopeReady", function() {
-      return Action("Schematic:Show");
+  Take("SVG", function(SVG) {
+    var Highlighter, enabled;
+    enabled = true;
+    Make("Highlighter", Highlighter = {
+      setup: function(highlighted) {
+        var highlight, len, m, mouseLeave, mouseOver, results;
+        if (highlighted == null) {
+          highlighted = [];
+        }
+        mouseOver = function(e) {
+          var highlight, len, m, results;
+          if (enabled) {
+            results = [];
+            for (m = 0, len = highlighted.length; m < len; m++) {
+              highlight = highlighted[m];
+              results.push(SVG.attr(highlight, "filter", "url(#highlightMatrix)"));
+            }
+            return results;
+          }
+        };
+        mouseLeave = function(e) {
+          var highlight, len, m, results;
+          results = [];
+          for (m = 0, len = highlighted.length; m < len; m++) {
+            highlight = highlighted[m];
+            results.push(SVG.attr(highlight, "filter", null));
+          }
+          return results;
+        };
+        results = [];
+        for (m = 0, len = highlighted.length; m < len; m++) {
+          highlight = highlighted[m];
+          highlight.addEventListener("mouseover", mouseOver);
+          results.push(highlight.addEventListener("mouseleave", mouseLeave));
+        }
+        return results;
+      },
+      enable: function() {
+        return enabled = true;
+      },
+      disable: function() {
+        return enabled = true;
+      }
     });
-    Reaction("Schematic:Toggle", function() {
-      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
-    });
-    Reaction("Schematic:Hide", function() {
-      animateMode = true;
-      return Dispatch(root, "animateMode");
-    });
-    return Reaction("Schematic:Show", function() {
-      animateMode = false;
-      return Dispatch(root, "schematicMode");
-    });
+    return SVG.createColorMatrixFilter("highlightMatrix", ".5  0   0    0   0 .5  1   .5   0  20 0   0   .5   0   0 0   0   0    1   0");
   });
 
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
-    });
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.element.createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.element;
+    maskedElement = maskedInstance.element;
+    rootElement = root.element;
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
+    } else {
+      newStyle = "mask: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    return maskedParent.setAttribute("style", newStyle);
   });
 
   Take(["Symbol"], function(Symbol) {
@@ -582,60 +539,6 @@
       }
     });
   })();
-
-  Take("RAF", function(RAF) {
-    var Animation;
-    return Make("Animation", Animation = function(scope) {
-      var dt, restart, running, startTime, time, update;
-      if (scope.update == null) {
-        return;
-      }
-      scope._callback = scope.update;
-      running = false;
-      restart = false;
-      dt = 0;
-      time = 0;
-      startTime = 0;
-      update = function(t) {
-        var newTime;
-        if (!running) {
-          return;
-        }
-        if (restart) {
-          restart = false;
-          startTime = t / 1000;
-          time = 0;
-        } else {
-          newTime = t / 1000 - startTime;
-          dt = newTime - time;
-          time = newTime;
-          scope._callback(dt, time);
-        }
-        if (running) {
-          return RAF(update);
-        }
-      };
-      return scope.animation = {
-        start: function() {
-          if (!running) {
-            RAF(update);
-          }
-          running = true;
-          return restart = true;
-        },
-        stop: function() {
-          return running = false;
-        },
-        toggle: function() {
-          if (running) {
-            return this.stop();
-          } else {
-            return this.start();
-          }
-        }
-      };
-    });
-  });
 
   Take(["Reaction"], function(Reaction) {
     var Component, definitions, instantiatedStarted;
@@ -1720,6 +1623,26 @@
     return Make("Symbol", Symbol);
   })();
 
+  Take("RAF", function(RAF) {
+    var callbacks, tick, time;
+    callbacks = [];
+    time = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+    RAF(tick = function(t) {
+      var cb, dt, len, m;
+      dt = t / 1000 - time;
+      time += dt;
+      for (m = 0, len = callbacks.length; m < len; m++) {
+        cb = callbacks[m];
+        cb(time, dt);
+      }
+      return RAF(tick);
+    });
+    return Make("Tick", function(cb) {
+      callbacks.push(cb);
+      return cb;
+    });
+  });
+
   Take(["RAF", "DOMContentLoaded"], function(RAF) {
     var Transform;
     return Make("Transform", Transform = function(scope) {
@@ -2119,6 +2042,63 @@
       return diff;
     };
     return Make("Tween", Tween);
+  });
+
+  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+    var showing;
+    showing = false;
+    Reaction("ScopeReady", function() {
+      return Action("FlowArrows:Show");
+    });
+    Reaction("FlowArrows:Toggle", function() {
+      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
+    });
+    Reaction("FlowArrows:Hide", function() {
+      return showing = true;
+    });
+    return Reaction("FlowArrows:Show", function() {
+      return showing = false;
+    });
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
+    var colors, current, setColor;
+    colors = ["#666", "#bbb", "#fff"];
+    current = 1;
+    setColor = function(index) {
+      return document.rootElement.style["background-color"] = colors[index % colors.length];
+    };
+    Reaction("setup", function() {
+      return setColor(1);
+    });
+    return Reaction("cycleBackgroundColor", function() {
+      return setColor(++current);
+    });
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
+    var animateMode;
+    animateMode = false;
+    Reaction("ScopeReady", function() {
+      return Action("Schematic:Show");
+    });
+    Reaction("Schematic:Toggle", function() {
+      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
+    });
+    Reaction("Schematic:Hide", function() {
+      animateMode = true;
+      return Dispatch(root, "animateMode");
+    });
+    return Reaction("Schematic:Show", function() {
+      animateMode = false;
+      return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
+    return Reaction("setup", function() {
+      return Dispatch(root, "setup");
+    });
   });
 
   Arrow = (function() {
@@ -2748,5 +2728,65 @@
     return Segment;
 
   })();
+
+  Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
+    return ScopeBuilder.process(function(scope) {
+      var running, startTime;
+      if (scope.animate == null) {
+        return;
+      }
+      running = false;
+      startTime = 0;
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return scope.animate.call(scope, dt, time - startTime);
+      });
+      Reaction("Schematic:Hide", function() {
+        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        return running = true;
+      });
+      return Reaction("Schematic:Show", function() {
+        return running = false;
+      });
+    });
+  });
+
+  Take(["ScopeBuilder", "Tick"], function(ScopeBuilder, Tick) {
+    return ScopeBuilder.process(function(scope) {
+      var running, startTime;
+      if (scope.update == null) {
+        return;
+      }
+      running = false;
+      startTime = null;
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return scope.update.call(scope, dt, time - startTime);
+      });
+      scope.update.start = function() {
+        if (startTime == null) {
+          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        }
+        return running = true;
+      };
+      scope.update.stop = function() {
+        return running = false;
+      };
+      scope.update.toggle = function() {
+        if (running) {
+          return scope.update.stop();
+        } else {
+          return scope.update.start();
+        }
+      };
+      return scope.update.restart = function() {
+        return startTime = null;
+      };
+    });
+  });
 
 }).call(this);

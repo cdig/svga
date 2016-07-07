@@ -23,7 +23,7 @@ Take ["FlowArrows","Style","Symbol","Transform"],
     scope.children ?= []
     scope.element ?= element
     Object.defineProperty scope, "FlowArrows", get: ()-> throw "root.FlowArrows has been removed. Please use SVGA.arrows instead."
-    scope.getElement ?= ()-> throw "scope.getElement() has been removed. Please use scope.element instead."
+    scope.getElement ?= ()-> throw "@getElement() has been removed. Please use @element instead."
     Style scope
     Transform scope
     fn scope for fn in processors

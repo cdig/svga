@@ -18,7 +18,7 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
     for prop in ["x", "y", "rotation", "scale", "scaleX", "scaleY"] #, "skewX", "skewY"]
       if scope[prop]?
         console.log element
-        throw "^ Transform will clobber scope.#{prop} on this element. Please find a different name for your child/property \"#{prop}\"."
+        throw "^ Transform will clobber @#{prop} on this element. Please find a different name for your child/property \"#{prop}\"."
     
     
     # Extract the existing transform value from the element
@@ -119,15 +119,15 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
       set: ()-> throw "cy has been removed from the SVGA Transform system."
     
     Object.defineProperty scope, 'angle',
-      get: ()-> throw "angle has been removed from the SVGA Transform system. Please use scope.rotation instead."
-      set: ()-> throw "angle has been removed from the SVGA Transform system. Please use scope.rotation instead."
+      get: ()-> throw "angle has been removed from the SVGA Transform system. Please use @rotation instead."
+      set: ()-> throw "angle has been removed from the SVGA Transform system. Please use @rotation instead."
     
     Object.defineProperty scope, 'turns',
-      get: ()-> throw "turns has been removed from the SVGA Transform system. Please use scope.rotation instead."
-      set: ()-> throw "turns has been removed from the SVGA Transform system. Please use scope.rotation instead."
+      get: ()-> throw "turns has been removed from the SVGA Transform system. Please use @rotation instead."
+      set: ()-> throw "turns has been removed from the SVGA Transform system. Please use @rotation instead."
 
     Object.defineProperty scope, "transform",
-      get: ()-> throw "scope.transform has been removed. You can just delete the .transform and things should work."
+      get: ()-> throw "@transform has been removed. You can just delete the \"transform.\" and things should work."
     
     
     # LEGACY

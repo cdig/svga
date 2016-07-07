@@ -15,7 +15,7 @@ Take ["PureDom", "Pressure"], (PureDom, Pressure)->
         console.log scope
         console.log "element:"
         console.log element
-        throw "^ Transform will clobber scope.#{prop} on this element. Please find a different name for your child/property \"#{prop}\"."
+        throw "^ SVGA will overwrite @#{prop} on this element. Please find a different name for your child/property named \"#{prop}\"."
 
 
     # We need a better API for changing the element.style property. This sucks.
@@ -143,13 +143,13 @@ Take ["PureDom", "Pressure"], (PureDom, Pressure)->
     # REMOVED #####################################################################################
     
     scope.getPressure = ()->
-      throw "scope.getPressure() has been removed. Please use scope.pressure instead."
+      throw "@getPressure() has been removed. Please use @pressure instead."
 
     scope.setPressure = ()->
-      throw "scope.setPressure(x) has been removed. Please use scope.pressure = x instead."
+      throw "@setPressure(x) has been removed. Please use @pressure = x instead."
 
     scope.getPressureColor = (pressure)->
-      throw "scope.getPressureColor() has been removed. Please Take and use Pressure() instead."
+      throw "@getPressureColor() has been removed. Please Take and use Pressure() instead."
     
     scope.setText = (text)->
-      throw "scope.setText(x) has been removed. Please scope.text = x instead."
+      throw "@setText(x) has been removed. Please @text = x instead."

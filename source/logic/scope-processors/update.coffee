@@ -8,9 +8,13 @@ Take ["ScopeBuilder", "Tick"], (ScopeBuilder, Tick)->
     running = false
     startTime = null
     
+    # Replace the actual scope update function with a warning
+    update = scope.update
+    scope.update = ()-> throw "@update() is called by the system. Please don't call it yourself."
+    
     Tick (time, dt)->
       return unless running
-      scope.update.call scope, dt, time - startTime # Yes, the dt & time arguments are switched — legacy reasons :(
+      update.call scope, dt, time - startTime # Yes, the dt & time arguments are switched — legacy reasons :(
     
     scope.update.start = ()->
       startTime ?= (performance?.now() or 0)/1000

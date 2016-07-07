@@ -5,7 +5,6 @@ Take ["Ease", "RAF"], (Ease, RAF)->
   Tween = (tween)->
     tween.from ?= cloneObj tween.on
     tween.delta = diffObj tween.to, tween.from
-    console.log tween.delta
     tweens.push tween
     RAF update, true
   

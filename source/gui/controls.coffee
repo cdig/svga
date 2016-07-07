@@ -38,7 +38,7 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"]
     if not defn? then console.log(props); throw "^ Unknown Control type: \"#{type}\". First, check for typos. If everything looks good, this Control may have failed to load on time, which would mean there's a bug in the Control component."
     instancesByName = instancesByNameByType[type] ?= {}
     if not instancesByName[name]
-      element = TRS SVG.create "g", g, class: "#{name} #{type}"
+      element = TRS SVG.create "g", g, class: "#{name} #{type}", ui: true
       api = defn name, element
       api.setup?()
       instancesByName[name] = element: element, api: api

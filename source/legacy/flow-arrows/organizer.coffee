@@ -1,19 +1,15 @@
 do ->
   edgesToLines = (edgesData)->
-    linesData = [] 
-    edge = []
-    for i in [0..edgesData.length-1]
-      edge = edgesData[i]
-      linesData.push(edge[0], edge[2])
-      
-    return linesData
+    linesData = []
+    linesData.push edge[0], edge[2] for edge in edgesData
+    linesData
 
   formSegments = (lineData, flowArrows)->
     segments = [] # array of segments
     segmentEdges = null # array of edges in the current segment
 
     # loop in pairs, since lineData is alternating start/end points of edges
-    for i in [0..lineData.length - 1] by 2  
+    for i in [0..lineData.length - 1] by 2
       pointA = lineData[i]
       pointB = lineData[i+1]
 
@@ -135,15 +131,6 @@ do ->
             seg.splice(j+1, 1)
     return segments
 
-  cullShortSegments = (segments, flowArrows)->
-    # cull short segments
-    i = segments.length
-    while i--
-      if segments.length < flowArrows.MIN_SEGMENT_LENGTH
-        segments.splice(i, 1)
-
-    return segments
-
   finish = (parent, segments, arrowsContainer, flowArrows)->
     for i in [0..segments.length-1]
       segPoints = segments[i]
@@ -156,7 +143,7 @@ do ->
         edge.x = segPoints[j].x
         edge.y = segPoints[j].y
         edge.length = distance(segPoints[j], segPoints[j+1])
-        edge.angle = angle(segPoints[j], segPoints[j+1]) 
+        edge.angle = angle(segPoints[j], segPoints[j+1])
         segmentLength += edge.length
         edges.push(edge)
 
@@ -193,10 +180,9 @@ do ->
     return Math.atan2(b.y - a.y, b.x - a.x)
 
 
-  Make "Organizer", Organizer = 
+  Make "Organizer", Organizer =
     build: (parent, edgesData, arrowsContainer, flowArrows)->
       lineData = edgesToLines(edgesData)
-      segments = []
       segments = formSegments(lineData, flowArrows) # organize the points into an array of segment groups
       segments = joinSegments(segments, flowArrows) # combine segments that are visibly connected but whose points were listed in the wrong order
       segments = cullShortEdges(segments, flowArrows) # remove points that constitute an unusably short edge

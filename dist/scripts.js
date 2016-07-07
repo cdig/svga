@@ -246,7 +246,8 @@
       instancesByName = instancesByNameByType[type] != null ? instancesByNameByType[type] : instancesByNameByType[type] = {};
       if (!instancesByName[name]) {
         element = TRS(SVG.create("g", g, {
-          "class": name + " " + type
+          "class": name + " " + type,
+          ui: true
         }));
         api = defn(name, element);
         if (typeof api.setup === "function") {
@@ -2380,13 +2381,12 @@
   });
 
   (function() {
-    var Organizer, angle, cullShortEdges, cullShortSegments, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
+    var Organizer, angle, cullShortEdges, cullUnusedPoints, distance, edgesToLines, finish, formSegments, isConnected, isInline, joinSegments;
     edgesToLines = function(edgesData) {
-      var edge, i, linesData, m, ref;
+      var edge, len, linesData, m;
       linesData = [];
-      edge = [];
-      for (i = m = 0, ref = edgesData.length - 1; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
-        edge = edgesData[i];
+      for (m = 0, len = edgesData.length; m < len; m++) {
+        edge = edgesData[m];
         linesData.push(edge[0], edge[2]);
       }
       return linesData;
@@ -2510,16 +2510,6 @@
       }
       return segments;
     };
-    cullShortSegments = function(segments, flowArrows) {
-      var i;
-      i = segments.length;
-      while (i--) {
-        if (segments.length < flowArrows.MIN_SEGMENT_LENGTH) {
-          segments.splice(i, 1);
-        }
-      }
-      return segments;
-    };
     finish = function(parent, segments, arrowsContainer, flowArrows) {
       var edge, edges, i, j, m, n, ref, ref1, results, segPoints, segmentLength;
       results = [];
@@ -2578,7 +2568,6 @@
       build: function(parent, edgesData, arrowsContainer, flowArrows) {
         var lineData, segments;
         lineData = edgesToLines(edgesData);
-        segments = [];
         segments = formSegments(lineData, flowArrows);
         segments = joinSegments(segments, flowArrows);
         segments = cullShortEdges(segments, flowArrows);

@@ -1,4 +1,5 @@
-Take ["Resize", "SVG", "Tick", "TopBarReady"], (Resize, SVG, Tick)->
+Take ["Config", "Resize", "SVG", "Tick", "TopBarReady"], (Config, Resize, SVG, Tick)->
+  return unless Config "dev"
   
   avgLength = 120
   avgList = []

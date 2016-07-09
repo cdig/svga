@@ -280,8 +280,11 @@
     return Make("Control", Control);
   });
 
-  Take(["Resize", "SVG", "Tick", "TopBarReady"], function(Resize, SVG, Tick) {
+  Take(["Config", "Resize", "SVG", "Tick", "TopBarReady"], function(Config, Resize, SVG, Tick) {
     var avgLength, avgList, text, total;
+    if (!Config("dev")) {
+      return;
+    }
     avgLength = 120;
     avgList = [];
     total = 0;

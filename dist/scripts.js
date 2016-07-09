@@ -280,6 +280,32 @@
     return Make("Control", Control);
   });
 
+  Take(["Resize", "SVG", "Tick", "TopBarReady"], function(Resize, SVG, Tick) {
+    var avgLength, avgList, text, total;
+    avgLength = 120;
+    avgList = [];
+    total = 0;
+    text = SVG.create("text", SVG.root, {
+      fill: "#FFF"
+    });
+    Resize(function() {
+      return SVG.attrs(text, {
+        x: window.innerWidth - 65,
+        y: 30
+      });
+    });
+    return Tick(function(time, dt) {
+      avgList.push(1 / dt);
+      total += 1 / dt;
+      if (avgList.length > avgLength) {
+        total -= avgList.shift();
+      }
+      return SVG.attrs(text, {
+        textContent: "FPS: " + Math.min(60, Math.round(total / avgList.length))
+      });
+    });
+  });
+
   Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], function(Component, PointerInput, Reaction, Resize, SVG, TRS) {
     var TopBar, bg, buttonPad, construct, container, iconPad, instances, offsetX, requested, resize, topBar, topBarHeight;
     topBarHeight = 48;

@@ -4,7 +4,7 @@ Take ["Action", "Dispatch", "Reaction", "root"],
   animateMode = false
   
   Reaction "ScopeReady", ()->
-    Action "Schematic:Show"
+    Action "Schematic:Hide" # TODO — This is just for testing
   
   Reaction "Schematic:Toggle", ()->
     Action if animateMode then "Schematic:Show" else "Schematic:Hide"

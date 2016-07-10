@@ -2742,7 +2742,7 @@
     var animateMode;
     animateMode = false;
     Reaction("ScopeReady", function() {
-      return Action("Schematic:Show");
+      return Action("Schematic:Hide");
     });
     Reaction("Schematic:Toggle", function() {
       return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");

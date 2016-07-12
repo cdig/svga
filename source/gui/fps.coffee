@@ -13,4 +13,5 @@ Take ["Config", "Resize", "SVG", "Tick", "TopBarReady"], (Config, Resize, SVG, T
     avgList.push 1/dt
     total += 1/dt
     total -= avgList.shift() if avgList.length > avgLength
-    SVG.attrs text, textContent: "FPS: " + Math.min 60, Math.round total/avgList.length
+    fps = Math.min 60, Math.round total/avgList.length
+    SVG.attrs text, textContent: "FPS: " + fps

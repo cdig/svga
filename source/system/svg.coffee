@@ -59,10 +59,10 @@ Take ["SVGReady"], ()->
     attr: (elm, k, v)->
       unless elm then throw "SVG.attr was called with a null element"
       unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^"
-      return elm.getAttribute k if v is undefined
-      elm._SVG ?= {}
-      if elm._SVG[k] isnt v
-        elm._SVG[k] = v
+      return elm.getAttribute k if v is undefined # TODO: try reading from the cache first
+      elm._SVG_attr ?= {}
+      if elm._SVG_attr[k] isnt v
+        elm._SVG_attr[k] = v
         if props[k]?
           elm[k] = v
         else if v?
@@ -71,6 +71,21 @@ Take ["SVGReady"], ()->
         else
           ns = if k is "xlink:href" then xlinkNS else null
           elm.removeAttributeNS ns, k
+      v # Not Composable
+
+    styles: (elm, styles)->
+      unless elm then throw "SVG.styles was called with a null element"
+      unless typeof styles is "object" then console.log styles; throw "SVG.styles requires an object as the second argument, got ^"
+      SVG.style elm, k, v for k, v of styles
+      elm # Composable
+    
+    style: (elm, k, v)->
+      unless elm then throw "SVG.style was called with a null element"
+      unless typeof k is "string" then console.log k; throw "SVG.style requires a string as the second argument, got ^"
+      elm._SVG_style ?= {}
+      return elm._SVG_style[k] ?= elm.style[k] if v is undefined
+      if elm._SVG_style[k] isnt v
+        elm.style[k] = elm._SVG_style[k] = v
       v # Not Composable
     
     grey: (elm, l)->

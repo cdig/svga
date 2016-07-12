@@ -1,48 +1,56 @@
-class Segment
-  arrows: null
-  direction: 1
-  flow: null
-  name: ""
-  scale: 1.0
-  fillColor: "transparent"
-  
-  constructor: (@parent, @edges, @arrowsContainer, @segmentLength, @flowArrows)->
-    @arrows = []
-    @name = "segment" + @arrowsContainer.segments.length
-    @arrowsContainer.addSegment(@)
-    self = @
+Take ["FlowArrows:Arrow", "FlowArrows:Config"], (Arrow, Config)->
+  Make "Segment", (set, edges, i, segmentLength)->
+    if segmentLength < Config.FADE_LENGTH * 2 then throw "You have a segment that is only #{Math.round segmentLength} units long, which is clashing with your fade length of #{Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FlowArrows.FADE_LENGTH * 2."
+    
+    direction = 1
+    arrows = []
+    
+    segment =
+      flow: 1
+      name: "segment" + i
+      scale: 1
+      visible: true
 
-    segmentArrows = Math.max(1, Math.round(self.segmentLength / @flowArrows.SPACING))
-    segmentSpacing = self.segmentLength/segmentArrows;
-    position = 0
+      # Used by Arrows
+      edges: edges
+      length: segmentLength
+      set: set
+      
+      
+      updateVisibility: ()->
+        showing = segment.visible and segment.flow isnt 0
+        SVG.styles target, display: if showing then null else "none"
+        return showing
+      
+      reverse: ()->
+        direction *= -1
+      
+      
+      update: (dt, setFlow)->
+        
+        ancestorScale = segment.scale * segment.set.scale * Config.SCALE
+        if Config.SPACING < 60 * ancestorScale then throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay before this error will go away. Until then, please make your arrow scale smaller, or your FlowArrows.SPACING bigger."
+        if ancestorScale < 0.1 then throw "FlowArrows.SCALE is set to #{Config.SCALE}, which is so small that arrows might not be visible. If this is necessary, then you are doing something suspicious and need to convince Ivan that what you are doing is okay. Until then, this is a fatal error, so please make your FlowArrows.SCALE = 0.1 or larger."
+        
+        velocity = dt * direction * segment.flow * setFlow * Config.SPEED
+        arrow.update velocity for arrow in arrows if velocity isnt 0
+    
+    
+    arrowCount = Math.max 1, Math.round segmentLength / Config.SPACING
+    segmentSpacing = segmentLength / arrowCount
+    segmentPosition = 0
+    edgePosition = 0
     edgeIndex = 0
-    edge = self.edges[edgeIndex]
-
-    for i in [0..segmentArrows-1]
-      while (position > edge.length)
-        position -= edge.length
-        edge = self.edges[++edgeIndex]
-      arrow = new Arrow(self.parent, self.arrowsContainer.target, self, position, edgeIndex, @flowArrows)
-      arrow.name = "arrow" + i
-      self[arrow.name] = arrow
-      self.arrows.push(arrow)
-      position += segmentSpacing
-
-  visible: (isVisible)=>
-    for arrow in @arrows
-      arrow.setVisibility(isVisible)
-  
-  reverse: ()=>
-    @direction *= -1
-
-  setColor: (fillColor)=>
-    @fillColor = fillColor
-
-
-  update: (deltaTime, ancestorFlow)=>
-    arrowFlow = if @flow? then @flow else ancestorFlow
-    arrowFlow *= deltaTime * @direction * @flowArrows.SPEED if @flowArrows
-
-    for arrow in @arrows
-      arrow.setColor(@fillColor)
-      arrow.update(arrowFlow)
+    edge = edges[edgeIndex]
+    
+    for i in [0...arrowCount]
+      while (edgePosition > edge.length)
+        edgePosition -= edge.length
+        edge = edges[++edgeIndex]
+      arrow = Arrow set.target, segment, segmentPosition, edgePosition, edgeIndex
+      arrows.push arrow
+      edgePosition += segmentSpacing
+      segmentPosition += segmentSpacing
+    
+    set.addSegment segment
+    segment

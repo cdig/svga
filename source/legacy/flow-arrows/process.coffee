@@ -1,33 +1,55 @@
-do ->
-  edgesToLines = (edgesData)->
+Take "FlowArrows:Config", (Config)->
+
+  Make "FlowArrows:Process", (linesData)->
+    wrap linesData # Wrap our data into a format suitable for the below processing pipeline
+    .process cullMidpoints # Remove the middle point, since we don't care about curves/anchors (for now)
+    .process formSegments # organize the points into an array of segment groups
+    .process joinSegments # combine segments that are visibly connected but whose points were listed in the wrong order
+    .process cullShortEdges # remove points that constitute an unusably short edge
+    .process cullInlinePoints # remove points that lie on a line
+    .process reifyVectors # create vectors with a position, length, and angle
+    .process setSegmentLengths # use our vector lengths to figure out each segment's length
+    .process cullShortSegments # remove vectors that are unusably short
+    .result # return the result after all the above processing steps
+  
+  
+  # PROCESSING STEPS ##############################################################################
+  
+  
+  cullMidpoints = ()->
     linesData = []
     linesData.push edge[0], edge[2] for edge in edgesData
-    linesData
-
-  formSegments = (lineData, flowArrows)->
+  
+  
+  formSegments = (lineData)->
     segments = [] # array of segments
     segmentEdges = null # array of edges in the current segment
-
+    
     # loop in pairs, since lineData is alternating start/end points of edges
-    for i in [0..lineData.length - 1] by 2
+    for i in [0...lineData.length] by 2
       pointA = lineData[i]
       pointB = lineData[i+1]
-
+      
       # if we're already making a segment, and the new edge is a continuation of the last edge
-      if segmentEdges? and isConnected(pointA, segmentEdges[segmentEdges.length-1], flowArrows)
-        segmentEdges.push(pointB)
-      else if segmentEdges? and isConnected(pointB, segmentEdges[segmentEdges.length-1], flowArrows)
-        segmentEdges.push(pointA)      # this edge is a continuation of the last edge
-      else if segmentEdges? and isConnected(segmentEdges[0], pointB, flowArrows)
-        segmentEdges.unshift(pointA)
-      else if segmentEdges? and isConnected(segmentEdges[0], pointA, flowArrows)
-        segmentEdges.unshift(pointB)
+      if segmentEdges? and isConnected(pointA, segmentEdges[segmentEdges.length-1])
+        segmentEdges.push(pointB) # this edge is a continuation of the last edge
+      else if segmentEdges? and isConnected(pointB, segmentEdges[segmentEdges.length-1])
+        segmentEdges.push(pointA) # this edge is a continuation of the last edge
+      
+      # if we're already making a segment, and the new edge comes before the first edge
+      else if segmentEdges? and isConnected(segmentEdges[0], pointB)
+        segmentEdges.unshift(pointA) # the first edge is a continuation of this edge
+      else if segmentEdges? and isConnected(segmentEdges[0], pointA)
+        segmentEdges.unshift(pointB) # the first edge is a continuation of this edge
+      
+      # we're not yet making a segment, or the new edge isn't connected to the current segment
       else
-        segmentEdges = [pointA, pointB]
-        segments.push(segmentEdges)
+        segments.push segmentEdges = [pointA, pointB] # this edge is for a new segment
+    
     return segments
-
-  joinSegments = (segments, flowArrows)->
+  
+  
+  joinSegments = (segments)->
     segA = null
     segB = null
     pointA = null
@@ -42,7 +64,7 @@ do ->
       
         pointA = segA[0]
         pointB = segB[0]
-        if isConnected(pointA, pointB, flowArrows)
+        if isConnected(pointA, pointB)
           # they're connected startA-to-startB, so flip B and merge B->A
           segB.reverse()
           segB.pop()
@@ -54,7 +76,7 @@ do ->
         pointA = segA[segA.length - 1]
         pointB = segB[segB.length - 1]
       
-        if isConnected(pointA, pointB, flowArrows)
+        if isConnected(pointA, pointB)
         # they're connected endA-to-endB, so flip B and merge A->B
           segB.reverse()
           segB.unshift()
@@ -66,7 +88,7 @@ do ->
         pointA = segA[segA.length - 1]
         pointB = segB[0]
       
-        if isConnected(pointA, pointB, flowArrows)
+        if isConnected(pointA, pointB)
         # they're connected endA-to-startB, so merge A->B
           segments[i] = segA.concat(segB)
           segments.splice(j, 1)
@@ -77,7 +99,7 @@ do ->
         pointA = segA[0]
         pointB = segB[segB.length - 1]
       
-        if isConnected(pointA, pointB, flowArrows)
+        if isConnected(pointA, pointB)
           # they're connected startA-to-endB, so merge B->A
           segments[i] = segB.concat(segA)
           segments.splice(j, 1)
@@ -85,7 +107,8 @@ do ->
 
     return segments
 
-  cullShortEdges = (segments, flowArrows)->
+
+  cullShortEdges = (segments)->
     i = segments.length
     seg = []
     pointA = pointB = null
@@ -96,7 +119,7 @@ do ->
         pointA = seg[j]
         pointB = seg[j+1]
 
-        if distance(pointA, pointB) < flowArrows.MIN_EDGE_LENGTH
+        if distance(pointA, pointB) < Config.MIN_EDGE_LENGTH
           pointA.cull = true
 
     i = segments.length
@@ -110,7 +133,8 @@ do ->
 
     return segments
 
-  cullUnusedPoints = (segments)->
+
+  cullInlinePoints = (segments)->
     seg = []
     pointA = null
     pointB = null
@@ -131,30 +155,39 @@ do ->
             seg.splice(j+1, 1)
     return segments
 
-  finish = (parent, segments, arrowsContainer, flowArrows)->
-    for i in [0..segments.length-1]
-      segPoints = segments[i]
-      segmentLength = 0
-      edges = []
 
-      # Loop through all points, and make an edge with the next point in the sequence
-      for j in [0..segPoints.length - 2]
-        edge = new Edge()
-        edge.x = segPoints[j].x
-        edge.y = segPoints[j].y
-        edge.length = distance(segPoints[j], segPoints[j+1])
-        edge.angle = angle(segPoints[j], segPoints[j+1])
-        segmentLength += edge.length
-        edges.push(edge)
+  reifyVectors = (segments)->
+    for segment in segments
+      for pointA, i in segment when pointB = segment[i+1]
+        vector =
+          x: pointA.x
+          y: pointA.y
+          length: distance pointA, pointB
+          angle: angle pointA, pointB
+  
 
-      if segmentLength < flowArrows.MIN_SEGMENT_LENGTH
-        continue
-      new Segment(parent, edges, arrowsContainer, segmentLength, flowArrows)
+  setSegmentLengths = (segments)->
+    for segment in segments
+      segment.length = 0
+      segment.length += vector.length for vector in segments
+    return segments
+  
 
-  isConnected = (a, b, flowArrows)->
+  cullShortSegments = (segments)->
+    segments.filter (segment)->
+      segment.length >= Config.MIN_SEGMENT_LENGTH
+  
+  
+  # HELPERS #######################################################################################
+  
+  wrap = (data)->
+    process: (fn)-> wrap fn data
+    result: data
+  
+  isConnected = (a, b)->
     dX = Math.abs(a.x - b.x)
     dY = Math.abs(a.y - b.y)
-    return (dX < flowArrows.CONNECTED_DISTANCE and dY < flowArrows.CONNECTED_DISTANCE)
+    return (dX < Config.CONNECTED_DISTANCE and dY < Config.CONNECTED_DISTANCE)
 
   isInline = (a, b, c)->
     crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y)
@@ -170,22 +203,11 @@ do ->
       return false
 
     return true
-
+  
   distance = (a, b)->
     dx = b.x - a.x
     dy = b.y - a.y
     return Math.sqrt(dx*dx + dy*dy)
-
+  
   angle = (a, b)->
     return Math.atan2(b.y - a.y, b.x - a.x)
-
-
-  Make "Organizer", Organizer =
-    build: (parent, edgesData, arrowsContainer, flowArrows)->
-      lineData = edgesToLines(edgesData)
-      segments = formSegments(lineData, flowArrows) # organize the points into an array of segment groups
-      segments = joinSegments(segments, flowArrows) # combine segments that are visibly connected but whose points were listed in the wrong order
-      segments = cullShortEdges(segments, flowArrows) # remove points that constitute an unusably short edge
-      segments = cullUnusedPoints(segments) # remove points that lie on a line, or are otherwise unnecessary
-
-      finish(parent, segments, arrowsContainer, flowArrows) # Take all our finished point data, and make edge objects and segment objects, and add them to the container

@@ -1,5 +1,5 @@
-Take ["FlowArrows","Style","Symbol","Transform"],
-(      FlowArrows , Style , Symbol , Transform )->
+Take ["Style","Symbol","Transform"],
+(      Style , Symbol , Transform )->
   processors = []
   tooLate = false
   

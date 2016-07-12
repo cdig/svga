@@ -2078,8 +2078,8 @@
     return Make("Tween", Tween);
   });
 
-  Take(["SVG", "TRS"], function(SVG, TRS) {
-    return Make("Arrow", function(target, segment, segmentPosition, edgePosition, edgeIndex, FlowArrows) {
+  Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
+    return Make("FlowArrows:Arrow", function(target, segment, segmentPosition, edgePosition, edgeIndex) {
       var arrow, edge, element, line, triangle;
       edge = segment.edges[edgeIndex];
       element = TRS(SVG.create("g", target));
@@ -2128,7 +2128,7 @@
     });
   });
 
-  Take("", function() {
+  (function() {
     var Config;
     return Make("FlowArrows:Config", Config = {
       SCALE: 1,
@@ -2139,21 +2139,24 @@
       MIN_EDGE_LENGTH: 8,
       CONNECTED_DISTANCE: 1
     });
-  });
+  })();
 
   Take(["FlowArrows:Config", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Set, Reaction, Tick) {
     var FlowArrows, animateMode, len, m, prop, ref, sets, updateVisibility, visible;
     animateMode = true;
     visible = true;
     sets = [];
-    console.log("ME");
     FlowArrows = {
       setup: function(selectedSymbol, lines) {
-        var set;
+        var len, line, m, segmentDatas, set;
         if (selectedSymbol.querySelector("[id^=markerBox]")) {
           while (selectedSymbol.hasChildNodes()) {
             selectedSymbol.removeChild(selectedSymbol.firstChild);
           }
+        }
+        for (m = 0, len = lines.length; m < len; m++) {
+          line = lines[m];
+          segmentDatas = Process(line.edges);
         }
         set = Set(selectedSymbol, lines);
         sets.push(set);
@@ -2213,19 +2216,22 @@
   });
 
   Take("FlowArrows:Config", function(Config) {
-    var angle, cullInlinePoints, cullMidpoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, reifyVectors, setSegmentLengths, wrap;
-    Make("FlowArrows:Process", function(linesData) {
-      return wrap(linesData).process(cullMidpoints).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(setSegmentLengths).process(cullShortSegments).result;
+    var angle, cullInlinePoints, cullMidpoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
+    Make("FlowArrows:Process", function(edges) {
+      return wrap(edges).process(cullMidpoints).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
     });
-    cullMidpoints = function() {
-      var edge, len, linesData, m, results;
-      linesData = [];
-      results = [];
-      for (m = 0, len = edgesData.length; m < len; m++) {
-        edge = edgesData[m];
-        results.push(linesData.push(edge[0], edge[2]));
+    log = function(a) {
+      console.dir(a);
+      return a;
+    };
+    cullMidpoints = function(edges) {
+      var edge, len, m, output;
+      output = [];
+      for (m = 0, len = edges.length; m < len; m++) {
+        edge = edges[m];
+        output.push(edge[0], edge[2]);
       }
-      return results;
+      return output;
     };
     formSegments = function(lineData) {
       var i, m, pointA, pointB, ref, segmentEdges, segments;
@@ -2369,17 +2375,22 @@
       }
       return results;
     };
-    setSegmentLengths = function(segments) {
-      var len, len1, m, n, segment, vector;
-      for (m = 0, len = segments.length; m < len; m++) {
-        segment = segments[m];
-        segment.length = 0;
-        for (n = 0, len1 = segments.length; n < len1; n++) {
-          vector = segments[n];
-          segment.length += vector.length;
+    reifySegments = function(vectorsBySegment) {
+      var len, len1, length, m, n, results, segment, vector, vectors;
+      results = [];
+      for (m = 0, len = vectorsBySegment.length; m < len; m++) {
+        vectors = vectorsBySegment[m];
+        length = 0;
+        for (n = 0, len1 = vectors.length; n < len1; n++) {
+          vector = vectors[n];
+          length += vector.length;
         }
+        results.push(segment = {
+          edges: vectors,
+          length: length
+        });
       }
-      return segments;
+      return results;
     };
     cullShortSegments = function(segments) {
       return segments.filter(function(segment) {
@@ -2428,10 +2439,10 @@
   });
 
   Take(["FlowArrows:Arrow", "FlowArrows:Config"], function(Arrow, Config) {
-    return Make("Segment", function(set, edges, i, segmentLength) {
+    return Make("FlowArrows:Segment", function(set, segmentData, i) {
       var arrow, arrowCount, arrows, direction, edge, edgeIndex, edgePosition, m, ref, segment, segmentPosition, segmentSpacing;
-      if (segmentLength < Config.FADE_LENGTH * 2) {
-        throw "You have a segment that is only " + (Math.round(segmentLength)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FlowArrows.FADE_LENGTH * 2.";
+      if (segmentData.length < Config.FADE_LENGTH * 2) {
+        throw "You have a segment that is only " + (Math.round(segmentData.length)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FlowArrows.FADE_LENGTH * 2.";
       }
       direction = 1;
       arrows = [];
@@ -2440,8 +2451,8 @@
         name: "segment" + i,
         scale: 1,
         visible: true,
-        edges: edges,
-        length: segmentLength,
+        edges: segmentData.edges,
+        length: segmentData.length,
         set: set,
         updateVisibility: function() {
           var showing;
@@ -2474,30 +2485,29 @@
           }
         }
       };
-      arrowCount = Math.max(1, Math.round(segmentLength / Config.SPACING));
-      segmentSpacing = segmentLength / arrowCount;
+      arrowCount = Math.max(1, Math.round(segment.length / Config.SPACING));
+      segmentSpacing = segment.length / arrowCount;
       segmentPosition = 0;
       edgePosition = 0;
       edgeIndex = 0;
-      edge = edges[edgeIndex];
+      edge = segment.edges[edgeIndex];
       for (i = m = 0, ref = arrowCount; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
         while (edgePosition > edge.length) {
           edgePosition -= edge.length;
-          edge = edges[++edgeIndex];
+          edge = segment.edges[++edgeIndex];
         }
         arrow = Arrow(set.target, segment, segmentPosition, edgePosition, edgeIndex);
         arrows.push(arrow);
         edgePosition += segmentSpacing;
         segmentPosition += segmentSpacing;
       }
-      set.addSegment(segment);
       return segment;
     });
   });
 
   Take(["FlowArrows:Process", "FlowArrows:Segment", "SVG"], function(Process, Segment, SVG) {
-    return Make("FlowArrows:Set", function(FlowArrows, selectedSymbol, lines) {
-      var direction, flow, len, len1, line, m, n, pressure, ref, segment, segmentData, segments, set, showing, target, updateShowing, visible;
+    return Make("FlowArrows:Set", function(selectedSymbol, lines) {
+      var direction, flow, i, len, len1, line, m, n, pressure, segment, segmentData, segmentDatas, segments, set, showing, target, updateShowing, visible;
       segments = [];
       direction = 1;
       flow = 1;
@@ -2506,7 +2516,7 @@
       showing = true;
       set = {
         scale: 1,
-        target: target = SVG.create("g", parent),
+        target: target = SVG.create("g", selectedSymbol),
         reverse: function() {
           return direction *= -1;
         },
@@ -2524,10 +2534,10 @@
       };
       for (m = 0, len = lines.length; m < len; m++) {
         line = lines[m];
-        ref = ArrowsSegmentOrganizer(FlowArrows, line.edges);
-        for (n = 0, len1 = ref.length; n < len1; n++) {
-          segmentData = ref[n];
-          segment = Segment(FlowArrows, set, segmentData, i, segmentLength);
+        segmentDatas = Process(line.edges);
+        for (i = n = 0, len1 = segmentDatas.length; n < len1; i = ++n) {
+          segmentData = segmentDatas[i];
+          segment = Segment(set, segmentData, i);
           segments.push(segment);
           set[segment.name] = segment;
         }

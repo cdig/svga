@@ -1,24 +1,27 @@
 Take "FlowArrows:Config", (Config)->
-
-  Make "FlowArrows:Process", (linesData)->
-    wrap linesData # Wrap our data into a format suitable for the below processing pipeline
+  Make "FlowArrows:Process", (edges)->
+    wrap edges # Wrap our data into a format suitable for the below processing pipeline
     .process cullMidpoints # Remove the middle point, since we don't care about curves/anchors (for now)
     .process formSegments # organize the points into an array of segment groups
     .process joinSegments # combine segments that are visibly connected but whose points were listed in the wrong order
     .process cullShortEdges # remove points that constitute an unusably short edge
     .process cullInlinePoints # remove points that lie on a line
     .process reifyVectors # create vectors with a position, length, and angle
-    .process setSegmentLengths # use our vector lengths to figure out each segment's length
+    .process reifySegments # create segments with a length and edges
     .process cullShortSegments # remove vectors that are unusably short
     .result # return the result after all the above processing steps
   
   
   # PROCESSING STEPS ##############################################################################
   
+  log = (a)->
+    console.dir a
+    a
   
-  cullMidpoints = ()->
-    linesData = []
-    linesData.push edge[0], edge[2] for edge in edgesData
+  cullMidpoints = (edges)->
+    output = []
+    output.push edge[0], edge[2] for edge in edges
+    output
   
   
   formSegments = (lineData)->
@@ -154,8 +157,8 @@ Take "FlowArrows:Config", (Config)->
         if isInline(pointA, pointB, pointC)
             seg.splice(j+1, 1)
     return segments
-
-
+  
+  
   reifyVectors = (segments)->
     for segment in segments
       for pointA, i in segment when pointB = segment[i+1]
@@ -165,14 +168,16 @@ Take "FlowArrows:Config", (Config)->
           length: distance pointA, pointB
           angle: angle pointA, pointB
   
-
-  setSegmentLengths = (segments)->
-    for segment in segments
-      segment.length = 0
-      segment.length += vector.length for vector in segments
-    return segments
   
-
+  reifySegments = (vectorsBySegment)->
+    for vectors in vectorsBySegment
+      length = 0
+      length += vector.length for vector in vectors
+      segment =
+        edges: vectors
+        length: length
+  
+  
   cullShortSegments = (segments)->
     segments.filter (segment)->
       segment.length >= Config.MIN_SEGMENT_LENGTH

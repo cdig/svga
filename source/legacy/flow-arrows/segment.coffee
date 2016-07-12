@@ -1,6 +1,7 @@
 Take ["FlowArrows:Arrow", "FlowArrows:Config"], (Arrow, Config)->
-  Make "Segment", (set, edges, i, segmentLength)->
-    if segmentLength < Config.FADE_LENGTH * 2 then throw "You have a segment that is only #{Math.round segmentLength} units long, which is clashing with your fade length of #{Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FlowArrows.FADE_LENGTH * 2."
+  Make "FlowArrows:Segment", (set, segmentData, i)->
+    
+    if segmentData.length < Config.FADE_LENGTH * 2 then throw "You have a segment that is only #{Math.round segmentData.length} units long, which is clashing with your fade length of #{Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FlowArrows.FADE_LENGTH * 2."
     
     direction = 1
     arrows = []
@@ -10,10 +11,10 @@ Take ["FlowArrows:Arrow", "FlowArrows:Config"], (Arrow, Config)->
       name: "segment" + i
       scale: 1
       visible: true
-
+      
       # Used by Arrows
-      edges: edges
-      length: segmentLength
+      edges: segmentData.edges
+      length: segmentData.length
       set: set
       
       
@@ -36,21 +37,21 @@ Take ["FlowArrows:Arrow", "FlowArrows:Config"], (Arrow, Config)->
         arrow.update velocity for arrow in arrows if velocity isnt 0
     
     
-    arrowCount = Math.max 1, Math.round segmentLength / Config.SPACING
-    segmentSpacing = segmentLength / arrowCount
+    arrowCount = Math.max 1, Math.round segment.length / Config.SPACING
+    segmentSpacing = segment.length / arrowCount
     segmentPosition = 0
     edgePosition = 0
     edgeIndex = 0
-    edge = edges[edgeIndex]
+    edge = segment.edges[edgeIndex]
     
     for i in [0...arrowCount]
       while (edgePosition > edge.length)
         edgePosition -= edge.length
-        edge = edges[++edgeIndex]
+        edge = segment.edges[++edgeIndex]
       arrow = Arrow set.target, segment, segmentPosition, edgePosition, edgeIndex
       arrows.push arrow
       edgePosition += segmentSpacing
       segmentPosition += segmentSpacing
     
-    set.addSegment segment
-    segment
+    
+    return segment

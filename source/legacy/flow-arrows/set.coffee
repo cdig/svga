@@ -1,5 +1,5 @@
 Take ["FlowArrows:Process", "FlowArrows:Segment", "SVG"], (Process, Segment, SVG)->
-  Make "FlowArrows:Set", (FlowArrows, selectedSymbol, lines)->
+  Make "FlowArrows:Set", (selectedSymbol, lines)->
     
     segments = []
     direction = 1
@@ -10,7 +10,7 @@ Take ["FlowArrows:Process", "FlowArrows:Segment", "SVG"], (Process, Segment, SVG
     
     set =
       scale: 1
-      target: target = SVG.create "g", parent
+      target: target = SVG.create "g", selectedSymbol
 
       reverse: ()->
         direction *= -1
@@ -21,12 +21,15 @@ Take ["FlowArrows:Process", "FlowArrows:Segment", "SVG"], (Process, Segment, SVG
             segment.update dt, flow * direction
 
     
-    for line in lines
-      for segmentData in ArrowsSegmentOrganizer FlowArrows, line.edges
-        segment = Segment FlowArrows, set, segmentData, i, segmentLength
+      for segmentData, i in segmentDatas
+        segment = Segment set, segmentData, i
         segments.push segment
         set[segment.name] = segment
     
+    # console.log selectedSymbol
+    # console.log lines
+    # console.log segments
+    # console.dir set
     
     updateShowing = ()->
       showing = visible and flow isnt 0

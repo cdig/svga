@@ -1,5 +1,5 @@
-Take ["SVG", "TRS"], (SVG, TRS)->
-  Make "Arrow", (target, segment, segmentPosition, edgePosition, edgeIndex, FlowArrows)->
+Take ["FlowArrows:Config", "SVG", "TRS"], (Config, SVG, TRS)->
+  Make "FlowArrows:Arrow", (target, segment, segmentPosition, edgePosition, edgeIndex)->
     edge = segment.edges[edgeIndex]
     
     element = TRS SVG.create "g", target
@@ -29,9 +29,9 @@ Take ["SVG", "TRS"], (SVG, TRS)->
         scale = 1
         #
         # if fadeStart
-        #   scale = Math.max 0, Math.min 1, (edgePosition / edge.length) * edge.length / FlowArrows.FADE_LENGTH
+        #   scale = Math.max 0, Math.min 1, (edgePosition / edge.length) * edge.length / Config.FADE_LENGTH
         # else if fadeEnd
-        #   scale = Math.max 0, Math.min 1, 1 - (edgePosition - (edge.length - FlowArrows.FADE_LENGTH))/FlowArrows.FADE_LENGTH
+        #   scale = Math.max 0, Math.min 1, 1 - (edgePosition - (edge.length - Config.FADE_LENGTH))/Config.FADE_LENGTH
         
         TRS.abs element,
           x: Math.cos edge.angle * edgePosition + edge.x

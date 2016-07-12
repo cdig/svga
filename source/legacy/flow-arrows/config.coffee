@@ -1,4 +1,4 @@
-Take "", ()->
+do ()->
   Make "FlowArrows:Config", Config =
     SCALE: 1 # Visible size of arrows is multiplied by this value — it's not factored in to any of the other size/distance/speed values
     SPACING: 600 # APPROXIMATELY how far apart should arrows be spaced? (+/-)50%

@@ -2,8 +2,6 @@ Take ["FlowArrows:Config", "FlowArrows:Set", "Reaction", "Tick"], (Config, Set, 
   animateMode = true # Default to true, in case we don't have a schematic mode
   visible = true # Default to true, in case we don't have an arrows button
   sets = []
-
-  console.log "ME"
   
   FlowArrows =
     setup: (selectedSymbol, lines)->
@@ -13,6 +11,9 @@ Take ["FlowArrows:Config", "FlowArrows:Set", "Reaction", "Tick"], (Config, Set, 
       if selectedSymbol.querySelector "[id^=markerBox]" # ^= matches values by prefix, so we can match IDs like markerBox_FL
         while selectedSymbol.hasChildNodes()
           selectedSymbol.removeChild selectedSymbol.firstChild
+      
+      for line in lines
+        segmentDatas = Process line.edges
       
       set = Set selectedSymbol, lines
       sets.push set

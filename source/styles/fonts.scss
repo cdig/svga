@@ -1,18 +1,15 @@
-// We're deliberately only pulling the WOFF2 version.
-// We want these puppies to load as fast as possible.
-// Older browsers (eg: IE) should just use the fallback,
-// since they do a poorer job with fonts anyway.
-
 @font-face {
   font-family: "Lato";
-  src: url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-regular.woff2") format("woff2");
+  src: url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-regular.woff2") format("woff2"),
+       url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-regular.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Lato";
-  src: url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-bold.woff2") format("woff2");
+  src: url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-bold.woff2") format("woff2"),
+       url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-bold.woff") format("woff");
   font-weight: bold;
   font-style: normal;
 }

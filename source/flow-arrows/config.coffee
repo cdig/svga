@@ -7,3 +7,12 @@ do ()->
     SPEED: 200 # The speed Arrows move per second when flow is 1
     MIN_EDGE_LENGTH: 8 # How long must an edge be to survive being culled?
     CONNECTED_DISTANCE: 1 # How close must two physically-disconnected points be to be treated as part of the same line?
+    
+    wrap: (obj)->
+      defineProp obj, k for k of Config when k isnt "wrap"
+      obj # Composable
+  
+  defineProp = (obj, k)->
+    Object.defineProperty obj, k,
+      get: ()-> Config[k]
+      set: (v)-> Config[k] = v

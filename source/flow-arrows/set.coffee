@@ -1,0 +1,14 @@
+Take ["Config","FlowArrows:Config","FlowArrows:Containerize","FlowArrows:Segment"],
+(    CDConfig ,            Config ,            Containerize ,            Segment)->
+  Make "FlowArrows:Set", (parentElm, setData)->
+    Containerize parentElm, (scope)-> # This function must return an array of children
+      
+      for segmentData, i in setData
+        
+        if segmentData.dist < Config.FADE_LENGTH * 2
+          throw "You have a FlowArrows segment that is only #{Math.round segmentData.dist} units long, which is clashing with your fade length of #{Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2."
+        
+        childName = "segment" + i
+        child = Segment scope.element, segmentData
+        if CDConfig "dev" then child.element.addEventListener "mouseover", ()-> console.log childName
+        scope[childName] = child

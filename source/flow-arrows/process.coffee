@@ -1,13 +1,12 @@
 Take "FlowArrows:Config", (Config)->
-  Make "FlowArrows:Process", (edges)->
-    wrap edges # Wrap our data into a format suitable for the below processing pipeline
-    .process cullMidpoints # Remove the middle point, since we don't care about curves/anchors (for now)
+  Make "FlowArrows:Process", (lineData)->
+    wrap lineData # Wrap our data into a format suitable for the below processing pipeline
     .process formSegments # organize the points into an array of segment groups
     .process joinSegments # combine segments that are visibly connected but whose points were listed in the wrong order
     .process cullShortEdges # remove points that constitute an unusably short edge
     .process cullInlinePoints # remove points that lie on a line
-    .process reifyVectors # create vectors with a position, length, and angle
-    .process reifySegments # create segments with a length and edges
+    .process reifyVectors # create vectors with a position, dist, and angle
+    .process reifySegments # create segments with a dist and edges
     .process cullShortSegments # remove vectors that are unusably short
     .result # return the result after all the above processing steps
   
@@ -17,12 +16,6 @@ Take "FlowArrows:Config", (Config)->
   log = (a)->
     console.dir a
     a
-  
-  cullMidpoints = (edges)->
-    output = []
-    output.push edge[0], edge[2] for edge in edges
-    output
-  
   
   formSegments = (lineData)->
     segments = [] # array of segments
@@ -165,22 +158,22 @@ Take "FlowArrows:Config", (Config)->
         vector =
           x: pointA.x
           y: pointA.y
-          length: distance pointA, pointB
+          dist: distance pointA, pointB
           angle: angle pointA, pointB
   
   
-  reifySegments = (vectorsBySegment)->
-    for vectors in vectorsBySegment
-      length = 0
-      length += vector.length for vector in vectors
+  reifySegments = (set)->
+    for segmentVectors in set
+      dist = 0
+      dist += vector.dist for vector in segmentVectors
       segment =
-        edges: vectors
-        length: length
+        vectors: segmentVectors
+        dist: dist
   
   
-  cullShortSegments = (segments)->
-    segments.filter (segment)->
-      segment.length >= Config.MIN_SEGMENT_LENGTH
+  cullShortSegments = (set)->
+    set.filter (segment)->
+      segment.dist >= Config.MIN_SEGMENT_LENGTH
   
   
   # HELPERS #######################################################################################

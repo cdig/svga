@@ -3,7 +3,7 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
   buttonPad = 30
   iconPad = 6
   
-  requested = ["Menu"] # We always include the Menu button
+  requested = ["Menu", "Settings"] # We always include the Menu button
   instances = {}
   offsetX = 0
   

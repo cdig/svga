@@ -1,136 +1,7 @@
 (function() {
   var Mask, getParentInverseTransform,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    slice = [].slice;
-
-  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
-    var crawlerData, svg;
-    svg = document.rootElement;
-    crawlerData = SVGCrawler(svg);
-    Make("SVGReady");
-    return setTimeout(function() {
-      var rootScope;
-      rootScope = ScopeBuilder(crawlerData);
-      Make("root", rootScope);
-      Action("setup");
-      Action("ScopeReady");
-      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
-        return svg.style.opacity = 1;
-      });
-    });
-  });
-
-  Take(["Style", "Symbol", "Transform"], function(Style, Symbol, Transform) {
-    var ScopeBuilder, buildScope, getSymbol, processors, tooLate;
-    processors = [];
-    tooLate = false;
-    ScopeBuilder = function(target, parentScope) {
-      var len, m, ref, scope, subTarget;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      tooLate = true;
-      scope = buildScope(target.name, target.elm, parentScope);
-      ref = target.sub;
-      for (m = 0, len = ref.length; m < len; m++) {
-        subTarget = ref[m];
-        ScopeBuilder(subTarget, scope);
-      }
-      return scope;
-    };
-    ScopeBuilder.process = function(fn) {
-      if (tooLate) {
-        console.log(fn);
-        throw "^ ScopeBuilder.process fn was too late. Please make it init faster.";
-      }
-      return processors.push(fn);
-    };
-    Make("ScopeBuilder", ScopeBuilder);
-    buildScope = function(instanceName, element, parentScope) {
-      var fn, len, m, scope, symbol;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      symbol = getSymbol(instanceName);
-      scope = symbol.create(element);
-      if (scope.children == null) {
-        scope.children = [];
-      }
-      if (scope.element == null) {
-        scope.element = element;
-      }
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
-        }
-      });
-      if (scope.getElement == null) {
-        scope.getElement = function() {
-          throw "@getElement() has been removed. Please use @element instead.";
-        };
-      }
-      Style(scope);
-      Transform(scope);
-      for (m = 0, len = processors.length; m < len; m++) {
-        fn = processors[m];
-        fn(scope);
-      }
-      if (parentScope == null) {
-        if (scope.root == null) {
-          scope.root = scope;
-        }
-      } else {
-        if (scope.root == null) {
-          scope.root = parentScope.root;
-        }
-        if (instanceName !== "DefaultElement") {
-          if (parentScope[instanceName] == null) {
-            parentScope[instanceName] = scope;
-          }
-        }
-        parentScope.children.push(scope);
-      }
-      return scope;
-    };
-    return getSymbol = function(instanceName) {
-      var symbol;
-      if (symbol = Symbol.forInstanceName(instanceName)) {
-        return symbol;
-      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicLine");
-      } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicField");
-      } else {
-        return Symbol.forSymbolName("DefaultElement");
-      }
-    };
-  });
-
-  Take("DOMContentLoaded", function() {
-    var SVGCrawler, deprecations;
-    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
-    return Make("SVGCrawler", SVGCrawler = function(elm) {
-      var childElm, childNodes, len, m, ref, ref1, target;
-      target = {
-        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
-        elm: elm,
-        sub: []
-      };
-      childNodes = Array.prototype.slice.call(elm.childNodes);
-      for (m = 0, len = childNodes.length; m < len; m++) {
-        childElm = childNodes[m];
-        if (childElm instanceof SVGGElement) {
-          if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
-            console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
-            elm.removeChild(childElm);
-          } else {
-            target.sub.push(SVGCrawler(childElm));
-          }
-        }
-      }
-      return target;
-    });
-  });
+    slice = [].slice,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
     return Make("FlowArrows:Arrow", function(parentElm, segmentData, segmentPosition, vectorPosition, vectorIndex) {
@@ -639,6 +510,135 @@
         }
         return results;
       });
+    });
+  });
+
+  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
+    var crawlerData, svg;
+    svg = document.rootElement;
+    crawlerData = SVGCrawler(svg);
+    Make("SVGReady");
+    return setTimeout(function() {
+      var rootScope;
+      rootScope = ScopeBuilder(crawlerData);
+      Make("root", rootScope);
+      Action("setup");
+      Action("ScopeReady");
+      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
+        return svg.style.opacity = 1;
+      });
+    });
+  });
+
+  Take(["Style", "Symbol", "Transform"], function(Style, Symbol, Transform) {
+    var ScopeBuilder, buildScope, getSymbol, processors, tooLate;
+    processors = [];
+    tooLate = false;
+    ScopeBuilder = function(target, parentScope) {
+      var len, m, ref, scope, subTarget;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      tooLate = true;
+      scope = buildScope(target.name, target.elm, parentScope);
+      ref = target.sub;
+      for (m = 0, len = ref.length; m < len; m++) {
+        subTarget = ref[m];
+        ScopeBuilder(subTarget, scope);
+      }
+      return scope;
+    };
+    ScopeBuilder.process = function(fn) {
+      if (tooLate) {
+        console.log(fn);
+        throw "^ ScopeBuilder.process fn was too late. Please make it init faster.";
+      }
+      return processors.push(fn);
+    };
+    Make("ScopeBuilder", ScopeBuilder);
+    buildScope = function(instanceName, element, parentScope) {
+      var fn, len, m, scope, symbol;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      symbol = getSymbol(instanceName);
+      scope = symbol.create(element);
+      if (scope.children == null) {
+        scope.children = [];
+      }
+      if (scope.element == null) {
+        scope.element = element;
+      }
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
+        }
+      });
+      if (scope.getElement == null) {
+        scope.getElement = function() {
+          throw "@getElement() has been removed. Please use @element instead.";
+        };
+      }
+      Style(scope);
+      Transform(scope);
+      for (m = 0, len = processors.length; m < len; m++) {
+        fn = processors[m];
+        fn(scope);
+      }
+      if (parentScope == null) {
+        if (scope.root == null) {
+          scope.root = scope;
+        }
+      } else {
+        if (scope.root == null) {
+          scope.root = parentScope.root;
+        }
+        if (instanceName !== "DefaultElement") {
+          if (parentScope[instanceName] == null) {
+            parentScope[instanceName] = scope;
+          }
+        }
+        parentScope.children.push(scope);
+      }
+      return scope;
+    };
+    return getSymbol = function(instanceName) {
+      var symbol;
+      if (symbol = Symbol.forInstanceName(instanceName)) {
+        return symbol;
+      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicLine");
+      } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicField");
+      } else {
+        return Symbol.forSymbolName("DefaultElement");
+      }
+    };
+  });
+
+  Take("DOMContentLoaded", function() {
+    var SVGCrawler, deprecations;
+    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
+    return Make("SVGCrawler", SVGCrawler = function(elm) {
+      var childElm, childNodes, len, m, ref, ref1, target;
+      target = {
+        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
+        elm: elm,
+        sub: []
+      };
+      childNodes = Array.prototype.slice.call(elm.childNodes);
+      for (m = 0, len = childNodes.length; m < len; m++) {
+        childElm = childNodes[m];
+        if (childElm instanceof SVGGElement) {
+          if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
+            console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
+            elm.removeChild(childElm);
+          } else {
+            target.sub.push(SVGCrawler(childElm));
+          }
+        }
+      }
+      return target;
     });
   });
 

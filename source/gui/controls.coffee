@@ -1,5 +1,7 @@
-Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"], (Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS)->
+Take ["Component","PointerInput","Reaction","Resize","SVG","TopBar","TRS","Tween1"],
+(      Component , PointerInput , Reaction , Resize , SVG , TopBar , TRS , Tween1)->
   pad = 5
+  panelX = 1
   instancesByNameByType = {}
   
   g = TRS SVG.create "g", SVG.root, class: "Controls", "font-size": 20, "text-anchor": "middle"
@@ -19,7 +21,7 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"]
     panelWidth = Control.panelWidth = Math.ceil 3 * Math.sqrt window.innerWidth
     SVG.attr bg, "width", panelWidth
     SVG.attr bg, "height", window.innerHeight - TopBar.height
-    TRS.move g, window.innerWidth - panelWidth, TopBar.height
+    positionPanel()
     offset = pad
     for type, instancesByName of instancesByNameByType
       for name, control of instancesByName
@@ -46,12 +48,21 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"]
     instancesByName[name].api
   
   
+  positionPanel = ()->
+    TRS.move g, window.innerWidth - Control.panelWidth * panelX, TopBar.height
+
+  tick = (v)->
+    panelX = v
+    positionPanel()
+  
   Reaction "Schematic:Show", ()->
-    SVG.attrs g, opacity: 0
+    # SVG.attrs g, opacity: 0
+    Tween1 1, -1, 0.7, tick
     Control.panelShowing = false
   
   Reaction "Schematic:Hide", ()->
-    SVG.attrs g, opacity: 1
+    # SVG.attrs g, opacity: 1
+    Tween1 -1, 1, 0.7, tick
     Control.panelShowing = true
   
   Reaction "ScopeReady", ()->

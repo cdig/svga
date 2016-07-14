@@ -1,7 +1,136 @@
 (function() {
   var Mask, getParentInverseTransform,
-    slice = [].slice,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    slice = [].slice;
+
+  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
+    var crawlerData, svg;
+    svg = document.rootElement;
+    crawlerData = SVGCrawler(svg);
+    Make("SVGReady");
+    return setTimeout(function() {
+      var rootScope;
+      rootScope = ScopeBuilder(crawlerData);
+      Make("root", rootScope);
+      Action("setup");
+      Action("ScopeReady");
+      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
+        return svg.style.opacity = 1;
+      });
+    });
+  });
+
+  Take(["Style", "Symbol", "Transform"], function(Style, Symbol, Transform) {
+    var ScopeBuilder, buildScope, getSymbol, processors, tooLate;
+    processors = [];
+    tooLate = false;
+    ScopeBuilder = function(target, parentScope) {
+      var len, m, ref, scope, subTarget;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      tooLate = true;
+      scope = buildScope(target.name, target.elm, parentScope);
+      ref = target.sub;
+      for (m = 0, len = ref.length; m < len; m++) {
+        subTarget = ref[m];
+        ScopeBuilder(subTarget, scope);
+      }
+      return scope;
+    };
+    ScopeBuilder.process = function(fn) {
+      if (tooLate) {
+        console.log(fn);
+        throw "^ ScopeBuilder.process fn was too late. Please make it init faster.";
+      }
+      return processors.push(fn);
+    };
+    Make("ScopeBuilder", ScopeBuilder);
+    buildScope = function(instanceName, element, parentScope) {
+      var fn, len, m, scope, symbol;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      symbol = getSymbol(instanceName);
+      scope = symbol.create(element);
+      if (scope.children == null) {
+        scope.children = [];
+      }
+      if (scope.element == null) {
+        scope.element = element;
+      }
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
+        }
+      });
+      if (scope.getElement == null) {
+        scope.getElement = function() {
+          throw "@getElement() has been removed. Please use @element instead.";
+        };
+      }
+      Style(scope);
+      Transform(scope);
+      for (m = 0, len = processors.length; m < len; m++) {
+        fn = processors[m];
+        fn(scope);
+      }
+      if (parentScope == null) {
+        if (scope.root == null) {
+          scope.root = scope;
+        }
+      } else {
+        if (scope.root == null) {
+          scope.root = parentScope.root;
+        }
+        if (instanceName !== "DefaultElement") {
+          if (parentScope[instanceName] == null) {
+            parentScope[instanceName] = scope;
+          }
+        }
+        parentScope.children.push(scope);
+      }
+      return scope;
+    };
+    return getSymbol = function(instanceName) {
+      var symbol;
+      if (symbol = Symbol.forInstanceName(instanceName)) {
+        return symbol;
+      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicLine");
+      } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicField");
+      } else {
+        return Symbol.forSymbolName("DefaultElement");
+      }
+    };
+  });
+
+  Take("DOMContentLoaded", function() {
+    var SVGCrawler, deprecations;
+    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
+    return Make("SVGCrawler", SVGCrawler = function(elm) {
+      var childElm, childNodes, len, m, ref, ref1, target;
+      target = {
+        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
+        elm: elm,
+        sub: []
+      };
+      childNodes = Array.prototype.slice.call(elm.childNodes);
+      for (m = 0, len = childNodes.length; m < len; m++) {
+        childElm = childNodes[m];
+        if (childElm instanceof SVGGElement) {
+          if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
+            console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
+            elm.removeChild(childElm);
+          } else {
+            target.sub.push(SVGCrawler(childElm));
+          }
+        }
+      }
+      return target;
+    });
+  });
 
   Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
     return Make("FlowArrows:Arrow", function(parentElm, segmentData, segmentPosition, vectorPosition, vectorIndex) {
@@ -513,135 +642,6 @@
     });
   });
 
-  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
-    var crawlerData, svg;
-    svg = document.rootElement;
-    crawlerData = SVGCrawler(svg);
-    Make("SVGReady");
-    return setTimeout(function() {
-      var rootScope;
-      rootScope = ScopeBuilder(crawlerData);
-      Make("root", rootScope);
-      Action("setup");
-      Action("ScopeReady");
-      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
-        return svg.style.opacity = 1;
-      });
-    });
-  });
-
-  Take(["Style", "Symbol", "Transform"], function(Style, Symbol, Transform) {
-    var ScopeBuilder, buildScope, getSymbol, processors, tooLate;
-    processors = [];
-    tooLate = false;
-    ScopeBuilder = function(target, parentScope) {
-      var len, m, ref, scope, subTarget;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      tooLate = true;
-      scope = buildScope(target.name, target.elm, parentScope);
-      ref = target.sub;
-      for (m = 0, len = ref.length; m < len; m++) {
-        subTarget = ref[m];
-        ScopeBuilder(subTarget, scope);
-      }
-      return scope;
-    };
-    ScopeBuilder.process = function(fn) {
-      if (tooLate) {
-        console.log(fn);
-        throw "^ ScopeBuilder.process fn was too late. Please make it init faster.";
-      }
-      return processors.push(fn);
-    };
-    Make("ScopeBuilder", ScopeBuilder);
-    buildScope = function(instanceName, element, parentScope) {
-      var fn, len, m, scope, symbol;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      symbol = getSymbol(instanceName);
-      scope = symbol.create(element);
-      if (scope.children == null) {
-        scope.children = [];
-      }
-      if (scope.element == null) {
-        scope.element = element;
-      }
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please use SVGA.arrows instead.";
-        }
-      });
-      if (scope.getElement == null) {
-        scope.getElement = function() {
-          throw "@getElement() has been removed. Please use @element instead.";
-        };
-      }
-      Style(scope);
-      Transform(scope);
-      for (m = 0, len = processors.length; m < len; m++) {
-        fn = processors[m];
-        fn(scope);
-      }
-      if (parentScope == null) {
-        if (scope.root == null) {
-          scope.root = scope;
-        }
-      } else {
-        if (scope.root == null) {
-          scope.root = parentScope.root;
-        }
-        if (instanceName !== "DefaultElement") {
-          if (parentScope[instanceName] == null) {
-            parentScope[instanceName] = scope;
-          }
-        }
-        parentScope.children.push(scope);
-      }
-      return scope;
-    };
-    return getSymbol = function(instanceName) {
-      var symbol;
-      if (symbol = Symbol.forInstanceName(instanceName)) {
-        return symbol;
-      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicLine");
-      } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicField");
-      } else {
-        return Symbol.forSymbolName("DefaultElement");
-      }
-    };
-  });
-
-  Take("DOMContentLoaded", function() {
-    var SVGCrawler, deprecations;
-    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
-    return Make("SVGCrawler", SVGCrawler = function(elm) {
-      var childElm, childNodes, len, m, ref, ref1, target;
-      target = {
-        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
-        elm: elm,
-        sub: []
-      };
-      childNodes = Array.prototype.slice.call(elm.childNodes);
-      for (m = 0, len = childNodes.length; m < len; m++) {
-        childElm = childNodes[m];
-        if (childElm instanceof SVGGElement) {
-          if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
-            console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
-            elm.removeChild(childElm);
-          } else {
-            target.sub.push(SVGCrawler(childElm));
-          }
-        }
-      }
-      return target;
-    });
-  });
-
   Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", SVG.root));
@@ -686,9 +686,10 @@
     return window.focus();
   });
 
-  Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS"], function(Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS) {
-    var Control, bg, g, instancesByNameByType, instantiate, pad, resize;
+  Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween1"], function(Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS, Tween1) {
+    var Control, bg, g, instancesByNameByType, instantiate, pad, panelX, positionPanel, resize, tick;
     pad = 5;
+    panelX = 1;
     instancesByNameByType = {};
     g = TRS(SVG.create("g", SVG.root, {
       "class": "Controls",
@@ -714,7 +715,7 @@
       panelWidth = Control.panelWidth = Math.ceil(3 * Math.sqrt(window.innerWidth));
       SVG.attr(bg, "width", panelWidth);
       SVG.attr(bg, "height", window.innerHeight - TopBar.height);
-      TRS.move(g, window.innerWidth - panelWidth, TopBar.height);
+      positionPanel();
       offset = pad;
       results = [];
       for (type in instancesByNameByType) {
@@ -772,16 +773,19 @@
       instancesByName[name].api.attach(props);
       return instancesByName[name].api;
     };
+    positionPanel = function() {
+      return TRS.move(g, window.innerWidth - Control.panelWidth * panelX, TopBar.height);
+    };
+    tick = function(v) {
+      panelX = v;
+      return positionPanel();
+    };
     Reaction("Schematic:Show", function() {
-      SVG.attrs(g, {
-        opacity: 0
-      });
+      Tween1(1, -1, 0.7, tick);
       return Control.panelShowing = false;
     });
     Reaction("Schematic:Hide", function() {
-      SVG.attrs(g, {
-        opacity: 1
-      });
+      Tween1(-1, 1, 0.7, tick);
       return Control.panelShowing = true;
     });
     Reaction("ScopeReady", function() {
@@ -827,7 +831,7 @@
     topBarHeight = 48;
     buttonPad = 30;
     iconPad = 6;
-    requested = ["Menu"];
+    requested = ["Menu", "Settings", "Help"];
     instances = {};
     offsetX = 0;
     topBar = SVG.create("g", SVG.root, {
@@ -880,7 +884,7 @@
       }
     };
     construct = function(i, name, api) {
-      var buttonWidth, iconRect, iconScale, iconX, iconY, source, textRect, textX;
+      var buttonWidth, iconRect, iconX, iconY, source, textRect, textX;
       if (api == null) {
         throw "Unknown TopBar button name: " + name;
       }
@@ -916,15 +920,13 @@
       }
       iconRect = api.icon.getBoundingClientRect();
       textRect = api.text.getBoundingClientRect();
-      iconScale = Math.min((topBarHeight - iconPad * 2) / iconRect.width, (topBarHeight - iconPad * 2) / iconRect.height);
       iconX = buttonPad;
-      iconY = topBarHeight / 2 - iconRect.height * iconScale / 2;
-      textX = buttonPad + iconRect.width * iconScale + iconPad;
+      iconY = 0;
+      textX = buttonPad + iconRect.width + iconPad;
       buttonWidth = textX + textRect.width + buttonPad;
       TRS.abs(api.icon, {
         x: iconX,
-        y: iconY,
-        scale: iconScale
+        y: iconY
       });
       TRS.move(api.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
       SVG.attrs(api.bg, {
@@ -936,7 +938,22 @@
         api.setup(api.element);
       }
       if (api.click != null) {
-        return PointerInput.addClick(api.element, api.click);
+        PointerInput.addClick(api.element, api.click);
+      }
+      if (api.move != null) {
+        PointerInput.addMove(api.element, api.move);
+      }
+      if (api.down != null) {
+        PointerInput.addDown(api.element, api.down);
+      }
+      if (api.up != null) {
+        PointerInput.addUp(api.element, api.up);
+      }
+      if (api.over != null) {
+        PointerInput.addOver(api.element, api.over);
+      }
+      if (api.out != null) {
+        return PointerInput.addOut(api.element, api.our);
       }
     };
     return Make("TopBar", TopBar);
@@ -2540,12 +2557,19 @@
     var Tween, cloneObj, diffObj, tweens, update, updateTween;
     tweens = [];
     Tween = function(tween) {
+      if (tween.on == null) {
+        tween.on = cloneObj(tween.from);
+      }
       if (tween.from == null) {
         tween.from = cloneObj(tween.on);
       }
       tween.delta = diffObj(tween.to, tween.from);
       tweens.push(tween);
-      return RAF(update, true);
+      RAF(update, true);
+      return tween;
+    };
+    Tween.cancel = function(tween) {
+      return tween != null ? tween.cancelled = true : void 0;
     };
     update = function(t) {
       var tween;
@@ -2576,9 +2600,9 @@
         tween.on[k] = v * Ease.cubic(pos) + tween.from[k];
       }
       if (typeof tween.tick === "function") {
-        tween.tick();
+        tween.tick(pos, tween);
       }
-      if (pos < 1) {
+      if (pos < 1 && !tween.cancelled) {
         return tween;
       }
     };
@@ -2601,6 +2625,59 @@
       return diff;
     };
     return Make("Tween", Tween);
+  });
+
+  Take(["Ease", "Tick"], function(Ease, Tick) {
+    var Tween1, tweens;
+    tweens = [];
+    Tween1 = function() {
+      var args, from, m, tick, time, to, tween;
+      args = 2 <= arguments.length ? slice.call(arguments, 0, m = arguments.length - 1) : (m = 0, []), tick = arguments[m++];
+      from = args[0] || 0;
+      to = args[1] || 1;
+      time = args[2] || 1;
+      tweens = tweens.filter(function(tween) {
+        if (tween.pos >= 1) {
+          return false;
+        }
+        if (tween.cancelled) {
+          return false;
+        }
+        if (tween.tick === tick) {
+          return false;
+        }
+        return true;
+      });
+      tweens.push(tween = {
+        from: from,
+        to: to,
+        time: time,
+        tick: tick,
+        cancelled: false,
+        pos: 0,
+        value: from,
+        delta: to - from
+      });
+      return tween;
+    };
+    Tween1.cancel = function(tween) {
+      return tween != null ? tween.cancelled = true : void 0;
+    };
+    Tick(function(t, dt) {
+      var len, m, results, tween;
+      results = [];
+      for (m = 0, len = tweens.length; m < len; m++) {
+        tween = tweens[m];
+        if (!(tween.pos < 1 && !tween.cancelled)) {
+          continue;
+        }
+        tween.pos += dt / tween.time;
+        tween.value = tween.from + tween.delta * Ease.cubic(Math.min(1, tween.pos));
+        results.push(tween.tick(tween.value, tween));
+      }
+      return results;
+    });
+    return Make("Tween1", Tween1);
   });
 
   Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {

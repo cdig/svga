@@ -3,7 +3,7 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
   buttonPad = 30
   iconPad = 6
   
-  requested = ["Menu", "Settings"] # We always include the Menu button
+  requested = ["Menu", "Settings", "Help"] # We always include the Menu button
   instances = {}
   offsetX = 0
   
@@ -57,18 +57,22 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     
     iconRect = api.icon.getBoundingClientRect()
     textRect = api.text.getBoundingClientRect()
-    iconScale = Math.min (topBarHeight - iconPad*2)/iconRect.width, (topBarHeight - iconPad*2)/iconRect.height
     iconX = buttonPad
-    iconY = topBarHeight/2 - iconRect.height*iconScale/2
-    textX = buttonPad + iconRect.width*iconScale + iconPad
+    iconY = 0
+    textX = buttonPad + iconRect.width + iconPad
     buttonWidth = textX + textRect.width + buttonPad
-    TRS.abs api.icon, x:iconX, y:iconY, scale: iconScale
+    TRS.abs api.icon, x:iconX, y:iconY
     TRS.move api.text, textX, topBarHeight/2 + textRect.height/2 - 3
     SVG.attrs api.bg, width: buttonWidth
     TRS.move api.element, offsetX
     offsetX += buttonWidth
     api.setup? api.element
     PointerInput.addClick api.element, api.click if api.click?
+    PointerInput.addMove api.element, api.move if api.move?
+    PointerInput.addDown api.element, api.down if api.down?
+    PointerInput.addUp api.element, api.up if api.up?
+    PointerInput.addOver api.element, api.over if api.over?
+    PointerInput.addOut api.element, api.our if api.out?
   
   
   Make "TopBar", TopBar

@@ -84,5 +84,6 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
   
   window.addEventListener "keydown", keyDown
   window.addEventListener "keyup", keyUp
+  window.addEventListener "blur", ()-> KeyMe.pressing = {}
   
   Make "KeyMe", KeyMe

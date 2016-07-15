@@ -1,6 +1,7 @@
-Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Component, PointerInput, Reaction, Resize, SVG, TRS)->
+Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
+(      Component , PointerInput , Reaction , Resize , SVG , TRS)->
   topBarHeight = 48
-  buttonPad = 30
+  buttonPad = 20
   iconPad = 6
   
   requested = []
@@ -45,8 +46,8 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     TRS.move container, window.innerWidth/2 - offsetX/2
     instance.api.resize?() for instance in instances
     TRS.move menu.element, 0
-    TRS.move help.element, window.innerWidth - 133
-    TRS.move settings.element, window.innerWidth - 296
+    TRS.move help.element, window.innerWidth - 122
+    TRS.move settings.element, window.innerWidth - 264
     Make "TopBarReady" unless Take "TopBarReady"
   
   construct = (i, name, api)->
@@ -66,7 +67,7 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     instances[name] = instance unless custom
     
     # The api can disable these by setting the property to false, or providing its own values
-    api.bg ?= SVG.create "rect", api.element, class: "BG", height: topBarHeight
+    api.bg ?= SVG.create "rect", api.element, class: "BG", height: topBarHeight, fill: "transparent"
     api.icon ?= TRS SVG.clone source, api.element
     api.text ?= TRS SVG.create "text", api.element, "font-size": 14, fill: "#FFF", textContent: api.label or name.toUpperCase()
     

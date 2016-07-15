@@ -4,10 +4,7 @@
 Take ["Ease", "Tick"], (Ease, Tick)->
   tweens = []
   
-  Tween1 = (args..., tick)->
-    from = args[0] or 0
-    to   = args[1] or 1
-    time = args[2] or 1
+  Tween1 = (from, to, time, tick, next)->
     
     gc tick # Now is a great time to do some GC
     
@@ -15,6 +12,7 @@ Take ["Ease", "Tick"], (Ease, Tick)->
       return false if tween.pos >= 1
       return false if tween.cancelled
       return false if tween.tick is tick
+      return false if tween is next
       return true
     
     tweens.push tween =
@@ -26,13 +24,18 @@ Take ["Ease", "Tick"], (Ease, Tick)->
       pos: 0
       value: from
       delta: to - from
+      next: next
     tween # Composable
   
   Tick (t, dt)->
-    for tween in tweens when tween.pos < 1 and not tween.cancelled
-      tween.pos += dt / tween.time
-      tween.value = tween.from + tween.delta * Ease.cubic Math.min 1, tween.pos
-      tween.tick tween.value, tween
+    for tween in tweens when not tween.cancelled
+      if tween.pos < 1
+        tween.pos += dt / tween.time
+        tween.value = tween.from + tween.delta * Ease.cubic Math.min 1, tween.pos
+        tween.tick tween.value, tween
+      else if tween.next?
+        tweens.push tween.next
+        tween.next = null
   
   gc = (ticks...)->
     tweens = tweens.filter (tween)->

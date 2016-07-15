@@ -1,8 +1,7 @@
 # These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
 # They're not to be used by content, since they might endure breaking changes at any time.
 
-# We wait for the SVGReady event, fired by core/main.coffee, to tell us that it's safe to mutate the DOM.
-Take ["SVGReady"], ()->
+Take [], ()->
   
   root = document.rootElement
   defs = root.querySelector "defs"
@@ -13,8 +12,11 @@ Take ["SVGReady"], ()->
     textContent: true
     # additional props will be listed here as needed
   
+  # We wait for the SVGReady event, fired by core/main.coffee, to tell us that it's safe to mutate the DOM.
+  SVGReady = false
   
-  Make "SVG", SVG =
+  
+  SVG =
     root: root
     defs: defs
     
@@ -31,6 +33,7 @@ Take ["SVGReady"], ()->
     
     clone: (source, parent, attrs)->
       throw "Clone source is undefined in SVG.clone(source, parent, attrs)" unless source?
+      throw "SVG.clone() called before SVGReady" unless SVGReadyForMutation()
       elm = document.createElementNS svgNS, "g"
       SVG.attr elm, attr.name, attr.value for attr in source.attributes
       SVG.attrs elm, id: null
@@ -40,10 +43,12 @@ Take ["SVGReady"], ()->
       elm # Composable
     
     append: (parent, child)->
+      throw "SVG.append() called before SVGReady" unless SVGReadyForMutation()
       parent.appendChild child
       child # Composable
     
     prepend: (parent, child)->
+      throw "SVG.prepend() called before SVGReady" unless SVGReadyForMutation()
       if parent.hasChildNodes()
         parent.insertBefore child, parent.firstChild
       else
@@ -113,6 +118,7 @@ Take ["SVGReady"], ()->
       filter # Not Composable
   
   
+  
   createStops = (gradient, stops)->
     stops = if stops[0] instanceof Array then stops[0] else stops
     for stop, i in stops
@@ -122,3 +128,16 @@ Take ["SVGReady"], ()->
         { "stop-color": stop.color, offset: (100 * stop.offset) + "%" }
       SVG.create "stop", gradient, attrs
     null # Not Composable
+  
+  
+  SVGReadyForMutation = ()->
+    # We have to do some extra nonsense to check that SVGReady has been fired,
+    # because other systems that want to use us might have SVGReady fire for them
+    # before it fires for us. So, the first time we run, we'll do a synchronous
+    # take to make sure that SVGReady has indeed fired, and that we're not being
+    # called by a system too early in initialization (ie: before it's safe to
+    # mutate the DOM).
+    return SVGReady or (SVGReady = Take "SVGReady")
+  
+  
+  Make "SVG", SVG

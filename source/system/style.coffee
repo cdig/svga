@@ -1,4 +1,4 @@
-Take ["PureDom", "Pressure"], (PureDom, Pressure)->
+Take ["PureDom", "Pressure", "SVG"], (PureDom, Pressure, SVG)->
   Make "Style", Style = (scope)->
     element = scope.element
     styleCache = {}
@@ -64,19 +64,20 @@ Take ["PureDom", "Pressure"], (PureDom, Pressure)->
     
     
     scope.stroke = (color)->
-      path = element.querySelector("path")
-      use = element.querySelector("use")
-      if not path? and use?
-        useParent = PureDom.querySelectorParent(use, "g")
-        parent = PureDom.querySelectorParent(element, "svg")
-        defs = parent.querySelector("defs")
-        link = defs.querySelector(use.getAttribute("xlink:href"))
-        clone = link.cloneNode(true)
-        useParent.appendChild(clone)
-        useParent.removeChild(use)
-      path = element.querySelector("path")
-      if path?
-        path.setAttributeNS(null, "stroke", color)
+      SVG.attr element, "stroke", color
+      # path = element.querySelector("path")
+      # use = element.querySelector("use")
+      # if not path? and use?
+      #   useParent = PureDom.querySelectorParent(use, "g")
+      #   parent = PureDom.querySelectorParent(element, "svg")
+      #   defs = parent.querySelector("defs")
+      #   link = defs.querySelector(use.getAttribute("xlink:href"))
+      #   clone = link.cloneNode(true)
+      #   useParent.appendChild(clone)
+      #   useParent.removeChild(use)
+      # path = element.querySelector("path")
+      # if path?
+      #   path.setAttributeNS(null, "stroke", color)
     
     
     scope.fill = (color)->

@@ -1,7 +1,7 @@
-Take ["Component","PointerInput","Reaction","Resize","SVG","TopBar","TRS","Tween1"],
+Take ["Component","PointerInput","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
 (      Component , PointerInput , Reaction , Resize , SVG , TopBar , TRS , Tween1)->
   pad = 5
-  panelX = 1
+  panelX = 0
   instancesByNameByType = {}
   
   g = TRS SVG.create "g", SVG.root, class: "Controls", "font-size": 20, "text-anchor": "middle"
@@ -35,8 +35,8 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TopBar","TRS","Tween
     name = props.name
     type = props.type
     defn = Component.take "Control", type
-    if not name? then console.log(props); throw "^ You must include a \"name\" property when creating an SVGA.control instance"
-    if not type? then console.log(props); throw "^ You must include a \"type\" property when creating an SVGA.control instance"
+    if not name? then console.log(props); throw "^ You must include a \"name\" property when creating a Control instance"
+    if not type? then console.log(props); throw "^ You must include a \"type\" property when creating a Control instance"
     if not defn? then console.log(props); throw "^ Unknown Control type: \"#{type}\". First, check for typos. If everything looks good, this Control may have failed to load on time, which would mean there's a bug in the Control component."
     instancesByName = instancesByNameByType[type] ?= {}
     if not instancesByName[name]
@@ -57,12 +57,12 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TopBar","TRS","Tween
   
   Reaction "Schematic:Show", ()->
     # SVG.attrs g, opacity: 0
-    Tween1 1, -1, 0.7, tick
+    Tween1 panelX, -1, 0.7, tick
     Control.panelShowing = false
   
   Reaction "Schematic:Hide", ()->
     # SVG.attrs g, opacity: 1
-    Tween1 -1, 1, 0.7, tick
+    Tween1 panelX, 1, 0.7, tick
     Control.panelShowing = true
   
   Reaction "ScopeReady", ()->

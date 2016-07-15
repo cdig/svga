@@ -1,4 +1,4 @@
-Take "DOMContentLoaded", ()->
+Take ["PureDom", "SVG", "DOMContentLoaded"], (PureDom, SVG)->
   deprecations = ["controlPanel", "ctrlPanel", "navOverlay"]
   
   Make "SVGCrawler", SVGCrawler = (elm)->
@@ -9,12 +9,20 @@ Take "DOMContentLoaded", ()->
     
     childNodes = Array.prototype.slice.call elm.childNodes
     
-    for childElm in childNodes when childElm instanceof SVGGElement
+    for childElm in childNodes
       if childElm.id in deprecations
         console.log "##{childElm.id} is obsolete. Please remove it from your FLA and re-export this SVG."
         elm.removeChild(childElm)
-      else
+      else if childElm instanceof SVGGElement
         target.sub.push SVGCrawler childElm
+      else if childElm instanceof SVGUseElement
+        useParent = childElm.parentNode
+        link = SVG.defs.querySelector childElm.getAttribute "xlink:href"
+        clone = link.cloneNode true
+        useParent.replaceChild clone, childElm
+
+        # if clone instanceof SVGGElement
+        #   target.sub.push SVGCrawler clone
         
     
     return target

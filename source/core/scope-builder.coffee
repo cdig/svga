@@ -22,18 +22,37 @@ Take ["Style","Symbol","Transform"],
     
     scope.children ?= []
     scope.element ?= element
-    Object.defineProperty scope, "FlowArrows", get: ()-> throw "root.FlowArrows has been removed. Please use SVGA.arrows instead."
+    scope.parent ?= parentScope
+    Object.defineProperty scope, "FlowArrows", get: ()-> throw "root.FlowArrows has been removed. Please use FlowArrows instead."
     scope.getElement ?= ()-> throw "@getElement() has been removed. Please use @element instead."
     Style scope
     Transform scope
     fn scope for fn in processors
     
-    if not parentScope? # If there's no parent, this scope is the root
-      scope.root ?= scope
-    else
+    if parentScope?
       scope.root ?= parentScope.root
-      parentScope[instanceName] ?= scope if instanceName isnt "DefaultElement"
+      
+      name = if instanceName? and instanceName isnt "DefaultElement"
+        instanceName
+      else
+        "child" + parentScope.children.length
+      
+      if not element.getAttributeNS(null, "class")?
+        element.setAttributeNS null, "class", name
+      
+      if parentScope.name is "mainStage"
+        console.log name
+      
+      throw "Duplicate instance name detected in #{parentScope.name}: #{name}" if parentScope[name]?
+      parentScope[name] = scope
       parentScope.children.push scope
+      
+      # These help debugging
+      scope.instanceName = instanceName
+      scope.name = name
+        
+    else # If there's no parent, this scope is the root
+      scope.root ?= scope
     
     scope # Composable
   

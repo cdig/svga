@@ -1,7 +1,6 @@
 Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
 (      Component , PointerInput , Reaction , Resize , SVG , TRS)->
   topBarHeight = 48
-  buttonPad = 20
   iconPad = 6
   
   requested = []
@@ -46,8 +45,8 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
     TRS.move container, window.innerWidth/2 - offsetX/2
     instance.api.resize?() for instance in instances
     TRS.move menu.element, 0
-    TRS.move help.element, window.innerWidth - 122
-    TRS.move settings.element, window.innerWidth - 264
+    TRS.move help.element, window.innerWidth - 92
+    TRS.move settings.element, window.innerWidth - 214
     Make "TopBarReady" unless Take "TopBarReady"
   
   construct = (i, name, api)->
@@ -57,6 +56,8 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
     throw "TopBar icon not found for id: ##{name}" if not source?
     
     custom = i is -1
+    
+    buttonPad = if custom then 10 else 20
     
     if custom
       api.element = TRS SVG.create "g", topBar, class: "Element", ui: true

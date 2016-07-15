@@ -309,11 +309,13 @@
     avgLength = 10;
     avgList = [];
     total = 0;
-    text = SVG.create("text", SVG.root);
+    text = SVG.create("text", SVG.root, {
+      fill: "#666"
+    });
     Resize(function() {
       return SVG.attrs(text, {
-        x: 7,
-        y: 68
+        x: 10,
+        y: 70
       });
     });
     return Tick(function(time, dt) {
@@ -334,9 +336,8 @@
   });
 
   Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, PointerInput, Reaction, Resize, SVG, TRS) {
-    var TopBar, bg, buttonPad, construct, container, help, iconPad, instances, menu, offsetX, requested, resize, settings, topBar, topBarHeight;
+    var TopBar, bg, construct, container, help, iconPad, instances, menu, offsetX, requested, resize, settings, topBar, topBarHeight;
     topBarHeight = 48;
-    buttonPad = 20;
     iconPad = 6;
     requested = [];
     instances = {};
@@ -393,14 +394,14 @@
         }
       }
       TRS.move(menu.element, 0);
-      TRS.move(help.element, window.innerWidth - 122);
-      TRS.move(settings.element, window.innerWidth - 264);
+      TRS.move(help.element, window.innerWidth - 92);
+      TRS.move(settings.element, window.innerWidth - 214);
       if (!Take("TopBarReady")) {
         return Make("TopBarReady");
       }
     };
     construct = function(i, name, api) {
-      var buttonWidth, custom, iconRect, iconX, iconY, instance, source, textRect, textX;
+      var buttonPad, buttonWidth, custom, iconRect, iconX, iconY, instance, source, textRect, textX;
       if (api == null) {
         throw "Unknown TopBar button name: " + name;
       }
@@ -409,6 +410,7 @@
         throw "TopBar icon not found for id: #" + name;
       }
       custom = i === -1;
+      buttonPad = custom ? 10 : 20;
       if (custom) {
         api.element = TRS(SVG.create("g", topBar, {
           "class": "Element",
@@ -488,70 +490,6 @@
       return instance;
     };
     return Make("TopBar", TopBar);
-  });
-
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.element.createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.element;
-    maskedElement = maskedInstance.element;
-    rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    return maskedParent.setAttribute("style", newStyle);
   });
 
   Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
@@ -772,7 +710,9 @@
       }
     });
     Reaction("Schematic:Hide", function() {
-      return enableAll(animateMode = true);
+      return setTimeout(function() {
+        return enableAll(animateMode = true);
+      });
     });
     Reaction("Schematic:Show", function() {
       return enableAll(animateMode = false);
@@ -1062,6 +1002,70 @@
         return results;
       });
     });
+  });
+
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.element.createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.element;
+    maskedElement = maskedInstance.element;
+    rootElement = root.element;
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
+    } else {
+      newStyle = "mask: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    return maskedParent.setAttribute("style", newStyle);
   });
 
   Take(["Symbol"], function(Symbol) {

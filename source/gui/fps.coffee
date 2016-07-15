@@ -6,10 +6,10 @@ Take ["Config", "Resize", "SVG", "Tick", "TopBarReady"], (Config, Resize, SVG, T
   avgLength = 10 # Average of the last 10 frames
   avgList = []
   total = 0
-  text = SVG.create "text", SVG.root
+  text = SVG.create "text", SVG.root, fill: "#666"
   
   Resize ()->
-    SVG.attrs text, x: 7, y: 68
+    SVG.attrs text, x: 10, y: 70
   
   Tick (time, dt)->
     avgList.push 1/dt

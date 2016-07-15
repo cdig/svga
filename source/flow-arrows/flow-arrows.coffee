@@ -16,7 +16,7 @@ Take ["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick
           s = Config.SCALE
           set.update f, s
   
-  Reaction "Schematic:Hide", ()-> enableAll animateMode = true
+  Reaction "Schematic:Hide", ()-> setTimeout ()-> enableAll animateMode = true # Wait one extra tick, to give the creator's symbol code a chance to init all the appropriate flow/pressure values before we appear
   Reaction "Schematic:Show", ()-> enableAll animateMode = false
   Reaction "FlowArrows:Show", ()-> enableAll visible = true
   Reaction "FlowArrows:Hide", ()-> enableAll visible = false

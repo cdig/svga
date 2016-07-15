@@ -4,10 +4,10 @@ Take ["Config", "Resize", "SVG", "Tick", "TopBarReady"], (Config, Resize, SVG, T
   avgLength = 10
   avgList = []
   total = 0
-  text = SVG.create "text", SVG.root, fill: "#FFF"
+  text = SVG.create "text", SVG.root
   
   Resize ()->
-    SVG.attrs text, x: window.innerWidth - 65, y: 30
+    SVG.attrs text, x: 10, y: 68
   
   Tick (time, dt)->
     avgList.push 1/dt

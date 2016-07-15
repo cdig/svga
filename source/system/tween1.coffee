@@ -9,7 +9,8 @@ Take ["Ease", "Tick"], (Ease, Tick)->
     to   = args[1] or 1
     time = args[2] or 1
     
-    # This is when we do our GC, rather than doing it every frame.
+    gc tick # Now is a great time to do some GC
+    
     tweens = tweens.filter (tween)->
       return false if tween.pos >= 1
       return false if tween.cancelled
@@ -27,13 +28,21 @@ Take ["Ease", "Tick"], (Ease, Tick)->
       delta: to - from
     tween # Composable
   
-  Tween1.cancel = (tween)->
-    tween?.cancelled = true
-  
   Tick (t, dt)->
     for tween in tweens when tween.pos < 1 and not tween.cancelled
       tween.pos += dt / tween.time
       tween.value = tween.from + tween.delta * Ease.cubic Math.min 1, tween.pos
       tween.tick tween.value, tween
   
+  gc = (ticks...)->
+    tweens = tweens.filter (tween)->
+      return false if tween.pos >= 1
+      return false if tween.cancelled
+      return false if tween.tick in ticks
+      return true
+  
+  
+  # You can pass as many callbacks as you want to this. We'll stop calling them.
+  Tween1.cancel = gc
+    
   Make "Tween1", Tween1

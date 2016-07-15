@@ -3,8 +3,11 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
   buttonPad = 30
   iconPad = 6
   
-  requested = ["Menu", "Settings", "Help"] # We always include the Menu button
+  requested = []
   instances = {}
+  menu = null
+  settings = null
+  help = null
   offsetX = 0
   
   
@@ -29,6 +32,9 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
   Reaction "ScopeReady", ()->
     definitions = Component.take "TopBar"
     construct i, name, definitions[name] for name, i in requested
+    menu = construct -1, "Menu", definitions["Menu"]
+    settings = construct -1, "Settings", definitions["Settings"]
+    help = construct -1, "Help", definitions["Help"]
     Resize resize
   
   Take "ControlsReady", ()->
@@ -38,8 +44,10 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     SVG.attrs bg, width: window.innerWidth
     TRS.move container, window.innerWidth/2 - offsetX/2
     instance.api.resize?() for instance in instances
+    TRS.move menu.element, 0
+    TRS.move help.element, window.innerWidth - 133
+    TRS.move settings.element, window.innerWidth - 296
     Make "TopBarReady" unless Take "TopBarReady"
-  
   
   construct = (i, name, api)->
     throw "Unknown TopBar button name: #{name}" unless api?
@@ -47,8 +55,15 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     source = document.getElementById(name.toLowerCase())
     throw "TopBar icon not found for id: ##{name}" if not source?
     
-    api.element = TRS SVG.create "g", container, class: "Element", ui: true
-    instances[name] = element:api.element, i:i, name:name, api:api
+    custom = i is -1
+    
+    if custom
+      api.element = TRS SVG.create "g", topBar, class: "Element", ui: true
+    else
+      api.element = TRS SVG.create "g", container, class: "Element", ui: true
+    
+    instance = element:api.element, i:i, name:name, api:api
+    instances[name] = instance unless custom
     
     # The api can disable these by setting the property to false, or providing its own values
     api.bg ?= SVG.create "rect", api.element, class: "BG", height: topBarHeight
@@ -64,8 +79,9 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     TRS.abs api.icon, x:iconX, y:iconY
     TRS.move api.text, textX, topBarHeight/2 + textRect.height/2 - 3
     SVG.attrs api.bg, width: buttonWidth
-    TRS.move api.element, offsetX
-    offsetX += buttonWidth
+    if not custom
+      TRS.move api.element, offsetX
+      offsetX += buttonWidth
     api.setup? api.element
     PointerInput.addClick api.element, api.click if api.click?
     PointerInput.addMove api.element, api.move if api.move?
@@ -73,6 +89,8 @@ Take ["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS"], (Compone
     PointerInput.addUp api.element, api.up if api.up?
     PointerInput.addOver api.element, api.over if api.over?
     PointerInput.addOut api.element, api.our if api.out?
+    
+    instance # Composable
   
   
   Make "TopBar", TopBar

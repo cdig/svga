@@ -56,12 +56,10 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TopBar","TRS","Tween
     positionPanel()
   
   Reaction "Schematic:Show", ()->
-    # SVG.attrs g, opacity: 0
     Tween1 panelX, -1, 0.7, tick
     Control.panelShowing = false
   
   Reaction "Schematic:Hide", ()->
-    # SVG.attrs g, opacity: 1
     Tween1 panelX, 1, 0.7, tick
     Control.panelShowing = true
   

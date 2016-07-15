@@ -810,17 +810,19 @@
   });
 
   Take(["Config", "Resize", "SVG", "Tick", "TopBarReady"], function(Config, Resize, SVG, Tick) {
-    var avgLength, avgList, text, total;
+    var avgLength, avgList, count, freq, text, total;
     if (!Config("dev")) {
       return;
     }
+    count = 0;
+    freq = 1;
     avgLength = 10;
     avgList = [];
     total = 0;
     text = SVG.create("text", SVG.root);
     Resize(function() {
       return SVG.attrs(text, {
-        x: 10,
+        x: 7,
         y: 68
       });
     });
@@ -832,9 +834,12 @@
         total -= avgList.shift();
       }
       fps = Math.min(60, Math.ceil(total / avgList.length));
-      return SVG.attrs(text, {
-        textContent: "FPS: " + fps
-      });
+      if (count++ / fps > freq) {
+        count = 0;
+        return SVG.attrs(text, {
+          textContent: "FPS: " + fps
+        });
+      }
     });
   });
 

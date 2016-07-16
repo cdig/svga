@@ -16,8 +16,8 @@ Take ["RAF", "SVG"], (RAF, SVG)->
 
   
   TRS.abs = (elm, attrs)->
-    if not elm?._trs? then err elm, "Non-TRS element passed to TRS.abs(elm, attrs)"
-    if not attrs? then err elm, "Null attrs passed to TRS.abs(elm, attrs)"
+    if not elm?._trs? then console.log elm; throw "^ Non-TRS element passed to TRS.abs(elm, attrs)"
+    if not attrs? then console.log elm; throw "^ Null attrs passed to TRS.abs(elm, attrs)"
     # The order in which these are applied is super important.
     # If we change the order, it'll change the outcome of everything that uses this to do more than one operation per call.
     attrs.sx = attrs.sy = attrs.scale if attrs.scale?
@@ -41,8 +41,8 @@ Take ["RAF", "SVG"], (RAF, SVG)->
     elm # Composable
   
   TRS.rel = (elm, attrs)->
-    if not elm?._trs? then err elm, "Non-TRS element passed to TRS.abs(elm, attrs)"
-    if not attrs? then err elm, "Null attrs passed to TRS.abs(elm, attrs)"
+    if not elm?._trs? then console.log elm; throw "^ Non-TRS element passed to TRS.abs(elm, attrs)"
+    if not attrs? then console.log elm; throw "^ Null attrs passed to TRS.abs(elm, attrs)"
     # The order in which these are applied is super important.
     # If we change the order, it'll change the outcome of everything that uses this to do more than one operation per call.
     elm._trs.x += attrs.x if attrs.x?
@@ -63,19 +63,19 @@ Take ["RAF", "SVG"], (RAF, SVG)->
     elm # Composable
   
   TRS.move = (elm, x = 0, y = 0)->
-    if not elm._trs? then err elm, "Non-TRS element passed to TRS.move"
+    if not elm._trs? then console.log elm; throw "^ Non-TRS element passed to TRS.move"
     TRS.abs elm, x:x, y:y # Composable
   
   TRS.rotate = (elm, r = 0)->
-    if not elm._trs? then err elm, "Non-TRS element passed to TRS.rotate"
+    if not elm._trs? then console.log elm; throw "^ Non-TRS element passed to TRS.rotate"
     TRS.abs elm, r:r # Composable
   
   TRS.scale = (elm, sx = 1, sy = sx)->
-    if not elm._trs? then err elm, "Non-TRS element passed to TRS.scale"
+    if not elm._trs? then console.log elm; throw "^ Non-TRS element passed to TRS.scale"
     TRS.abs elm, sx:sx, sy:sy # Composable
   
   TRS.origin = (elm, ox = 0, oy = 0)->
-    if not elm._trs? then err elm, "Non-TRS element passed to TRS.origin"
+    if not elm._trs? then console.log elm; throw "^ Non-TRS element passed to TRS.origin"
     TRS.abs elm, ox:ox, oy:oy # Composable
   
   

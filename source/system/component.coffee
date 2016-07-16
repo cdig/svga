@@ -1,4 +1,4 @@
-Take ["Reaction"], (Reaction)->
+do ()->
   definitions = {}
   instantiatedStarted = false
   

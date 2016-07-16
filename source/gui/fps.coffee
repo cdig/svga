@@ -1,7 +1,7 @@
 Take ["Config", "Resize", "SVG", "Tick", "TopBarReady"], (Config, Resize, SVG, Tick)->
   return unless Config "dev"
   
-  count = 0
+  count = 60 # Update immediately
   freq = 1 # Update every n seconds
   avgLength = 10 # Average of the last 10 frames
   avgList = []
@@ -16,6 +16,6 @@ Take ["Config", "Resize", "SVG", "Tick", "TopBarReady"], (Config, Resize, SVG, T
     total += 1/dt
     total -= avgList.shift() if avgList.length > avgLength
     fps = Math.min 60, Math.ceil total/avgList.length
-    if count++ / fps > freq
+    if ++count / fps >= freq
       count = 0
       SVG.attrs text, textContent: "FPS: " + fps

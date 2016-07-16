@@ -1,8 +1,5 @@
-Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
-(      Component , PointerInput , Reaction , Resize , SVG , TRS)->
-  topBarHeight = 48
-  iconPad = 6
-  
+Take ["Component","GUI","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
+(      Component , GUI , PointerInput , Reaction , Resize , SVG , TRS)->
   requested = []
   instances = {}
   menu = null
@@ -12,9 +9,12 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
   
   
   topBar = SVG.create "g", SVG.root, class: "TopBar"
-  bg = SVG.create "rect", topBar, height: 48, fill: "url(#TopBarGradient)"
+  bg = SVG.create "rect", topBar, height: GUI.TopBar.height, fill: "url(#TopBarGradient)"
   SVG.createGradient "TopBarGradient", false, "#35488d", "#5175bd", "#35488d"
   container = TRS SVG.create "g", topBar, class: "Elements"
+    
+  # Place us above the click-to-focus element
+  Reaction "ScopeReady", ()-> SVG.append SVG.root, topBar
   
   
   TopBar = (args...)->
@@ -26,7 +26,7 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
     else
       requested.push args...
   
-  TopBar.height = topBarHeight
+  TopBar.height = GUI.TopBar.height
 
   
   Reaction "ScopeReady", ()->
@@ -37,16 +37,13 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
     help = construct -1, "Help", definitions["Help"]
     Resize resize
   
-  Take "ControlsReady", ()->
-    SVG.append SVG.root, topBar # Put the topbar on top of the Control Panel
-  
   resize = ()->
     SVG.attrs bg, width: window.innerWidth
     TRS.move container, window.innerWidth/2 - offsetX/2
     instance.api.resize?() for instance in instances
     TRS.move menu.element, 0
-    TRS.move help.element, window.innerWidth - 92
-    TRS.move settings.element, window.innerWidth - 214
+    TRS.move help.element, window.innerWidth - GUI.TopBar.Help.inset
+    TRS.move settings.element, window.innerWidth - GUI.TopBar.Settings.inset
     Make "TopBarReady" unless Take "TopBarReady"
   
   construct = (i, name, api)->
@@ -57,7 +54,7 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
     
     custom = i is -1
     
-    buttonPad = if custom then 10 else 20
+    buttonPad = if custom then GUI.TopBar.buttonPadCustom else GUI.TopBar.buttonPadStandard
     
     if custom
       api.element = TRS SVG.create "g", topBar, class: "Element", ui: true
@@ -68,7 +65,7 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
     instances[name] = instance unless custom
     
     # The api can disable these by setting the property to false, or providing its own values
-    api.bg ?= SVG.create "rect", api.element, class: "BG", height: topBarHeight, fill: "transparent"
+    api.bg ?= SVG.create "rect", api.element, class: "BG", height: GUI.TopBar.height, fill: "transparent"
     api.icon ?= TRS SVG.clone source, api.element
     api.text ?= TRS SVG.create "text", api.element, "font-size": 14, fill: "#FFF", textContent: api.label or name.toUpperCase()
     
@@ -76,10 +73,10 @@ Take ["Component","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
     textRect = api.text.getBoundingClientRect()
     iconX = buttonPad
     iconY = 0
-    textX = buttonPad + iconRect.width + iconPad
+    textX = buttonPad + iconRect.width + GUI.TopBar.iconPad
     buttonWidth = textX + textRect.width + buttonPad
     TRS.abs api.icon, x:iconX, y:iconY
-    TRS.move api.text, textX, topBarHeight/2 + textRect.height/2 - 3
+    TRS.move api.text, textX, GUI.TopBar.height/2 + textRect.height/2 - 3
     SVG.attrs api.bg, width: buttonWidth
     if not custom
       TRS.move api.element, offsetX

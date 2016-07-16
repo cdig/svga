@@ -1,5 +1,5 @@
-Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","Tween"],
-(      Control , KeyMe , Reaction , RAF , Resize , root , SVG , TopBar , TRS , Tween)->
+Take ["GUI","KeyMe","Reaction","RAF","Resize","root","SVG","TRS","Tween"],
+(      GUI , KeyMe , Reaction , RAF , Resize , root , SVG , TRS , Tween)->
   minVel = 0.1
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
   minZoom = 0
@@ -48,12 +48,12 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
     Make "NavReady"
   
   resize = ()->
-    width = window.innerWidth - Control.panelWidth
-    height = window.innerHeight - TopBar.height
+    width = window.innerWidth - GUI.ControlPanel.width
+    height = window.innerHeight - GUI.TopBar.height
     wFrac = width / initialSize.width
     hFrac = height / initialSize.height
     base.x = width/2
-    base.y = TopBar.height + height/2
+    base.y = GUI.TopBar.height + height/2
     base.z = .9 * Math.min wFrac, hFrac
     TRS.abs zoom, x: base.x, y: base.y, scale: base.z
     run()
@@ -196,7 +196,7 @@ Take ["Control","KeyMe","Reaction","RAF","Resize","root","SVG","TopBar","TRS","T
   
   
   eventInside = (x, y)->
-    panelHidden = !Control.panelShowing
-    insidePanel = x < window.innerWidth - Control.panelWidth
-    insideTopBar = y > TopBar.height
+    panelHidden = false # !Control.panelShowing # TODO
+    insidePanel = x < window.innerWidth - GUI.ControlPanel.width
+    insideTopBar = y > GUI.TopBar.height
     return insideTopBar and (panelHidden or insidePanel)

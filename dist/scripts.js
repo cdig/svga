@@ -14,8 +14,9 @@
       Make("root", rootScope);
       Action("setup");
       Action("ScopeReady");
-      return Take(["ControlsReady", "TopBarReady", "NavReady"], function() {
-        return svg.style.opacity = 1;
+      return Take(["TopBarReady", "NavReady"], function() {
+        svg.style.opacity = 1;
+        return Action("Schematic:Hide");
       });
     });
   });
@@ -86,9 +87,6 @@
         if (element.getAttributeNS(null, "class") == null) {
           element.setAttributeNS(null, "class", name);
         }
-        if (parentScope.name === "mainStage") {
-          console.log(name);
-        }
         if (parentScope[name] != null) {
           throw "Duplicate instance name detected in " + parentScope.name + ": " + name;
         }
@@ -144,352 +142,6 @@
       }
       return target;
     });
-  });
-
-  Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
-    var g, hide, show;
-    g = TRS(SVG.create("g", SVG.root));
-    SVG.create("rect", g, {
-      x: -200,
-      y: -30,
-      width: 400,
-      height: 60,
-      rx: 30,
-      ry: 30,
-      fill: "#222",
-      "fill-opacity": 0.9
-    });
-    SVG.create("text", g, {
-      y: 15,
-      textContent: "Click To Focus",
-      "font-size": 20,
-      fill: "#FFF",
-      "alignment-baseline": "middle",
-      "text-anchor": "middle"
-    });
-    show = function() {
-      return SVG.attrs(g, {
-        style: "display: block"
-      });
-    };
-    hide = function() {
-      return SVG.attrs(g, {
-        style: "display: none"
-      });
-    };
-    Resize(function() {
-      return TRS.abs(g, {
-        x: window.innerWidth / 2,
-        y: TopBar.height
-      });
-    });
-    window.addEventListener("focus", hide);
-    window.addEventListener("touchstart", hide);
-    window.addEventListener("blur", show);
-    show();
-    return window.focus();
-  });
-
-  Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween1", "SVGReady"], function(Component, PointerInput, Reaction, Resize, SVG, TopBar, TRS, Tween1) {
-    var Control, bg, g, instancesByNameByType, instantiate, pad, panelX, positionPanel, resize, tick;
-    pad = 5;
-    panelX = 0;
-    instancesByNameByType = {};
-    g = TRS(SVG.create("g", SVG.root, {
-      "class": "Controls",
-      "font-size": 20,
-      "text-anchor": "middle"
-    }));
-    bg = SVG.create("rect", g, {
-      "class": "BG"
-    });
-    Control = function() {
-      var args;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      if (typeof args[0] === "string") {
-        return Component.make.apply(Component, ["Control"].concat(slice.call(args)));
-      } else {
-        return instantiate.apply(null, args);
-      }
-    };
-    Control.panelWidth = 0;
-    Control.panelShowing = false;
-    resize = function() {
-      var control, height, instancesByName, name, offset, panelWidth, results, type;
-      panelWidth = Control.panelWidth = Math.ceil(3 * Math.sqrt(window.innerWidth));
-      SVG.attr(bg, "width", panelWidth);
-      SVG.attr(bg, "height", window.innerHeight - TopBar.height);
-      positionPanel();
-      offset = pad;
-      results = [];
-      for (type in instancesByNameByType) {
-        instancesByName = instancesByNameByType[type];
-        results.push((function() {
-          var results1;
-          results1 = [];
-          for (name in instancesByName) {
-            control = instancesByName[name];
-            height = control.api.resize(panelWidth - pad * 2);
-            if (typeof height !== "number") {
-              console.log(control);
-              throw "Control api.resize() function must return a height";
-            }
-            TRS.move(control.element, pad, offset);
-            results1.push(offset += height + pad);
-          }
-          return results1;
-        })());
-      }
-      return results;
-    };
-    instantiate = function(props) {
-      var api, defn, element, instancesByName, name, type;
-      name = props.name;
-      type = props.type;
-      defn = Component.take("Control", type);
-      if (name == null) {
-        console.log(props);
-        throw "^ You must include a \"name\" property when creating a Control instance";
-      }
-      if (type == null) {
-        console.log(props);
-        throw "^ You must include a \"type\" property when creating a Control instance";
-      }
-      if (defn == null) {
-        console.log(props);
-        throw "^ Unknown Control type: \"" + type + "\". First, check for typos. If everything looks good, this Control may have failed to load on time, which would mean there's a bug in the Control component.";
-      }
-      instancesByName = instancesByNameByType[type] != null ? instancesByNameByType[type] : instancesByNameByType[type] = {};
-      if (!instancesByName[name]) {
-        element = TRS(SVG.create("g", g, {
-          "class": name + " " + type,
-          ui: true
-        }));
-        api = defn(name, element);
-        if (typeof api.setup === "function") {
-          api.setup();
-        }
-        instancesByName[name] = {
-          element: element,
-          api: api
-        };
-      }
-      instancesByName[name].api.attach(props);
-      return instancesByName[name].api;
-    };
-    positionPanel = function() {
-      return TRS.move(g, window.innerWidth - Control.panelWidth * panelX, TopBar.height);
-    };
-    tick = function(v) {
-      panelX = v;
-      return positionPanel();
-    };
-    Reaction("Schematic:Show", function() {
-      Tween1(panelX, -1, 0.7, tick);
-      return Control.panelShowing = false;
-    });
-    Reaction("Schematic:Hide", function() {
-      Tween1(panelX, 1, 0.7, tick);
-      return Control.panelShowing = true;
-    });
-    Reaction("ScopeReady", function() {
-      Resize(resize);
-      return Make("ControlsReady");
-    });
-    return Make("Control", Control);
-  });
-
-  Take(["Config", "Resize", "SVG", "Tick", "TopBarReady"], function(Config, Resize, SVG, Tick) {
-    var avgLength, avgList, count, freq, text, total;
-    if (!Config("dev")) {
-      return;
-    }
-    count = 0;
-    freq = 1;
-    avgLength = 10;
-    avgList = [];
-    total = 0;
-    text = SVG.create("text", SVG.root, {
-      fill: "#666"
-    });
-    Resize(function() {
-      return SVG.attrs(text, {
-        x: 10,
-        y: 70
-      });
-    });
-    return Tick(function(time, dt) {
-      var fps;
-      avgList.push(1 / dt);
-      total += 1 / dt;
-      if (avgList.length > avgLength) {
-        total -= avgList.shift();
-      }
-      fps = Math.min(60, Math.ceil(total / avgList.length));
-      if (count++ / fps > freq) {
-        count = 0;
-        return SVG.attrs(text, {
-          textContent: "FPS: " + fps
-        });
-      }
-    });
-  });
-
-  Take(["Component", "PointerInput", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, PointerInput, Reaction, Resize, SVG, TRS) {
-    var TopBar, bg, construct, container, help, iconPad, instances, menu, offsetX, requested, resize, settings, topBar, topBarHeight;
-    topBarHeight = 48;
-    iconPad = 6;
-    requested = [];
-    instances = {};
-    menu = null;
-    settings = null;
-    help = null;
-    offsetX = 0;
-    topBar = SVG.create("g", SVG.root, {
-      "class": "TopBar"
-    });
-    bg = SVG.create("rect", topBar, {
-      height: 48,
-      fill: "url(#TopBarGradient)"
-    });
-    SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
-    container = TRS(SVG.create("g", topBar, {
-      "class": "Elements"
-    }));
-    TopBar = function() {
-      var args;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      if (typeof args[1] === "object") {
-        return Component.make.apply(Component, ["TopBar"].concat(slice.call(args)));
-      } else {
-        return requested.push.apply(requested, args);
-      }
-    };
-    TopBar.height = topBarHeight;
-    Reaction("ScopeReady", function() {
-      var definitions, i, len, m, name;
-      definitions = Component.take("TopBar");
-      for (i = m = 0, len = requested.length; m < len; i = ++m) {
-        name = requested[i];
-        construct(i, name, definitions[name]);
-      }
-      menu = construct(-1, "Menu", definitions["Menu"]);
-      settings = construct(-1, "Settings", definitions["Settings"]);
-      help = construct(-1, "Help", definitions["Help"]);
-      return Resize(resize);
-    });
-    Take("ControlsReady", function() {
-      return SVG.append(SVG.root, topBar);
-    });
-    resize = function() {
-      var base1, instance, len, m;
-      SVG.attrs(bg, {
-        width: window.innerWidth
-      });
-      TRS.move(container, window.innerWidth / 2 - offsetX / 2);
-      for (m = 0, len = instances.length; m < len; m++) {
-        instance = instances[m];
-        if (typeof (base1 = instance.api).resize === "function") {
-          base1.resize();
-        }
-      }
-      TRS.move(menu.element, 0);
-      TRS.move(help.element, window.innerWidth - 92);
-      TRS.move(settings.element, window.innerWidth - 214);
-      if (!Take("TopBarReady")) {
-        return Make("TopBarReady");
-      }
-    };
-    construct = function(i, name, api) {
-      var buttonPad, buttonWidth, custom, iconRect, iconX, iconY, instance, source, textRect, textX;
-      if (api == null) {
-        throw "Unknown TopBar button name: " + name;
-      }
-      source = document.getElementById(name.toLowerCase());
-      if (source == null) {
-        throw "TopBar icon not found for id: #" + name;
-      }
-      custom = i === -1;
-      buttonPad = custom ? 10 : 20;
-      if (custom) {
-        api.element = TRS(SVG.create("g", topBar, {
-          "class": "Element",
-          ui: true
-        }));
-      } else {
-        api.element = TRS(SVG.create("g", container, {
-          "class": "Element",
-          ui: true
-        }));
-      }
-      instance = {
-        element: api.element,
-        i: i,
-        name: name,
-        api: api
-      };
-      if (!custom) {
-        instances[name] = instance;
-      }
-      if (api.bg == null) {
-        api.bg = SVG.create("rect", api.element, {
-          "class": "BG",
-          height: topBarHeight,
-          fill: "transparent"
-        });
-      }
-      if (api.icon == null) {
-        api.icon = TRS(SVG.clone(source, api.element));
-      }
-      if (api.text == null) {
-        api.text = TRS(SVG.create("text", api.element, {
-          "font-size": 14,
-          fill: "#FFF",
-          textContent: api.label || name.toUpperCase()
-        }));
-      }
-      iconRect = api.icon.getBoundingClientRect();
-      textRect = api.text.getBoundingClientRect();
-      iconX = buttonPad;
-      iconY = 0;
-      textX = buttonPad + iconRect.width + iconPad;
-      buttonWidth = textX + textRect.width + buttonPad;
-      TRS.abs(api.icon, {
-        x: iconX,
-        y: iconY
-      });
-      TRS.move(api.text, textX, topBarHeight / 2 + textRect.height / 2 - 3);
-      SVG.attrs(api.bg, {
-        width: buttonWidth
-      });
-      if (!custom) {
-        TRS.move(api.element, offsetX);
-        offsetX += buttonWidth;
-      }
-      if (typeof api.setup === "function") {
-        api.setup(api.element);
-      }
-      if (api.click != null) {
-        PointerInput.addClick(api.element, api.click);
-      }
-      if (api.move != null) {
-        PointerInput.addMove(api.element, api.move);
-      }
-      if (api.down != null) {
-        PointerInput.addDown(api.element, api.down);
-      }
-      if (api.up != null) {
-        PointerInput.addUp(api.element, api.up);
-      }
-      if (api.over != null) {
-        PointerInput.addOver(api.element, api.over);
-      }
-      if (api.out != null) {
-        PointerInput.addOut(api.element, api.our);
-      }
-      return instance;
-    };
-    return Make("TopBar", TopBar);
   });
 
   Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
@@ -1004,6 +656,276 @@
     });
   });
 
+  Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
+    var g, hide, show;
+    g = TRS(SVG.create("g", SVG.root));
+    SVG.create("rect", g, {
+      x: -200,
+      y: -30,
+      width: 400,
+      height: 60,
+      rx: 30,
+      ry: 30,
+      fill: "#222",
+      "fill-opacity": 0.9
+    });
+    SVG.create("text", g, {
+      y: 15,
+      textContent: "Click To Focus",
+      "font-size": 20,
+      fill: "#FFF",
+      "alignment-baseline": "middle",
+      "text-anchor": "middle"
+    });
+    show = function() {
+      return SVG.attrs(g, {
+        style: "display: block"
+      });
+    };
+    hide = function() {
+      return SVG.attrs(g, {
+        style: "display: none"
+      });
+    };
+    Resize(function() {
+      return TRS.abs(g, {
+        x: window.innerWidth / 2,
+        y: TopBar.height
+      });
+    });
+    window.addEventListener("focus", hide);
+    window.addEventListener("touchstart", hide);
+    window.addEventListener("blur", show);
+    show();
+    return window.focus();
+  });
+
+  Take(["Config", "Resize", "SVG", "Tick", "TopBarReady"], function(Config, Resize, SVG, Tick) {
+    var avgLength, avgList, count, freq, text, total;
+    if (!Config("dev")) {
+      return;
+    }
+    count = 60;
+    freq = 1;
+    avgLength = 10;
+    avgList = [];
+    total = 0;
+    text = SVG.create("text", SVG.root, {
+      fill: "#666"
+    });
+    Resize(function() {
+      return SVG.attrs(text, {
+        x: 10,
+        y: 70
+      });
+    });
+    return Tick(function(time, dt) {
+      var fps;
+      avgList.push(1 / dt);
+      total += 1 / dt;
+      if (avgList.length > avgLength) {
+        total -= avgList.shift();
+      }
+      fps = Math.min(60, Math.ceil(total / avgList.length));
+      if (++count / fps >= freq) {
+        count = 0;
+        return SVG.attrs(text, {
+          textContent: "FPS: " + fps
+        });
+      }
+    });
+  });
+
+  (function() {
+    var GUI;
+    return Make("GUI", GUI = {
+      TopBar: {
+        buttonPadCustom: 6,
+        buttonPadStandard: 24,
+        height: 48,
+        iconPad: 6,
+        Help: {
+          inset: 80
+        },
+        Settings: {
+          inset: 192
+        }
+      },
+      ControlPanel: {
+        width: 192,
+        unit: 48
+      }
+    });
+  })();
+
+  Take(["Reaction", "root", "Tween1"], function(Reaction, root, Tween1) {
+    var tick;
+    tick = function(v) {
+      return root.mainStage.alpha = v;
+    };
+    Reaction("Settings:Show", function() {
+      return Tween1(root.mainStage.alpha, 0, 0.7, tick);
+    });
+    return Reaction("Settings:Hide", function() {
+      return Tween1(root.mainStage.alpha, 1, 0.7, tick);
+    });
+  });
+
+  Take(["Component", "GUI", "PointerInput", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, GUI, PointerInput, Reaction, Resize, SVG, TRS) {
+    var TopBar, bg, construct, container, help, instances, menu, offsetX, requested, resize, settings, topBar;
+    requested = [];
+    instances = {};
+    menu = null;
+    settings = null;
+    help = null;
+    offsetX = 0;
+    topBar = SVG.create("g", SVG.root, {
+      "class": "TopBar"
+    });
+    bg = SVG.create("rect", topBar, {
+      height: GUI.TopBar.height,
+      fill: "url(#TopBarGradient)"
+    });
+    SVG.createGradient("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
+    container = TRS(SVG.create("g", topBar, {
+      "class": "Elements"
+    }));
+    Reaction("ScopeReady", function() {
+      return SVG.append(SVG.root, topBar);
+    });
+    TopBar = function() {
+      var args;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (typeof args[1] === "object") {
+        return Component.make.apply(Component, ["TopBar"].concat(slice.call(args)));
+      } else {
+        return requested.push.apply(requested, args);
+      }
+    };
+    TopBar.height = GUI.TopBar.height;
+    Reaction("ScopeReady", function() {
+      var definitions, i, len, m, name;
+      definitions = Component.take("TopBar");
+      for (i = m = 0, len = requested.length; m < len; i = ++m) {
+        name = requested[i];
+        construct(i, name, definitions[name]);
+      }
+      menu = construct(-1, "Menu", definitions["Menu"]);
+      settings = construct(-1, "Settings", definitions["Settings"]);
+      help = construct(-1, "Help", definitions["Help"]);
+      return Resize(resize);
+    });
+    resize = function() {
+      var base1, instance, len, m;
+      SVG.attrs(bg, {
+        width: window.innerWidth
+      });
+      TRS.move(container, window.innerWidth / 2 - offsetX / 2);
+      for (m = 0, len = instances.length; m < len; m++) {
+        instance = instances[m];
+        if (typeof (base1 = instance.api).resize === "function") {
+          base1.resize();
+        }
+      }
+      TRS.move(menu.element, 0);
+      TRS.move(help.element, window.innerWidth - GUI.TopBar.Help.inset);
+      TRS.move(settings.element, window.innerWidth - GUI.TopBar.Settings.inset);
+      if (!Take("TopBarReady")) {
+        return Make("TopBarReady");
+      }
+    };
+    construct = function(i, name, api) {
+      var buttonPad, buttonWidth, custom, iconRect, iconX, iconY, instance, source, textRect, textX;
+      if (api == null) {
+        throw "Unknown TopBar button name: " + name;
+      }
+      source = document.getElementById(name.toLowerCase());
+      if (source == null) {
+        throw "TopBar icon not found for id: #" + name;
+      }
+      custom = i === -1;
+      buttonPad = custom ? GUI.TopBar.buttonPadCustom : GUI.TopBar.buttonPadStandard;
+      if (custom) {
+        api.element = TRS(SVG.create("g", topBar, {
+          "class": "Element",
+          ui: true
+        }));
+      } else {
+        api.element = TRS(SVG.create("g", container, {
+          "class": "Element",
+          ui: true
+        }));
+      }
+      instance = {
+        element: api.element,
+        i: i,
+        name: name,
+        api: api
+      };
+      if (!custom) {
+        instances[name] = instance;
+      }
+      if (api.bg == null) {
+        api.bg = SVG.create("rect", api.element, {
+          "class": "BG",
+          height: GUI.TopBar.height,
+          fill: "transparent"
+        });
+      }
+      if (api.icon == null) {
+        api.icon = TRS(SVG.clone(source, api.element));
+      }
+      if (api.text == null) {
+        api.text = TRS(SVG.create("text", api.element, {
+          "font-size": 14,
+          fill: "#FFF",
+          textContent: api.label || name.toUpperCase()
+        }));
+      }
+      iconRect = api.icon.getBoundingClientRect();
+      textRect = api.text.getBoundingClientRect();
+      iconX = buttonPad;
+      iconY = 0;
+      textX = buttonPad + iconRect.width + GUI.TopBar.iconPad;
+      buttonWidth = textX + textRect.width + buttonPad;
+      TRS.abs(api.icon, {
+        x: iconX,
+        y: iconY
+      });
+      TRS.move(api.text, textX, GUI.TopBar.height / 2 + textRect.height / 2 - 3);
+      SVG.attrs(api.bg, {
+        width: buttonWidth
+      });
+      if (!custom) {
+        TRS.move(api.element, offsetX);
+        offsetX += buttonWidth;
+      }
+      if (typeof api.setup === "function") {
+        api.setup(api.element);
+      }
+      if (api.click != null) {
+        PointerInput.addClick(api.element, api.click);
+      }
+      if (api.move != null) {
+        PointerInput.addMove(api.element, api.move);
+      }
+      if (api.down != null) {
+        PointerInput.addDown(api.element, api.down);
+      }
+      if (api.up != null) {
+        PointerInput.addUp(api.element, api.up);
+      }
+      if (api.over != null) {
+        PointerInput.addOver(api.element, api.over);
+      }
+      if (api.out != null) {
+        PointerInput.addOut(api.element, api.our);
+      }
+      return instance;
+    };
+    return Make("TopBar", TopBar);
+  });
+
   Take("SVG", function(SVG) {
     var Highlighter;
     return Make("Highlighter", Highlighter = {
@@ -1162,7 +1084,7 @@
     });
   })();
 
-  Take(["Reaction"], function(Reaction) {
+  (function() {
     var Component, definitions, instantiatedStarted;
     definitions = {};
     instantiatedStarted = false;
@@ -1186,7 +1108,7 @@
         }
       }
     });
-  });
+  })();
 
   (function() {
     var buildSubCache, cache, dispatchWithFn;
@@ -1478,7 +1400,7 @@
     return Make("KeyNames", KeyNames);
   })();
 
-  Take(["Control", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TopBar", "TRS", "Tween"], function(Control, KeyMe, Reaction, RAF, Resize, root, SVG, TopBar, TRS, Tween) {
+  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TRS", "Tween"], function(GUI, KeyMe, Reaction, RAF, Resize, root, SVG, TRS, Tween) {
     var accel, alreadyRan, base, cloneTouches, dblclick, decel, dist, distTo, distTouches, eventInside, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchEnd, touchMove, touchStart, touches, vel, wheel, zoom;
     minVel = 0.1;
     maxVel = {
@@ -1561,12 +1483,12 @@
     });
     resize = function() {
       var hFrac, height, wFrac, width;
-      width = window.innerWidth - Control.panelWidth;
-      height = window.innerHeight - TopBar.height;
+      width = window.innerWidth - GUI.ControlPanel.width;
+      height = window.innerHeight - GUI.TopBar.height;
       wFrac = width / initialSize.width;
       hFrac = height / initialSize.height;
       base.x = width / 2;
-      base.y = TopBar.height + height / 2;
+      base.y = GUI.TopBar.height + height / 2;
       base.z = .9 * Math.min(wFrac, hFrac);
       TRS.abs(zoom, {
         x: base.x,
@@ -1746,9 +1668,9 @@
     };
     return eventInside = function(x, y) {
       var insidePanel, insideTopBar, panelHidden;
-      panelHidden = !Control.panelShowing;
-      insidePanel = x < window.innerWidth - Control.panelWidth;
-      insideTopBar = y > TopBar.height;
+      panelHidden = false;
+      insidePanel = x < window.innerWidth - GUI.ControlPanel.width;
+      insideTopBar = y > GUI.TopBar.height;
       return insideTopBar && (panelHidden || insidePanel);
     };
   });
@@ -2008,7 +1930,7 @@
     });
   });
 
-  Take([], function() {
+  (function() {
     var SVG, SVGReady, SVGReadyForMutation, createStops, defs, props, root, svgNS, xlinkNS;
     root = document.rootElement;
     defs = root.querySelector("defs");
@@ -2114,7 +2036,7 @@
         return elm;
       },
       attr: function(elm, k, v) {
-        var ns;
+        var base1, ns;
         if (!elm) {
           throw "SVG.attr was called with a null element";
         }
@@ -2123,7 +2045,7 @@
           throw "SVG.attr requires a string as the second argument, got ^";
         }
         if (v === void 0) {
-          return elm.getAttribute(k);
+          return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
         }
         if (elm._SVG_attr == null) {
           elm._SVG_attr = {};
@@ -2241,7 +2163,7 @@
       return SVGReady || (SVGReady = Take("SVGReady"));
     };
     return Make("SVG", SVG);
-  });
+  })();
 
   (function() {
     var Symbol, byInstanceName, bySymbolName, tooLate;
@@ -2499,10 +2421,12 @@
     TRS.abs = function(elm, attrs) {
       var delta;
       if ((elm != null ? elm._trs : void 0) == null) {
-        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
+        console.log(elm);
+        throw "^ Non-TRS element passed to TRS.abs(elm, attrs)";
       }
       if (attrs == null) {
-        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
+        console.log(elm);
+        throw "^ Null attrs passed to TRS.abs(elm, attrs)";
       }
       if (attrs.scale != null) {
         attrs.sx = attrs.sy = attrs.scale;
@@ -2541,10 +2465,12 @@
     };
     TRS.rel = function(elm, attrs) {
       if ((elm != null ? elm._trs : void 0) == null) {
-        err(elm, "Non-TRS element passed to TRS.abs(elm, attrs)");
+        console.log(elm);
+        throw "^ Non-TRS element passed to TRS.abs(elm, attrs)";
       }
       if (attrs == null) {
-        err(elm, "Null attrs passed to TRS.abs(elm, attrs)");
+        console.log(elm);
+        throw "^ Null attrs passed to TRS.abs(elm, attrs)";
       }
       if (attrs.x != null) {
         elm._trs.x += attrs.x;
@@ -2584,7 +2510,8 @@
         y = 0;
       }
       if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.move");
+        console.log(elm);
+        throw "^ Non-TRS element passed to TRS.move";
       }
       return TRS.abs(elm, {
         x: x,
@@ -2596,7 +2523,8 @@
         r = 0;
       }
       if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.rotate");
+        console.log(elm);
+        throw "^ Non-TRS element passed to TRS.rotate";
       }
       return TRS.abs(elm, {
         r: r
@@ -2610,7 +2538,8 @@
         sy = sx;
       }
       if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.scale");
+        console.log(elm);
+        throw "^ Non-TRS element passed to TRS.scale";
       }
       return TRS.abs(elm, {
         sx: sx,
@@ -2625,7 +2554,8 @@
         oy = 0;
       }
       if (elm._trs == null) {
-        err(elm, "Non-TRS element passed to TRS.origin");
+        console.log(elm);
+        throw "^ Non-TRS element passed to TRS.origin";
       }
       return TRS.abs(elm, {
         ox: ox,
@@ -2712,35 +2642,32 @@
   Take(["Ease", "Tick"], function(Ease, Tick) {
     var Tween1, gc, tweens;
     tweens = [];
-    Tween1 = function(from, to, time, tick, next) {
+    Tween1 = function(from, to, time, opts, next) {
       var tween;
-      gc(tick);
-      tweens = tweens.filter(function(tween) {
-        if (tween.pos >= 1) {
-          return false;
-        }
-        if (tween.cancelled) {
-          return false;
-        }
-        if (tween.tick === tick) {
-          return false;
-        }
-        if (tween === next) {
-          return false;
-        }
-        return true;
-      });
-      tweens.push(tween = {
-        from: from,
-        to: to,
-        time: time,
-        tick: tick,
-        cancelled: false,
-        pos: 0,
-        value: from,
-        delta: to - from,
-        next: next
-      });
+      if (typeof opts === "function") {
+        tween = {
+          tick: opts
+        };
+      } else {
+        tween = opts;
+      }
+      tween.from = from;
+      tween.to = to;
+      tween.time = time;
+      if (next != null) {
+        tween.next = next;
+      }
+      if (tween.pos == null) {
+        tween.pos = 0;
+      }
+      if (tween.ease == null) {
+        tween.ease = "easeInOut";
+      }
+      tween.value = 0;
+      tween.delta = to - from;
+      tween.cancelled = false;
+      gc(tween.tick, tween.next);
+      tweens.push(tween);
       return tween;
     };
     Tick(function(t, dt) {
@@ -2763,18 +2690,18 @@
       }
       return results;
     });
-    gc = function() {
-      var ticks;
-      ticks = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+    gc = function(tick, next) {
       return tweens = tweens.filter(function(tween) {
-        var ref;
         if (tween.pos >= 1) {
           return false;
         }
         if (tween.cancelled) {
           return false;
         }
-        if (ref = tween.tick, indexOf.call(ticks, ref) >= 0) {
+        if (tween.tick === tick) {
+          return false;
+        }
+        if ((next != null) && tween === next) {
           return false;
         }
         return true;
@@ -2782,6 +2709,101 @@
     };
     Tween1.cancel = gc;
     return Make("Tween1", Tween1);
+  });
+
+  Take(["Component", "ControlPanelView"], function(Component, ControlPanelView) {
+    var instancesByNameByType, instantiate;
+    instancesByNameByType = {};
+    Make("Control", function() {
+      var args;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (typeof args[0] === "string") {
+        return Component.make.apply(Component, ["Control"].concat(slice.call(args)));
+      } else {
+        return instantiate.apply(null, args);
+      }
+    });
+    return instantiate = function(props) {
+      var api, defn, element, instancesByName, name, type;
+      name = props.name;
+      type = props.type;
+      defn = Component.take("Control", type);
+      if (name == null) {
+        console.log(props);
+        throw "^ You must include a \"name\" property when creating a Control instance";
+      }
+      if (type == null) {
+        console.log(props);
+        throw "^ You must include a \"type\" property when creating a Control instance";
+      }
+      if (defn == null) {
+        console.log(props);
+        throw "^ Unknown Control type: \"" + type + "\". First, check for typos. If everything looks good, this Control may have failed to load on time, which would mean there's a bug in the Control component.";
+      }
+      instancesByName = instancesByNameByType[type] != null ? instancesByNameByType[type] : instancesByNameByType[type] = {};
+      if (!instancesByName[name]) {
+        element = ControlPanelView.createElement(name, type);
+        api = defn(name, element);
+        if (typeof api.setup === "function") {
+          api.setup();
+        }
+        ControlPanelView.position(element, props.x, props.y);
+        instancesByName[name] = {
+          element: element,
+          api: api
+        };
+      }
+      instancesByName[name].api.attach(props);
+      return instancesByName[name].api;
+    };
+  });
+
+  Take(["GUI", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween1", "SVGReady"], function(GUI, Reaction, Resize, SVG, TopBar, TRS, Tween1) {
+    var ControlPanelView, bg, g, panelX, positionPanel, tick;
+    panelX = 0;
+    g = TRS(SVG.create("g", SVG.root, {
+      "class": "Controls",
+      "font-size": 20,
+      "text-anchor": "middle"
+    }));
+    bg = SVG.create("rect", g, {
+      "class": "BG",
+      width: GUI.ControlPanel.width,
+      fill: "hsl(230, 6%, 17%)"
+    });
+    positionPanel = function() {
+      var x, y;
+      x = window.innerWidth - GUI.ControlPanel.width * panelX;
+      y = TopBar.height;
+      return TRS.move(g, x, y);
+    };
+    tick = function(v) {
+      panelX = v;
+      return positionPanel();
+    };
+    Resize(function() {
+      SVG.attr(bg, "height", window.innerHeight);
+      return positionPanel();
+    });
+    Reaction("ControlPanel:Show", function() {
+      return Tween1(panelX, 1, 0.7, tick);
+    });
+    Reaction("ControlPanel:Hide", function() {
+      return Tween1(panelX, 0, 0.7, tick);
+    });
+    return Make("ControlPanelView", ControlPanelView = {
+      createElement: function(name, type) {
+        return TRS(SVG.create("g", g, {
+          "class": name + " " + type,
+          ui: true
+        }));
+      },
+      position: function(element, x, y) {
+        var u;
+        u = GUI.ControlPanel.unit;
+        return TRS.move(element, x * u, y * u);
+      }
+    });
   });
 
   Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
@@ -2801,18 +2823,28 @@
     });
   });
 
-  Take(["Action", "Dispatch", "Reaction", "SVGReady"], function(Action, Dispatch, Reaction) {
-    var colors, current, setColor;
-    colors = ["#666", "#bbb", "#fff"];
-    current = 1;
-    setColor = function(index) {
-      return document.rootElement.style["background-color"] = colors[index % colors.length];
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var schematic, settings, updateShowing;
+    schematic = false;
+    settings = false;
+    updateShowing = function() {
+      if (schematic || settings) {
+        return Action("ControlPanel:Hide");
+      } else {
+        return Action("ControlPanel:Show");
+      }
     };
-    Reaction("setup", function() {
-      return setColor(1);
+    Reaction("Schematic:Show", function() {
+      return updateShowing(schematic = true);
     });
-    return Reaction("cycleBackgroundColor", function() {
-      return setColor(++current);
+    Reaction("Schematic:Hide", function() {
+      return updateShowing(schematic = false);
+    });
+    Reaction("Settings:Show", function() {
+      return updateShowing(settings = true);
+    });
+    return Reaction("Settings:Hide", function() {
+      return updateShowing(settings = false);
     });
   });
 
@@ -2848,6 +2880,20 @@
     return Reaction("Schematic:Show", function() {
       animateMode = false;
       return Dispatch(root, "schematicMode");
+    });
+  });
+
+  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+    var showing;
+    showing = false;
+    Reaction("Settings:Toggle", function() {
+      return Action(showing ? "Settings:Hide" : "Settings:Show");
+    });
+    Reaction("Settings:Hide", function() {
+      return showing = false;
+    });
+    return Reaction("Settings:Show", function() {
+      return showing = true;
     });
   });
 
@@ -2923,6 +2969,14 @@
         return startTime = null;
       };
     });
+  });
+
+  Take(["Action", "Dispatch", "Reaction", "DOMContentLoaded"], function(Action, Dispatch, Reaction) {
+    var Background;
+    Make("Background", Background = function(color) {
+      return document.rootElement.style.backgroundColor = color;
+    });
+    return Background("hsl(220, 4%, 75%)");
   });
 
 }).call(this);

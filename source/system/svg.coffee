@@ -1,7 +1,7 @@
 # These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
 # They're not to be used by content, since they might endure breaking changes at any time.
 
-Take [], ()->
+do ()->
   
   root = document.rootElement
   defs = root.querySelector "defs"
@@ -64,7 +64,8 @@ Take [], ()->
     attr: (elm, k, v)->
       unless elm then throw "SVG.attr was called with a null element"
       unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^"
-      return elm.getAttribute k if v is undefined # TODO: try reading from the cache first
+      # return elm.getAttribute k if v is undefined # TODO: try reading from the cache first
+      return elm._SVG_attr[k] ?= elm.getAttribute k if v is undefined
       elm._SVG_attr ?= {}
       if elm._SVG_attr[k] isnt v
         elm._SVG_attr[k] = v

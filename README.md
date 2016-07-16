@@ -15,6 +15,7 @@ TopBar & ControlPanel
 * Help — don't need it if we kill all the other buttons
 * Mimic should be a picture-in-picture that sits in one of the 4 corners
 
+* Set the startTime for animations inside the first tick, so we start at 0. This avoids a judder when an animation starts.
 
 ## License
 Copyright (c) 2014-2016 CD Industrial Group Inc. http://www.cdiginc.com

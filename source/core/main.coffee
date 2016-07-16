@@ -24,5 +24,7 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
     Action "setup"
     Action "ScopeReady"
     
-    Take ["ControlsReady", "TopBarReady", "NavReady"], ()->
+    Take ["TopBarReady", "NavReady"], ()->
       svg.style.opacity = 1
+      
+      Action "Schematic:Hide"

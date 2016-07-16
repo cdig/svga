@@ -39,10 +39,7 @@ Take ["Style","Symbol","Transform"],
       
       if not element.getAttributeNS(null, "class")?
         element.setAttributeNS null, "class", name
-      
-      if parentScope.name is "mainStage"
-        console.log name
-      
+            
       throw "Duplicate instance name detected in #{parentScope.name}: #{name}" if parentScope[name]?
       parentScope[name] = scope
       parentScope.children.push scope

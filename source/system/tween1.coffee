@@ -4,27 +4,30 @@
 Take ["Ease", "Tick"], (Ease, Tick)->
   tweens = []
   
-  Tween1 = (from, to, time, tick, next)->
+  Tween1 = (from, to, time, opts, next)->
     
-    gc tick # Now is a great time to do some GC
+    # Allow the 4th arg to just be a tick function, rather than an options object.
+    if typeof opts is "function"
+      tween = tick: opts
+    else
+      tween = opts
     
-    tweens = tweens.filter (tween)->
-      return false if tween.pos >= 1
-      return false if tween.cancelled
-      return false if tween.tick is tick
-      return false if tween is next
-      return true
+    tween.from = from
+    tween.to = to
+    tween.time = time
+    tween.next = next if next? # Allow the 5th arg to be optional
     
-    tweens.push tween =
-      from: from
-      to: to
-      time: time
-      tick: tick
-      cancelled: false
-      pos: 0
-      value: from
-      delta: to - from
-      next: next
+    tween.pos ?= 0
+    tween.ease ?= "easeInOut"
+    
+    tween.value = 0
+    tween.delta = to - from
+    tween.cancelled = false
+    
+    # Now is a great time to do some GC
+    gc tween.tick, tween.next
+    
+    tweens.push tween
     tween # Composable
   
   Tick (t, dt)->
@@ -37,11 +40,12 @@ Take ["Ease", "Tick"], (Ease, Tick)->
         tweens.push tween.next
         tween.next = null
   
-  gc = (ticks...)->
+  gc = (tick, next)->
     tweens = tweens.filter (tween)->
       return false if tween.pos >= 1
       return false if tween.cancelled
-      return false if tween.tick in ticks
+      return false if tween.tick is tick
+      return false if next? and tween is next
       return true
   
   

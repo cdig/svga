@@ -3,6 +3,7 @@ do ()->
     state =
       down: false
       over: false
+      touch: false
     
     over = (e)->
       state.over = true
@@ -34,34 +35,46 @@ do ()->
     # MOUSE #####################################################################################
     
     elm.addEventListener "mouseenter", (e)->
+      return if state.touch
+      # console.log "mouseenter"
       over e
       elm.addEventListener "mouseleave", mouseleave
     
     elm.addEventListener "mousedown", (e)->
+      return if state.touch
+      # console.log "mousedown"
       down e
       elm.addEventListener "mousemove", mousemove
       window.addEventListener "mouseup", mouseup
     
     mousemove = (e)->
+      return if state.touch
+      # console.log "mousemove"
       move e
     
     mouseup = (e)->
+      return if state.touch
+      # console.log "mouseup"
       up e
       elm.removeEventListener "mousemove", mousemove
       window.removeEventListener "mouseup", mouseup
     
     mouseleave = (e)->
+      return if state.touch
+      # console.log "mouseleave"
       out e
       elm.removeEventListener "mouseleave", mouseleave
     
     # TOUCH #####################################################################################
     
-    addMouseMocks = (e)->
+    prepTouchEvent = (e)->
+      state.touch = true
       e.clientX = e.touches[0]?.clientX
       e.clientY = e.touches[0]?.clientY
     
     elm.addEventListener "touchstart", (e)->
-      addMouseMocks e
+      # console.log "touchstart"
+      prepTouchEvent e
       over e
       down e
       elm.addEventListener "touchmove", touchmove
@@ -69,7 +82,8 @@ do ()->
       elm.addEventListener "touchcancel", touchend
     
     touchmove = (e)->
-      addMouseMocks e
+      # console.log "touchmove"
+      prepTouchEvent e
       # Not sure how to do this properly. Not trivial.
       # isOver = elm is e.currentTarget or elm.contains e.currentTarget
       isOver = true
@@ -78,7 +92,8 @@ do ()->
       out e if not isOver and state.over
     
     touchend = (e)->
-      addMouseMocks e
+      # console.log "touchend"
+      prepTouchEvent e
       up e
       elm.removeEventListener "touchmove", touchmove
       elm.removeEventListener "touchend", touchend

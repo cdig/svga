@@ -765,10 +765,11 @@
 
   (function() {
     return Make("Input", function(elm, calls) {
-      var addMouseMocks, down, mouseleave, mousemove, mouseup, move, out, over, state, touchend, touchmove, up;
+      var down, mouseleave, mousemove, mouseup, move, out, over, prepTouchEvent, state, touchend, touchmove, up;
       state = {
         down: false,
-        over: false
+        over: false,
+        touch: false
       };
       over = function(e) {
         state.over = true;
@@ -803,33 +804,49 @@
         return typeof calls.out === "function" ? calls.out(e) : void 0;
       };
       elm.addEventListener("mouseenter", function(e) {
+        if (state.touch) {
+          return;
+        }
         over(e);
         return elm.addEventListener("mouseleave", mouseleave);
       });
       elm.addEventListener("mousedown", function(e) {
+        if (state.touch) {
+          return;
+        }
         down(e);
         elm.addEventListener("mousemove", mousemove);
         return window.addEventListener("mouseup", mouseup);
       });
       mousemove = function(e) {
+        if (state.touch) {
+          return;
+        }
         return move(e);
       };
       mouseup = function(e) {
+        if (state.touch) {
+          return;
+        }
         up(e);
         elm.removeEventListener("mousemove", mousemove);
         return window.removeEventListener("mouseup", mouseup);
       };
       mouseleave = function(e) {
+        if (state.touch) {
+          return;
+        }
         out(e);
         return elm.removeEventListener("mouseleave", mouseleave);
       };
-      addMouseMocks = function(e) {
+      prepTouchEvent = function(e) {
         var ref, ref1;
+        state.touch = true;
         e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
         return e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
       };
       elm.addEventListener("touchstart", function(e) {
-        addMouseMocks(e);
+        prepTouchEvent(e);
         over(e);
         down(e);
         elm.addEventListener("touchmove", touchmove);
@@ -838,7 +855,7 @@
       });
       touchmove = function(e) {
         var isOver;
-        addMouseMocks(e);
+        prepTouchEvent(e);
         isOver = true;
         if (isOver && !state.over) {
           over(e);
@@ -851,7 +868,7 @@
         }
       };
       return touchend = function(e) {
-        addMouseMocks(e);
+        prepTouchEvent(e);
         up(e);
         elm.removeEventListener("touchmove", touchmove);
         elm.removeEventListener("touchend", touchend);

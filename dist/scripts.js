@@ -2960,6 +2960,11 @@
     Reaction("ControlPanel:Hide", function() {
       return Tween1(panelX, 0, 0.7, tick);
     });
+    Reaction("Background:Set", function(v) {
+      var l;
+      l = (v + .4) % 1;
+      return SVG.attr(bg, "fill", "hsl(230, 6%, " + (l * 100) + "%)");
+    });
     Reaction("GUIReady", function() {
       var h, len, m, padX, padY, panelWidth, results, row, scope, unit, w, widthUnit, x, y;
       padX = GUI.ControlPanel.padX;
@@ -3181,7 +3186,7 @@
     };
     Reaction("Background:Set", setBackground);
     return Reaction("GUIReady", function() {
-      return Action("Background:Set", .75);
+      return Action("Background:Set", .8);
     });
   });
 

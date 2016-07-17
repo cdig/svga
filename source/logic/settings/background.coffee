@@ -8,4 +8,4 @@ Take ["Action", "Dispatch", "Reaction", "DOMContentLoaded"],
   Reaction "Background:Set", setBackground
   
   Reaction "GUIReady", ()->
-    Action "Background:Set", .75
+    Action "Background:Set", .8

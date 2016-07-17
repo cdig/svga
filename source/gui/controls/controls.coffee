@@ -22,16 +22,14 @@ Take ["Component", "ControlPanelView"], (Component, ControlPanelView )->
     instancesByName = instancesByNameByType[type] ?= {}
     
     if not instancesByName[name]
-      element = ControlPanelView.createElement name, type
-      api = defn name, element
-      api.setup?()
-      
-      ControlPanelView.position element, props.x, props.y
-      
+      elm = ControlPanelView.createElement props
+      scope = defn elm, props
+      scope.element = elm
+      ControlPanelView.setup scope
       instancesByName[name] =
-        element: element
-        api: api
+        scope: scope
+        props: props
     
-    instancesByName[name].api.attach props
+    instancesByName[name].scope.attach props
     
-    instancesByName[name].api # Composable
+    instancesByName[name].scope # Composable

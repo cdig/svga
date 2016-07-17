@@ -56,7 +56,12 @@ do ()->
     
     # TOUCH #####################################################################################
     
+    addMouseMocks = (e)->
+      e.clientX = e.touches[0]?.clientX
+      e.clientY = e.touches[0]?.clientY
+    
     elm.addEventListener "touchstart", (e)->
+      addMouseMocks e
       over e
       down e
       elm.addEventListener "touchmove", touchmove
@@ -64,6 +69,7 @@ do ()->
       elm.addEventListener "touchcancel", touchend
     
     touchmove = (e)->
+      addMouseMocks e
       # Not sure how to do this properly. Not trivial.
       # isOver = elm is e.currentTarget or elm.contains e.currentTarget
       isOver = true
@@ -72,6 +78,7 @@ do ()->
       out e if not isOver and state.over
     
     touchend = (e)->
+      addMouseMocks e
       up e
       elm.removeEventListener "touchmove", touchmove
       elm.removeEventListener "touchend", touchend

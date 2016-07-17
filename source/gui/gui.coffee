@@ -10,5 +10,7 @@ do ()->
       Settings:
         inset: 192
     ControlPanel:
-      width: 192
+      width: 200
       unit: 48
+      padX: 8
+      padY: 12

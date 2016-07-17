@@ -1,13 +1,10 @@
 Take ["Action", "Reaction", "root"],
 (      Action ,  Reaction ,  root)->
   
-  return unless labels = root.mainStage?.labelsContainer
+  showing = false
   
-  Reaction "Labels:Hide", ()->
-    labels.visible = false
+  Reaction "Labels:Hide", ()-> showing = false
+  Reaction "Labels:Show", ()-> showing = true
   
-  Reaction "Labels:Show", ()->
-    labels.visible = true
-    
   Reaction "Labels:Toggle", ()->
-    Action if labels.visible then "Labels:Hide" else "Labels:Show"
+    Action if showing then "Labels:Hide" else "Labels:Show"

@@ -21,10 +21,10 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
     Make "root", rootScope
     
     # Ready to rock!
-    Action "setup"
-    Action "ScopeReady"
+    Action "setup" # TODO: This only runs once, so it should be a Make
+    Action "ScopeReady" # TODO: This only runs once, so it should be a Make
     
     Take ["TopBarReady", "NavReady"], ()->
+      Action "GUIReady" # TODO: This only runs once, so it should be a Make
+      Action "Schematic:Hide" # TODO: This should go in the Schematic reaction, reacting to GUIReady
       svg.style.opacity = 1
-      
-      Action "Schematic:Hide"

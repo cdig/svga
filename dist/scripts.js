@@ -15,8 +15,9 @@
       Action("setup");
       Action("ScopeReady");
       return Take(["TopBarReady", "NavReady"], function() {
-        svg.style.opacity = 1;
-        return Action("Schematic:Hide");
+        Action("GUIReady");
+        Action("Schematic:Hide");
+        return svg.style.opacity = 1;
       });
     });
   });
@@ -109,6 +110,8 @@
         return Symbol.forSymbolName("HydraulicLine");
       } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
         return Symbol.forSymbolName("HydraulicField");
+      } else if ((instanceName != null ? instanceName.indexOf("labelsContainer") : void 0) > -1) {
+        return Symbol.forSymbolName("Labels");
       } else {
         return Symbol.forSymbolName("DefaultElement");
       }
@@ -752,15 +755,17 @@
         }
       },
       ControlPanel: {
-        width: 192,
-        unit: 48
+        width: 200,
+        unit: 48,
+        padX: 8,
+        padY: 12
       }
     });
   })();
 
   (function() {
     return Make("Input", function(elm, calls) {
-      var down, mouseleave, mousemove, mouseup, move, out, over, state, touchend, touchmove, up;
+      var addMouseMocks, down, mouseleave, mousemove, mouseup, move, out, over, state, touchend, touchmove, up;
       state = {
         down: false,
         over: false
@@ -818,7 +823,13 @@
         out(e);
         return elm.removeEventListener("mouseleave", mouseleave);
       };
+      addMouseMocks = function(e) {
+        var ref, ref1;
+        e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
+        return e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
+      };
       elm.addEventListener("touchstart", function(e) {
+        addMouseMocks(e);
         over(e);
         down(e);
         elm.addEventListener("touchmove", touchmove);
@@ -827,6 +838,7 @@
       });
       touchmove = function(e) {
         var isOver;
+        addMouseMocks(e);
         isOver = true;
         if (isOver && !state.over) {
           over(e);
@@ -839,6 +851,7 @@
         }
       };
       return touchend = function(e) {
+        addMouseMocks(e);
         up(e);
         elm.removeEventListener("touchmove", touchmove);
         elm.removeEventListener("touchend", touchend);
@@ -869,7 +882,7 @@
     });
   });
 
-  Take(["Component", "GUI", "PointerInput", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, GUI, PointerInput, Reaction, Resize, SVG, TRS) {
+  Take(["Component", "GUI", "Input", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, GUI, Input, Reaction, Resize, SVG, TRS) {
     var TopBar, bg, construct, container, help, instances, menu, offsetX, requested, resize, settings, topBar;
     requested = [];
     instances = {};
@@ -977,7 +990,7 @@
         api.text = TRS(SVG.create("text", api.element, {
           "font-size": 14,
           fill: "#FFF",
-          textContent: api.label || name.toUpperCase()
+          textContent: api.label || name
         }));
       }
       iconRect = api.icon.getBoundingClientRect();
@@ -990,7 +1003,7 @@
         x: iconX,
         y: iconY
       });
-      TRS.move(api.text, textX, GUI.TopBar.height / 2 + textRect.height / 2 - 3);
+      TRS.move(api.text, textX, GUI.TopBar.height / 2 + textRect.height / 2 - 4);
       SVG.attrs(api.bg, {
         width: buttonWidth
       });
@@ -1001,24 +1014,38 @@
       if (typeof api.setup === "function") {
         api.setup(api.element);
       }
-      if (api.click != null) {
-        PointerInput.addClick(api.element, api.click);
-      }
-      if (api.move != null) {
-        PointerInput.addMove(api.element, api.move);
-      }
-      if (api.down != null) {
-        PointerInput.addDown(api.element, api.down);
-      }
-      if (api.up != null) {
-        PointerInput.addUp(api.element, api.up);
-      }
-      if (api.over != null) {
-        PointerInput.addOver(api.element, api.over);
-      }
-      if (api.out != null) {
-        PointerInput.addOut(api.element, api.our);
-      }
+      Input(api.element, {
+        over: function() {
+          if (api.over != null) {
+            return api.over();
+          }
+        },
+        down: function() {
+          if (api.down != null) {
+            return api.down();
+          }
+        },
+        move: function() {
+          if (api.move != null) {
+            return api.move();
+          }
+        },
+        click: function() {
+          if (api.click != null) {
+            return api.click();
+          }
+        },
+        up: function() {
+          if (api.up != null) {
+            return api.up();
+          }
+        },
+        out: function() {
+          if (api.out != null) {
+            return api.out();
+          }
+        }
+      });
       return instance;
     };
     return Make("TopBar", TopBar);
@@ -1155,6 +1182,32 @@
         setup: function() {
           return Reaction("Schematic:Show", function() {
             return scope.pressure = Pressure.black;
+          });
+        }
+      };
+    });
+  });
+
+  Take(["Reaction", "Symbol", "SVG"], function(Reaction, Symbol, SVG) {
+    return Symbol("Labels", [], function(svgElement) {
+      var c, len, m, ref, scope;
+      ref = svgElement.querySelectorAll("[fill]");
+      for (m = 0, len = ref.length; m < len; m++) {
+        c = ref[m];
+        c.removeAttributeNS(null, "fill");
+      }
+      return scope = {
+        setup: function() {
+          Reaction("Labels:Hide", function() {
+            return scope.visible = false;
+          });
+          Reaction("Labels:Show", function() {
+            return scope.visible = true;
+          });
+          return Reaction("Background:Set", function(v) {
+            var l;
+            l = (v / 2 + .8) % 1;
+            return SVG.attr(svgElement, "fill", "hsl(220, 4%, " + (l * 100) + "%)");
           });
         }
       };
@@ -2822,7 +2875,7 @@
       }
     });
     return instantiate = function(props) {
-      var api, defn, element, instancesByName, name, type;
+      var defn, elm, instancesByName, name, scope, type;
       name = props.name;
       type = props.type;
       defn = Component.take("Control", type);
@@ -2840,24 +2893,25 @@
       }
       instancesByName = instancesByNameByType[type] != null ? instancesByNameByType[type] : instancesByNameByType[type] = {};
       if (!instancesByName[name]) {
-        element = ControlPanelView.createElement(name, type);
-        api = defn(name, element);
-        if (typeof api.setup === "function") {
-          api.setup();
-        }
-        ControlPanelView.position(element, props.x, props.y);
+        elm = ControlPanelView.createElement(props);
+        scope = defn(elm, props);
+        scope.element = elm;
+        ControlPanelView.setup(scope);
         instancesByName[name] = {
-          element: element,
-          api: api
+          scope: scope,
+          props: props
         };
       }
-      instancesByName[name].api.attach(props);
-      return instancesByName[name].api;
+      instancesByName[name].scope.attach(props);
+      return instancesByName[name].scope;
     };
   });
 
   Take(["GUI", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween1", "SVGReady"], function(GUI, Reaction, Resize, SVG, TopBar, TRS, Tween1) {
-    var ControlPanelView, bg, g, panelX, positionPanel, tick;
+    var ControlPanelView, bg, consumedCols, consumedRows, g, panelX, positionPanel, rows, tick;
+    consumedCols = 0;
+    consumedRows = 0;
+    rows = [];
     panelX = 0;
     g = TRS(SVG.create("g", SVG.root, {
       "class": "Controls",
@@ -2889,17 +2943,51 @@
     Reaction("ControlPanel:Hide", function() {
       return Tween1(panelX, 0, 0.7, tick);
     });
+    Reaction("GUIReady", function() {
+      var h, len, m, padX, padY, panelWidth, results, row, scope, unit, w, widthUnit, x, y;
+      padX = GUI.ControlPanel.padX;
+      padY = GUI.ControlPanel.padY;
+      unit = GUI.ControlPanel.unit;
+      panelWidth = GUI.ControlPanel.width;
+      widthUnit = (panelWidth - padX * 5) / 4;
+      results = [];
+      for (m = 0, len = rows.length; m < len; m++) {
+        row = rows[m];
+        results.push((function() {
+          var len1, n, results1;
+          results1 = [];
+          for (n = 0, len1 = row.length; n < len1; n++) {
+            scope = row[n];
+            w = scope.w * widthUnit + padX * (scope.w - 1);
+            h = scope.h * unit;
+            x = scope.x * (widthUnit + padX) + padX;
+            y = scope.y * unit + padY * (scope.y + 1);
+            scope.resize(w, h);
+            results1.push(TRS.move(scope.element, x, y));
+          }
+          return results1;
+        })());
+      }
+      return results;
+    });
     return Make("ControlPanelView", ControlPanelView = {
-      createElement: function(name, type) {
+      createElement: function(props) {
         return TRS(SVG.create("g", g, {
-          "class": name + " " + type,
+          "class": props.name + " " + props.type,
           ui: true
         }));
       },
-      position: function(element, x, y) {
-        var u;
-        u = GUI.ControlPanel.unit;
-        return TRS.move(element, x * u, y * u);
+      setup: function(scope) {
+        var w;
+        w = scope.w;
+        if (consumedCols + w > 4) {
+          consumedCols = 0;
+          consumedRows++;
+        }
+        scope.x = consumedCols;
+        scope.y = consumedRows;
+        (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
+        return consumedCols += w;
       }
     });
   });
@@ -2947,18 +3035,16 @@
   });
 
   Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
-    var labels, ref;
-    if (!(labels = (ref = root.mainStage) != null ? ref.labelsContainer : void 0)) {
-      return;
-    }
+    var showing;
+    showing = false;
     Reaction("Labels:Hide", function() {
-      return labels.visible = false;
+      return showing = false;
     });
     Reaction("Labels:Show", function() {
-      return labels.visible = true;
+      return showing = true;
     });
     return Reaction("Labels:Toggle", function() {
-      return Action(labels.visible ? "Labels:Hide" : "Labels:Show");
+      return Action(showing ? "Labels:Hide" : "Labels:Show");
     });
   });
 
@@ -3070,11 +3156,16 @@
   });
 
   Take(["Action", "Dispatch", "Reaction", "DOMContentLoaded"], function(Action, Dispatch, Reaction) {
-    var Background;
-    Make("Background", Background = function(color) {
-      return document.rootElement.style.backgroundColor = color;
+    var setBackground;
+    setBackground = function(v) {
+      var c;
+      c = "hsl(220, 4%, " + (v * 100) + "%)";
+      return document.rootElement.style.backgroundColor = c;
+    };
+    Reaction("Background:Set", setBackground);
+    return Reaction("GUIReady", function() {
+      return Action("Background:Set", .75);
     });
-    return Background("hsl(220, 4%, 75%)");
   });
 
 }).call(this);

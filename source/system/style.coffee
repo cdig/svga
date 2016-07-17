@@ -16,8 +16,8 @@ Take ["PureDom", "Pressure", "SVG"], (PureDom, Pressure, SVG)->
         console.log "element:"
         console.log element
         throw "^ SVGA will overwrite @#{prop} on this element. Please find a different name for your child/property named \"#{prop}\"."
-
-
+    
+    
     # We need a better API for changing the element.style property. This sucks.
     scope.style = (key, val)->
       unless styleCache[key] is val

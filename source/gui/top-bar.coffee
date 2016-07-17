@@ -1,5 +1,5 @@
-Take ["Component","GUI","PointerInput","Reaction","Resize","SVG","TRS","SVGReady"],
-(      Component , GUI , PointerInput , Reaction , Resize , SVG , TRS)->
+Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
+(      Component , GUI , Input , Reaction , Resize , SVG , TRS)->
   requested = []
   instances = {}
   menu = null
@@ -67,7 +67,7 @@ Take ["Component","GUI","PointerInput","Reaction","Resize","SVG","TRS","SVGReady
     # The api can disable these by setting the property to false, or providing its own values
     api.bg ?= SVG.create "rect", api.element, class: "BG", height: GUI.TopBar.height, fill: "transparent"
     api.icon ?= TRS SVG.clone source, api.element
-    api.text ?= TRS SVG.create "text", api.element, "font-size": 14, fill: "#FFF", textContent: api.label or name.toUpperCase()
+    api.text ?= TRS SVG.create "text", api.element, "font-size": 14, fill: "#FFF", textContent: api.label or name
     
     iconRect = api.icon.getBoundingClientRect()
     textRect = api.text.getBoundingClientRect()
@@ -76,18 +76,19 @@ Take ["Component","GUI","PointerInput","Reaction","Resize","SVG","TRS","SVGReady
     textX = buttonPad + iconRect.width + GUI.TopBar.iconPad
     buttonWidth = textX + textRect.width + buttonPad
     TRS.abs api.icon, x:iconX, y:iconY
-    TRS.move api.text, textX, GUI.TopBar.height/2 + textRect.height/2 - 3
+    TRS.move api.text, textX, GUI.TopBar.height/2 + textRect.height/2 - 4
     SVG.attrs api.bg, width: buttonWidth
     if not custom
       TRS.move api.element, offsetX
       offsetX += buttonWidth
     api.setup? api.element
-    PointerInput.addClick api.element, api.click if api.click?
-    PointerInput.addMove api.element, api.move if api.move?
-    PointerInput.addDown api.element, api.down if api.down?
-    PointerInput.addUp api.element, api.up if api.up?
-    PointerInput.addOver api.element, api.over if api.over?
-    PointerInput.addOut api.element, api.our if api.out?
+    Input api.element,
+      over:  ()-> api.over()  if api.over?
+      down:  ()-> api.down()  if api.down?
+      move:  ()-> api.move()  if api.move?
+      click: ()-> api.click() if api.click?
+      up:    ()-> api.up()    if api.up?
+      out:   ()-> api.out()   if api.out?
     
     instance # Composable
   

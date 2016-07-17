@@ -1,7 +1,7 @@
 # Tween1
 # This is just a really dumb value interpolator
 
-Take ["Ease", "Tick"], (Ease, Tick)->
+Take ["Tick"], (Tick)->
   tweens = []
   
   Tween1 = (from, to, time, opts, next)->
@@ -34,7 +34,7 @@ Take ["Ease", "Tick"], (Ease, Tick)->
     for tween in tweens when not tween.cancelled
       if tween.pos < 1
         tween.pos += dt / tween.time
-        tween.value = tween.from + tween.delta * Ease.cubic Math.min 1, tween.pos
+        tween.value = tween.from + tween.delta * cubic Math.min 1, tween.pos
         tween.tick tween.value, tween
       else if tween.next?
         tweens.push tween.next
@@ -48,6 +48,18 @@ Take ["Ease", "Tick"], (Ease, Tick)->
       return false if next? and tween is next
       return true
   
+  cubic = (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
+    return outputMin if inputMin is inputMax # Avoids a divide by zero
+    input = Math.max inputMin, Math.min inputMax, input if clip
+    outputDiff = outputMax - outputMin
+    inputDiff = inputMax - inputMin
+    p = (input-inputMin) / (inputDiff/2)
+    power = 3
+    if p < 1
+      return outputMin + outputDiff/2 * Math.pow(p, power)
+    else
+      return outputMin + outputDiff/2 * (2 - Math.abs(Math.pow(p-2, power)))
+
   
   # You can pass as many callbacks as you want to this. We'll stop calling them.
   Tween1.cancel = gc

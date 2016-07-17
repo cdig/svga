@@ -118,7 +118,7 @@
     };
   });
 
-  Take(["PureDom", "SVG", "DOMContentLoaded"], function(PureDom, SVG) {
+  Take(["SVG", "DOMContentLoaded"], function(SVG) {
     var SVGCrawler, deprecations;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     return Make("SVGCrawler", SVGCrawler = function(elm) {
@@ -635,7 +635,7 @@
     });
   });
 
-  Take(["Config", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(CDConfig, Config, Containerize, Segment) {
+  Take(["Env", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Env, Config, Containerize, Segment) {
     return Make("FlowArrows:Set", function(parentElm, setData) {
       return Containerize(parentElm, function(scope) {
         var child, childName, i, len, m, results, segmentData;
@@ -647,7 +647,7 @@
           }
           childName = "segment" + i;
           child = Segment(scope.element, segmentData);
-          if (CDConfig("dev")) {
+          if (Env.dev) {
             child.element.addEventListener("mouseover", function() {
               return console.log(childName);
             });
@@ -703,9 +703,9 @@
     return window.focus();
   });
 
-  Take(["Config", "Resize", "SVG", "Tick", "TopBarReady"], function(Config, Resize, SVG, Tick) {
+  Take(["Env", "Resize", "SVG", "Tick", "TopBarReady"], function(Env, Resize, SVG, Tick) {
     var avgLength, avgList, count, freq, text, total;
-    if (!Config("dev")) {
+    if (!Env.dev) {
       return;
     }
     count = 60;
@@ -1339,6 +1339,14 @@
     };
   })();
 
+  (function() {
+    var Env, hasPort;
+    hasPort = window.top.location.port.length > 0;
+    return Make("Env", Object.freeze(Env = {
+      dev: hasPort
+    }));
+  })();
+
   Take(["KeyCodes", "KeyNames"], function(KeyCodes, KeyNames) {
     var KeyMe, actionize, downHandlers, getModifier, handleKey, keyDown, keyUp, runCallbacks, upHandlers;
     downHandlers = {};
@@ -1919,7 +1927,7 @@
     });
   });
 
-  Take(["PureDom", "Pressure", "SVG"], function(PureDom, Pressure, SVG) {
+  Take(["Pressure", "SVG"], function(Pressure, SVG) {
     var Style;
     return Make("Style", Style = function(scope) {
       var alpha, element, isLine, len, m, pressure, prop, ref, ref1, styleCache, t, text, textElement, visible;
@@ -2003,25 +2011,9 @@
         return SVG.attr(element, "stroke", color);
       };
       scope.fill = function(color) {
-        var clone, defs, link, parent, path, use, useParent;
-        path = element.querySelector("path");
-        use = element.querySelector("use");
-        if ((path == null) && (use != null)) {
-          useParent = PureDom.querySelectorParent(use, "g");
-          parent = PureDom.querySelectorParent(element, "svg");
-          defs = parent.querySelector("defs");
-          link = defs.querySelector(use.getAttribute("xlink:href"));
-          clone = link.cloneNode(true);
-          useParent.appendChild(clone);
-          useParent.removeChild(use);
-        }
-        path = element.querySelector("path");
-        if (path != null) {
-          return path.setAttributeNS(null, "fill", color);
-        }
+        return SVG.attr(element, "fill", color);
       };
       scope.linearGradient = function(stops, x1, y1, x2, y2) {
-        var fillUrl, gradient, gradientName, gradientStop, len1, n, stop, useParent;
         if (x1 == null) {
           x1 = 0;
         }
@@ -2034,63 +2026,8 @@
         if (y2 == null) {
           y2 = 0;
         }
-        useParent = PureDom.querySelectorParent(element, "svg");
-        gradientName = "Gradient_" + element.getAttributeNS(null, "id");
-        gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
-        if (gradient == null) {
-          gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-          useParent.querySelector("defs").appendChild(gradient);
-        }
-        gradient.setAttribute("id", gradientName);
-        gradient.setAttributeNS(null, "x1", x1);
-        gradient.setAttributeNS(null, "y1", y1);
-        gradient.setAttributeNS(null, "x2", x2);
-        gradient.setAttributeNS(null, "y2", y2);
-        while (gradient.hasChildNodes()) {
-          gradient.removeChild(gradient.firstChild);
-        }
-        for (n = 0, len1 = stops.length; n < len1; n++) {
-          stop = stops[n];
-          gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-          gradientStop.setAttribute("offset", stop.offset);
-          gradientStop.setAttribute("stop-color", stop.color);
-          gradient.appendChild(gradientStop);
-        }
-        fillUrl = "url(#" + gradientName + ")";
-        return scope.fill(fillUrl);
       };
-      scope.radialGradient = function(stops, cx, cy, radius) {
-        var fillUrl, gradient, gradientName, gradientStop, len1, n, stop, useParent;
-        useParent = PureDom.querySelectorParent(element, "svg");
-        gradientName = "Gradient_" + element.getAttributeNS(null, "id");
-        gradient = useParent.querySelector("defs").querySelector("#" + gradientName);
-        if (gradient == null) {
-          gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
-          useParent.querySelector("defs").appendChild(gradient);
-        }
-        gradient.setAttribute("id", gradientName);
-        if (cx != null) {
-          gradient.setAttributeNS(null, "cx", cx);
-        }
-        if (cy != null) {
-          gradient.setAttributeNS(null, "cy", cy);
-        }
-        if (radius != null) {
-          gradient.setAttributeNS(null, "r", radius);
-        }
-        while (gradient.hasChildNodes()) {
-          gradient.removeChild(gradient.firstChild);
-        }
-        for (n = 0, len1 = stops.length; n < len1; n++) {
-          stop = stops[n];
-          gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-          gradientStop.setAttribute("offset", stop.offset);
-          gradientStop.setAttribute("stop-color", stop.color);
-          gradient.appendChild(gradientStop);
-        }
-        fillUrl = "url(#" + gradientName + ")";
-        return scope.fill(fillUrl);
-      };
+      scope.radialGradient = function(stops, cx, cy, radius) {};
       scope.getPressure = function() {
         throw "@getPressure() has been removed. Please use @pressure instead.";
       };
@@ -2741,8 +2678,8 @@
     return Make("TRS", TRS);
   });
 
-  Take(["Ease", "RAF"], function(Ease, RAF) {
-    var Tween, cloneObj, diffObj, tweens, update, updateTween;
+  Take(["RAF"], function(RAF) {
+    var Tween, cloneObj, cubic, diffObj, tweens, update, updateTween;
     tweens = [];
     Tween = function(tween) {
       if (tween.on == null) {
@@ -2785,7 +2722,7 @@
       ref = tween.delta;
       for (k in ref) {
         v = ref[k];
-        tween.on[k] = v * Ease.cubic(pos) + tween.from[k];
+        tween.on[k] = v * cubic(pos) + tween.from[k];
       }
       if (typeof tween.tick === "function") {
         tween.tick(pos, tween);
@@ -2812,11 +2749,44 @@
       }
       return diff;
     };
+    cubic = function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+      var inputDiff, outputDiff, p, power;
+      if (inputMin == null) {
+        inputMin = 0;
+      }
+      if (inputMax == null) {
+        inputMax = 1;
+      }
+      if (outputMin == null) {
+        outputMin = 0;
+      }
+      if (outputMax == null) {
+        outputMax = 1;
+      }
+      if (clip == null) {
+        clip = true;
+      }
+      if (inputMin === inputMax) {
+        return outputMin;
+      }
+      if (clip) {
+        input = Math.max(inputMin, Math.min(inputMax, input));
+      }
+      outputDiff = outputMax - outputMin;
+      inputDiff = inputMax - inputMin;
+      p = (input - inputMin) / (inputDiff / 2);
+      power = 3;
+      if (p < 1) {
+        return outputMin + outputDiff / 2 * Math.pow(p, power);
+      } else {
+        return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
+      }
+    };
     return Make("Tween", Tween);
   });
 
-  Take(["Ease", "Tick"], function(Ease, Tick) {
-    var Tween1, gc, tweens;
+  Take(["Tick"], function(Tick) {
+    var Tween1, cubic, gc, tweens;
     tweens = [];
     Tween1 = function(from, to, time, opts, next) {
       var tween;
@@ -2854,7 +2824,7 @@
         if (!tween.cancelled) {
           if (tween.pos < 1) {
             tween.pos += dt / tween.time;
-            tween.value = tween.from + tween.delta * Ease.cubic(Math.min(1, tween.pos));
+            tween.value = tween.from + tween.delta * cubic(Math.min(1, tween.pos));
             results.push(tween.tick(tween.value, tween));
           } else if (tween.next != null) {
             tweens.push(tween.next);
@@ -2882,6 +2852,39 @@
         }
         return true;
       });
+    };
+    cubic = function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+      var inputDiff, outputDiff, p, power;
+      if (inputMin == null) {
+        inputMin = 0;
+      }
+      if (inputMax == null) {
+        inputMax = 1;
+      }
+      if (outputMin == null) {
+        outputMin = 0;
+      }
+      if (outputMax == null) {
+        outputMax = 1;
+      }
+      if (clip == null) {
+        clip = true;
+      }
+      if (inputMin === inputMax) {
+        return outputMin;
+      }
+      if (clip) {
+        input = Math.max(inputMin, Math.min(inputMax, input));
+      }
+      outputDiff = outputMax - outputMin;
+      inputDiff = inputMax - inputMin;
+      p = (input - inputMin) / (inputDiff / 2);
+      power = 3;
+      if (p < 1) {
+        return outputMin + outputDiff / 2 * Math.pow(p, power);
+      } else {
+        return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
+      }
     };
     Tween1.cancel = gc;
     return Make("Tween1", Tween1);

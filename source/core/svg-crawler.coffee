@@ -1,4 +1,4 @@
-Take ["PureDom", "SVG", "DOMContentLoaded"], (PureDom, SVG)->
+Take ["SVG", "DOMContentLoaded"], (SVG)->
   deprecations = ["controlPanel", "ctrlPanel", "navOverlay"]
   
   Make "SVGCrawler", SVGCrawler = (elm)->

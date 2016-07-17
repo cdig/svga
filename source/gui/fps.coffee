@@ -1,5 +1,5 @@
-Take ["Config", "Resize", "SVG", "Tick", "TopBarReady"], (Config, Resize, SVG, Tick)->
-  return unless Config "dev"
+Take ["Env", "Resize", "SVG", "Tick", "TopBarReady"], (Env, Resize, SVG, Tick)->
+  return unless Env.dev
   
   count = 60 # Update immediately
   freq = 1 # Update every n seconds

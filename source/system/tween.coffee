@@ -7,7 +7,7 @@
 # tick: (optional) a function to be called each frame. Will be called with the current pos (0 to 1) and the `tween` object you passed in
 
 
-Take ["Ease", "RAF"], (Ease, RAF)->
+Take ["RAF"], (RAF)->
   tweens = []
   
   Tween = (tween)->
@@ -29,7 +29,7 @@ Take ["Ease", "RAF"], (Ease, RAF)->
     tween.started ?= time
     pos = Math.min 1, (time - tween.started) / tween.time
     for k,v of tween.delta
-      tween.on[k] = v * Ease.cubic(pos) + tween.from[k]
+      tween.on[k] = v * cubic(pos) + tween.from[k]
     tween.tick?(pos, tween)
     tween if pos < 1 and not tween.cancelled
   
@@ -42,5 +42,18 @@ Take ["Ease", "RAF"], (Ease, RAF)->
     diff = {}
     diff[k] = a[k] - b[k] for k,v of a
     diff
+  
+  cubic = (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
+    return outputMin if inputMin is inputMax # Avoids a divide by zero
+    input = Math.max inputMin, Math.min inputMax, input if clip
+    outputDiff = outputMax - outputMin
+    inputDiff = inputMax - inputMin
+    p = (input-inputMin) / (inputDiff/2)
+    power = 3
+    if p < 1
+      return outputMin + outputDiff/2 * Math.pow(p, power)
+    else
+      return outputMin + outputDiff/2 * (2 - Math.abs(Math.pow(p-2, power)))
+    
   
   Make "Tween", Tween

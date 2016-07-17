@@ -38,7 +38,7 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
   
   Reaction "Background:Set", (v)->
     l = (v + .4) % 1
-    SVG.attr bg, "fill", "hsl(230, 6%, #{l*100}%)"
+    SVG.attr bg, "fill", "hsl(230, 10%, #{l*100}%)"
   
   
   Reaction "GUIReady", ()->

@@ -743,15 +743,18 @@
     var GUI;
     return Make("GUI", GUI = {
       TopBar: {
-        buttonPadCustom: 6,
+        buttonPadCustom: 16,
         buttonPadStandard: 24,
         height: 48,
         iconPad: 6,
         Help: {
-          inset: 80
+          inset: 88
+        },
+        Menu: {
+          inset: -4
         },
         Settings: {
-          inset: 192
+          inset: 200
         }
       },
       ControlPanel: {
@@ -762,6 +765,8 @@
       }
     });
   })();
+
+  Take(["Control", "GUI", "Input", "Pressure", "Reaction", "SVG", "TRS", "Tween1"], function(Control, GUI, Input, Pressure, Reaction, SVG, TRS, Tween1) {});
 
   (function() {
     return Make("Input", function(elm, calls) {
@@ -886,19 +891,6 @@
     });
   })();
 
-  Take(["Reaction", "root", "Tween1"], function(Reaction, root, Tween1) {
-    var tick;
-    tick = function(v) {
-      return root.mainStage.alpha = v;
-    };
-    Reaction("Settings:Show", function() {
-      return Tween1(root.mainStage.alpha, 0, 0.7, tick);
-    });
-    return Reaction("Settings:Hide", function() {
-      return Tween1(root.mainStage.alpha, 1, 0.7, tick);
-    });
-  });
-
   Take(["Component", "GUI", "Input", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, GUI, Input, Reaction, Resize, SVG, TRS) {
     var TopBar, bg, construct, container, help, instances, menu, offsetX, requested, resize, settings, topBar;
     requested = [];
@@ -955,7 +947,7 @@
           base1.resize();
         }
       }
-      TRS.move(menu.element, 0);
+      TRS.move(menu.element, GUI.TopBar.Menu.inset);
       TRS.move(help.element, window.innerWidth - GUI.TopBar.Help.inset);
       TRS.move(settings.element, window.innerWidth - GUI.TopBar.Settings.inset);
       if (!Take("TopBarReady")) {
@@ -1228,6 +1220,22 @@
           });
         }
       };
+    });
+  });
+
+  Take(["Reaction", "root", "Tween1"], function(Reaction, root, Tween1) {
+    var tick;
+    if (root.mainStage == null) {
+      return;
+    }
+    tick = function(v) {
+      return root.mainStage.alpha = v;
+    };
+    Reaction("MainStage:Show", function() {
+      return Tween1(root.mainStage.alpha, 1, 0.7, tick);
+    });
+    return Reaction("MainStage:Hide", function() {
+      return Tween1(root.mainStage.alpha, 0, 0.7, tick);
     });
   });
 
@@ -2892,14 +2900,10 @@
       }
     });
     return instantiate = function(props) {
-      var defn, elm, instancesByName, name, scope, type;
-      name = props.name;
+      var base1, defn, elm, instancesByName, name, scope, type;
       type = props.type;
+      name = props.name || props.type;
       defn = Component.take("Control", type);
-      if (name == null) {
-        console.log(props);
-        throw "^ You must include a \"name\" property when creating a Control instance";
-      }
       if (type == null) {
         console.log(props);
         throw "^ You must include a \"type\" property when creating a Control instance";
@@ -2919,7 +2923,9 @@
           props: props
         };
       }
-      instancesByName[name].scope.attach(props);
+      if (typeof (base1 = instancesByName[name].scope).attach === "function") {
+        base1.attach(props);
+      }
       return instancesByName[name].scope;
     };
   });
@@ -2963,7 +2969,7 @@
     Reaction("Background:Set", function(v) {
       var l;
       l = (v + .4) % 1;
-      return SVG.attr(bg, "fill", "hsl(230, 6%, " + (l * 100) + "%)");
+      return SVG.attr(bg, "fill", "hsl(230, 10%, " + (l * 100) + "%)");
     });
     Reaction("GUIReady", function() {
       var h, len, m, padX, padY, panelWidth, results, row, scope, unit, w, widthUnit, x, y;
@@ -3032,27 +3038,44 @@
   });
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
-    var schematic, settings, updateShowing;
-    schematic = false;
-    settings = false;
-    updateShowing = function() {
-      if (schematic || settings) {
-        return Action("ControlPanel:Hide");
-      } else {
+    var animate, mainStage, update;
+    animate = false;
+    mainStage = true;
+    update = function() {
+      if (animate && mainStage) {
         return Action("ControlPanel:Show");
+      } else {
+        return Action("ControlPanel:Hide");
       }
     };
     Reaction("Schematic:Show", function() {
-      return updateShowing(schematic = true);
+      return update(animate = false);
     });
     Reaction("Schematic:Hide", function() {
-      return updateShowing(schematic = false);
+      return update(animate = true);
     });
-    Reaction("Settings:Show", function() {
-      return updateShowing(settings = true);
+    Reaction("MainStage:Show", function() {
+      return update(mainStage = true);
     });
-    return Reaction("Settings:Hide", function() {
-      return updateShowing(settings = false);
+    return Reaction("MainStage:Hide", function() {
+      return update(mainStage = false);
+    });
+  });
+
+  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+    var showing;
+    showing = false;
+    Reaction("Help:Toggle", function() {
+      return Action(showing ? "Help:Hide" : "Help:Show");
+    });
+    Reaction("Help:Hide", function() {
+      return showing = false;
+    });
+    Reaction("Help:Show", function() {
+      return showing = true;
+    });
+    return Reaction("Settings:Show", function() {
+      return Action("Help:Hide");
     });
   });
 
@@ -3067,6 +3090,31 @@
     });
     return Reaction("Labels:Toggle", function() {
       return Action(showing ? "Labels:Hide" : "Labels:Show");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var help, settings, update;
+    help = false;
+    settings = false;
+    update = function() {
+      if (help || settings) {
+        return Action("MainStage:Hide");
+      } else {
+        return Action("MainStage:Show");
+      }
+    };
+    Reaction("Help:Show", function() {
+      return update(help = true);
+    });
+    Reaction("Help:Hide", function() {
+      return update(help = false);
+    });
+    Reaction("Settings:Show", function() {
+      return update(settings = true);
+    });
+    return Reaction("Settings:Hide", function() {
+      return update(settings = false);
     });
   });
 
@@ -3098,8 +3146,11 @@
     Reaction("Settings:Hide", function() {
       return showing = false;
     });
-    return Reaction("Settings:Show", function() {
+    Reaction("Settings:Show", function() {
       return showing = true;
+    });
+    return Reaction("Help:Show", function() {
+      return Action("Settings:Hide");
     });
   });
 
@@ -3181,12 +3232,12 @@
     var setBackground;
     setBackground = function(v) {
       var c;
-      c = "hsl(220, 4%, " + (v * 100) + "%)";
+      c = "hsl(220, 5%, " + (v * 100) + "%)";
       return document.rootElement.style.backgroundColor = c;
     };
     Reaction("Background:Set", setBackground);
     return Reaction("GUIReady", function() {
-      return Action("Background:Set", .8);
+      return Action("Background:Set", .75);
     });
   });
 

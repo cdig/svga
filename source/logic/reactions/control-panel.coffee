@@ -1,16 +1,16 @@
 Take ["Action", "Reaction"],
 (      Action ,  Reaction )->
 
-  schematic = false
-  settings = false
+  animate = false
+  mainStage = true
   
-  updateShowing = ()->
-    if schematic or settings
-      Action "ControlPanel:Hide"
-    else
+  update = ()->
+    if animate and mainStage
       Action "ControlPanel:Show"
-
-  Reaction "Schematic:Show", ()-> updateShowing  schematic = true
-  Reaction "Schematic:Hide", ()-> updateShowing schematic = false
-  Reaction "Settings:Show", ()-> updateShowing  settings = true
-  Reaction "Settings:Hide", ()-> updateShowing settings = false
+    else
+      Action "ControlPanel:Hide"
+  
+  Reaction "Schematic:Show", ()-> update animate = false
+  Reaction "Schematic:Hide", ()-> update animate = true
+  Reaction "MainStage:Show", ()-> update mainStage = true
+  Reaction "MainStage:Hide", ()-> update mainStage = false

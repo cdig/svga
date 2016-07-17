@@ -41,7 +41,7 @@ Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
     SVG.attrs bg, width: window.innerWidth
     TRS.move container, window.innerWidth/2 - offsetX/2
     instance.api.resize?() for instance in instances
-    TRS.move menu.element, 0
+    TRS.move menu.element, GUI.TopBar.Menu.inset
     TRS.move help.element, window.innerWidth - GUI.TopBar.Help.inset
     TRS.move settings.element, window.innerWidth - GUI.TopBar.Settings.inset
     Make "TopBarReady" unless Take "TopBarReady"

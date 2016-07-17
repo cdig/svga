@@ -11,11 +11,10 @@ Take ["Component", "ControlPanelView"], (Component, ControlPanelView )->
   
   
   instantiate = (props)->
-    name = props.name
     type = props.type
+    name = props.name or props.type
     defn = Component.take "Control", type
     
-    if not name? then console.log(props); throw "^ You must include a \"name\" property when creating a Control instance"
     if not type? then console.log(props); throw "^ You must include a \"type\" property when creating a Control instance"
     if not defn? then console.log(props); throw "^ Unknown Control type: \"#{type}\". First, check for typos. If everything looks good, this Control may have failed to load on time, which would mean there's a bug in the Control component."
     
@@ -30,6 +29,6 @@ Take ["Component", "ControlPanelView"], (Component, ControlPanelView )->
         scope: scope
         props: props
     
-    instancesByName[name].scope.attach props
+    instancesByName[name].scope.attach? props
     
     instancesByName[name].scope # Composable

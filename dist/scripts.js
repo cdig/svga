@@ -758,6 +758,104 @@
     });
   })();
 
+  (function() {
+    return Make("Input", function(elm, calls) {
+      var down, mouseleave, mousemove, mouseup, move, out, over, state, touchend, touchmove, up;
+      state = {
+        down: false,
+        over: false
+      };
+      over = function(e) {
+        state.over = true;
+        return typeof calls.over === "function" ? calls.over(e) : void 0;
+      };
+      down = function(e) {
+        state.down = true;
+        return typeof calls.down === "function" ? calls.down(e) : void 0;
+      };
+      move = function(e) {
+        if (state.down && (calls.drag != null)) {
+          return calls.drag(e);
+        } else {
+          return typeof calls.move === "function" ? calls.move(e) : void 0;
+        }
+      };
+      up = function(e) {
+        state.down = false;
+        if (state.over) {
+          if (typeof calls.click === "function") {
+            calls.click(e);
+          }
+        } else {
+          if (typeof calls.miss === "function") {
+            calls.miss(e);
+          }
+        }
+        return typeof calls.up === "function" ? calls.up(e) : void 0;
+      };
+      out = function(e) {
+        state.over = false;
+        return typeof calls.out === "function" ? calls.out(e) : void 0;
+      };
+      elm.addEventListener("mouseenter", function(e) {
+        over(e);
+        return elm.addEventListener("mouseleave", mouseleave);
+      });
+      elm.addEventListener("mousedown", function(e) {
+        down(e);
+        elm.addEventListener("mousemove", mousemove);
+        return window.addEventListener("mouseup", mouseup);
+      });
+      mousemove = function(e) {
+        return move(e);
+      };
+      mouseup = function(e) {
+        up(e);
+        elm.removeEventListener("mousemove", mousemove);
+        return window.removeEventListener("mouseup", mouseup);
+      };
+      mouseleave = function(e) {
+        out(e);
+        return elm.removeEventListener("mouseleave", mouseleave);
+      };
+      elm.addEventListener("touchstart", function(e) {
+        over(e);
+        down(e);
+        elm.addEventListener("touchmove", touchmove);
+        elm.addEventListener("touchend", touchend);
+        return elm.addEventListener("touchcancel", touchend);
+      });
+      touchmove = function(e) {
+        var isOver;
+        isOver = true;
+        if (isOver && !state.over) {
+          over(e);
+        }
+        if (isOver) {
+          move(e);
+        }
+        if (!isOver && state.over) {
+          return out(e);
+        }
+      };
+      return touchend = function(e) {
+        up(e);
+        elm.removeEventListener("touchmove", touchmove);
+        elm.removeEventListener("touchend", touchend);
+        return elm.removeEventListener("touchcancel", touchend);
+      };
+    });
+  })();
+
+  (function() {
+    window.addEventListener("touchmove", function(e) {
+      return e.preventDefault();
+    });
+    return window.addEventListener("scroll", function(e) {
+      return e.preventDefault();
+    });
+  })();
+
   Take(["Reaction", "root", "Tween1"], function(Reaction, root, Tween1) {
     var tick;
     tick = function(v) {

@@ -24,7 +24,7 @@ Take ["Component", "ControlPanelView"], (Component, ControlPanelView )->
       elm = ControlPanelView.createElement props
       scope = defn elm, props
       scope.element = elm
-      ControlPanelView.setup scope
+      ControlPanelView.setup scope, props
       instancesByName[name] =
         scope: scope
         props: props

@@ -1,5 +1,5 @@
-Take ["GUI","KeyMe","Reaction","RAF","Resize","rootScope","SVG","TRS","Tween"],
-(      GUI , KeyMe , Reaction , RAF , Resize , rootScope , SVG , TRS , Tween)->
+Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween","ScopeReady"],
+(      GUI , KeyMe , Reaction , RAF , Resize , SVG , TRS , Tween)->
   minVel = 0.1
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
   minZoom = 0
@@ -17,18 +17,21 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","rootScope","SVG","TRS","Tween"],
   alreadyRan = false
   
   Take "ScopeReady", ()->
-    if ms = rootScope.mainStage
-      nav = TRS ms.element
-      mid = SVG.create "g", SVG.root
+    if msElm = document.querySelector "#mainStage"
+      parent = msElm.parentNode
+      ms = msElm._scope
+      nav = TRS msElm
+      mid = SVG.create "g", parent
       SVG.append mid, nav.parentNode
       zoom = TRS mid
-      SVG.prepend SVG.root, zoom.parentNode
+      SVG.prepend parent, zoom.parentNode
+      
       # Debug points
       # SVG.create "rect", nav, x:-4, y:-4, width:8, height:8, fill:"#F00"
       # SVG.create "rect", nav.parentNode, x:-3, y:-3, width:6, height:6, fill:"#FF0"
       # SVG.create "rect", zoom.parentNode, x:-2, y:-2, width:4, height:4, fill:"#F70"
       
-      initialSize = ms.element.getBoundingClientRect()
+      initialSize = msElm.getBoundingClientRect()
       registrationOffset.x = -ms.x + initialSize.left + initialSize.width/2
       registrationOffset.y = -ms.y + initialSize.top + initialSize.height/2
       TRS.abs nav, ox: registrationOffset.x, oy: registrationOffset.y

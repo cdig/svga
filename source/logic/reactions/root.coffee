@@ -6,9 +6,9 @@ Take ["Action", "Reaction"],
   
   update = ()->
     if help or settings
-      Action "MainStage:Hide"
+      Action "Root:Hide"
     else
-      Action "MainStage:Show"
+      Action "Root:Show"
   
   Reaction "Help:Show", ()-> update help = true
   Reaction "Help:Hide", ()-> update help = false

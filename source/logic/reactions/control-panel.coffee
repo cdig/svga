@@ -12,5 +12,5 @@ Take ["Action", "Reaction"],
   
   Reaction "Schematic:Show", ()-> update animate = false
   Reaction "Schematic:Hide", ()-> update animate = true
-  Reaction "MainStage:Show", ()-> update mainStage = true
-  Reaction "MainStage:Hide", ()-> update mainStage = false
+  Reaction "Root:Show", ()-> update mainStage = true
+  Reaction "Root:Hide", ()-> update mainStage = false

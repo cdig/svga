@@ -4,7 +4,7 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
   # A) Might do transformations, to bring things to a more ideal arrangement for animating.
   # B) Grabs a bunch of references (crawlerData) that we'll use to link Symbol code to the DOM.
   svg = document.rootElement
-  crawlerData = SVGCrawler svg
+  crawlerData = SVGCrawler svg.querySelector "#root"
   
   # Allow other systems that mutate the DOM to do their thing, now that we're done preprocessing
   Make "SVGReady"

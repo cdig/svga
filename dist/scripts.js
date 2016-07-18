@@ -6,7 +6,7 @@
   Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
     var crawlerData, svg;
     svg = document.rootElement;
-    crawlerData = SVGCrawler(svg);
+    crawlerData = SVGCrawler(svg.querySelector("#root"));
     Make("SVGReady");
     return setTimeout(function() {
       var rootScope;
@@ -54,6 +54,7 @@
       }
       symbol = getSymbol(instanceName);
       scope = symbol.create(element);
+      element._scope = scope;
       if (scope.children == null) {
         scope.children = [];
       }
@@ -109,8 +110,6 @@
         return Symbol.forSymbolName("HydraulicLine");
       } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
         return Symbol.forSymbolName("HydraulicField");
-      } else if ((instanceName != null ? instanceName.indexOf("labelsContainer") : void 0) > -1) {
-        return Symbol.forSymbolName("Labels");
       } else {
         return Symbol.forSymbolName("DefaultElement");
       }
@@ -123,7 +122,7 @@
     return Make("SVGCrawler", SVGCrawler = function(elm) {
       var childElm, childNodes, clone, len, link, m, ref, ref1, target, useParent;
       target = {
-        name: elm === document.rootElement ? "root" : (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
+        name: (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
         elm: elm,
         sub: []
       };
@@ -765,7 +764,108 @@
     });
   })();
 
-  Take(["GUI", "Pressure", "SVG", "TRS", "Tween1"], function(GUI, Pressure, SVG, TRS, Tween1) {});
+  Take(["GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween1"], function(GUI, Pressure, Reaction, Resize, SVG, TRS, Tween1) {
+    var alpha, atmLabel, atmRect, g, maxLabel, maxRect, medLabel, medRect, minLabel, minRect, pressures, tick, title, u, vacLabel, vacRect;
+    u = 36;
+    g = TRS(SVG.create("g", SVG.root));
+    pressures = TRS(SVG.create("g", g));
+    TRS.move(pressures, -84, 0);
+    title = SVG.create("text", pressures, {
+      x: 84,
+      y: 0,
+      "text-anchor": "middle",
+      textContent: "What do the colors mean?",
+      "font-size": 24
+    });
+    vacRect = SVG.create("rect", pressures, {
+      x: 0,
+      y: 0 * u + 20,
+      width: u,
+      height: u,
+      fill: Pressure(Pressure.vacuum)
+    });
+    atmRect = SVG.create("rect", pressures, {
+      x: 0,
+      y: 1 * u + 20,
+      width: u,
+      height: u,
+      fill: Pressure(Pressure.drain)
+    });
+    minRect = SVG.create("rect", pressures, {
+      x: 0,
+      y: 2 * u + 20,
+      width: u,
+      height: u,
+      fill: Pressure(Pressure.min)
+    });
+    medRect = SVG.create("rect", pressures, {
+      x: 0,
+      y: 3 * u + 20,
+      width: u,
+      height: u,
+      fill: Pressure(Pressure.med)
+    });
+    maxRect = SVG.create("rect", pressures, {
+      x: 0,
+      y: 4 * u + 20,
+      width: u,
+      height: u,
+      fill: Pressure(Pressure.max)
+    });
+    vacLabel = SVG.create("text", pressures, {
+      x: u + 8,
+      y: 1 * u + 10,
+      "text-anchor": "start",
+      textContent: "Suction Pressure"
+    });
+    atmLabel = SVG.create("text", pressures, {
+      x: u + 8,
+      y: 2 * u + 10,
+      "text-anchor": "start",
+      textContent: "Drain Pressure"
+    });
+    minLabel = SVG.create("text", pressures, {
+      x: u + 8,
+      y: 3 * u + 10,
+      "text-anchor": "start",
+      textContent: "Low Pressure"
+    });
+    medLabel = SVG.create("text", pressures, {
+      x: u + 8,
+      y: 4 * u + 10,
+      "text-anchor": "start",
+      textContent: "Medium Pressure"
+    });
+    maxLabel = SVG.create("text", pressures, {
+      x: u + 8,
+      y: 5 * u + 10,
+      "text-anchor": "start",
+      textContent: "High Pressure"
+    });
+    Resize(function() {
+      var x, y;
+      x = window.innerWidth / 2;
+      y = GUI.TopBar.height * 2;
+      return TRS.abs(g, {
+        x: x,
+        y: y
+      });
+    });
+    alpha = 1;
+    (tick = function(v) {
+      alpha = v;
+      SVG.styles(g, {
+        opacity: alpha * 2 - 1
+      });
+      return TRS.scale(g, alpha / 10 + .9);
+    })(0);
+    Reaction("Help:Show", function() {
+      return Tween1(alpha, 1, 1.7, tick);
+    });
+    return Reaction("Help:Hide", function() {
+      return Tween1(alpha, 0, 1.7, tick);
+    });
+  });
 
   (function() {
     return Make("Input", function(elm, calls) {
@@ -881,6 +981,21 @@
     });
   })();
 
+  Take(["Reaction", "SVG", "Tween1", "ScopeReady"], function(Reaction, SVG, Tween1) {
+    var alpha, root, tick;
+    alpha = 1;
+    root = document.querySelector("#root");
+    tick = function(v) {
+      return root._scope.alpha = alpha = v;
+    };
+    Reaction("Root:Show", function() {
+      return Tween1(alpha, 1, 1.4, tick);
+    });
+    return Reaction("Root:Hide", function() {
+      return Tween1(alpha, -1, 1.4, tick);
+    });
+  });
+
   (function() {
     window.addEventListener("touchmove", function(e) {
       return e.preventDefault();
@@ -889,6 +1004,49 @@
       return e.preventDefault();
     });
   })();
+
+  Take(["Action", "Control", "GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween1", "ScopeReady"], function(Action, Control, GUI, Pressure, Reaction, Resize, SVG, TRS, Tween1) {
+    var alpha, g, slider, sliders, tick;
+    g = TRS(SVG.create("g", SVG.root));
+    sliders = TRS(SVG.create("g", g, {
+      "text-anchor": "middle"
+    }));
+    TRS.move(sliders, -128);
+    slider = Control({
+      name: "Color2",
+      type: "Slider",
+      parent: sliders,
+      change: function(v) {
+        return Action("Background:Set", v * .7 + 0.3);
+      }
+    });
+    Reaction("Background:Set", function(v) {
+      return slider.set((v - .3) / .7);
+    });
+    Resize(function() {
+      var x, y;
+      x = window.innerWidth / 2;
+      y = GUI.TopBar.height * 2;
+      return TRS.abs(g, {
+        x: x,
+        y: y
+      });
+    });
+    alpha = 1;
+    (tick = function(v) {
+      alpha = v;
+      SVG.styles(g, {
+        opacity: alpha * 2 - 1
+      });
+      return TRS.scale(g, alpha / 10 + .9);
+    })(0);
+    Reaction("Settings:Show", function() {
+      return Tween1(alpha, 1, 1.7, tick);
+    });
+    return Reaction("Settings:Hide", function() {
+      return Tween1(alpha, 0, 1.7, tick);
+    });
+  });
 
   Take(["Component", "GUI", "Input", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, GUI, Input, Reaction, Resize, SVG, TRS) {
     var TopBar, bg, construct, container, help, instances, menu, offsetX, requested, resize, settings, topBar;
@@ -1197,7 +1355,7 @@
   });
 
   Take(["Reaction", "Symbol", "SVG"], function(Reaction, Symbol, SVG) {
-    return Symbol("Labels", [], function(svgElement) {
+    return Symbol("Labels", ["labelsContainer"], function(svgElement) {
       var c, len, m, ref, scope;
       ref = svgElement.querySelectorAll("[fill]");
       for (m = 0, len = ref.length; m < len; m++) {
@@ -1216,26 +1374,6 @@
             var l;
             l = (v / 2 + .8) % 1;
             return SVG.attr(svgElement, "fill", "hsl(220, 4%, " + (l * 100) + "%)");
-          });
-        }
-      };
-    });
-  });
-
-  Take(["Reaction", "Symbol", "Tween1"], function(Reaction, Symbol, Tween1) {
-    return Symbol("MainStage", [], function(svgElement) {
-      var scope;
-      return scope = {
-        setup: function() {
-          var tick;
-          tick = function(v) {
-            return scope.alpha = v;
-          };
-          Reaction("MainStage:Show", function() {
-            return Tween1(scope.alpha, 1, 0.7, tick);
-          });
-          return Reaction("MainStage:Hide", function() {
-            return Tween1(scope.alpha, 0, 0.7, tick);
           });
         }
       };
@@ -1590,7 +1728,7 @@
     return Make("KeyNames", KeyNames);
   })();
 
-  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "rootScope", "SVG", "TRS", "Tween"], function(GUI, KeyMe, Reaction, RAF, Resize, rootScope, SVG, TRS, Tween) {
+  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "SVG", "TRS", "Tween", "ScopeReady"], function(GUI, KeyMe, Reaction, RAF, Resize, SVG, TRS, Tween) {
     var accel, alreadyRan, base, cloneTouches, dblclick, decel, dist, distTo, distTouches, eventInside, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchEnd, touchMove, touchStart, touches, vel, wheel, zoom;
     minVel = 0.1;
     maxVel = {
@@ -1632,14 +1770,16 @@
     initialSize = null;
     alreadyRan = false;
     Take("ScopeReady", function() {
-      var mid;
-      if (ms = rootScope.mainStage) {
-        nav = TRS(ms.element);
-        mid = SVG.create("g", SVG.root);
+      var mid, msElm, parent;
+      if (msElm = document.querySelector("#mainStage")) {
+        parent = msElm.parentNode;
+        ms = msElm._scope;
+        nav = TRS(msElm);
+        mid = SVG.create("g", parent);
         SVG.append(mid, nav.parentNode);
         zoom = TRS(mid);
-        SVG.prepend(SVG.root, zoom.parentNode);
-        initialSize = ms.element.getBoundingClientRect();
+        SVG.prepend(parent, zoom.parentNode);
+        initialSize = msElm.getBoundingClientRect();
         registrationOffset.x = -ms.x + initialSize.left + initialSize.width / 2;
         registrationOffset.y = -ms.y + initialSize.top + initialSize.height / 2;
         TRS.abs(nav, {
@@ -2926,7 +3066,7 @@
         elm = ControlPanelView.createElement(props);
         scope = defn(elm, props);
         scope.element = elm;
-        ControlPanelView.setup(scope);
+        ControlPanelView.setup(scope, props);
         instancesByName[name] = {
           scope: scope,
           props: props
@@ -3009,22 +3149,28 @@
     });
     return Make("ControlPanelView", ControlPanelView = {
       createElement: function(props) {
-        return TRS(SVG.create("g", g, {
+        var parent;
+        parent = props.parent || g;
+        return TRS(SVG.create("g", parent, {
           "class": props.name + " " + props.type,
           ui: true
         }));
       },
-      setup: function(scope) {
+      setup: function(scope, props) {
         var w;
-        w = scope.w;
-        if (consumedCols + w > 4) {
-          consumedCols = 0;
-          consumedRows++;
+        if (props.parent != null) {
+          return scope.resize(256, 48);
+        } else {
+          w = scope.w;
+          if (consumedCols + w > 4) {
+            consumedCols = 0;
+            consumedRows++;
+          }
+          scope.x = consumedCols;
+          scope.y = consumedRows;
+          (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
+          return consumedCols += w;
         }
-        scope.x = consumedCols;
-        scope.y = consumedRows;
-        (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
-        return consumedCols += w;
       }
     });
   });
@@ -3063,10 +3209,10 @@
     Reaction("Schematic:Hide", function() {
       return update(animate = true);
     });
-    Reaction("MainStage:Show", function() {
+    Reaction("Root:Show", function() {
       return update(mainStage = true);
     });
-    return Reaction("MainStage:Hide", function() {
+    return Reaction("Root:Hide", function() {
       return update(mainStage = false);
     });
   });
@@ -3083,11 +3229,8 @@
     Reaction("Help:Show", function() {
       return showing = true;
     });
-    Reaction("Settings:Show", function() {
+    return Reaction("Settings:Show", function() {
       return Action("Help:Hide");
-    });
-    return Take("GUIReady", function() {
-      return Action("Help:Show");
     });
   });
 
@@ -3111,9 +3254,9 @@
     settings = false;
     update = function() {
       if (help || settings) {
-        return Action("MainStage:Hide");
+        return Action("Root:Hide");
       } else {
-        return Action("MainStage:Show");
+        return Action("Root:Show");
       }
     };
     Reaction("Help:Show", function() {

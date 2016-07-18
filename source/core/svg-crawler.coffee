@@ -3,7 +3,7 @@ Take ["SVG", "DOMContentLoaded"], (SVG)->
   
   Make "SVGCrawler", SVGCrawler = (elm)->
     target =
-      name: if elm is document.rootElement then "root" else elm.getAttribute("id")?.split("_")[0]
+      name: elm.getAttribute("id")?.split("_")[0]
       elm: elm
       sub: []
     
@@ -20,9 +20,5 @@ Take ["SVG", "DOMContentLoaded"], (SVG)->
         link = SVG.defs.querySelector childElm.getAttribute "xlink:href"
         clone = link.cloneNode true
         useParent.replaceChild clone, childElm
-
-        # if clone instanceof SVGGElement
-        #   target.sub.push SVGCrawler clone
-        
     
     return target

@@ -20,6 +20,8 @@ Take ["Style","Symbol","Transform"],
     symbol = getSymbol instanceName
     scope = symbol.create element
     
+    element._scope = scope
+    
     scope.children ?= []
     scope.element ?= element
     scope.parent ?= parentScope
@@ -61,7 +63,5 @@ Take ["Style","Symbol","Transform"],
       Symbol.forSymbolName "HydraulicLine"
     else if instanceName?.indexOf("Field") > -1
       Symbol.forSymbolName "HydraulicField"
-    else if instanceName?.indexOf("labelsContainer") > -1
-      Symbol.forSymbolName "Labels"
     else
       Symbol.forSymbolName "DefaultElement"

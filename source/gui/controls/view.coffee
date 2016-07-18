@@ -59,15 +59,19 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
   
   Make "ControlPanelView", ControlPanelView =
     createElement: (props)->
-      TRS SVG.create "g", g, class: "#{props.name} #{props.type}", ui: true
+      parent = props.parent or g
+      TRS SVG.create "g", parent, class: "#{props.name} #{props.type}", ui: true
     
-    setup: (scope)->
-      w = scope.w
-      if consumedCols + w > 4
-        consumedCols = 0
-        consumedRows++
-      scope.x = consumedCols
-      scope.y = consumedRows
-      (rows[consumedRows] ?= []).push scope
-      consumedCols += w
-      
+    setup: (scope, props)->
+      if props.parent?
+        scope.resize 256, 48
+      else
+        w = scope.w
+        if consumedCols + w > 4
+          consumedCols = 0
+          consumedRows++
+        scope.x = consumedCols
+        scope.y = consumedRows
+        (rows[consumedRows] ?= []).push scope
+        consumedCols += w
+        

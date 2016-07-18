@@ -1,6 +1,4 @@
-Take ["Action", "Reaction", "root"],
-(      Action ,  Reaction ,  root)->
-  
+Take ["Action", "Reaction"], (Action, Reaction)->
   showing = false
   
   Reaction "Labels:Hide", ()-> showing = false

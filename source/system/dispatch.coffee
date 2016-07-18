@@ -7,7 +7,8 @@
 do ()->
   cache = {}
   
-  Make "Dispatch", (node, action, sub = "children")->
+  Make "Dispatch", (action, sub = "children", node)->
+    node ?= Take "rootScope"
     if typeof action is "function"
       dispatchWithFn node, action, sub
     else

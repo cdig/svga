@@ -1,4 +1,4 @@
-Take ["Reaction","Symbol","SVG"], (Reaction, Symbol, SVG)->
+Take ["Reaction", "Symbol", "SVG"], (Reaction, Symbol, SVG)->
   Symbol "Labels", [], (svgElement)->
     for c in svgElement.querySelectorAll "[fill]"
       c.removeAttributeNS null, "fill"

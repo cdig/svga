@@ -16,15 +16,13 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
     # Use the references collected during preprocessing to build our Scope tree.
     rootScope = ScopeBuilder crawlerData
     
-    # This is used by Reactions
-    # This should not be used by anything that calls Make, otherwise we'll probably end up with a circular ref.
-    Make "root", rootScope
+    # This is used by Dispatch and Nav — we should figure out how to get away from this.
+    Make "rootScope", rootScope
     
     # Ready to rock!
-    Action "setup" # TODO: This only runs once, so it should be a Make
-    Action "ScopeReady" # TODO: This only runs once, so it should be a Make
+    Make "setup"
+    Make "ScopeReady"
     
     Take ["TopBarReady", "NavReady"], ()->
-      Action "GUIReady" # TODO: This only runs once, so it should be a Make
-      Action "Schematic:Hide" # TODO: This should go in the Schematic reaction, reacting to GUIReady
+      Make "GUIReady"
       svg.style.opacity = 1

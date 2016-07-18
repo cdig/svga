@@ -1,5 +1,4 @@
-Take ["Action","Reaction","root"],
-(      Action , Reaction , root)->
+Take ["Action", "Reaction"], (Action, Reaction)->
   showing = false
   
   Reaction "Help:Toggle", ()->
@@ -8,3 +7,6 @@ Take ["Action","Reaction","root"],
   Reaction "Help:Hide", ()-> showing = false
   Reaction "Help:Show", ()-> showing = true
   Reaction "Settings:Show", ()-> Action "Help:Hide"
+
+  
+  Take "GUIReady", ()-> Action "Help:Show" # TODO: Debuggin

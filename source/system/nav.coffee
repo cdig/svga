@@ -1,5 +1,5 @@
-Take ["GUI","KeyMe","Reaction","RAF","Resize","root","SVG","TRS","Tween"],
-(      GUI , KeyMe , Reaction , RAF , Resize , root , SVG , TRS , Tween)->
+Take ["GUI","KeyMe","Reaction","RAF","Resize","rootScope","SVG","TRS","Tween"],
+(      GUI , KeyMe , Reaction , RAF , Resize , rootScope , SVG , TRS , Tween)->
   minVel = 0.1
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
   minZoom = 0
@@ -16,8 +16,8 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","root","SVG","TRS","Tween"],
   initialSize = null
   alreadyRan = false
   
-  Reaction "ScopeReady", ()->
-    if ms = root.mainStage
+  Take "ScopeReady", ()->
+    if ms = rootScope.mainStage
       nav = TRS ms.element
       mid = SVG.create "g", SVG.root
       SVG.append mid, nav.parentNode

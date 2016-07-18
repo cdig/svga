@@ -1,18 +1,16 @@
-Take ["Action", "Dispatch", "Reaction", "root"],
-(      Action ,  Dispatch ,  Reaction ,  root)->
-  
+Take ["Action", "Dispatch", "Reaction"], (Action, Dispatch, Reaction)->
   animateMode = false
   
-  Reaction "ScopeReady", ()->
-    Action "Schematic:Show"
+  Take "ScopeReady", ()->
+    Action "Schematic:Hide" # TODO: Debuggin
   
   Reaction "Schematic:Toggle", ()->
     Action if animateMode then "Schematic:Show" else "Schematic:Hide"
   
   Reaction "Schematic:Hide", ()->
     animateMode = true
-    Dispatch root, "animateMode"
+    Dispatch "animateMode"
   
   Reaction "Schematic:Show", ()->
     animateMode = false
-    Dispatch root, "schematicMode"
+    Dispatch "schematicMode"

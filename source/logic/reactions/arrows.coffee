@@ -1,8 +1,7 @@
-Take ["Action","Reaction","root"],
-(      Action , Reaction , root)->
+Take ["Action", "Reaction"], (Action, Reaction)->
   showing = false
   
-  Reaction "ScopeReady", ()->
+  Take "ScopeReady", ()->
     Action "FlowArrows:Show"
   
   Reaction "FlowArrows:Toggle", ()->

@@ -1,5 +1,4 @@
-Take ["Action","Reaction","root"],
-(      Action , Reaction , root)->
+Take ["Action", "Reaction"], (Action, Reaction)->
   showing = false
   
   Reaction "Settings:Toggle", ()->

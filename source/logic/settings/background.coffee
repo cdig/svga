@@ -1,5 +1,4 @@
-Take ["Action", "Dispatch", "Reaction", "DOMContentLoaded"],
-(      Action ,  Dispatch ,  Reaction)->
+Take ["Action", "Reaction", "DOMContentLoaded"], (Action, Reaction)->
   
   setBackground = (v)->
     c = "hsl(220, 5%, #{v*100}%)"
@@ -7,5 +6,5 @@ Take ["Action", "Dispatch", "Reaction", "DOMContentLoaded"],
   
   Reaction "Background:Set", setBackground
   
-  Reaction "GUIReady", ()->
+  Take "GUIReady", ()->
     Action "Background:Set", .75

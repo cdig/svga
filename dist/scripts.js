@@ -11,12 +11,11 @@
     return setTimeout(function() {
       var rootScope;
       rootScope = ScopeBuilder(crawlerData);
-      Make("root", rootScope);
-      Action("setup");
-      Action("ScopeReady");
+      Make("rootScope", rootScope);
+      Make("setup");
+      Make("ScopeReady");
       return Take(["TopBarReady", "NavReady"], function() {
-        Action("GUIReady");
-        Action("Schematic:Hide");
+        Make("GUIReady");
         return svg.style.opacity = 1;
       });
     });
@@ -659,7 +658,7 @@
     });
   });
 
-  Take(["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, root, SVG, TopBar, TRS) {
+  Take(["Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", SVG.root));
     SVG.create("rect", g, {
@@ -766,7 +765,7 @@
     });
   })();
 
-  Take(["Control", "GUI", "Input", "Pressure", "Reaction", "SVG", "TRS", "Tween1"], function(Control, GUI, Input, Pressure, Reaction, SVG, TRS, Tween1) {});
+  Take(["GUI", "Pressure", "SVG", "TRS", "Tween1"], function(GUI, Pressure, SVG, TRS, Tween1) {});
 
   (function() {
     return Make("Input", function(elm, calls) {
@@ -910,7 +909,7 @@
     container = TRS(SVG.create("g", topBar, {
       "class": "Elements"
     }));
-    Reaction("ScopeReady", function() {
+    Take("ScopeReady", function() {
       return SVG.append(SVG.root, topBar);
     });
     TopBar = function() {
@@ -923,7 +922,7 @@
       }
     };
     TopBar.height = GUI.TopBar.height;
-    Reaction("ScopeReady", function() {
+    Take("ScopeReady", function() {
       var definitions, i, len, m, name;
       definitions = Component.take("TopBar");
       for (i = m = 0, len = requested.length; m < len; i = ++m) {
@@ -1223,19 +1222,23 @@
     });
   });
 
-  Take(["Reaction", "root", "Tween1"], function(Reaction, root, Tween1) {
-    var tick;
-    if (root.mainStage == null) {
-      return;
-    }
-    tick = function(v) {
-      return root.mainStage.alpha = v;
-    };
-    Reaction("MainStage:Show", function() {
-      return Tween1(root.mainStage.alpha, 1, 0.7, tick);
-    });
-    return Reaction("MainStage:Hide", function() {
-      return Tween1(root.mainStage.alpha, 0, 0.7, tick);
+  Take(["Reaction", "Symbol", "Tween1"], function(Reaction, Symbol, Tween1) {
+    return Symbol("MainStage", [], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          var tick;
+          tick = function(v) {
+            return scope.alpha = v;
+          };
+          Reaction("MainStage:Show", function() {
+            return Tween1(scope.alpha, 1, 0.7, tick);
+          });
+          return Reaction("MainStage:Hide", function() {
+            return Tween1(scope.alpha, 0, 0.7, tick);
+          });
+        }
+      };
     });
   });
 
@@ -1289,10 +1292,13 @@
   (function() {
     var buildSubCache, cache, dispatchWithFn;
     cache = {};
-    Make("Dispatch", function(node, action, sub) {
+    Make("Dispatch", function(action, sub, node) {
       var base1, fn, len, m, nameCache, ref, results;
       if (sub == null) {
         sub = "children";
+      }
+      if (node == null) {
+        node = Take("rootScope");
       }
       if (typeof action === "function") {
         return dispatchWithFn(node, action, sub);
@@ -1584,7 +1590,7 @@
     return Make("KeyNames", KeyNames);
   })();
 
-  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "root", "SVG", "TRS", "Tween"], function(GUI, KeyMe, Reaction, RAF, Resize, root, SVG, TRS, Tween) {
+  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "rootScope", "SVG", "TRS", "Tween"], function(GUI, KeyMe, Reaction, RAF, Resize, rootScope, SVG, TRS, Tween) {
     var accel, alreadyRan, base, cloneTouches, dblclick, decel, dist, distTo, distTouches, eventInside, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchEnd, touchMove, touchStart, touches, vel, wheel, zoom;
     minVel = 0.1;
     maxVel = {
@@ -1625,9 +1631,9 @@
     zoom = null;
     initialSize = null;
     alreadyRan = false;
-    Reaction("ScopeReady", function() {
+    Take("ScopeReady", function() {
       var mid;
-      if (ms = root.mainStage) {
+      if (ms = rootScope.mainStage) {
         nav = TRS(ms.element);
         mid = SVG.create("g", SVG.root);
         SVG.append(mid, nav.parentNode);
@@ -2974,7 +2980,7 @@
       l = (v + .4) % 1;
       return SVG.attr(bg, "fill", "hsl(230, 10%, " + (l * 100) + "%)");
     });
-    Reaction("GUIReady", function() {
+    Take("GUIReady", function() {
       var h, len, m, padX, padY, panelWidth, results, row, scope, unit, w, widthUnit, x, y;
       padX = GUI.ControlPanel.padX;
       padY = GUI.ControlPanel.padY;
@@ -3023,10 +3029,10 @@
     });
   });
 
-  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+  Take(["Action", "Reaction"], function(Action, Reaction) {
     var showing;
     showing = false;
-    Reaction("ScopeReady", function() {
+    Take("ScopeReady", function() {
       return Action("FlowArrows:Show");
     });
     Reaction("FlowArrows:Toggle", function() {
@@ -3065,7 +3071,7 @@
     });
   });
 
-  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+  Take(["Action", "Reaction"], function(Action, Reaction) {
     var showing;
     showing = false;
     Reaction("Help:Toggle", function() {
@@ -3077,12 +3083,15 @@
     Reaction("Help:Show", function() {
       return showing = true;
     });
-    return Reaction("Settings:Show", function() {
+    Reaction("Settings:Show", function() {
       return Action("Help:Hide");
+    });
+    return Take("GUIReady", function() {
+      return Action("Help:Show");
     });
   });
 
-  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+  Take(["Action", "Reaction"], function(Action, Reaction) {
     var showing;
     showing = false;
     Reaction("Labels:Hide", function() {
@@ -3121,26 +3130,26 @@
     });
   });
 
-  Take(["Action", "Dispatch", "Reaction", "root"], function(Action, Dispatch, Reaction, root) {
+  Take(["Action", "Dispatch", "Reaction"], function(Action, Dispatch, Reaction) {
     var animateMode;
     animateMode = false;
-    Reaction("ScopeReady", function() {
-      return Action("Schematic:Show");
+    Take("ScopeReady", function() {
+      return Action("Schematic:Hide");
     });
     Reaction("Schematic:Toggle", function() {
       return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
     });
     Reaction("Schematic:Hide", function() {
       animateMode = true;
-      return Dispatch(root, "animateMode");
+      return Dispatch("animateMode");
     });
     return Reaction("Schematic:Show", function() {
       animateMode = false;
-      return Dispatch(root, "schematicMode");
+      return Dispatch("schematicMode");
     });
   });
 
-  Take(["Action", "Reaction", "root"], function(Action, Reaction, root) {
+  Take(["Action", "Reaction"], function(Action, Reaction) {
     var showing;
     showing = false;
     Reaction("Settings:Toggle", function() {
@@ -3157,10 +3166,8 @@
     });
   });
 
-  Take(["Dispatch", "Reaction", "root"], function(Dispatch, Reaction, root) {
-    return Reaction("setup", function() {
-      return Dispatch(root, "setup");
-    });
+  Take(["Dispatch", "setup"], function(Dispatch) {
+    return Dispatch("setup");
   });
 
   Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
@@ -3231,7 +3238,7 @@
     });
   });
 
-  Take(["Action", "Dispatch", "Reaction", "DOMContentLoaded"], function(Action, Dispatch, Reaction) {
+  Take(["Action", "Reaction", "DOMContentLoaded"], function(Action, Reaction) {
     var setBackground;
     setBackground = function(v) {
       var c;
@@ -3239,7 +3246,7 @@
       return document.rootElement.style.backgroundColor = c;
     };
     Reaction("Background:Set", setBackground);
-    return Reaction("GUIReady", function() {
+    return Take("GUIReady", function() {
       return Action("Background:Set", .75);
     });
   });

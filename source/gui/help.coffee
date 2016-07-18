@@ -1,5 +1,7 @@
-Take ["Control","GUI","Input","Pressure","Reaction","SVG","TRS","Tween1"],
-(      Control , GUI , Input , Pressure , Reaction , SVG , TRS , Tween1)->
+Take ["GUI","Pressure","SVG","TRS","Tween1"],
+(      GUI , Pressure , SVG , TRS , Tween1)->
+  
+  
   
   # u = 24
   # vacRect  = SVG.create "rect", elm, x:0,  y:0*u,   width:u, height:u, fill: Pressure Pressure.vacuum

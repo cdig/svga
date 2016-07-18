@@ -1,5 +1,2 @@
-Take ["Dispatch", "Reaction", "root"],
-(      Dispatch ,  Reaction ,  root)->
-  
-  Reaction "setup", ()->
-    Dispatch root, "setup"
+Take ["Dispatch", "setup"], (Dispatch)->
+  Dispatch "setup"

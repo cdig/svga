@@ -1,4 +1,4 @@
-Take ["Resize", "root", "SVG", "TopBar", "TRS", "SVGReady"], (Resize, root, SVG, TopBar, TRS)->
+Take ["Resize", "SVG", "TopBar", "TRS", "SVGReady"], (Resize, SVG, TopBar, TRS)->
   
   g = TRS SVG.create "g", SVG.root
   SVG.create "rect", g, x: -200, y:-30, width: 400, height: 60, rx: 30, ry: 30, fill: "#222", "fill-opacity": 0.9

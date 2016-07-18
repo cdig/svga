@@ -14,7 +14,7 @@ Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
   container = TRS SVG.create "g", topBar, class: "Elements"
     
   # Place us above the click-to-focus element
-  Reaction "ScopeReady", ()-> SVG.append SVG.root, topBar
+  Take "ScopeReady", ()-> SVG.append SVG.root, topBar
   
   
   TopBar = (args...)->
@@ -29,7 +29,7 @@ Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
   TopBar.height = GUI.TopBar.height
 
   
-  Reaction "ScopeReady", ()->
+  Take "ScopeReady", ()->
     definitions = Component.take "TopBar"
     construct i, name, definitions[name] for name, i in requested
     menu = construct -1, "Menu", definitions["Menu"]

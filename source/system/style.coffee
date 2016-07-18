@@ -1,7 +1,8 @@
 Take ["Pressure", "SVG"], (Pressure, SVG)->
   Make "Style", Style = (scope)->
     element = scope.element
-    styleCache = {}
+    parent = element.parentNode
+    placeholder = SVG.create "g"
     isLine = element.getAttribute("id")?.indexOf("Line") > -1
     
     textElement = element.querySelector "text"
@@ -18,11 +19,8 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
         throw "^ SVGA will overwrite @#{prop} on this element. Please find a different name for your child/property named \"#{prop}\"."
     
     
-    # We need a better API for changing the element.style property. This sucks.
     scope.style = (key, val)->
-      unless styleCache[key] is val
-        styleCache[key] = val
-        element.style[key] = val
+      SVG.style element, key, val
     
     
     pressure = null
@@ -41,8 +39,8 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
     Object.defineProperty scope, 'text',
       get: ()-> text
       set: (val)->
-        if textElement? and text isnt val
-          textElement.textContent = text
+        if text isnt val
+          SVG.attr "textContent", text = val
     
     
     visible = true
@@ -50,8 +48,10 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
       get: ()-> visible
       set: (val)->
         if visible isnt val
-          visible = val
-          element.style.opacity = if visible then alpha else 0
+          if visible = val
+            parent.replaceChild element, placeholder
+          else
+            parent.replaceChild placeholder, element
     
     
     alpha = 1
@@ -59,8 +59,7 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
       get: ()-> alpha
       set: (val)->
         if alpha isnt val
-          alpha = val
-          element.style.opacity = if visible then alpha else 0
+          SVG.style element, "opacity", alpha = val
     
     
     scope.stroke = (color)->
@@ -81,20 +80,20 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
     
     
     scope.fill = (color)->
-      SVG.attr element, "fill", color
-      # path = element.querySelector("path")
-      # use = element.querySelector("use")
-      # if not path? and use?
-      #   useParent = PureDom.querySelectorParent(use, "g")
-      #   parent = PureDom.querySelectorParent(element, "svg")
-      #   defs = parent.querySelector("defs")
-      #   link = defs.querySelector(use.getAttribute("xlink:href"))
-      #   clone = link.cloneNode(true)
-      #   useParent.appendChild(clone)
-      #   useParent.removeChild(use)
-      # path = element.querySelector("path")
-      # if path?
-      #   path.setAttributeNS(null, "fill", color)
+      # SVG.attr element, "fill", color
+      path = element.querySelector("path")
+      use = element.querySelector("use")
+      if not path? and use?
+        useParent = PureDom.querySelectorParent(use, "g")
+        parent = PureDom.querySelectorParent(element, "svg")
+        defs = parent.querySelector("defs")
+        link = defs.querySelector(use.getAttribute("xlink:href"))
+        clone = link.cloneNode(true)
+        useParent.appendChild(clone)
+        useParent.removeChild(use)
+      path = element.querySelector("path")
+      if path?
+        path.setAttributeNS(null, "fill", color)
     
     
     scope.linearGradient = (stops, x1=0, y1=0, x2=1, y2=0)->

@@ -12,7 +12,8 @@ do ()->
       Settings:
         inset: 200
     ControlPanel:
-      width: 200
+      width: 240
       unit: 48
-      padX: 8
+      padX: 12
       padY: 12
+      borderRadius: 8

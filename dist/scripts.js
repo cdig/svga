@@ -756,10 +756,11 @@
         }
       },
       ControlPanel: {
-        width: 200,
+        width: 240,
         unit: 48,
-        padX: 8,
-        padY: 12
+        padX: 12,
+        padY: 12,
+        borderRadius: 8
       }
     });
   })();
@@ -2076,9 +2077,10 @@
   Take(["Pressure", "SVG"], function(Pressure, SVG) {
     var Style;
     return Make("Style", Style = function(scope) {
-      var alpha, element, isLine, len, m, pressure, prop, ref, ref1, styleCache, t, text, textElement, visible;
+      var alpha, element, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, t, text, textElement, visible;
       element = scope.element;
-      styleCache = {};
+      parent = element.parentNode;
+      placeholder = SVG.create("g");
       isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
       textElement = element.querySelector("text");
       if ((t = textElement != null ? textElement.querySelector("tspan") : void 0) != null) {
@@ -2097,10 +2099,7 @@
         }
       }
       scope.style = function(key, val) {
-        if (styleCache[key] !== val) {
-          styleCache[key] = val;
-          return element.style[key] = val;
-        }
+        return SVG.style(element, key, val);
       };
       pressure = null;
       Object.defineProperty(scope, 'pressure', {
@@ -2124,8 +2123,8 @@
           return text;
         },
         set: function(val) {
-          if ((textElement != null) && text !== val) {
-            return textElement.textContent = text;
+          if (text !== val) {
+            return SVG.attr("textContent", text = val);
           }
         }
       });
@@ -2136,8 +2135,11 @@
         },
         set: function(val) {
           if (visible !== val) {
-            visible = val;
-            return element.style.opacity = visible ? alpha : 0;
+            if (visible = val) {
+              return parent.replaceChild(element, placeholder);
+            } else {
+              return parent.replaceChild(placeholder, element);
+            }
           }
         }
       });
@@ -2148,8 +2150,7 @@
         },
         set: function(val) {
           if (alpha !== val) {
-            alpha = val;
-            return element.style.opacity = visible ? alpha : 0;
+            return SVG.style(element, "opacity", alpha = val);
           }
         }
       });
@@ -2157,7 +2158,22 @@
         return SVG.attr(element, "stroke", color);
       };
       scope.fill = function(color) {
-        return SVG.attr(element, "fill", color);
+        var clone, defs, link, path, use, useParent;
+        path = element.querySelector("path");
+        use = element.querySelector("use");
+        if ((path == null) && (use != null)) {
+          useParent = PureDom.querySelectorParent(use, "g");
+          parent = PureDom.querySelectorParent(element, "svg");
+          defs = parent.querySelector("defs");
+          link = defs.querySelector(use.getAttribute("xlink:href"));
+          clone = link.cloneNode(true);
+          useParent.appendChild(clone);
+          useParent.removeChild(use);
+        }
+        path = element.querySelector("path");
+        if (path != null) {
+          return path.setAttributeNS(null, "fill", color);
+        }
       };
       scope.linearGradient = function(stops, x1, y1, x2, y2) {
         if (x1 == null) {
@@ -3092,7 +3108,10 @@
     }));
     bg = SVG.create("rect", g, {
       "class": "BG",
-      width: GUI.ControlPanel.width,
+      width: GUI.ControlPanel.width + GUI.ControlPanel.borderRadius,
+      y: -GUI.ControlPanel.borderRadius,
+      rx: GUI.ControlPanel.borderRadius,
+      ry: GUI.ControlPanel.borderRadius,
       fill: "hsl(230, 6%, 17%)"
     });
     positionPanel = function() {
@@ -3106,7 +3125,6 @@
       return positionPanel();
     };
     Resize(function() {
-      SVG.attr(bg, "height", window.innerHeight);
       return positionPanel();
     });
     Reaction("ControlPanel:Show", function() {
@@ -3121,31 +3139,27 @@
       return SVG.attr(bg, "fill", "hsl(230, 10%, " + (l * 100) + "%)");
     });
     Take("GUIReady", function() {
-      var h, len, m, padX, padY, panelWidth, results, row, scope, unit, w, widthUnit, x, y;
+      var consumedHeight, h, len, len1, m, n, padX, padY, panelWidth, row, scope, unit, w, widthUnit, x, y;
       padX = GUI.ControlPanel.padX;
       padY = GUI.ControlPanel.padY;
       unit = GUI.ControlPanel.unit;
       panelWidth = GUI.ControlPanel.width;
       widthUnit = (panelWidth - padX * 5) / 4;
-      results = [];
+      consumedHeight = 0;
       for (m = 0, len = rows.length; m < len; m++) {
         row = rows[m];
-        results.push((function() {
-          var len1, n, results1;
-          results1 = [];
-          for (n = 0, len1 = row.length; n < len1; n++) {
-            scope = row[n];
-            w = scope.w * widthUnit + padX * (scope.w - 1);
-            h = scope.h * unit;
-            x = scope.x * (widthUnit + padX) + padX;
-            y = scope.y * unit + padY * (scope.y + 1);
-            scope.resize(w, h);
-            results1.push(TRS.move(scope.element, x, y));
-          }
-          return results1;
-        })());
+        for (n = 0, len1 = row.length; n < len1; n++) {
+          scope = row[n];
+          w = scope.w * widthUnit + padX * (scope.w - 1);
+          h = scope.h * unit;
+          x = scope.x * (widthUnit + padX) + padX;
+          y = scope.y * unit + padY * (scope.y + 1);
+          scope.resize(w, h);
+          TRS.move(scope.element, x, y);
+          consumedHeight = Math.max(consumedHeight, y + h);
+        }
       }
-      return results;
+      return SVG.attr(bg, "height", consumedHeight + padY + GUI.ControlPanel.borderRadius);
     });
     return Make("ControlPanelView", ControlPanelView = {
       createElement: function(props) {
@@ -3176,23 +3190,6 @@
   });
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Take("ScopeReady", function() {
-      return Action("FlowArrows:Show");
-    });
-    Reaction("FlowArrows:Toggle", function() {
-      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
-    });
-    Reaction("FlowArrows:Hide", function() {
-      return showing = true;
-    });
-    return Reaction("FlowArrows:Show", function() {
-      return showing = false;
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
     var animate, mainStage, update;
     animate = false;
     mainStage = true;
@@ -3214,6 +3211,23 @@
     });
     return Reaction("Root:Hide", function() {
       return update(mainStage = false);
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Take("ScopeReady", function() {
+      return Action("FlowArrows:Show");
+    });
+    Reaction("FlowArrows:Toggle", function() {
+      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
+    });
+    Reaction("FlowArrows:Hide", function() {
+      return showing = true;
+    });
+    return Reaction("FlowArrows:Show", function() {
+      return showing = false;
     });
   });
 

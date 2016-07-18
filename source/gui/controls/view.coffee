@@ -13,7 +13,10 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
   
   bg = SVG.create "rect", g,
     class: "BG"
-    width: GUI.ControlPanel.width
+    width: GUI.ControlPanel.width + GUI.ControlPanel.borderRadius
+    y: -GUI.ControlPanel.borderRadius
+    rx: GUI.ControlPanel.borderRadius
+    ry: GUI.ControlPanel.borderRadius
     fill: "hsl(230, 6%, 17%)"
   
   
@@ -28,7 +31,6 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
   
   
   Resize ()->
-    SVG.attr bg, "height", window.innerHeight
     positionPanel()
   
   
@@ -47,6 +49,7 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
     unit = GUI.ControlPanel.unit
     panelWidth = GUI.ControlPanel.width
     widthUnit = (panelWidth-padX*5)/4
+    consumedHeight = 0
     for row in rows
       for scope in row
         w = scope.w * widthUnit + padX * (scope.w - 1)
@@ -55,6 +58,9 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
         y = scope.y * unit + padY * (scope.y+1)
         scope.resize w, h
         TRS.move scope.element, x, y
+        consumedHeight = Math.max consumedHeight, y + h
+    SVG.attr bg, "height", consumedHeight + padY + GUI.ControlPanel.borderRadius
+
   
   
   Make "ControlPanelView", ControlPanelView =

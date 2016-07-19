@@ -2452,7 +2452,22 @@
       }
       return RAF(tick);
     });
-    return Make("Tick", function(cb) {
+    return Make("Tick", function(cb, ignoreDuplicates) {
+      var c, len, m;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
+      for (m = 0, len = callbacks.length; m < len; m++) {
+        c = callbacks[m];
+        if (!(c === cb)) {
+          continue;
+        }
+        if (ignoreDuplicates) {
+          return;
+        }
+        console.log(cb);
+        throw "^ Tick was called more than once with this function. You can use Tick(fn, true) to drop duplicates and bypass this error.";
+      }
       callbacks.push(cb);
       return cb;
     });

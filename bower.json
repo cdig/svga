@@ -2,6 +2,7 @@
   "name": "svga",
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
+    "pressure": "cdig/pressure#v3",
     "take-and-make": "cdig/take-and-make#v3"
   },
   "main": [

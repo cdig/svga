@@ -3,9 +3,8 @@
     slice = [].slice;
 
   Take(["ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(ScopeBuilder, SVGCrawler) {
-    var crawlerData, svg;
-    svg = document.rootElement;
-    crawlerData = SVGCrawler(svg.querySelector("#root"));
+    var crawlerData;
+    crawlerData = SVGCrawler(document.getElementById("root"));
     Make("SVGReady");
     return setTimeout(function() {
       ScopeBuilder(crawlerData);

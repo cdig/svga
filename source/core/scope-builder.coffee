@@ -1,17 +1,12 @@
-Take ["Style","Symbol","Transform"],
-(      Style , Symbol , Transform )->
-  processors = []
-  tooLate = false
+Take ["Registry", "Style", "Symbol", "Transform"], (Registry, Style, Symbol, Transform)->
   
   ScopeBuilder = (target, parentScope = null)->
-    tooLate = true
     scope = buildScope target.name, target.elm, parentScope
     ScopeBuilder subTarget, scope for subTarget in target.sub
     return scope
   
   ScopeBuilder.process = (fn)->
-    if tooLate then console.log fn; throw "^ ScopeBuilder.process fn was too late. Please make it init faster."
-    processors.push fn
+    Registry.add "ScopeBuilder", fn
   
   Make "ScopeBuilder", ScopeBuilder
   
@@ -29,7 +24,7 @@ Take ["Style","Symbol","Transform"],
     scope.getElement ?= ()-> throw "@getElement() has been removed. Please use @element instead."
     Style scope
     Transform scope
-    fn scope for fn in processors
+    fn scope for fn in Registry.all "ScopeBuilder"
     
     if parentScope?
       scope.root ?= parentScope.root

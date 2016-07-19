@@ -2,27 +2,25 @@
   var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice;
 
-  Take(["ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(ScopeBuilder, SVGCrawler) {
+  Take(["Registry", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Registry, ScopeBuilder, SVGCrawler) {
     var crawlerData;
     crawlerData = SVGCrawler(document.getElementById("root"));
     Make("SVGReady");
     return setTimeout(function() {
+      Registry.closeRegistration();
       ScopeBuilder(crawlerData);
       Make("ScopeSetup");
       return Make("ScopeReady");
     });
   });
 
-  Take(["Style", "Symbol", "Transform"], function(Style, Symbol, Transform) {
-    var ScopeBuilder, buildScope, getSymbol, processors, tooLate;
-    processors = [];
-    tooLate = false;
+  Take(["Registry", "Style", "Symbol", "Transform"], function(Registry, Style, Symbol, Transform) {
+    var ScopeBuilder, buildScope, getSymbol;
     ScopeBuilder = function(target, parentScope) {
       var len, m, ref, scope, subTarget;
       if (parentScope == null) {
         parentScope = null;
       }
-      tooLate = true;
       scope = buildScope(target.name, target.elm, parentScope);
       ref = target.sub;
       for (m = 0, len = ref.length; m < len; m++) {
@@ -32,15 +30,11 @@
       return scope;
     };
     ScopeBuilder.process = function(fn) {
-      if (tooLate) {
-        console.log(fn);
-        throw "^ ScopeBuilder.process fn was too late. Please make it init faster.";
-      }
-      return processors.push(fn);
+      return Registry.add("ScopeBuilder", fn);
     };
     Make("ScopeBuilder", ScopeBuilder);
     buildScope = function(instanceName, element, parentScope) {
-      var fn, len, m, name, scope, symbol;
+      var fn, len, m, name, ref, scope, symbol;
       if (parentScope == null) {
         parentScope = null;
       }
@@ -68,8 +62,9 @@
       }
       Style(scope);
       Transform(scope);
-      for (m = 0, len = processors.length; m < len; m++) {
-        fn = processors[m];
+      ref = Registry.all("ScopeBuilder");
+      for (m = 0, len = ref.length; m < len; m++) {
+        fn = ref[m];
         fn(scope);
       }
       if (parentScope != null) {
@@ -1969,6 +1964,35 @@
         requestAnimationFrame(run);
       }
       return cb;
+    });
+  })();
+
+  (function() {
+    var Registry, items, tooLate;
+    items = {};
+    tooLate = false;
+    return Make("Registry", Registry = {
+      add: function(type, item, name) {
+        if (name != null) {
+          if (tooLate) {
+            console.log(item);
+            throw "^ Registry.add was called after registration closed. Please make " + type + ": " + name + " init faster.";
+          }
+          return (items[type] != null ? items[type] : items[type] = {})[name] = item;
+        } else {
+          if (tooLate) {
+            console.log(item);
+            throw "^ Registry.add was called after registration closed. Please make this " + type + " init faster.";
+          }
+          return (items[type] != null ? items[type] : items[type] = []).push(item);
+        }
+      },
+      all: function(type) {
+        return items[type];
+      },
+      closeRegistration: function() {
+        return tooLate = true;
+      }
     });
   })();
 

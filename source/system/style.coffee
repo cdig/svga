@@ -3,10 +3,9 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
     element = scope.element
     parent = element.parentNode
     placeholder = SVG.create "g"
+    strokePath = fillPath = element.querySelector("path")
     isLine = element.getAttribute("id")?.indexOf("Line") > -1
-    
-    textElement = element.querySelector "text"
-    textElement = t if (t = textElement?.querySelector "tspan")?
+    textElement = element.querySelector "tspan" or element.querySelector "text"
     
     # Check that we aren't about to clobber anything
     for prop in ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"]
@@ -63,37 +62,17 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
     
     
     scope.stroke = (color)->
+      if strokePath?
+        SVG.attr strokePath, "stroke", null
+        strokePath = null
       SVG.attr element, "stroke", color
-      # path = element.querySelector("path")
-      # use = element.querySelector("use")
-      # if not path? and use?
-      #   useParent = PureDom.querySelectorParent(use, "g")
-      #   parent = PureDom.querySelectorParent(element, "svg")
-      #   defs = parent.querySelector("defs")
-      #   link = defs.querySelector(use.getAttribute("xlink:href"))
-      #   clone = link.cloneNode(true)
-      #   useParent.appendChild(clone)
-      #   useParent.removeChild(use)
-      # path = element.querySelector("path")
-      # if path?
-      #   path.setAttributeNS(null, "stroke", color)
     
     
     scope.fill = (color)->
-      # SVG.attr element, "fill", color
-      path = element.querySelector("path")
-      use = element.querySelector("use")
-      if not path? and use?
-        useParent = PureDom.querySelectorParent(use, "g")
-        parent = PureDom.querySelectorParent(element, "svg")
-        defs = parent.querySelector("defs")
-        link = defs.querySelector(use.getAttribute("xlink:href"))
-        clone = link.cloneNode(true)
-        useParent.appendChild(clone)
-        useParent.removeChild(use)
-      path = element.querySelector("path")
-      if path?
-        path.setAttributeNS(null, "fill", color)
+      if fillPath?
+        SVG.attr fillPath, "fill", null
+        fillPath = null
+      SVG.attr element, "fill", color
     
     
     scope.linearGradient = (stops, x1=0, y1=0, x2=1, y2=0)->

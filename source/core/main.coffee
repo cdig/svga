@@ -6,6 +6,7 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
   svg = document.rootElement
   crawlerData = SVGCrawler svg.querySelector "#root"
   
+  
   # Allow other systems that mutate the DOM to do their thing, now that we're done preprocessing
   Make "SVGReady"
   

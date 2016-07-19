@@ -657,6 +657,70 @@
     });
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  getParentInverseTransform = function(root, element, currentTransform) {
+    var inv, inversion, matches, matrixString, newMatrix;
+    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
+      return currentTransform;
+    }
+    newMatrix = root.element.createSVGMatrix();
+    matrixString = element.getAttribute("transform");
+    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
+    newMatrix.a = matches[0];
+    newMatrix.b = matches[1];
+    newMatrix.c = matches[2];
+    newMatrix.d = matches[3];
+    newMatrix.e = matches[4];
+    newMatrix.f = matches[5];
+    inv = newMatrix.inverse();
+    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
+    currentTransform = currentTransform + " " + inversion;
+    return getParentInverseTransform(root, element.parentNode, currentTransform);
+  };
+
+  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
+    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
+    maskElement = maskInstance.element;
+    maskedElement = maskedInstance.element;
+    rootElement = root.element;
+    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+    mask.setAttribute("id", maskName);
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
+    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
+    maskedElement.parentNode.removeChild(maskedElement);
+    maskedParent.appendChild(maskedElement);
+    mask.appendChild(maskElement);
+    rootElement.querySelector('defs').insertBefore(mask, null);
+    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
+    origMatrix = maskElement.getAttribute("transform");
+    transString = invertMatrix + " " + origMatrix + " ";
+    maskElement.setAttribute('transform', transString);
+    origStyle = maskedElement.getAttribute('style');
+    if (origStyle != null) {
+      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
+    } else {
+      newStyle = "mask: url(#" + maskName + ");";
+    }
+    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
+    return maskedParent.setAttribute("style", newStyle);
+  });
+
   Take(["Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", SVG.root));
@@ -671,11 +735,10 @@
       "fill-opacity": 0.9
     });
     SVG.create("text", g, {
-      y: 15,
+      y: 22,
       textContent: "Click To Focus",
       "font-size": 20,
       fill: "#FFF",
-      "alignment-baseline": "middle",
       "text-anchor": "middle"
     });
     show = function() {
@@ -765,7 +828,7 @@
     });
   })();
 
-  Take(["GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween1"], function(GUI, Pressure, Reaction, Resize, SVG, TRS, Tween1) {
+  Take(["GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween1", "SVGReady"], function(GUI, Pressure, Reaction, Resize, SVG, TRS, Tween1) {
     var alpha, atmLabel, atmRect, g, maxLabel, maxRect, medLabel, medRect, minLabel, minRect, pressures, tick, title, u, vacLabel, vacRect;
     u = 36;
     g = TRS(SVG.create("g", SVG.root));
@@ -1216,70 +1279,6 @@
       return instance;
     };
     return Make("TopBar", TopBar);
-  });
-
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.element.createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.element;
-    maskedElement = maskedInstance.element;
-    rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    return maskedParent.setAttribute("style", newStyle);
   });
 
   Take(["Symbol"], function(Symbol) {
@@ -2077,15 +2076,13 @@
   Take(["Pressure", "SVG"], function(Pressure, SVG) {
     var Style;
     return Make("Style", Style = function(scope) {
-      var alpha, element, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, t, text, textElement, visible;
+      var alpha, element, fillPath, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, strokePath, text, textElement, visible;
       element = scope.element;
       parent = element.parentNode;
       placeholder = SVG.create("g");
+      strokePath = fillPath = element.querySelector("path");
       isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
-      textElement = element.querySelector("text");
-      if ((t = textElement != null ? textElement.querySelector("tspan") : void 0) != null) {
-        textElement = t;
-      }
+      textElement = element.querySelector("tspan" || element.querySelector("text"));
       ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
       for (m = 0, len = ref1.length; m < len; m++) {
         prop = ref1[m];
@@ -2155,25 +2152,18 @@
         }
       });
       scope.stroke = function(color) {
+        if (strokePath != null) {
+          SVG.attr(strokePath, "stroke", null);
+          strokePath = null;
+        }
         return SVG.attr(element, "stroke", color);
       };
       scope.fill = function(color) {
-        var clone, defs, link, path, use, useParent;
-        path = element.querySelector("path");
-        use = element.querySelector("use");
-        if ((path == null) && (use != null)) {
-          useParent = PureDom.querySelectorParent(use, "g");
-          parent = PureDom.querySelectorParent(element, "svg");
-          defs = parent.querySelector("defs");
-          link = defs.querySelector(use.getAttribute("xlink:href"));
-          clone = link.cloneNode(true);
-          useParent.appendChild(clone);
-          useParent.removeChild(use);
+        if (fillPath != null) {
+          SVG.attr(fillPath, "fill", null);
+          fillPath = null;
         }
-        path = element.querySelector("path");
-        if (path != null) {
-          return path.setAttributeNS(null, "fill", color);
-        }
+        return SVG.attr(element, "fill", color);
       };
       scope.linearGradient = function(stops, x1, y1, x2, y2) {
         if (x1 == null) {
@@ -3396,11 +3386,20 @@
   });
 
   Take(["Action", "Reaction", "DOMContentLoaded"], function(Action, Reaction) {
-    var setBackground;
+    var len, m, o, ref, setBackground, target;
+    target = null;
+    ref = window.parent.document.querySelectorAll("object");
+    for (m = 0, len = ref.length; m < len; m++) {
+      o = ref[m];
+      if (o.contentDocument = document) {
+        target = o;
+        break;
+      }
+    }
     setBackground = function(v) {
       var c;
       c = "hsl(220, 5%, " + (v * 100) + "%)";
-      return document.rootElement.style.backgroundColor = c;
+      return target.style.background = c;
     };
     Reaction("Background:Set", setBackground);
     return Take("GUIReady", function() {

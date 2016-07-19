@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- This particular viewport tag allows GPU rasterization on Android -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <style>
     html, body, object {
       display: block;
@@ -13,6 +14,7 @@
     }
   </style>
   <script>
+    // This avoids scrolling the whole window on iOS
     window.addEventListener("touchmove",function(e){e.preventDefault()});
   </script>
 </head>

@@ -1,4 +1,4 @@
-Take ["GUI","Pressure","Reaction","Resize","SVG","TRS","Tween1"],
+Take ["GUI","Pressure","Reaction","Resize","SVG","TRS","Tween1","SVGReady"],
 (      GUI , Pressure , Reaction , Resize , SVG , TRS , Tween1)->
   
   u = 36

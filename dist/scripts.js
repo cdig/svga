@@ -705,7 +705,7 @@
     return window.focus();
   });
 
-  Take(["Env", "Resize", "SVG", "Tick", "TopBarReady"], function(Env, Resize, SVG, Tick) {
+  Take(["Env", "Resize", "SVG", "Tick", "SVGReady"], function(Env, Resize, SVG, Tick) {
     var avgLength, avgList, count, freq, text, total;
     if (!Env.dev) {
       return;

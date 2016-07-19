@@ -1,4 +1,4 @@
-Take ["Env", "Resize", "SVG", "Tick", "TopBarReady"], (Env, Resize, SVG, Tick)->
+Take ["Env", "Resize", "SVG", "Tick", "SVGReady"], (Env, Resize, SVG, Tick)->
   return unless Env.dev
   
   count = 60 # Update immediately

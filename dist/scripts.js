@@ -2,25 +2,15 @@
   var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice;
 
-  Take(["Action", "Dispatch", "Env", "RAF", "ScopeBuilder", "SVGCrawler", "Tween1", "DOMContentLoaded"], function(Action, Dispatch, Env, RAF, ScopeBuilder, SVGCrawler, Tween1) {
+  Take(["ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(ScopeBuilder, SVGCrawler) {
     var crawlerData, svg;
     svg = document.rootElement;
     crawlerData = SVGCrawler(svg.querySelector("#root"));
     Make("SVGReady");
     return setTimeout(function() {
-      var rootScope;
-      rootScope = ScopeBuilder(crawlerData);
-      Dispatch.runSetup(rootScope);
-      Make("ScopeReady");
-      if (Env.dev) {
-        return setTimeout(function() {
-          return svg.style.opacity = 1;
-        });
-      } else {
-        return Tween1(0, 1, .5, function(v) {
-          return svg.style.opacity = v;
-        });
-      }
+      ScopeBuilder(crawlerData);
+      Make("ScopeSetup");
+      return Make("ScopeReady");
     });
   });
 
@@ -1217,6 +1207,18 @@
     return Make("TopBar", TopBar);
   });
 
+  Take(["Env", "Tween1", "ScopeReady"], function(Env, Tween1) {
+    if (Env.dev) {
+      return setTimeout(function() {
+        return document.rootElement.style.opacity = 1;
+      });
+    } else {
+      return Tween1(0, 1, .5, function(v) {
+        return document.rootElement.style.opacity = v;
+      });
+    }
+  });
+
   Take("SVG", function(SVG) {
     var Highlighter;
     return Make("Highlighter", Highlighter = {
@@ -1390,67 +1392,6 @@
         }
       }
     });
-  })();
-
-  (function() {
-    var Dispatch, buildSubCache, cache, dispatchWithFn, rootScope;
-    cache = {};
-    rootScope = null;
-    Make("Dispatch", Dispatch = function(action, sub, node) {
-      var base1, fn, len, m, nameCache, ref, results;
-      if (sub == null) {
-        sub = "children";
-      }
-      if (node == null) {
-        node = rootScope;
-      }
-      if (typeof action === "function") {
-        return dispatchWithFn(node, action, sub);
-      } else {
-        if (cache[sub] == null) {
-          cache[sub] = {};
-        }
-        if (cache[sub][action] == null) {
-          nameCache = (base1 = cache[sub])[action] != null ? base1[action] : base1[action] = [];
-          buildSubCache(node, action, sub, nameCache);
-        }
-        ref = cache[sub][action];
-        results = [];
-        for (m = 0, len = ref.length; m < len; m++) {
-          fn = ref[m];
-          results.push(fn());
-        }
-        return results;
-      }
-    });
-    Dispatch.runSetup = function(rs) {
-      rootScope = rs;
-      return Dispatch("setup");
-    };
-    buildSubCache = function(node, name, sub, nameCache) {
-      var child, len, m, ref, results;
-      if (typeof node[name] === "function") {
-        nameCache.push(node[name].bind(node));
-      }
-      ref = node[sub];
-      results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
-        results.push(buildSubCache(child, name, sub, nameCache));
-      }
-      return results;
-    };
-    return dispatchWithFn = function(node, fn, sub) {
-      var child, len, m, ref, results;
-      fn(node);
-      ref = node[sub];
-      results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
-        results.push(dispatchWithFn(child, fn, sub));
-      }
-      return results;
-    };
   })();
 
   (function() {
@@ -3261,7 +3202,7 @@
     });
   });
 
-  Take(["Action", "Dispatch", "Reaction"], function(Action, Dispatch, Reaction) {
+  Take(["Action", "Reaction"], function(Action, Reaction) {
     var animateMode;
     animateMode = false;
     Take("ScopeReady", function() {
@@ -3271,12 +3212,10 @@
       return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
     });
     Reaction("Schematic:Hide", function() {
-      animateMode = true;
-      return Dispatch("animateMode");
+      return animateMode = true;
     });
     return Reaction("Schematic:Show", function() {
-      animateMode = false;
-      return Dispatch("schematicMode");
+      return animateMode = false;
     });
   });
 
@@ -3321,6 +3260,25 @@
       });
       return Reaction("Schematic:Show", function() {
         return running = false;
+      });
+    });
+  });
+
+  Take(["Reaction", "ScopeBuilder"], function(Reaction, ScopeBuilder) {
+    return ScopeBuilder.process(function(scope) {
+      Reaction("Schematic:Hide", function() {
+        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
+      });
+      return Reaction("Schematic:Show", function() {
+        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
+      });
+    });
+  });
+
+  Take(["ScopeBuilder"], function(ScopeBuilder) {
+    return ScopeBuilder.process(function(scope) {
+      return Take("ScopeSetup", function() {
+        return typeof scope.setup === "function" ? scope.setup() : void 0;
       });
     });
   });

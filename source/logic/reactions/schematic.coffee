@@ -1,4 +1,4 @@
-Take ["Action", "Dispatch", "Reaction"], (Action, Dispatch, Reaction)->
+Take ["Action", "Reaction"], (Action, Reaction)->
   animateMode = false
   
   Take "ScopeReady", ()->
@@ -9,8 +9,6 @@ Take ["Action", "Dispatch", "Reaction"], (Action, Dispatch, Reaction)->
   
   Reaction "Schematic:Hide", ()->
     animateMode = true
-    Dispatch "animateMode"
   
   Reaction "Schematic:Show", ()->
     animateMode = false
-    Dispatch "schematicMode"

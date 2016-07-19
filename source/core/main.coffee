@@ -1,8 +1,8 @@
-Take ["Action", "Dispatch", "Env", "RAF", "ScopeBuilder", "SVGCrawler", "Tween1", "DOMContentLoaded"], (Action, Dispatch, Env, RAF, ScopeBuilder, SVGCrawler, Tween1)->
+Take ["ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (ScopeBuilder, SVGCrawler)->
   
   # This is the very first code that touches the DOM. It crawls the entire DOM tree and:
-  # A) Might do transformations, to bring things to a more ideal arrangement for animating.
-  # B) Grabs a bunch of references (crawlerData) that we'll use to link Symbol code to the DOM.
+  # 1. Applies transformations to bring things to a more ideal arrangement for animating
+  # 2. Grabs a bunch of references (crawlerData) that we'll use to link Symbol code to the DOM
   svg = document.rootElement
   crawlerData = SVGCrawler svg.querySelector "#root"
   
@@ -14,16 +14,11 @@ Take ["Action", "Dispatch", "Env", "RAF", "ScopeBuilder", "SVGCrawler", "Tween1"
     # By now, we're assuming all Symbols & Controls are ready
     
     # Use the references collected during preprocessing to build our Scope tree.
-    rootScope = ScopeBuilder crawlerData
+    ScopeBuilder crawlerData
     
-    # Register the rootScope with Dispatch, and run all the scope.setup() functions
-    Dispatch.runSetup rootScope
+    # Run all the scope setup functions
+    Make "ScopeSetup"
     
     # Inform the system that all our scopes are built and setup
     Make "ScopeReady"
     
-    # Unhide the <svg>
-    if Env.dev
-      setTimeout ()-> svg.style.opacity = 1
-    else
-      Tween1 0, 1, .5, (v)-> svg.style.opacity = v

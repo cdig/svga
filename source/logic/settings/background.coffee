@@ -11,11 +11,11 @@ Take ["Action", "Reaction", "DOMContentLoaded"], (Action, Reaction)->
   
   
   setBackground = (v)->
-    c = "hsl(220, 5%, #{v*100}%)"
+    c = "hsl(220, 0%, #{v*100}%)"
     target.style.background = c
       
   
   Reaction "Background:Set", setBackground
   
-  Take "GUIReady", ()->
+  Take "ScopeReady", ()->
     Action "Background:Set", .75

@@ -1,4 +1,4 @@
-Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween","ScopeReady"],
+Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
 (      GUI , KeyMe , Reaction , RAF , Resize , SVG , TRS , Tween)->
   minVel = 0.1
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
@@ -47,8 +47,6 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween","ScopeReady"],
       window.addEventListener "touchstart", touchStart
       window.addEventListener "dblclick", dblclick
       window.addEventListener "wheel", wheel
-    
-    Make "NavReady"
   
   resize = ()->
     width = window.innerWidth - GUI.ControlPanel.width

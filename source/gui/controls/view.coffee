@@ -43,7 +43,7 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
     SVG.attr bg, "fill", "hsl(230, 10%, #{l*100}%)"
   
   
-  Take "GUIReady", ()->
+  Take "ScopeReady", ()->
     padX = GUI.ControlPanel.padX
     padY = GUI.ControlPanel.padY
     unit = GUI.ControlPanel.unit

@@ -1,11 +1,10 @@
-Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Action, RAF, ScopeBuilder, SVGCrawler)->
+Take ["Action", "Dispatch", "Env", "RAF", "ScopeBuilder", "SVGCrawler", "Tween1", "DOMContentLoaded"], (Action, Dispatch, Env, RAF, ScopeBuilder, SVGCrawler, Tween1)->
   
   # This is the very first code that touches the DOM. It crawls the entire DOM tree and:
   # A) Might do transformations, to bring things to a more ideal arrangement for animating.
   # B) Grabs a bunch of references (crawlerData) that we'll use to link Symbol code to the DOM.
   svg = document.rootElement
   crawlerData = SVGCrawler svg.querySelector "#root"
-  
   
   # Allow other systems that mutate the DOM to do their thing, now that we're done preprocessing
   Make "SVGReady"
@@ -17,13 +16,14 @@ Take ["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Actio
     # Use the references collected during preprocessing to build our Scope tree.
     rootScope = ScopeBuilder crawlerData
     
-    # This is used by Dispatch and Nav — we should figure out how to get away from this.
-    Make "rootScope", rootScope
+    # Register the rootScope with Dispatch, and run all the scope.setup() functions
+    Dispatch.runSetup rootScope
     
-    # Ready to rock!
-    Make "setup"
+    # Inform the system that all our scopes are built and setup
     Make "ScopeReady"
     
-    Take ["TopBarReady", "NavReady"], ()->
-      Make "GUIReady"
-      svg.style.opacity = 1
+    # Unhide the <svg>
+    if Env.dev
+      setTimeout ()-> svg.style.opacity = 1
+    else
+      Tween1 0, 1, .5, (v)-> svg.style.opacity = v

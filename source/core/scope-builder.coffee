@@ -63,5 +63,7 @@ Take ["Style","Symbol","Transform"],
       Symbol.forSymbolName "HydraulicLine"
     else if instanceName?.indexOf("Field") > -1
       Symbol.forSymbolName "HydraulicField"
+    else if instanceName?.indexOf("Mask") > -1
+      Symbol.forSymbolName "Mask"
     else
       Symbol.forSymbolName "DefaultElement"

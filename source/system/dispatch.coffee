@@ -6,9 +6,10 @@
 
 do ()->
   cache = {}
+  rootScope = null
   
-  Make "Dispatch", (action, sub = "children", node)->
-    node ?= Take "rootScope"
+  Make "Dispatch", Dispatch = (action, sub = "children", node)->
+    node ?= rootScope
     if typeof action is "function"
       dispatchWithFn node, action, sub
     else
@@ -17,6 +18,10 @@ do ()->
         nameCache = cache[sub][action] ?= []
         buildSubCache node, action, sub, nameCache
       fn() for fn in cache[sub][action]
+  
+  Dispatch.runSetup = (rs)->
+    rootScope = rs
+    Dispatch "setup"
   
   buildSubCache = (node, name, sub, nameCache)->
     nameCache.push node[name].bind node if typeof node[name] is "function"

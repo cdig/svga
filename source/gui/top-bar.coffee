@@ -44,7 +44,6 @@ Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
     TRS.move menu.element, GUI.TopBar.Menu.inset
     TRS.move help.element, window.innerWidth - GUI.TopBar.Help.inset
     TRS.move settings.element, window.innerWidth - GUI.TopBar.Settings.inset
-    Make "TopBarReady" unless Take "TopBarReady"
   
   construct = (i, name, api)->
     throw "Unknown TopBar button name: #{name}" unless api?

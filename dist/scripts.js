@@ -1,9 +1,8 @@
 (function() {
-  var Mask, getParentInverseTransform,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice;
 
-  Take(["Action", "RAF", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Action, RAF, ScopeBuilder, SVGCrawler) {
+  Take(["Action", "Dispatch", "Env", "RAF", "ScopeBuilder", "SVGCrawler", "Tween1", "DOMContentLoaded"], function(Action, Dispatch, Env, RAF, ScopeBuilder, SVGCrawler, Tween1) {
     var crawlerData, svg;
     svg = document.rootElement;
     crawlerData = SVGCrawler(svg.querySelector("#root"));
@@ -11,13 +10,17 @@
     return setTimeout(function() {
       var rootScope;
       rootScope = ScopeBuilder(crawlerData);
-      Make("rootScope", rootScope);
-      Make("setup");
+      Dispatch.runSetup(rootScope);
       Make("ScopeReady");
-      return Take(["TopBarReady", "NavReady"], function() {
-        Make("GUIReady");
-        return svg.style.opacity = 1;
-      });
+      if (Env.dev) {
+        return setTimeout(function() {
+          return svg.style.opacity = 1;
+        });
+      } else {
+        return Tween1(0, 1, .5, function(v) {
+          return svg.style.opacity = v;
+        });
+      }
     });
   });
 
@@ -110,6 +113,8 @@
         return Symbol.forSymbolName("HydraulicLine");
       } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
         return Symbol.forSymbolName("HydraulicField");
+      } else if ((instanceName != null ? instanceName.indexOf("Mask") : void 0) > -1) {
+        return Symbol.forSymbolName("Mask");
       } else {
         return Symbol.forSymbolName("DefaultElement");
       }
@@ -657,70 +662,6 @@
     });
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  getParentInverseTransform = function(root, element, currentTransform) {
-    var inv, inversion, matches, matrixString, newMatrix;
-    if (element.nodeName === "svg" || element.getAttribute("id") === "mainStage") {
-      return currentTransform;
-    }
-    newMatrix = root.element.createSVGMatrix();
-    matrixString = element.getAttribute("transform");
-    matches = matrixString.match(/[+-]?\d+(\.\d+)?/g);
-    newMatrix.a = matches[0];
-    newMatrix.b = matches[1];
-    newMatrix.c = matches[2];
-    newMatrix.d = matches[3];
-    newMatrix.e = matches[4];
-    newMatrix.f = matches[5];
-    inv = newMatrix.inverse();
-    inversion = "matrix(" + inv.a + ", " + inv.b + ", " + inv.c + ", " + inv.d + ", " + inv.e + ", " + inv.f + ")";
-    currentTransform = currentTransform + " " + inversion;
-    return getParentInverseTransform(root, element.parentNode, currentTransform);
-  };
-
-  Make("Mask", Mask = function(root, maskInstance, maskedInstance, maskName) {
-    var invertMatrix, mask, maskElement, maskedElement, maskedParent, newStyle, origMatrix, origStyle, rootElement, transString;
-    maskElement = maskInstance.element;
-    maskedElement = maskedInstance.element;
-    rootElement = root.element;
-    mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
-    mask.setAttribute("id", maskName);
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    maskedParent = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    maskedParent.setAttribute('transform', maskedElement.getAttribute('transform'));
-    maskedElement.parentNode.insertBefore(maskedParent, maskedElement);
-    maskedElement.parentNode.removeChild(maskedElement);
-    maskedParent.appendChild(maskedElement);
-    mask.appendChild(maskElement);
-    rootElement.querySelector('defs').insertBefore(mask, null);
-    invertMatrix = getParentInverseTransform(root, maskedElement.parentNode, "");
-    origMatrix = maskElement.getAttribute("transform");
-    transString = invertMatrix + " " + origMatrix + " ";
-    maskElement.setAttribute('transform', transString);
-    origStyle = maskedElement.getAttribute('style');
-    if (origStyle != null) {
-      newStyle = origStyle + ("; mask: url(#" + maskName + ");");
-    } else {
-      newStyle = "mask: url(#" + maskName + ");";
-    }
-    maskedElement.setAttribute('transform', "matrix(1, 0, 0, 1, 0, 0)");
-    return maskedParent.setAttribute("style", newStyle);
-  });
-
   Take(["Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", SVG.root));
@@ -918,10 +859,9 @@
     alpha = 1;
     (tick = function(v) {
       alpha = v;
-      SVG.styles(g, {
-        opacity: alpha * 2 - 1
+      return SVG.styles(g, {
+        opacity: v * 2 - 1
       });
-      return TRS.scale(g, alpha / 10 + .9);
     })(0);
     Reaction("Help:Show", function() {
       return Tween1(alpha, 1, 1.7, tick);
@@ -1077,7 +1017,7 @@
     }));
     TRS.move(sliders, -128);
     slider = Control({
-      name: "Color2",
+      name: "Background",
       type: "Slider",
       parent: sliders,
       change: function(v) {
@@ -1099,10 +1039,9 @@
     alpha = 1;
     (tick = function(v) {
       alpha = v;
-      SVG.styles(g, {
+      return SVG.styles(g, {
         opacity: alpha * 2 - 1
       });
-      return TRS.scale(g, alpha / 10 + .9);
     })(0);
     Reaction("Settings:Show", function() {
       return Tween1(alpha, 1, 1.7, tick);
@@ -1170,10 +1109,7 @@
       }
       TRS.move(menu.element, GUI.TopBar.Menu.inset);
       TRS.move(help.element, window.innerWidth - GUI.TopBar.Help.inset);
-      TRS.move(settings.element, window.innerWidth - GUI.TopBar.Settings.inset);
-      if (!Take("TopBarReady")) {
-        return Make("TopBarReady");
-      }
+      return TRS.move(settings.element, window.innerWidth - GUI.TopBar.Settings.inset);
     };
     construct = function(i, name, api) {
       var buttonPad, buttonWidth, custom, iconRect, iconX, iconY, instance, source, textRect, textX;
@@ -1281,6 +1217,27 @@
     return Make("TopBar", TopBar);
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  (function() {
+    return Make("Mask", function() {
+      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+    });
+  })();
+
   Take(["Symbol"], function(Symbol) {
     return Symbol("DefaultElement", [], function(svgElement) {
       var ref, scope, textElement;
@@ -1380,6 +1337,14 @@
     });
   });
 
+  Take(["SVG", "Symbol"], function(SVG, Symbol) {
+    return Symbol("Mask", [], function(svgElement) {
+      var scope;
+      svgElement.parentNode.removeChild(svgElement);
+      return scope = {};
+    });
+  });
+
   (function() {
     var cbs;
     cbs = [];
@@ -1428,15 +1393,16 @@
   })();
 
   (function() {
-    var buildSubCache, cache, dispatchWithFn;
+    var Dispatch, buildSubCache, cache, dispatchWithFn, rootScope;
     cache = {};
-    Make("Dispatch", function(action, sub, node) {
+    rootScope = null;
+    Make("Dispatch", Dispatch = function(action, sub, node) {
       var base1, fn, len, m, nameCache, ref, results;
       if (sub == null) {
         sub = "children";
       }
       if (node == null) {
-        node = Take("rootScope");
+        node = rootScope;
       }
       if (typeof action === "function") {
         return dispatchWithFn(node, action, sub);
@@ -1457,6 +1423,10 @@
         return results;
       }
     });
+    Dispatch.runSetup = function(rs) {
+      rootScope = rs;
+      return Dispatch("setup");
+    };
     buildSubCache = function(node, name, sub, nameCache) {
       var child, len, m, ref, results;
       if (typeof node[name] === "function") {
@@ -1728,7 +1698,7 @@
     return Make("KeyNames", KeyNames);
   })();
 
-  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "SVG", "TRS", "Tween", "ScopeReady"], function(GUI, KeyMe, Reaction, RAF, Resize, SVG, TRS, Tween) {
+  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "SVG", "TRS", "Tween"], function(GUI, KeyMe, Reaction, RAF, Resize, SVG, TRS, Tween) {
     var accel, alreadyRan, base, cloneTouches, dblclick, decel, dist, distTo, distTouches, eventInside, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchEnd, touchMove, touchStart, touches, vel, wheel, zoom;
     minVel = 0.1;
     maxVel = {
@@ -1807,9 +1777,8 @@
         });
         window.addEventListener("touchstart", touchStart);
         window.addEventListener("dblclick", dblclick);
-        window.addEventListener("wheel", wheel);
+        return window.addEventListener("wheel", wheel);
       }
-      return Make("NavReady");
     });
     resize = function() {
       var hFrac, height, wFrac, width;
@@ -3128,7 +3097,7 @@
       l = (v + .4) % 1;
       return SVG.attr(bg, "fill", "hsl(230, 10%, " + (l * 100) + "%)");
     });
-    Take("GUIReady", function() {
+    Take("ScopeReady", function() {
       var consumedHeight, h, len, len1, m, n, padX, padY, panelWidth, row, scope, unit, w, widthUnit, x, y;
       padX = GUI.ControlPanel.padX;
       padY = GUI.ControlPanel.padY;
@@ -3313,10 +3282,6 @@
     });
   });
 
-  Take(["Dispatch", "setup"], function(Dispatch) {
-    return Dispatch("setup");
-  });
-
   Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
     return ScopeBuilder.process(function(scope) {
       var animate, running, startTime;
@@ -3398,11 +3363,11 @@
     }
     setBackground = function(v) {
       var c;
-      c = "hsl(220, 5%, " + (v * 100) + "%)";
+      c = "hsl(220, 0%, " + (v * 100) + "%)";
       return target.style.background = c;
     };
     Reaction("Background:Set", setBackground);
-    return Take("GUIReady", function() {
+    return Take("ScopeReady", function() {
       return Action("Background:Set", .75);
     });
   });

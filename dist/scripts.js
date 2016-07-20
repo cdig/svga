@@ -60,10 +60,16 @@
   });
 
   Take(["SVG"], function(SVG) {
-    var SVGCrawler, defs, deprecations;
+    var SVGCrawler, crawl, defs, deprecations;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     defs = {};
-    return Make("SVGCrawler", SVGCrawler = function(elm) {
+    Make("SVGCrawler", SVGCrawler = function(elm) {
+      var tree;
+      tree = crawl(elm);
+      defs = null;
+      return tree;
+    });
+    return crawl = function(elm) {
       var childElm, childNodes, clone, def, defId, len, m, ref, target;
       target = {
         elm: elm,
@@ -76,7 +82,7 @@
           console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
           elm.removeChild(childElm);
         } else if (childElm instanceof SVGGElement) {
-          target.sub.push(SVGCrawler(childElm));
+          target.sub.push(crawl(childElm));
         } else if (childElm instanceof SVGUseElement) {
           defId = childElm.getAttribute("xlink:href");
           def = defs[defId] != null ? defs[defId] : defs[defId] = SVG.defs.querySelector(defId);
@@ -86,12 +92,12 @@
             def.parentNode.removeChild(def);
           }
           if (clone instanceof SVGGElement) {
-            target.sub.push(SVGCrawler(clone));
+            target.sub.push(crawl(clone));
           }
         }
       }
       return target;
-    });
+    };
   });
 
   Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {

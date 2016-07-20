@@ -1,9 +1,14 @@
 Take ["SVG"], (SVG)->
   deprecations = ["controlPanel", "ctrlPanel", "navOverlay"]
-  
   defs = {}
   
   Make "SVGCrawler", SVGCrawler = (elm)->
+    tree = crawl elm
+    defs = null # Free this memory
+    return tree
+  
+  
+  crawl = (elm)->
     target =
       elm: elm
       sub: []
@@ -17,7 +22,7 @@ Take ["SVG"], (SVG)->
         elm.removeChild childElm
 
       else if childElm instanceof SVGGElement
-        target.sub.push SVGCrawler childElm
+        target.sub.push crawl childElm
 
       else if childElm instanceof SVGUseElement
         defId = childElm.getAttribute "xlink:href"
@@ -27,6 +32,6 @@ Take ["SVG"], (SVG)->
         def.parentNode.removeChild def if def.parentNode?
         
         if clone instanceof SVGGElement
-          target.sub.push SVGCrawler clone
+          target.sub.push crawl clone
     
     return target

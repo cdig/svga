@@ -15,67 +15,79 @@
   });
 
   Take(["Registry", "Symbol"], function(Registry, Symbol) {
-    var ScopeBuilder, buildScope;
-    Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
-      var len, m, ref, scope, subTarget;
+    var ScopeBuilder;
+    return Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
+      var element, instanceName, len, len1, m, n, ref, ref1, ref2, results, scope, scopeProcessor, strippedName, subTarget, symbol, symbolForInstanceName;
       if (parentScope == null) {
         parentScope = null;
       }
-      scope = buildScope(target.name, target.elm, parentScope);
-      ref = target.sub;
-      for (m = 0, len = ref.length; m < len; m++) {
-        subTarget = ref[m];
-        ScopeBuilder(subTarget, scope);
+      element = target.elm;
+      strippedName = (ref = element.id) != null ? ref.split("_")[0] : void 0;
+      symbolForInstanceName = Symbol.forInstanceName(element.id);
+      if (symbolForInstanceName != null) {
+        instanceName = element.id;
+        symbol = symbolForInstanceName;
+      } else if ((strippedName != null ? strippedName.indexOf("Line") : void 0) > -1) {
+        symbol = Symbol.forSymbolName("HydraulicLine");
+      } else if ((strippedName != null ? strippedName.indexOf("Field") : void 0) > -1) {
+        symbol = Symbol.forSymbolName("HydraulicField");
+      } else if ((strippedName != null ? strippedName.indexOf("Mask") : void 0) > -1) {
+        symbol = Symbol.forSymbolName("Mask");
+      } else {
+        symbol = Symbol.forSymbolName("DefaultElement");
       }
-      return scope;
-    });
-    return buildScope = function(instanceName, element, parentScope) {
-      var len, m, ref, s, scope, scopeProcessor, symbol;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      symbol = (s = Symbol.forInstanceName(instanceName)) != null ? s : (instanceName != null ? instanceName.indexOf("Line") : void 0) > -1 ? Symbol.forSymbolName("HydraulicLine") : (instanceName != null ? instanceName.indexOf("Field") : void 0) > -1 ? Symbol.forSymbolName("HydraulicField") : (instanceName != null ? instanceName.indexOf("Mask") : void 0) > -1 ? Symbol.forSymbolName("Mask") : Symbol.forSymbolName("DefaultElement");
       scope = symbol.create(element);
       element._scope = scope;
       scope.element = element;
-      scope.instanceName = instanceName;
       scope.children = [];
       scope.parent = parentScope;
       scope.root = (parentScope != null ? parentScope.root : void 0) || scope;
       scope.childName = "child" + ((parentScope != null ? parentScope.children.length : void 0) || 0);
-      scope.name = instanceName || scope.childName;
-      ref = Registry.all("ScopeProcessor");
-      for (m = 0, len = ref.length; m < len; m++) {
-        scopeProcessor = ref[m];
+      scope.name = instanceName || strippedName || scope.childName;
+      ref1 = Registry.all("ScopeProcessor");
+      for (m = 0, len = ref1.length; m < len; m++) {
+        scopeProcessor = ref1[m];
         scopeProcessor(scope);
       }
-      return scope;
-    };
+      ref2 = target.sub;
+      results = [];
+      for (n = 0, len1 = ref2.length; n < len1; n++) {
+        subTarget = ref2[n];
+        results.push(ScopeBuilder(subTarget, scope));
+      }
+      return results;
+    });
   });
 
-  Take(["SVG", "DOMContentLoaded"], function(SVG) {
-    var SVGCrawler, deprecations;
+  Take(["SVG"], function(SVG) {
+    var SVGCrawler, defs, deprecations;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
+    defs = {};
     return Make("SVGCrawler", SVGCrawler = function(elm) {
-      var childElm, childNodes, clone, len, link, m, ref, ref1, target, useParent;
+      var childElm, childNodes, clone, def, defId, len, m, ref, target;
       target = {
-        name: (ref = elm.getAttribute("id")) != null ? ref.split("_")[0] : void 0,
         elm: elm,
         sub: []
       };
       childNodes = Array.prototype.slice.call(elm.childNodes);
       for (m = 0, len = childNodes.length; m < len; m++) {
         childElm = childNodes[m];
-        if (ref1 = childElm.id, indexOf.call(deprecations, ref1) >= 0) {
+        if (ref = childElm.id, indexOf.call(deprecations, ref) >= 0) {
           console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
           elm.removeChild(childElm);
         } else if (childElm instanceof SVGGElement) {
           target.sub.push(SVGCrawler(childElm));
         } else if (childElm instanceof SVGUseElement) {
-          useParent = childElm.parentNode;
-          link = SVG.defs.querySelector(childElm.getAttribute("xlink:href"));
-          clone = link.cloneNode(true);
-          useParent.replaceChild(clone, childElm);
+          defId = childElm.getAttribute("xlink:href");
+          def = defs[defId] != null ? defs[defId] : defs[defId] = SVG.defs.querySelector(defId);
+          clone = def.cloneNode(true);
+          elm.replaceChild(clone, childElm);
+          if (def.parentNode != null) {
+            def.parentNode.removeChild(def);
+          }
+          if (clone instanceof SVGGElement) {
+            target.sub.push(SVGCrawler(clone));
+          }
         }
       }
       return target;
@@ -1225,11 +1237,15 @@
 
   Take(["Registry"], function(Registry) {
     return Registry.add("ScopeProcessor", function(scope) {
+      var base1, name1, ref;
       if (scope.parent != null) {
-        if (scope.parent[scope.name] != null) {
-          throw "Duplicate instance name detected in " + scope.parent.name + ": " + scope.name;
+        if (((ref = scope.parent[scope.name]) != null ? ref.element.id : void 0) === scope.element.id) {
+          console.log(scope.parent);
+          throw "Duplicate instance name detected in ^^^ " + scope.parent.name + ": " + scope.name;
         }
-        scope.parent[scope.name] = scope;
+        if ((base1 = scope.parent)[name1 = scope.name] == null) {
+          base1[name1] = scope;
+        }
         return scope.parent.children.push(scope);
       }
     });
@@ -2607,6 +2623,9 @@
       return bySymbolName[symbolName];
     };
     Symbol.forInstanceName = function(instanceName) {
+      if (instanceName == null) {
+        return;
+      }
       tooLate = true;
       return byInstanceName[instanceName];
     };

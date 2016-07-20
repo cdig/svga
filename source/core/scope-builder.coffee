@@ -1,36 +1,37 @@
 Take ["Registry", "Symbol"], (Registry, Symbol)->
-  
   Make "ScopeBuilder", ScopeBuilder = (target, parentScope = null)->
-    scope = buildScope target.name, target.elm, parentScope
-    for subTarget in target.sub
-      ScopeBuilder subTarget, scope
-    return scope
-  
-  
-  buildScope = (instanceName, element, parentScope = null)->
     
-    symbol = if (s = Symbol.forInstanceName instanceName)?
-      s
-    else if instanceName?.indexOf("Line") > -1
-      Symbol.forSymbolName "HydraulicLine"
-    else if instanceName?.indexOf("Field") > -1
-      Symbol.forSymbolName "HydraulicField"
-    else if instanceName?.indexOf("Mask") > -1
-      Symbol.forSymbolName "Mask"
+    element = target.elm
+    strippedName = element.id?.split("_")[0]
+    symbolForInstanceName = Symbol.forInstanceName element.id
+    
+    # Figure out which Symbol we should use to create the scope
+    if symbolForInstanceName?
+      instanceName = element.id
+      symbol = symbolForInstanceName
+    else if strippedName?.indexOf("Line") > -1
+      symbol = Symbol.forSymbolName "HydraulicLine"
+    else if strippedName?.indexOf("Field") > -1
+      symbol = Symbol.forSymbolName "HydraulicField"
+    else if strippedName?.indexOf("Mask") > -1
+      symbol = Symbol.forSymbolName "Mask"
     else
-      Symbol.forSymbolName "DefaultElement"
+      symbol = Symbol.forSymbolName "DefaultElement"
     
+    # Create the scope and add basic properties
     scope = symbol.create element
     element._scope = scope
     scope.element = element
-    scope.instanceName = instanceName
     scope.children = []
     scope.parent = parentScope
     scope.root = parentScope?.root or scope
     scope.childName = "child" + (parentScope?.children.length or 0)
-    scope.name = instanceName or scope.childName
+    scope.name = instanceName or strippedName or scope.childName
     
+    # Run this scope through all the processors, which add special properties, callbacks, and other fanciness
     for scopeProcessor in Registry.all "ScopeProcessor"
       scopeProcessor scope
     
-    scope # Composable
+    # Build child scopes
+    for subTarget in target.sub
+      ScopeBuilder subTarget, scope

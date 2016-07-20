@@ -26,6 +26,7 @@ do ()->
     bySymbolName[symbolName]
   
   Symbol.forInstanceName = (instanceName)->
+    return unless instanceName?
     tooLate = true
     byInstanceName[instanceName]
   

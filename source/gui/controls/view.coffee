@@ -35,7 +35,7 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
   
   
   Reaction "ControlPanel:Show", ()-> Tween1 panelX, 1, 0.7, tick
-  Reaction "ControlPanel:Hide", ()-> Tween1 panelX, 0, 0.7, tick
+  Reaction "ControlPanel:Hide", ()-> Tween1 panelX, -.2, 0.7, tick
   
   
   Reaction "Background:Set", (v)->

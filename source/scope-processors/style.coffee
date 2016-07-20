@@ -1,5 +1,5 @@
-Take ["Pressure", "SVG"], (Pressure, SVG)->
-  Make "Style", Style = (scope)->
+Take ["Pressure", "Registry", "SVG"], (Pressure, Registry, SVG)->
+  Registry.add "ScopeProcessor", (scope)->
     element = scope.element
     parent = element.parentNode
     placeholder = SVG.create "g"

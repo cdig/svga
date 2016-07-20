@@ -1,5 +1,5 @@
-Take ["RAF", "DOMContentLoaded"], (RAF)->
-  Make "Transform", Transform = (scope)->
+Take ["RAF", "Registry", "DOMContentLoaded"], (RAF, Registry)->
+  Registry.add "ScopeProcessor", (scope)->
     element = scope.element
     transformBaseVal = element.transform?.baseVal
     

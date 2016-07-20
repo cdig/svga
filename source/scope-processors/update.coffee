@@ -1,8 +1,8 @@
 # scope.update
 # An every-frame update function that can be turned on and off by the content creator.
 
-Take ["ScopeBuilder", "Tick"], (ScopeBuilder, Tick)->
-  ScopeBuilder.process (scope)->
+Take ["Registry", "Tick"], (Registry, Tick)->
+  Registry.add "ScopeProcessor", (scope)->
     return unless scope.update?
     
     running = false

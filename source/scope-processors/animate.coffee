@@ -1,8 +1,8 @@
 # scope.animate
 # An every-frame update function that only runs in animate mode.
 
-Take ["Reaction", "ScopeBuilder", "Tick"], (Reaction, ScopeBuilder, Tick)->
-  ScopeBuilder.process (scope)->
+Take ["Reaction", "Registry", "Tick"], (Reaction, Registry, Tick)->
+  Registry.add "ScopeProcessor", (scope)->
     return unless scope.animate?
     
     running = false

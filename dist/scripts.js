@@ -14,9 +14,9 @@
     });
   });
 
-  Take(["Registry", "Style", "Symbol", "Transform"], function(Registry, Style, Symbol, Transform) {
-    var ScopeBuilder, buildScope, getSymbol;
-    ScopeBuilder = function(target, parentScope) {
+  Take(["Registry", "Symbol"], function(Registry, Symbol) {
+    var ScopeBuilder, buildScope;
+    Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
       var len, m, ref, scope, subTarget;
       if (parentScope == null) {
         parentScope = null;
@@ -28,80 +28,28 @@
         ScopeBuilder(subTarget, scope);
       }
       return scope;
-    };
-    ScopeBuilder.process = function(fn) {
-      return Registry.add("ScopeBuilder", fn);
-    };
-    Make("ScopeBuilder", ScopeBuilder);
-    buildScope = function(instanceName, element, parentScope) {
-      var fn, len, m, name, ref, scope, symbol;
+    });
+    return buildScope = function(instanceName, element, parentScope) {
+      var len, m, ref, s, scope, scopeProcessor, symbol;
       if (parentScope == null) {
         parentScope = null;
       }
-      symbol = getSymbol(instanceName);
+      symbol = (s = Symbol.forInstanceName(instanceName)) != null ? s : (instanceName != null ? instanceName.indexOf("Line") : void 0) > -1 ? Symbol.forSymbolName("HydraulicLine") : (instanceName != null ? instanceName.indexOf("Field") : void 0) > -1 ? Symbol.forSymbolName("HydraulicField") : (instanceName != null ? instanceName.indexOf("Mask") : void 0) > -1 ? Symbol.forSymbolName("Mask") : Symbol.forSymbolName("DefaultElement");
       scope = symbol.create(element);
       element._scope = scope;
-      if (scope.children == null) {
-        scope.children = [];
-      }
-      if (scope.element == null) {
-        scope.element = element;
-      }
-      if (scope.parent == null) {
-        scope.parent = parentScope;
-      }
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please use FlowArrows instead.";
-        }
-      });
-      if (scope.getElement == null) {
-        scope.getElement = function() {
-          throw "@getElement() has been removed. Please use @element instead.";
-        };
-      }
-      Style(scope);
-      Transform(scope);
-      ref = Registry.all("ScopeBuilder");
+      scope.element = element;
+      scope.instanceName = instanceName;
+      scope.children = [];
+      scope.parent = parentScope;
+      scope.root = (parentScope != null ? parentScope.root : void 0) || scope;
+      scope.childName = "child" + ((parentScope != null ? parentScope.children.length : void 0) || 0);
+      scope.name = instanceName || scope.childName;
+      ref = Registry.all("ScopeProcessor");
       for (m = 0, len = ref.length; m < len; m++) {
-        fn = ref[m];
-        fn(scope);
-      }
-      if (parentScope != null) {
-        if (scope.root == null) {
-          scope.root = parentScope.root;
-        }
-        name = (instanceName != null) && instanceName !== "DefaultElement" ? instanceName : "child" + parentScope.children.length;
-        if (element.getAttributeNS(null, "class") == null) {
-          element.setAttributeNS(null, "class", name);
-        }
-        if (parentScope[name] != null) {
-          throw "Duplicate instance name detected in " + parentScope.name + ": " + name;
-        }
-        parentScope[name] = scope;
-        parentScope.children.push(scope);
-        scope.instanceName = instanceName;
-        scope.name = name;
-      } else {
-        if (scope.root == null) {
-          scope.root = scope;
-        }
+        scopeProcessor = ref[m];
+        scopeProcessor(scope);
       }
       return scope;
-    };
-    return getSymbol = function(instanceName) {
-      var symbol;
-      if (symbol = Symbol.forInstanceName(instanceName)) {
-        return symbol;
-      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicLine");
-      } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicField");
-      } else if ((instanceName != null ? instanceName.indexOf("Mask") : void 0) > -1) {
-        return Symbol.forSymbolName("Mask");
-      } else {
-        return Symbol.forSymbolName("DefaultElement");
-      }
     };
   });
 
@@ -1234,6 +1182,391 @@
     });
   })();
 
+  Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var animate, running, startTime;
+      if (scope.animate == null) {
+        return;
+      }
+      running = false;
+      startTime = 0;
+      animate = scope.animate;
+      scope.animate = function() {
+        throw "@animate() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return animate.call(scope, dt, time - startTime);
+      });
+      Reaction("Schematic:Hide", function() {
+        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        return running = true;
+      });
+      return Reaction("Schematic:Show", function() {
+        return running = false;
+      });
+    });
+  });
+
+  Take(["Registry"], function(Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please use FlowArrows instead.";
+        }
+      });
+      return scope.getElement != null ? scope.getElement : scope.getElement = function() {
+        throw "@getElement() has been removed. Please use @element instead.";
+      };
+    });
+  });
+
+  Take(["Registry"], function(Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      if (scope.parent != null) {
+        if (scope.parent[scope.name] != null) {
+          throw "Duplicate instance name detected in " + scope.parent.name + ": " + scope.name;
+        }
+        scope.parent[scope.name] = scope;
+        return scope.parent.children.push(scope);
+      }
+    });
+  });
+
+  Take(["Reaction", "Registry"], function(Reaction, Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      Reaction("Schematic:Hide", function() {
+        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
+      });
+      return Reaction("Schematic:Show", function() {
+        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
+      });
+    });
+  });
+
+  Take(["Registry"], function(Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      return Take("ScopeSetup", function() {
+        return typeof scope.setup === "function" ? scope.setup() : void 0;
+      });
+    });
+  });
+
+  Take(["Pressure", "Registry", "SVG"], function(Pressure, Registry, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var alpha, element, fillPath, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, strokePath, text, textElement, visible;
+      element = scope.element;
+      parent = element.parentNode;
+      placeholder = SVG.create("g");
+      strokePath = fillPath = element.querySelector("path");
+      isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
+      textElement = element.querySelector("tspan" || element.querySelector("text"));
+      ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        prop = ref1[m];
+        if (scope[prop] != null) {
+          console.log("ERROR ############################################");
+          console.log("scope:");
+          console.log(scope);
+          console.log("element:");
+          console.log(element);
+          throw "^ SVGA will overwrite @" + prop + " on this element. Please find a different name for your child/property named \"" + prop + "\".";
+        }
+      }
+      scope.style = function(key, val) {
+        return SVG.style(element, key, val);
+      };
+      pressure = null;
+      Object.defineProperty(scope, 'pressure', {
+        get: function() {
+          return pressure;
+        },
+        set: function(val) {
+          if (pressure !== val) {
+            pressure = val;
+            if (isLine && !scope.root.BROKEN_LINES) {
+              return scope.stroke(Pressure(scope.pressure));
+            } else {
+              return scope.fill(Pressure(scope.pressure));
+            }
+          }
+        }
+      });
+      text = textElement != null ? textElement.textContent : void 0;
+      Object.defineProperty(scope, 'text', {
+        get: function() {
+          return text;
+        },
+        set: function(val) {
+          if (text !== val) {
+            return SVG.attr("textContent", text = val);
+          }
+        }
+      });
+      visible = true;
+      Object.defineProperty(scope, 'visible', {
+        get: function() {
+          return visible;
+        },
+        set: function(val) {
+          if (visible !== val) {
+            if (visible = val) {
+              return parent.replaceChild(element, placeholder);
+            } else {
+              return parent.replaceChild(placeholder, element);
+            }
+          }
+        }
+      });
+      alpha = 1;
+      Object.defineProperty(scope, 'alpha', {
+        get: function() {
+          return alpha;
+        },
+        set: function(val) {
+          if (alpha !== val) {
+            return SVG.style(element, "opacity", alpha = val);
+          }
+        }
+      });
+      scope.stroke = function(color) {
+        if (strokePath != null) {
+          SVG.attr(strokePath, "stroke", null);
+          strokePath = null;
+        }
+        return SVG.attr(element, "stroke", color);
+      };
+      scope.fill = function(color) {
+        if (fillPath != null) {
+          SVG.attr(fillPath, "fill", null);
+          fillPath = null;
+        }
+        return SVG.attr(element, "fill", color);
+      };
+      scope.linearGradient = function(stops, x1, y1, x2, y2) {
+        if (x1 == null) {
+          x1 = 0;
+        }
+        if (y1 == null) {
+          y1 = 0;
+        }
+        if (x2 == null) {
+          x2 = 1;
+        }
+        if (y2 == null) {
+          y2 = 0;
+        }
+      };
+      scope.radialGradient = function(stops, cx, cy, radius) {};
+      scope.getPressure = function() {
+        throw "@getPressure() has been removed. Please use @pressure instead.";
+      };
+      scope.setPressure = function() {
+        throw "@setPressure(x) has been removed. Please use @pressure = x instead.";
+      };
+      scope.getPressureColor = function(pressure) {
+        throw "@getPressureColor() has been removed. Please Take and use Pressure() instead.";
+      };
+      return scope.setText = function(text) {
+        throw "@setText(x) has been removed. Please @text = x instead.";
+      };
+    });
+  });
+
+  Take(["RAF", "Registry", "DOMContentLoaded"], function(RAF, Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var applyTransform, denom, element, len, m, matrix, prop, ref, ref1, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
+      element = scope.element;
+      transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
+      transform = document.rootElement.createSVGTransform();
+      matrix = document.rootElement.createSVGMatrix();
+      x = 0;
+      y = 0;
+      rotation = 0;
+      scaleX = 1;
+      scaleY = 1;
+      ref1 = ["x", "y", "rotation", "scale", "scaleX", "scaleY"];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        prop = ref1[m];
+        if (scope[prop] != null) {
+          console.log(element);
+          throw "^ Transform will clobber @" + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
+        }
+      }
+      if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
+        t = transformBaseVal.getItem(0);
+        switch (t.type) {
+          case SVGTransform.SVG_TRANSFORM_MATRIX:
+            x = t.matrix.e;
+            y = t.matrix.f;
+            rotation = 180 / Math.PI * Math.atan2(t.matrix.b, t.matrix.a);
+            denom = Math.pow(t.matrix.a, 2) + Math.pow(t.matrix.c, 2);
+            scaleX = Math.sqrt(denom);
+            scaleY = (t.matrix.a * t.matrix.d - t.matrix.b * t.matrix.c) / scaleX;
+            break;
+          default:
+            throw new Error("^ Transform encountered an SVG element with a non-matrix transform");
+        }
+      } else if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) > 1) {
+        console.log(element);
+        throw new Error("^ Transform encountered an SVG element with more than one transform");
+      }
+      applyTransform = function() {
+        matrix.a = scaleX;
+        matrix.d = scaleY;
+        matrix.e = x;
+        matrix.f = y;
+        transform.setMatrix(matrix.rotate(rotation));
+        return element.transform.baseVal.initialize(transform);
+      };
+      Object.defineProperty(scope, 'x', {
+        get: function() {
+          return x;
+        },
+        set: function(val) {
+          if (x !== val) {
+            x = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'y', {
+        get: function() {
+          return y;
+        },
+        set: function(val) {
+          if (y !== val) {
+            y = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'rotation', {
+        get: function() {
+          return rotation;
+        },
+        set: function(val) {
+          if (rotation !== val) {
+            rotation = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return (scaleX + scaleY) / 2;
+        },
+        set: function(val) {
+          if (scaleX !== val || scaleY !== val) {
+            scaleX = scaleY = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scaleX', {
+        get: function() {
+          return scaleX;
+        },
+        set: function(val) {
+          if (scaleX !== val) {
+            scaleX = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scaleY', {
+        get: function() {
+          return scaleY;
+        },
+        set: function(val) {
+          if (scaleY !== val) {
+            scaleY = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'cx', {
+        get: function() {
+          throw "cx has been removed from the SVGA Transform system.";
+        },
+        set: function() {
+          throw "cx has been removed from the SVGA Transform system.";
+        }
+      });
+      Object.defineProperty(scope, 'cy', {
+        get: function() {
+          throw "cy has been removed from the SVGA Transform system.";
+        },
+        set: function() {
+          throw "cy has been removed from the SVGA Transform system.";
+        }
+      });
+      Object.defineProperty(scope, 'angle', {
+        get: function() {
+          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
+        },
+        set: function() {
+          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
+        }
+      });
+      Object.defineProperty(scope, 'turns', {
+        get: function() {
+          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
+        },
+        set: function() {
+          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
+        }
+      });
+      return Object.defineProperty(scope, "transform", {
+        get: function() {
+          throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
+        }
+      });
+    });
+  });
+
+  Take(["Registry", "Tick"], function(Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var running, startTime, update;
+      if (scope.update == null) {
+        return;
+      }
+      running = false;
+      startTime = null;
+      update = scope.update;
+      scope.update = function() {
+        throw "@update() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return update.call(scope, dt, time - startTime);
+      });
+      scope.update.start = function() {
+        if (startTime == null) {
+          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        }
+        return running = true;
+      };
+      scope.update.stop = function() {
+        return running = false;
+      };
+      scope.update.toggle = function() {
+        if (running) {
+          return scope.update.stop();
+        } else {
+          return scope.update.start();
+        }
+      };
+      return scope.update.restart = function() {
+        return startTime = null;
+      };
+    });
+  });
+
   Take(["Symbol"], function(Symbol) {
     return Symbol("DefaultElement", [], function(svgElement) {
       var ref, scope, textElement;
@@ -2006,128 +2339,6 @@
     });
   });
 
-  Take(["Pressure", "SVG"], function(Pressure, SVG) {
-    var Style;
-    return Make("Style", Style = function(scope) {
-      var alpha, element, fillPath, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, strokePath, text, textElement, visible;
-      element = scope.element;
-      parent = element.parentNode;
-      placeholder = SVG.create("g");
-      strokePath = fillPath = element.querySelector("path");
-      isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
-      textElement = element.querySelector("tspan" || element.querySelector("text"));
-      ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
-      for (m = 0, len = ref1.length; m < len; m++) {
-        prop = ref1[m];
-        if (scope[prop] != null) {
-          console.log("ERROR ############################################");
-          console.log("scope:");
-          console.log(scope);
-          console.log("element:");
-          console.log(element);
-          throw "^ SVGA will overwrite @" + prop + " on this element. Please find a different name for your child/property named \"" + prop + "\".";
-        }
-      }
-      scope.style = function(key, val) {
-        return SVG.style(element, key, val);
-      };
-      pressure = null;
-      Object.defineProperty(scope, 'pressure', {
-        get: function() {
-          return pressure;
-        },
-        set: function(val) {
-          if (pressure !== val) {
-            pressure = val;
-            if (isLine && !scope.root.BROKEN_LINES) {
-              return scope.stroke(Pressure(scope.pressure));
-            } else {
-              return scope.fill(Pressure(scope.pressure));
-            }
-          }
-        }
-      });
-      text = textElement != null ? textElement.textContent : void 0;
-      Object.defineProperty(scope, 'text', {
-        get: function() {
-          return text;
-        },
-        set: function(val) {
-          if (text !== val) {
-            return SVG.attr("textContent", text = val);
-          }
-        }
-      });
-      visible = true;
-      Object.defineProperty(scope, 'visible', {
-        get: function() {
-          return visible;
-        },
-        set: function(val) {
-          if (visible !== val) {
-            if (visible = val) {
-              return parent.replaceChild(element, placeholder);
-            } else {
-              return parent.replaceChild(placeholder, element);
-            }
-          }
-        }
-      });
-      alpha = 1;
-      Object.defineProperty(scope, 'alpha', {
-        get: function() {
-          return alpha;
-        },
-        set: function(val) {
-          if (alpha !== val) {
-            return SVG.style(element, "opacity", alpha = val);
-          }
-        }
-      });
-      scope.stroke = function(color) {
-        if (strokePath != null) {
-          SVG.attr(strokePath, "stroke", null);
-          strokePath = null;
-        }
-        return SVG.attr(element, "stroke", color);
-      };
-      scope.fill = function(color) {
-        if (fillPath != null) {
-          SVG.attr(fillPath, "fill", null);
-          fillPath = null;
-        }
-        return SVG.attr(element, "fill", color);
-      };
-      scope.linearGradient = function(stops, x1, y1, x2, y2) {
-        if (x1 == null) {
-          x1 = 0;
-        }
-        if (y1 == null) {
-          y1 = 0;
-        }
-        if (x2 == null) {
-          x2 = 1;
-        }
-        if (y2 == null) {
-          y2 = 0;
-        }
-      };
-      scope.radialGradient = function(stops, cx, cy, radius) {};
-      scope.getPressure = function() {
-        throw "@getPressure() has been removed. Please use @pressure instead.";
-      };
-      scope.setPressure = function() {
-        throw "@setPressure(x) has been removed. Please use @pressure = x instead.";
-      };
-      scope.getPressureColor = function(pressure) {
-        throw "@getPressureColor() has been removed. Please Take and use Pressure() instead.";
-      };
-      return scope.setText = function(text) {
-        throw "@setText(x) has been removed. Please @text = x instead.";
-      };
-    });
-  });
-
   (function() {
     var SVG, SVGReady, SVGReadyForMutation, createStops, defs, props, root, svgNS, xlinkNS;
     root = document.rootElement;
@@ -2434,159 +2645,6 @@
       }
       callbacks.push(cb);
       return cb;
-    });
-  });
-
-  Take(["RAF", "DOMContentLoaded"], function(RAF) {
-    var Transform;
-    return Make("Transform", Transform = function(scope) {
-      var applyTransform, denom, element, len, m, matrix, prop, ref, ref1, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
-      element = scope.element;
-      transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
-      transform = document.rootElement.createSVGTransform();
-      matrix = document.rootElement.createSVGMatrix();
-      x = 0;
-      y = 0;
-      rotation = 0;
-      scaleX = 1;
-      scaleY = 1;
-      ref1 = ["x", "y", "rotation", "scale", "scaleX", "scaleY"];
-      for (m = 0, len = ref1.length; m < len; m++) {
-        prop = ref1[m];
-        if (scope[prop] != null) {
-          console.log(element);
-          throw "^ Transform will clobber @" + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
-        }
-      }
-      if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
-        t = transformBaseVal.getItem(0);
-        switch (t.type) {
-          case SVGTransform.SVG_TRANSFORM_MATRIX:
-            x = t.matrix.e;
-            y = t.matrix.f;
-            rotation = 180 / Math.PI * Math.atan2(t.matrix.b, t.matrix.a);
-            denom = Math.pow(t.matrix.a, 2) + Math.pow(t.matrix.c, 2);
-            scaleX = Math.sqrt(denom);
-            scaleY = (t.matrix.a * t.matrix.d - t.matrix.b * t.matrix.c) / scaleX;
-            break;
-          default:
-            throw new Error("^ Transform encountered an SVG element with a non-matrix transform");
-        }
-      } else if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) > 1) {
-        console.log(element);
-        throw new Error("^ Transform encountered an SVG element with more than one transform");
-      }
-      applyTransform = function() {
-        matrix.a = scaleX;
-        matrix.d = scaleY;
-        matrix.e = x;
-        matrix.f = y;
-        transform.setMatrix(matrix.rotate(rotation));
-        return element.transform.baseVal.initialize(transform);
-      };
-      Object.defineProperty(scope, 'x', {
-        get: function() {
-          return x;
-        },
-        set: function(val) {
-          if (x !== val) {
-            x = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'y', {
-        get: function() {
-          return y;
-        },
-        set: function(val) {
-          if (y !== val) {
-            y = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'rotation', {
-        get: function() {
-          return rotation;
-        },
-        set: function(val) {
-          if (rotation !== val) {
-            rotation = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scale', {
-        get: function() {
-          return (scaleX + scaleY) / 2;
-        },
-        set: function(val) {
-          if (scaleX !== val || scaleY !== val) {
-            scaleX = scaleY = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scaleX', {
-        get: function() {
-          return scaleX;
-        },
-        set: function(val) {
-          if (scaleX !== val) {
-            scaleX = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scaleY', {
-        get: function() {
-          return scaleY;
-        },
-        set: function(val) {
-          if (scaleY !== val) {
-            scaleY = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'cx', {
-        get: function() {
-          throw "cx has been removed from the SVGA Transform system.";
-        },
-        set: function() {
-          throw "cx has been removed from the SVGA Transform system.";
-        }
-      });
-      Object.defineProperty(scope, 'cy', {
-        get: function() {
-          throw "cy has been removed from the SVGA Transform system.";
-        },
-        set: function() {
-          throw "cy has been removed from the SVGA Transform system.";
-        }
-      });
-      Object.defineProperty(scope, 'angle', {
-        get: function() {
-          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
-        },
-        set: function() {
-          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
-        }
-      });
-      Object.defineProperty(scope, 'turns', {
-        get: function() {
-          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
-        },
-        set: function() {
-          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
-        }
-      });
-      return Object.defineProperty(scope, "transform", {
-        get: function() {
-          throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
-        }
-      });
     });
   });
 
@@ -3256,93 +3314,6 @@
     });
     return Reaction("Help:Show", function() {
       return Action("Settings:Hide");
-    });
-  });
-
-  Take(["Reaction", "ScopeBuilder", "Tick"], function(Reaction, ScopeBuilder, Tick) {
-    return ScopeBuilder.process(function(scope) {
-      var animate, running, startTime;
-      if (scope.animate == null) {
-        return;
-      }
-      running = false;
-      startTime = 0;
-      animate = scope.animate;
-      scope.animate = function() {
-        throw "@animate() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return animate.call(scope, dt, time - startTime);
-      });
-      Reaction("Schematic:Hide", function() {
-        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        return running = true;
-      });
-      return Reaction("Schematic:Show", function() {
-        return running = false;
-      });
-    });
-  });
-
-  Take(["Reaction", "ScopeBuilder"], function(Reaction, ScopeBuilder) {
-    return ScopeBuilder.process(function(scope) {
-      Reaction("Schematic:Hide", function() {
-        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
-      });
-      return Reaction("Schematic:Show", function() {
-        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
-      });
-    });
-  });
-
-  Take(["ScopeBuilder"], function(ScopeBuilder) {
-    return ScopeBuilder.process(function(scope) {
-      return Take("ScopeSetup", function() {
-        return typeof scope.setup === "function" ? scope.setup() : void 0;
-      });
-    });
-  });
-
-  Take(["ScopeBuilder", "Tick"], function(ScopeBuilder, Tick) {
-    return ScopeBuilder.process(function(scope) {
-      var running, startTime, update;
-      if (scope.update == null) {
-        return;
-      }
-      running = false;
-      startTime = null;
-      update = scope.update;
-      scope.update = function() {
-        throw "@update() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return update.call(scope, dt, time - startTime);
-      });
-      scope.update.start = function() {
-        if (startTime == null) {
-          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        }
-        return running = true;
-      };
-      scope.update.stop = function() {
-        return running = false;
-      };
-      scope.update.toggle = function() {
-        if (running) {
-          return scope.update.stop();
-        } else {
-          return scope.update.start();
-        }
-      };
-      return scope.update.restart = function() {
-        return startTime = null;
-      };
     });
   });
 

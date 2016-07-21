@@ -1,16 +1,14 @@
-Take ["Action", "Reaction"],
-(      Action ,  Reaction )->
-
-  animate = false
-  mainStage = true
+Take ["Action", "Reaction"], (Action, Reaction)->
+  root = true
+  schematic = false
   
   update = ()->
-    if animate and mainStage
+    if root and not schematic
       Action "ControlPanel:Show"
     else
       Action "ControlPanel:Hide"
   
-  Reaction "Schematic:Show", ()-> update animate = false
-  Reaction "Schematic:Hide", ()-> update animate = true
-  Reaction "Root:Show", ()-> update mainStage = true
-  Reaction "Root:Hide", ()-> update mainStage = false
+  Reaction "Schematic:Hide", ()-> update schematic = false
+  Reaction "Schematic:Show", ()-> update schematic = true
+  Reaction "Root:Hide", ()-> update root = false
+  Reaction "Root:Show", ()-> update root = true

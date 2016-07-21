@@ -1,14 +1,11 @@
 Take ["Action", "Reaction"], (Action, Reaction)->
-  animateMode = false
+  schematicMode = true
   
-  Take "ScopeReady", ()->
-    Action "Schematic:Hide" # TODO: Debuggin
+  Reaction "Schematic:Hide", ()-> schematicMode = false
+  Reaction "Schematic:Show", ()-> schematicMode = true
   
   Reaction "Schematic:Toggle", ()->
-    Action if animateMode then "Schematic:Show" else "Schematic:Hide"
+    Action if schematicMode then "Schematic:Hide" else "Schematic:Show"
   
-  Reaction "Schematic:Hide", ()->
-    animateMode = true
-  
-  Reaction "Schematic:Show", ()->
-    animateMode = false
+  Take "ScopeReady", ()->
+    Action "Schematic:Show"

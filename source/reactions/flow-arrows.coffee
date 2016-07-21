@@ -1,14 +1,12 @@
 Take ["Action", "Reaction"], (Action, Reaction)->
-  showing = false
+  showing = true
   
-  Take "ScopeReady", ()->
-    Action "FlowArrows:Show"
+  Reaction "FlowArrows:Hide", ()-> showing = false
+  Reaction "FlowArrows:Show", ()-> showing = true
   
   Reaction "FlowArrows:Toggle", ()->
-    Action if showing then "FlowArrows:Show" else "FlowArrows:Hide"
+    Action if showing then "FlowArrows:Hide" else "FlowArrows:Show"
   
-  Reaction "FlowArrows:Hide", ()->
-    showing = true
-  
-  Reaction "FlowArrows:Show", ()->
-    showing = false
+  # TODO: Is this necessary? Isn't this the default?
+  Take "ScopeReady", ()->
+    Action "FlowArrows:Show"

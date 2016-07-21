@@ -1,6 +1,4 @@
-Take ["Action", "Reaction"],
-(      Action ,  Reaction )->
-
+Take ["Action", "Reaction"], (Action, Reaction)->
   help = false
   settings = false
   

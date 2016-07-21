@@ -49,6 +49,7 @@
       scope.root = (parentScope != null ? parentScope.root : void 0) || scope;
       scope.childName = "child" + ((parentScope != null ? parentScope.children.length : void 0) || 0);
       scope.instanceName = instanceName || strippedName || scope.childName;
+      scope._symbol = symbol;
       element.setAttribute("scope-name", scope.instanceName);
       attrs = Array.prototype.slice.call(element.attributes);
       for (m = 0, len = attrs.length; m < len; m++) {
@@ -1244,7 +1245,7 @@
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
     var showing;
-    showing = true;
+    showing = false;
     Reaction("FlowArrows:Hide", function() {
       return showing = false;
     });
@@ -1766,9 +1767,18 @@
       var scope;
       return scope = {
         setup: function() {
-          return Reaction("Schematic:Show", function() {
-            return scope.pressure = Pressure.white;
-          });
+          var isInsideOtherField, p;
+          isInsideOtherField = false;
+          p = scope.parent;
+          while ((p != null) && !isInsideOtherField) {
+            isInsideOtherField = p._symbol === scope._symbol;
+            p = p.parent;
+          }
+          if (!isInsideOtherField) {
+            return Reaction("Schematic:Show", function() {
+              return scope.pressure = Pressure.white;
+            });
+          }
         }
       };
     });
@@ -2148,8 +2158,8 @@
     return Make("KeyNames", KeyNames);
   })();
 
-  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "SVG", "TRS", "Tween"], function(GUI, KeyMe, Reaction, RAF, Resize, SVG, TRS, Tween) {
-    var accel, alreadyRan, base, cloneTouches, dblclick, decel, dist, distTo, distTouches, eventInside, getAccel, initialSize, maxVel, maxZoom, minVel, minZoom, ms, nav, pos, registrationOffset, render, rerun, resize, run, to, touchEnd, touchMove, touchStart, touches, vel, wheel, zoom;
+  Take(["GUI", "KeyMe", "Reaction", "RAF", "Resize", "SVG", "TRS", "Tween", "Tween1", "ScopeReady"], function(GUI, KeyMe, Reaction, RAF, Resize, SVG, TRS, Tween, Tween1) {
+    var accel, alreadyRan, base, cloneTouches, cpAnim, dblclick, decel, dist, distTo, distTouches, eventInside, getAccel, initialSize, maxVel, maxZoom, mid, minVel, minZoom, ms, msElm, nav, parent, pos, registrationOffset, render, rerun, resize, run, tick, to, touchEnd, touchMove, touchStart, touches, vel, wheel, zoom;
     minVel = 0.1;
     maxVel = {
       xy: 10,
@@ -2189,50 +2199,10 @@
     zoom = null;
     initialSize = null;
     alreadyRan = false;
-    Take("ScopeReady", function() {
-      var mid, msElm, parent;
-      if (msElm = document.querySelector("#mainStage")) {
-        parent = msElm.parentNode;
-        ms = msElm._scope;
-        nav = TRS(msElm);
-        mid = SVG.create("g", parent);
-        SVG.append(mid, nav.parentNode);
-        zoom = TRS(mid);
-        SVG.prepend(parent, zoom.parentNode);
-        initialSize = msElm.getBoundingClientRect();
-        registrationOffset.x = -ms.x + initialSize.left + initialSize.width / 2;
-        registrationOffset.y = -ms.y + initialSize.top + initialSize.height / 2;
-        TRS.abs(nav, {
-          ox: registrationOffset.x,
-          oy: registrationOffset.y
-        });
-        Resize(resize);
-        KeyMe("up", {
-          down: run
-        });
-        KeyMe("down", {
-          down: run
-        });
-        KeyMe("left", {
-          down: run
-        });
-        KeyMe("right", {
-          down: run
-        });
-        KeyMe("equals", {
-          down: run
-        });
-        KeyMe("minus", {
-          down: run
-        });
-        window.addEventListener("touchstart", touchStart);
-        window.addEventListener("dblclick", dblclick);
-        return window.addEventListener("wheel", wheel);
-      }
-    });
+    cpAnim = 0;
     resize = function() {
       var hFrac, height, wFrac, width;
-      width = window.innerWidth;
+      width = window.innerWidth - GUI.ControlPanel.width * cpAnim;
       height = window.innerHeight - GUI.TopBar.height;
       wFrac = width / initialSize.width;
       hFrac = height / initialSize.height;
@@ -2245,6 +2215,10 @@
         scale: base.z
       });
       return run();
+    };
+    tick = function(v) {
+      cpAnim = v;
+      return resize();
     };
     run = function() {
       var down, inputX, inputY, inputZ, left, minus, plus, right, up;
@@ -2415,13 +2389,58 @@
       }
       return Math.sqrt(x * x + y * y + z * z);
     };
-    return eventInside = function(x, y) {
+    eventInside = function(x, y) {
       var insidePanel, insideTopBar, panelHidden;
       panelHidden = false;
       insidePanel = x < window.innerWidth - GUI.ControlPanel.width;
       insideTopBar = y > GUI.TopBar.height;
       return insideTopBar && (panelHidden || insidePanel);
     };
+    msElm = document.getElementById("root");
+    if (msElm != null) {
+      parent = msElm.parentNode;
+      ms = msElm._scope;
+      nav = TRS(msElm);
+      mid = SVG.create("g", parent);
+      SVG.append(mid, nav.parentNode);
+      zoom = TRS(mid);
+      SVG.prepend(parent, zoom.parentNode);
+      initialSize = msElm.getBoundingClientRect();
+      registrationOffset.x = -ms.x + initialSize.left + initialSize.width / 2;
+      registrationOffset.y = -ms.y + initialSize.top + initialSize.height / 2;
+      TRS.abs(nav, {
+        ox: registrationOffset.x,
+        oy: registrationOffset.y
+      });
+      Resize(resize);
+      KeyMe("up", {
+        down: run
+      });
+      KeyMe("down", {
+        down: run
+      });
+      KeyMe("left", {
+        down: run
+      });
+      KeyMe("right", {
+        down: run
+      });
+      KeyMe("equals", {
+        down: run
+      });
+      KeyMe("minus", {
+        down: run
+      });
+      window.addEventListener("touchstart", touchStart);
+      window.addEventListener("dblclick", dblclick);
+      window.addEventListener("wheel", wheel);
+      Reaction("ControlPanel:Show", function() {
+        return Tween1(cpAnim, 1, 0.7, tick);
+      });
+      return Reaction("ControlPanel:Hide", function() {
+        return Tween1(cpAnim, 0, 0.7, tick);
+      });
+    }
   });
 
   (function() {

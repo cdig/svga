@@ -1,5 +1,5 @@
-Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
-(      GUI , KeyMe , Reaction , RAF , Resize , SVG , TRS , Tween)->
+Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween","Tween1","ScopeReady"],
+(      GUI , KeyMe , Reaction , RAF , Resize , SVG , TRS , Tween , Tween1)->
   minVel = 0.1
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
   minZoom = 0
@@ -15,41 +15,11 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
   zoom = null
   initialSize = null
   alreadyRan = false
+  cpAnim = 0
   
-  Take "ScopeReady", ()->
-    if msElm = document.querySelector "#mainStage"
-      parent = msElm.parentNode
-      ms = msElm._scope
-      nav = TRS msElm
-      mid = SVG.create "g", parent
-      SVG.append mid, nav.parentNode
-      zoom = TRS mid
-      SVG.prepend parent, zoom.parentNode
-      
-      # Debug points
-      # SVG.create "rect", nav, x:-4, y:-4, width:8, height:8, fill:"#F00"
-      # SVG.create "rect", nav.parentNode, x:-3, y:-3, width:6, height:6, fill:"#FF0"
-      # SVG.create "rect", zoom.parentNode, x:-2, y:-2, width:4, height:4, fill:"#F70"
-      
-      initialSize = msElm.getBoundingClientRect()
-      registrationOffset.x = -ms.x + initialSize.left + initialSize.width/2
-      registrationOffset.y = -ms.y + initialSize.top + initialSize.height/2
-      TRS.abs nav, ox: registrationOffset.x, oy: registrationOffset.y
-      
-      Resize resize
-      
-      KeyMe "up", down: run
-      KeyMe "down", down: run
-      KeyMe "left", down: run
-      KeyMe "right", down: run
-      KeyMe "equals", down: run
-      KeyMe "minus", down: run
-      window.addEventListener "touchstart", touchStart
-      window.addEventListener "dblclick", dblclick
-      window.addEventListener "wheel", wheel
   
   resize = ()->
-    width = window.innerWidth# - GUI.ControlPanel.width
+    width = window.innerWidth - GUI.ControlPanel.width * cpAnim
     height = window.innerHeight - GUI.TopBar.height
     wFrac = width / initialSize.width
     hFrac = height / initialSize.height
@@ -59,6 +29,11 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
     TRS.abs zoom, x: base.x, y: base.y, scale: base.z
     run()
   
+  
+  tick = (v)->
+    cpAnim = v
+    resize()
+
   
   run = ()->
     # This function executes immediately upon keypress, so we need to avoid running multiple times per frame
@@ -91,6 +66,7 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
     
     render()
   
+  
   rerun = ()->
     alreadyRan = false
     p = KeyMe.pressing
@@ -98,6 +74,7 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
       run()
     else
       vel.d = vel.z = 0
+  
   
   render = ()->
     pos.z = Math.min maxZoom, Math.max minZoom, pos.z
@@ -201,3 +178,39 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
     insidePanel = x < window.innerWidth - GUI.ControlPanel.width
     insideTopBar = y > GUI.TopBar.height
     return insideTopBar and (panelHidden or insidePanel)
+  
+  
+  msElm = document.getElementById "root"
+  if msElm?
+    parent = msElm.parentNode
+    ms = msElm._scope
+    nav = TRS msElm
+    mid = SVG.create "g", parent
+    SVG.append mid, nav.parentNode
+    zoom = TRS mid
+    SVG.prepend parent, zoom.parentNode
+    
+    # Debug points
+    # SVG.create "rect", nav, x:-4, y:-4, width:8, height:8, fill:"#F00"
+    # SVG.create "rect", nav.parentNode, x:-3, y:-3, width:6, height:6, fill:"#FF0"
+    # SVG.create "rect", zoom.parentNode, x:-2, y:-2, width:4, height:4, fill:"#F70"
+    
+    initialSize = msElm.getBoundingClientRect()
+    registrationOffset.x = -ms.x + initialSize.left + initialSize.width/2
+    registrationOffset.y = -ms.y + initialSize.top + initialSize.height/2
+    TRS.abs nav, ox: registrationOffset.x, oy: registrationOffset.y
+    
+    Resize resize
+    
+    KeyMe "up", down: run
+    KeyMe "down", down: run
+    KeyMe "left", down: run
+    KeyMe "right", down: run
+    KeyMe "equals", down: run
+    KeyMe "minus", down: run
+    window.addEventListener "touchstart", touchStart
+    window.addEventListener "dblclick", dblclick
+    window.addEventListener "wheel", wheel
+    
+    Reaction "ControlPanel:Show", ()-> Tween1 cpAnim, 1, 0.7, tick
+    Reaction "ControlPanel:Hide", ()-> Tween1 cpAnim, 0, 0.7, tick

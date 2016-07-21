@@ -32,6 +32,9 @@ Take ["Registry", "Symbol"], (Registry, Symbol)->
     scope.childName = "child" + (parentScope?.children.length or 0)
     scope.instanceName = instanceName or strippedName or scope.childName
     
+    # Private properties used internally by the system
+    scope._symbol = symbol
+    
     # Add the "scope-name" attribute to the element
     element.setAttribute "scope-name", scope.instanceName
     

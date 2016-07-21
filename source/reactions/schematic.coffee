@@ -8,4 +8,4 @@ Take ["Action", "Reaction"], (Action, Reaction)->
     Action if schematicMode then "Schematic:Hide" else "Schematic:Show"
   
   Take "AllReady", ()->
-    Action "Schematic:Show"
+    Action "Schematic:Hide"

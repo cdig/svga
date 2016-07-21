@@ -8,5 +8,5 @@ Take ["Action", "Reaction"], (Action, Reaction)->
     Action if showing then "FlowArrows:Hide" else "FlowArrows:Show"
   
   # TODO: Is this necessary? Isn't this the default?
-  Take "ScopeReady", ()->
+  Take "AllReady", ()->
     Action "FlowArrows:Show"

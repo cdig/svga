@@ -23,3 +23,6 @@ Take ["Registry", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], (Registry, 
     # Inform the system that all our scopes are built and setup.
     Make "ScopeReady"
     
+    # Inform the system that setup is complete.
+    Make "AllReady"
+    

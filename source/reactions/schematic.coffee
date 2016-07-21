@@ -7,5 +7,5 @@ Take ["Action", "Reaction"], (Action, Reaction)->
   Reaction "Schematic:Toggle", ()->
     Action if schematicMode then "Schematic:Hide" else "Schematic:Show"
   
-  Take "ScopeReady", ()->
+  Take "AllReady", ()->
     Action "Schematic:Show"

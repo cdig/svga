@@ -49,7 +49,7 @@ Take ["GUI","KeyMe","Reaction","RAF","Resize","SVG","TRS","Tween"],
       window.addEventListener "wheel", wheel
   
   resize = ()->
-    width = window.innerWidth - GUI.ControlPanel.width
+    width = window.innerWidth# - GUI.ControlPanel.width
     height = window.innerHeight - GUI.TopBar.height
     wFrac = width / initialSize.width
     hFrac = height / initialSize.height

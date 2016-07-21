@@ -10,7 +10,8 @@
       Registry.closeRegistration();
       ScopeBuilder(crawlerData);
       Make("ScopeSetup");
-      return Make("ScopeReady");
+      Make("ScopeReady");
+      return Make("AllReady");
     });
   });
 
@@ -1182,6 +1183,138 @@
     });
   });
 
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var root, schematic, update;
+    root = true;
+    schematic = false;
+    update = function() {
+      if (root && !schematic) {
+        return Action("ControlPanel:Show");
+      } else {
+        return Action("ControlPanel:Hide");
+      }
+    };
+    Reaction("Schematic:Hide", function() {
+      return update(schematic = false);
+    });
+    Reaction("Schematic:Show", function() {
+      return update(schematic = true);
+    });
+    Reaction("Root:Hide", function() {
+      return update(root = false);
+    });
+    return Reaction("Root:Show", function() {
+      return update(root = true);
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = true;
+    Reaction("FlowArrows:Hide", function() {
+      return showing = false;
+    });
+    Reaction("FlowArrows:Show", function() {
+      return showing = true;
+    });
+    Reaction("FlowArrows:Toggle", function() {
+      return Action(showing ? "FlowArrows:Hide" : "FlowArrows:Show");
+    });
+    return Take("AllReady", function() {
+      return Action("FlowArrows:Show");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Reaction("Help:Hide", function() {
+      return showing = false;
+    });
+    Reaction("Help:Show", function() {
+      return showing = true;
+    });
+    Reaction("Help:Toggle", function() {
+      return Action(showing ? "Help:Hide" : "Help:Show");
+    });
+    return Reaction("Settings:Show", function() {
+      return Action("Help:Hide");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Reaction("Labels:Hide", function() {
+      return showing = false;
+    });
+    Reaction("Labels:Show", function() {
+      return showing = true;
+    });
+    return Reaction("Labels:Toggle", function() {
+      return Action(showing ? "Labels:Hide" : "Labels:Show");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var help, settings, update;
+    help = false;
+    settings = false;
+    update = function() {
+      if (help || settings) {
+        return Action("Root:Hide");
+      } else {
+        return Action("Root:Show");
+      }
+    };
+    Reaction("Help:Show", function() {
+      return update(help = true);
+    });
+    Reaction("Help:Hide", function() {
+      return update(help = false);
+    });
+    Reaction("Settings:Show", function() {
+      return update(settings = true);
+    });
+    return Reaction("Settings:Hide", function() {
+      return update(settings = false);
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var schematicMode;
+    schematicMode = true;
+    Reaction("Schematic:Hide", function() {
+      return schematicMode = false;
+    });
+    Reaction("Schematic:Show", function() {
+      return schematicMode = true;
+    });
+    Reaction("Schematic:Toggle", function() {
+      return Action(schematicMode ? "Schematic:Hide" : "Schematic:Show");
+    });
+    return Take("AllReady", function() {
+      return Action("Schematic:Show");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Reaction("Settings:Hide", function() {
+      return showing = false;
+    });
+    Reaction("Settings:Show", function() {
+      return showing = true;
+    });
+    Reaction("Settings:Toggle", function() {
+      return Action(showing ? "Settings:Hide" : "Settings:Show");
+    });
+    return Reaction("Help:Show", function() {
+      return Action("Settings:Hide");
+    });
+  });
+
   Take("SVG", function(SVG) {
     var Highlighter;
     return Make("Highlighter", Highlighter = {
@@ -2075,7 +2208,7 @@
     });
     resize = function() {
       var hFrac, height, wFrac, width;
-      width = window.innerWidth - GUI.ControlPanel.width;
+      width = window.innerWidth;
       height = window.innerHeight - GUI.TopBar.height;
       wFrac = width / initialSize.width;
       hFrac = height / initialSize.height;
@@ -3210,138 +3343,6 @@
           return consumedCols += w;
         }
       }
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var animate, mainStage, update;
-    animate = false;
-    mainStage = true;
-    update = function() {
-      if (animate && mainStage) {
-        return Action("ControlPanel:Show");
-      } else {
-        return Action("ControlPanel:Hide");
-      }
-    };
-    Reaction("Schematic:Show", function() {
-      return update(animate = false);
-    });
-    Reaction("Schematic:Hide", function() {
-      return update(animate = true);
-    });
-    Reaction("Root:Show", function() {
-      return update(mainStage = true);
-    });
-    return Reaction("Root:Hide", function() {
-      return update(mainStage = false);
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Take("ScopeReady", function() {
-      return Action("FlowArrows:Show");
-    });
-    Reaction("FlowArrows:Toggle", function() {
-      return Action(showing ? "FlowArrows:Show" : "FlowArrows:Hide");
-    });
-    Reaction("FlowArrows:Hide", function() {
-      return showing = true;
-    });
-    return Reaction("FlowArrows:Show", function() {
-      return showing = false;
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Reaction("Help:Toggle", function() {
-      return Action(showing ? "Help:Hide" : "Help:Show");
-    });
-    Reaction("Help:Hide", function() {
-      return showing = false;
-    });
-    Reaction("Help:Show", function() {
-      return showing = true;
-    });
-    return Reaction("Settings:Show", function() {
-      return Action("Help:Hide");
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Reaction("Labels:Hide", function() {
-      return showing = false;
-    });
-    Reaction("Labels:Show", function() {
-      return showing = true;
-    });
-    return Reaction("Labels:Toggle", function() {
-      return Action(showing ? "Labels:Hide" : "Labels:Show");
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var help, settings, update;
-    help = false;
-    settings = false;
-    update = function() {
-      if (help || settings) {
-        return Action("Root:Hide");
-      } else {
-        return Action("Root:Show");
-      }
-    };
-    Reaction("Help:Show", function() {
-      return update(help = true);
-    });
-    Reaction("Help:Hide", function() {
-      return update(help = false);
-    });
-    Reaction("Settings:Show", function() {
-      return update(settings = true);
-    });
-    return Reaction("Settings:Hide", function() {
-      return update(settings = false);
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var animateMode;
-    animateMode = false;
-    Take("ScopeReady", function() {
-      return Action("Schematic:Hide");
-    });
-    Reaction("Schematic:Toggle", function() {
-      return Action(animateMode ? "Schematic:Show" : "Schematic:Hide");
-    });
-    Reaction("Schematic:Hide", function() {
-      return animateMode = true;
-    });
-    return Reaction("Schematic:Show", function() {
-      return animateMode = false;
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Reaction("Settings:Toggle", function() {
-      return Action(showing ? "Settings:Hide" : "Settings:Show");
-    });
-    Reaction("Settings:Hide", function() {
-      return showing = false;
-    });
-    Reaction("Settings:Show", function() {
-      return showing = true;
-    });
-    return Reaction("Help:Show", function() {
-      return Action("Settings:Hide");
     });
   });
 

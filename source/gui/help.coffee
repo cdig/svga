@@ -29,5 +29,5 @@ Take ["GUI","Pressure","Reaction","Resize","SVG","TRS","Tween1","SVGReady"],
     alpha = v
     SVG.styles g, opacity: v * 2 - 1
   
-  Reaction "Help:Show", ()-> Tween1 alpha, 1, 1.7, tick
-  Reaction "Help:Hide", ()-> Tween1 alpha, 0, 1.7, tick
+  Reaction "Help:Show", ()-> Tween1 alpha, 1, 1.2, tick
+  Reaction "Help:Hide", ()-> Tween1 alpha, 0, 1.2, tick

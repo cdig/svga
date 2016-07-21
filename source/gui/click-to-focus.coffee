@@ -11,6 +11,6 @@ Take ["Resize", "SVG", "TopBar", "TRS", "SVGReady"], (Resize, SVG, TopBar, TRS)-
   window.addEventListener "focus", hide
   window.addEventListener "touchstart", hide
   window.addEventListener "blur", show
-  show()
   
   window.focus() # Focus by default
+  hide() # Fix a flicker on IE

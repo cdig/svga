@@ -1,5 +1,5 @@
-Take ["Env","FlowArrows:Config","FlowArrows:Containerize","FlowArrows:Segment"],
-(      Env ,            Config ,            Containerize ,            Segment)->
+Take ["Dev","FlowArrows:Config","FlowArrows:Containerize","FlowArrows:Segment"],
+(      Dev ,            Config ,            Containerize ,            Segment)->
   Make "FlowArrows:Set", (parentElm, setData)->
     Containerize parentElm, (scope)-> # This function must return an array of children
       
@@ -10,5 +10,5 @@ Take ["Env","FlowArrows:Config","FlowArrows:Containerize","FlowArrows:Segment"],
         
         childName = "segment" + i
         child = Segment scope.element, segmentData
-        if Env.dev then child.element.addEventListener "mouseover", ()-> console.log childName
+        if Dev then child.element.addEventListener "mouseover", ()-> console.log childName
         scope[childName] = child

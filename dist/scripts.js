@@ -15,7 +15,7 @@
     });
   });
 
-  Take(["Registry", "Symbol"], function(Registry, Symbol) {
+  Take(["Dev", "Registry", "Symbol"], function(Dev, Registry, Symbol) {
     var ScopeBuilder;
     return Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
       var attr, attrs, element, instanceName, len, len1, len2, m, n, q, ref, ref1, ref2, results, scope, scopeProcessor, strippedName, subTarget, symbol, symbolForInstanceName, symbolName;
@@ -51,12 +51,14 @@
       scope.instanceName = instanceName || strippedName || scope.childName;
       scope._symbol = symbol;
       element.setAttribute("scope-name", scope.instanceName);
-      attrs = Array.prototype.slice.call(element.attributes);
-      for (m = 0, len = attrs.length; m < len; m++) {
-        attr = attrs[m];
-        if (attr.name !== "scope-name") {
-          element.removeAttributeNS(attr.namespaceURI, attr.name);
-          element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
+      if (Dev) {
+        attrs = Array.prototype.slice.call(element.attributes);
+        for (m = 0, len = attrs.length; m < len; m++) {
+          attr = attrs[m];
+          if (attr.name !== "scope-name") {
+            element.removeAttributeNS(attr.namespaceURI, attr.name);
+            element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
+          }
         }
       }
       ref1 = Registry.all("ScopeProcessor");
@@ -603,7 +605,7 @@
     });
   });
 
-  Take(["Env", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Env, Config, Containerize, Segment) {
+  Take(["Dev", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Dev, Config, Containerize, Segment) {
     return Make("FlowArrows:Set", function(parentElm, setData) {
       return Containerize(parentElm, function(scope) {
         var child, childName, i, len, m, results, segmentData;
@@ -615,7 +617,7 @@
           }
           childName = "segment" + i;
           child = Segment(scope.element, segmentData);
-          if (Env.dev) {
+          if (Dev) {
             child.element.addEventListener("mouseover", function() {
               return console.log(childName);
             });
@@ -666,8 +668,8 @@
     window.addEventListener("focus", hide);
     window.addEventListener("touchstart", hide);
     window.addEventListener("blur", show);
-    show();
-    return window.focus();
+    window.focus();
+    return hide();
   });
 
   (function() {
@@ -682,9 +684,9 @@
     });
   })();
 
-  Take(["Env", "Resize", "SVG", "Tick", "SVGReady"], function(Env, Resize, SVG, Tick) {
+  Take(["Dev", "Resize", "SVG", "Tick", "SVGReady"], function(Dev, Resize, SVG, Tick) {
     var avgLength, avgList, count, freq, text, total;
-    if (!Env.dev) {
+    if (!Dev) {
       return;
     }
     count = 60;
@@ -1185,8 +1187,8 @@
     return Make("TopBar", TopBar);
   });
 
-  Take(["Env", "RAF", "Tween1", "AllReady"], function(Env, RAF, Tween1) {
-    if (Env.dev) {
+  Take(["Dev", "RAF", "Tween1", "AllReady"], function(Dev, RAF, Tween1) {
+    if (Dev) {
       return RAF(function() {
         return document.rootElement.style.opacity = 1;
       });
@@ -1350,8 +1352,11 @@
     });
   });
 
-  Take("AllReady", function() {
+  Take(["Dev", "AllReady"], function(Dev) {
     var elm, len, m, nodes, results;
+    if (!Dev) {
+      return;
+    }
     nodes = Array.prototype.slice.call(document.querySelectorAll("#root [id]"));
     results = [];
     for (m = 0, len = nodes.length; m < len; m++) {
@@ -1913,13 +1918,7 @@
     });
   })();
 
-  (function() {
-    var Env, hasPort;
-    hasPort = window.top.location.port.length > 0;
-    return Make("Env", Object.freeze(Env = {
-      dev: hasPort
-    }));
-  })();
+  Make("Dev", window.top.location.hostname === "localhost");
 
   Take(["KeyCodes", "KeyNames"], function(KeyCodes, KeyNames) {
     var KeyMe, actionize, downHandlers, getModifier, handleKey, keyDown, keyUp, runCallbacks, upHandlers;

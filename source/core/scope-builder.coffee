@@ -1,4 +1,4 @@
-Take ["Registry", "Symbol"], (Registry, Symbol)->
+Take ["Dev", "Registry", "Symbol"], (Dev, Registry, Symbol)->
   Make "ScopeBuilder", ScopeBuilder = (target, parentScope = null)->
     
     element = target.elm
@@ -38,12 +38,13 @@ Take ["Registry", "Symbol"], (Registry, Symbol)->
     # Add the "scope-name" attribute to the element
     element.setAttribute "scope-name", scope.instanceName
     
-    # Sort all attributes so that scope-name comes first
-    attrs = Array.prototype.slice.call element.attributes
-    for attr in attrs
-      if attr.name isnt "scope-name"
-        element.removeAttributeNS attr.namespaceURI, attr.name
-        element.setAttributeNS attr.namespaceURI, attr.name, attr.value
+    # DEV: Sort all attributes so that scope-name comes first
+    if Dev
+      attrs = Array.prototype.slice.call element.attributes
+      for attr in attrs
+        if attr.name isnt "scope-name"
+          element.removeAttributeNS attr.namespaceURI, attr.name
+          element.setAttributeNS attr.namespaceURI, attr.name, attr.value
     
     # Run this scope through all the processors, which add special properties, callbacks, and other fanciness
     for scopeProcessor in Registry.all "ScopeProcessor"

@@ -1,4 +1,6 @@
-Take "AllReady", ()->
+Take ["Dev", "AllReady"], (Dev)->
+  
+  return unless Dev
   
   nodes = Array.prototype.slice.call document.querySelectorAll "#root [id]"
   

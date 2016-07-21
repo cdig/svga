@@ -1,5 +1,5 @@
-Take ["Env", "Resize", "SVG", "Tick", "SVGReady"], (Env, Resize, SVG, Tick)->
-  return unless Env.dev
+Take ["Dev", "Resize", "SVG", "Tick", "SVGReady"], (Dev, Resize, SVG, Tick)->
+  return unless Dev
   
   count = 60 # Update immediately
   freq = 1 # Update every n seconds

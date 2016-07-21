@@ -18,8 +18,10 @@ Take ["Pressure", "Registry", "SVG"], (Pressure, Registry, SVG)->
         throw "^ SVGA will overwrite @#{prop} on this element. Please find a different name for your child/property named \"#{prop}\"."
     
     
-    scope.style = (key, val)->
-      SVG.style element, key, val
+    # scope.style = (key, val)->
+    #   SVG.style element, key, val
+    scope.stype = ()->
+      throw "@style is up for debate. Please show Ivan what you're using it to do."
     
     
     pressure = null

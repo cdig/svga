@@ -618,8 +618,8 @@
           childName = "segment" + i;
           child = Segment(scope.element, segmentData);
           if (Dev) {
-            child.element.addEventListener("mouseover", function() {
-              return console.log(childName);
+            child.element.addEventListener("click", function() {
+              return console.log(parentElm._scope.instanceName + "." + childName);
             });
           }
           results.push(scope[childName] = child);
@@ -628,6 +628,27 @@
       });
     });
   });
+
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  (function() {
+    return Make("Mask", function() {
+      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+    });
+  })();
 
   Take(["Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, SVG, TopBar, TRS) {
     var g, hide, show;
@@ -1198,27 +1219,6 @@
       });
     }
   });
-
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  (function() {
-    return Make("Mask", function() {
-      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
-    });
-  })();
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
     var root, schematic, update;

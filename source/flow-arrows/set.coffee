@@ -10,5 +10,5 @@ Take ["Dev","FlowArrows:Config","FlowArrows:Containerize","FlowArrows:Segment"],
         
         childName = "segment" + i
         child = Segment scope.element, segmentData
-        if Dev then child.element.addEventListener "mouseover", ()-> console.log childName
+        if Dev then child.element.addEventListener "click", ()-> console.log parentElm._scope.instanceName + "." + childName
         scope[childName] = child

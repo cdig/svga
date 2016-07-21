@@ -3,9 +3,9 @@ Take ["Registry"], (Registry)->
     
     if scope.parent?
       
-      if scope.parent[scope.name]?.element.id is scope.element.id
+      if scope.parent[scope.instanceName]?.element.id is scope.element.id
         console.log scope.parent
-        throw "Duplicate instance name detected in ^^^ #{scope.parent.name}: #{scope.name}"
+        throw "Duplicate instance name detected in ^^^ #{scope.parent.instanceName}: #{scope.instanceName}"
       
-      scope.parent[scope.name] ?= scope
+      scope.parent[scope.instanceName] ?= scope
       scope.parent.children.push scope

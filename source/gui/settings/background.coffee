@@ -1,4 +1,4 @@
-Take ["Action", "Reaction", "DOMContentLoaded"], (Action, Reaction)->
+Take ["Action", "Reaction", "SVG", "DOMContentLoaded"], (Action, Reaction, SVG)->
   
   # This bogus lets us workaround a bug in Chrome,
   # by changing the BG of the <object> that loads us
@@ -12,7 +12,7 @@ Take ["Action", "Reaction", "DOMContentLoaded"], (Action, Reaction)->
   
   setBackground = (v)->
     c = "hsl(220, 0%, #{v*100}%)"
-    target.style.background = c
+    SVG.style target, "background-color", c
       
   
   Reaction "Background:Set", setBackground

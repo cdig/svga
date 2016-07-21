@@ -18,7 +18,7 @@
   Take(["Registry", "Symbol"], function(Registry, Symbol) {
     var ScopeBuilder;
     return Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
-      var element, instanceName, len, len1, m, n, ref, ref1, ref2, results, scope, scopeProcessor, strippedName, subTarget, symbol, symbolForInstanceName;
+      var attr, attrs, element, instanceName, len, len1, len2, m, n, q, ref, ref1, ref2, results, scope, scopeProcessor, strippedName, subTarget, symbol, symbolForInstanceName, symbolName;
       if (parentScope == null) {
         parentScope = null;
       }
@@ -29,13 +29,17 @@
         instanceName = element.id;
         symbol = symbolForInstanceName;
       } else if ((strippedName != null ? strippedName.indexOf("Line") : void 0) > -1) {
-        symbol = Symbol.forSymbolName("HydraulicLine");
+        symbolName = "HydraulicLine";
+        symbol = Symbol.forSymbolName(symbolName);
       } else if ((strippedName != null ? strippedName.indexOf("Field") : void 0) > -1) {
-        symbol = Symbol.forSymbolName("HydraulicField");
+        symbolName = "HydraulicField";
+        symbol = Symbol.forSymbolName(symbolName);
       } else if ((strippedName != null ? strippedName.indexOf("Mask") : void 0) > -1) {
-        symbol = Symbol.forSymbolName("Mask");
+        symbolName = "Mask";
+        symbol = Symbol.forSymbolName(symbolName);
       } else {
-        symbol = Symbol.forSymbolName("DefaultElement");
+        symbolName = "DefaultElement";
+        symbol = Symbol.forSymbolName(symbolName);
       }
       scope = symbol.create(element);
       element._scope = scope;
@@ -44,16 +48,25 @@
       scope.parent = parentScope;
       scope.root = (parentScope != null ? parentScope.root : void 0) || scope;
       scope.childName = "child" + ((parentScope != null ? parentScope.children.length : void 0) || 0);
-      scope.name = instanceName || strippedName || scope.childName;
+      scope.instanceName = instanceName || strippedName || scope.childName;
+      element.setAttribute("scope-name", scope.instanceName);
+      attrs = Array.prototype.slice.call(element.attributes);
+      for (m = 0, len = attrs.length; m < len; m++) {
+        attr = attrs[m];
+        if (attr.name !== "scope-name") {
+          element.removeAttributeNS(attr.namespaceURI, attr.name);
+          element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
+        }
+      }
       ref1 = Registry.all("ScopeProcessor");
-      for (m = 0, len = ref1.length; m < len; m++) {
-        scopeProcessor = ref1[m];
+      for (n = 0, len1 = ref1.length; n < len1; n++) {
+        scopeProcessor = ref1[n];
         scopeProcessor(scope);
       }
       ref2 = target.sub;
       results = [];
-      for (n = 0, len1 = ref2.length; n < len1; n++) {
-        subTarget = ref2[n];
+      for (q = 0, len2 = ref2.length; q < len2; q++) {
+        subTarget = ref2[q];
         results.push(ScopeBuilder(subTarget, scope));
       }
       return results;
@@ -101,26 +114,517 @@
     };
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
+  Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
+    return Make("FlowArrows:Arrow", function(parentElm, segmentData, segmentPosition, vectorPosition, vectorIndex) {
+      var arrow, element, line, triangle, vector;
+      vector = segmentData.vectors[vectorIndex];
+      element = TRS(SVG.create("g", parentElm));
+      triangle = SVG.create("polyline", element, {
+        points: "0,-16 30,0 0,16"
+      });
+      line = SVG.create("line", element, {
+        x1: -23,
+        y1: 0,
+        x2: 5,
+        y2: 0,
+        "stroke-width": 11,
+        "stroke-linecap": "round"
+      });
+      return arrow = {
+        update: function(parentFlow, parentScale) {
+          var scale;
+          if (Config.SPACING < 60 * parentScale) {
+            throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay.";
+          }
+          if (parentScale < 0.1) {
+            throw "Your arrows are so small that they might not be visible. If this is necessary, then you are doing something suspicious and need to convince Ivan that what you are doing is okay.";
+          }
+          vectorPosition += parentFlow;
+          segmentPosition += parentFlow;
+          while (vectorPosition > vector.dist) {
+            vectorIndex++;
+            if (vectorIndex >= segmentData.vectors.length) {
+              vectorIndex = 0;
+              segmentPosition -= segmentData.dist;
+            }
+            vectorPosition -= vector.dist;
+            vector = segmentData.vectors[vectorIndex];
+          }
+          while (vectorPosition < 0) {
+            vectorIndex--;
+            if (vectorIndex < 0) {
+              vectorIndex = segmentData.vectors.length - 1;
+              segmentPosition += segmentData.dist;
+            }
+            vector = segmentData.vectors[vectorIndex];
+            vectorPosition += vector.dist;
+          }
+          if (segmentPosition < segmentData.dist / 2) {
+            scale = Math.max(0, Math.min(1, (segmentPosition / segmentData.dist) * segmentData.dist / Config.FADE_LENGTH));
+          } else {
+            scale = Math.max(0, Math.min(1, 1 - (segmentPosition - (segmentData.dist - Config.FADE_LENGTH)) / Config.FADE_LENGTH));
+          }
+          return TRS.abs(element, {
+            x: Math.cos(vector.angle) * vectorPosition + vector.x,
+            y: Math.sin(vector.angle) * vectorPosition + vector.y,
+            scale: scale * parentScale,
+            r: vector.angle / (2 * Math.PI) + (parentFlow < 0 ? 0.5 : 0)
+          });
+        }
+      };
     });
   });
 
   (function() {
-    return Make("Mask", function() {
-      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+    var Config, defineProp;
+    Make("FlowArrows:Config", Config = {
+      SCALE: 1,
+      SPACING: 600,
+      FADE_LENGTH: 50,
+      MIN_SEGMENT_LENGTH: 200,
+      SPEED: 200,
+      MIN_EDGE_LENGTH: 8,
+      CONNECTED_DISTANCE: 1,
+      wrap: function(obj) {
+        var k;
+        for (k in Config) {
+          if (k !== "wrap") {
+            defineProp(obj, k);
+          }
+        }
+        return obj;
+      }
     });
+    return defineProp = function(obj, k) {
+      return Object.defineProperty(obj, k, {
+        get: function() {
+          return Config[k];
+        },
+        set: function(v) {
+          return Config[k] = v;
+        }
+      });
+    };
   })();
+
+  Take(["Pressure", "SVG"], function(Pressure, SVG) {
+    return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
+      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible;
+      direction = 1;
+      flow = 1;
+      pressure = null;
+      scale = 1;
+      active = true;
+      enabled = true;
+      visible = true;
+      scope = {
+        element: SVG.create("g", parentElm),
+        reverse: function() {
+          return direction *= -1;
+        },
+        update: function(parentFlow, parentScale) {
+          var child, f, len, m, results, s;
+          if (active) {
+            f = flow * direction * parentFlow;
+            s = scale * parentScale;
+            results = [];
+            for (m = 0, len = children.length; m < len; m++) {
+              child = children[m];
+              results.push(child.update(f, s));
+            }
+            return results;
+          }
+        }
+      };
+      children = setupFn(scope);
+      updateActive = function() {
+        active = enabled && visible && flow !== 0;
+        return SVG.styles(scope.element, {
+          display: active ? null : "none"
+        });
+      };
+      Object.defineProperty(scope, 'enabled', {
+        set: function(val) {
+          if (visible !== val) {
+            return updateActive(visible = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'flow', {
+        get: function() {
+          return flow;
+        },
+        set: function(val) {
+          if (flow !== val) {
+            return updateActive(flow = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'pressure', {
+        get: function() {
+          return pressure;
+        },
+        set: function(val) {
+          var color;
+          if (pressure !== val) {
+            pressure = val;
+            color = Pressure(val);
+            return SVG.attrs(scope.element, {
+              fill: color,
+              stroke: color
+            });
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return scale;
+        },
+        set: function(val) {
+          if (scale !== val) {
+            return scale = val;
+          }
+        }
+      });
+      Object.defineProperty(scope, 'visible', {
+        get: function() {
+          return visible;
+        },
+        set: function(val) {
+          if (visible !== val) {
+            return updateActive(visible = val);
+          }
+        }
+      });
+      return scope;
+    });
+  });
+
+  Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
+    var animateMode, enableAll, sets, visible;
+    sets = [];
+    visible = true;
+    animateMode = true;
+    enableAll = function() {
+      var len, m, results, set;
+      results = [];
+      for (m = 0, len = sets.length; m < len; m++) {
+        set = sets[m];
+        results.push(set.enabled = visible && animateMode);
+      }
+      return results;
+    };
+    Tick(function(time, dt) {
+      var f, len, m, results, s, set;
+      if (visible && animateMode) {
+        results = [];
+        for (m = 0, len = sets.length; m < len; m++) {
+          set = sets[m];
+          if (set.parentScope.visible) {
+            f = dt * Config.SPEED;
+            s = Config.SCALE;
+            results.push(set.update(f, s));
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      }
+    });
+    Reaction("Schematic:Hide", function() {
+      return setTimeout(function() {
+        return enableAll(animateMode = true);
+      });
+    });
+    Reaction("Schematic:Show", function() {
+      return enableAll(animateMode = false);
+    });
+    Reaction("FlowArrows:Show", function() {
+      return enableAll(visible = true);
+    });
+    Reaction("FlowArrows:Hide", function() {
+      return enableAll(visible = false);
+    });
+    return Make("FlowArrows", Config.wrap(function() {
+      var elm, lineData, parentScope, set, setData;
+      parentScope = arguments[0], lineData = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      elm = parentScope.element;
+      if (elm.querySelector("[id^=markerBox]")) {
+        while (elm.hasChildNodes()) {
+          elm.removeChild(elm.firstChild);
+        }
+      }
+      setData = Process(lineData);
+      set = Set(elm, setData);
+      set.parentScope = parentScope;
+      sets.push(set);
+      return set;
+    }));
+  });
+
+  Take("FlowArrows:Config", function(Config) {
+    var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
+    Make("FlowArrows:Process", function(lineData) {
+      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
+    });
+    log = function(a) {
+      console.dir(a);
+      return a;
+    };
+    formSegments = function(lineData) {
+      var i, m, pointA, pointB, ref, segmentEdges, segments;
+      segments = [];
+      segmentEdges = null;
+      for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
+        pointA = lineData[i];
+        pointB = lineData[i + 1];
+        if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1])) {
+          segmentEdges.push(pointB);
+        } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1])) {
+          segmentEdges.push(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB)) {
+          segmentEdges.unshift(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA)) {
+          segmentEdges.unshift(pointB);
+        } else {
+          segments.push(segmentEdges = [pointA, pointB]);
+        }
+      }
+      return segments;
+    };
+    joinSegments = function(segments) {
+      var i, j, pointA, pointB, segA, segB;
+      segA = null;
+      segB = null;
+      pointA = null;
+      pointB = null;
+      i = segments.length;
+      while (i--) {
+        j = segments.length;
+        while (--j > i) {
+          segA = segments[i];
+          segB = segments[j];
+          pointA = segA[0];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB)) {
+            segB.reverse();
+            segB.pop();
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB)) {
+            segB.reverse();
+            segB.unshift();
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB)) {
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[0];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB)) {
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+        }
+      }
+      return segments;
+    };
+    cullShortEdges = function(segments) {
+      var i, j, pointA, pointB, seg;
+      i = segments.length;
+      seg = [];
+      pointA = pointB = null;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          if (distance(pointA, pointB) < Config.MIN_EDGE_LENGTH) {
+            pointA.cull = true;
+          }
+        }
+      }
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          if (seg[j].cull) {
+            seg.splice(j, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    cullInlinePoints = function(segments) {
+      var i, j, pointA, pointB, pointC, seg;
+      seg = [];
+      pointA = null;
+      pointB = null;
+      pointC = null;
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 2;
+        while (j-- > 0 && seg.length > 2) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          pointC = seg[j + 2];
+          if (isInline(pointA, pointB, pointC)) {
+            seg.splice(j + 1, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    reifyVectors = function(segments) {
+      var i, len, m, pointA, pointB, results, segment, vector;
+      results = [];
+      for (m = 0, len = segments.length; m < len; m++) {
+        segment = segments[m];
+        results.push((function() {
+          var len1, n, results1;
+          results1 = [];
+          for (i = n = 0, len1 = segment.length; n < len1; i = ++n) {
+            pointA = segment[i];
+            if (pointB = segment[i + 1]) {
+              results1.push(vector = {
+                x: pointA.x,
+                y: pointA.y,
+                dist: distance(pointA, pointB),
+                angle: angle(pointA, pointB)
+              });
+            }
+          }
+          return results1;
+        })());
+      }
+      return results;
+    };
+    reifySegments = function(set) {
+      var dist, len, len1, m, n, results, segment, segmentVectors, vector;
+      results = [];
+      for (m = 0, len = set.length; m < len; m++) {
+        segmentVectors = set[m];
+        dist = 0;
+        for (n = 0, len1 = segmentVectors.length; n < len1; n++) {
+          vector = segmentVectors[n];
+          dist += vector.dist;
+        }
+        results.push(segment = {
+          vectors: segmentVectors,
+          dist: dist
+        });
+      }
+      return results;
+    };
+    cullShortSegments = function(set) {
+      return set.filter(function(segment) {
+        return segment.dist >= Config.MIN_SEGMENT_LENGTH;
+      });
+    };
+    wrap = function(data) {
+      return {
+        process: function(fn) {
+          return wrap(fn(data));
+        },
+        result: data
+      };
+    };
+    isConnected = function(a, b) {
+      var dX, dY;
+      dX = Math.abs(a.x - b.x);
+      dY = Math.abs(a.y - b.y);
+      return dX < Config.CONNECTED_DISTANCE && dY < Config.CONNECTED_DISTANCE;
+    };
+    isInline = function(a, b, c) {
+      var crossproduct, dotproduct, squaredlengthba;
+      crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
+      if (Math.abs(crossproduct) > 0.01) {
+        return false;
+      }
+      dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
+      if (dotproduct < 0) {
+        return false;
+      }
+      squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+      if (dotproduct > squaredlengthba) {
+        return false;
+      }
+      return true;
+    };
+    distance = function(a, b) {
+      var dx, dy;
+      dx = b.x - a.x;
+      dy = b.y - a.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    return angle = function(a, b) {
+      return Math.atan2(b.y - a.y, b.x - a.x);
+    };
+  });
+
+  Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize"], function(Arrow, Config, Containerize) {
+    return Make("FlowArrows:Segment", function(parentElm, segmentData) {
+      return Containerize(parentElm, function(scope) {
+        var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
+        arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
+        segmentSpacing = segmentData.dist / arrowCount;
+        segmentPosition = 0;
+        vectorPosition = 0;
+        vectorIndex = 0;
+        vector = segmentData.vectors[vectorIndex];
+        results = [];
+        for (i = m = 0, ref = arrowCount; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
+          while (vectorPosition > vector.dist) {
+            vectorPosition -= vector.dist;
+            vector = segmentData.vectors[++vectorIndex];
+          }
+          arrow = Arrow(scope.element, segmentData, segmentPosition, vectorPosition, vectorIndex);
+          vectorPosition += segmentSpacing;
+          segmentPosition += segmentSpacing;
+          results.push(arrow);
+        }
+        return results;
+      });
+    });
+  });
+
+  Take(["Env", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Env, Config, Containerize, Segment) {
+    return Make("FlowArrows:Set", function(parentElm, setData) {
+      return Containerize(parentElm, function(scope) {
+        var child, childName, i, len, m, results, segmentData;
+        results = [];
+        for (i = m = 0, len = setData.length; m < len; i = ++m) {
+          segmentData = setData[i];
+          if (segmentData.dist < Config.FADE_LENGTH * 2) {
+            throw "You have a FlowArrows segment that is only " + (Math.round(segmentData.dist)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.";
+          }
+          childName = "segment" + i;
+          child = Segment(scope.element, segmentData);
+          if (Env.dev) {
+            child.element.addEventListener("mouseover", function() {
+              return console.log(childName);
+            });
+          }
+          results.push(scope[childName] = child);
+        }
+        return results;
+      });
+    });
+  });
 
   Take(["Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(Resize, SVG, TopBar, TRS) {
     var g, hide, show;
@@ -680,9 +1184,9 @@
     return Make("TopBar", TopBar);
   });
 
-  Take(["Env", "Tween1", "ScopeReady"], function(Env, Tween1) {
+  Take(["Env", "RAF", "Tween1", "AllReady"], function(Env, RAF, Tween1) {
     if (Env.dev) {
-      return setTimeout(function() {
+      return RAF(function() {
         return document.rootElement.style.opacity = 1;
       });
     } else {
@@ -692,517 +1196,26 @@
     }
   });
 
-  Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
-    return Make("FlowArrows:Arrow", function(parentElm, segmentData, segmentPosition, vectorPosition, vectorIndex) {
-      var arrow, element, line, triangle, vector;
-      vector = segmentData.vectors[vectorIndex];
-      element = TRS(SVG.create("g", parentElm));
-      triangle = SVG.create("polyline", element, {
-        points: "0,-16 30,0 0,16"
-      });
-      line = SVG.create("line", element, {
-        x1: -23,
-        y1: 0,
-        x2: 5,
-        y2: 0,
-        "stroke-width": 11,
-        "stroke-linecap": "round"
-      });
-      return arrow = {
-        update: function(parentFlow, parentScale) {
-          var scale;
-          if (Config.SPACING < 60 * parentScale) {
-            throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay.";
-          }
-          if (parentScale < 0.1) {
-            throw "Your arrows are so small that they might not be visible. If this is necessary, then you are doing something suspicious and need to convince Ivan that what you are doing is okay.";
-          }
-          vectorPosition += parentFlow;
-          segmentPosition += parentFlow;
-          while (vectorPosition > vector.dist) {
-            vectorIndex++;
-            if (vectorIndex >= segmentData.vectors.length) {
-              vectorIndex = 0;
-              segmentPosition -= segmentData.dist;
-            }
-            vectorPosition -= vector.dist;
-            vector = segmentData.vectors[vectorIndex];
-          }
-          while (vectorPosition < 0) {
-            vectorIndex--;
-            if (vectorIndex < 0) {
-              vectorIndex = segmentData.vectors.length - 1;
-              segmentPosition += segmentData.dist;
-            }
-            vector = segmentData.vectors[vectorIndex];
-            vectorPosition += vector.dist;
-          }
-          if (segmentPosition < segmentData.dist / 2) {
-            scale = Math.max(0, Math.min(1, (segmentPosition / segmentData.dist) * segmentData.dist / Config.FADE_LENGTH));
-          } else {
-            scale = Math.max(0, Math.min(1, 1 - (segmentPosition - (segmentData.dist - Config.FADE_LENGTH)) / Config.FADE_LENGTH));
-          }
-          return TRS.abs(element, {
-            x: Math.cos(vector.angle) * vectorPosition + vector.x,
-            y: Math.sin(vector.angle) * vectorPosition + vector.y,
-            scale: scale * parentScale,
-            r: vector.angle / (2 * Math.PI) + (parentFlow < 0 ? 0.5 : 0)
-          });
-        }
-      };
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
     });
   });
 
   (function() {
-    var Config, defineProp;
-    Make("FlowArrows:Config", Config = {
-      SCALE: 1,
-      SPACING: 600,
-      FADE_LENGTH: 50,
-      MIN_SEGMENT_LENGTH: 200,
-      SPEED: 200,
-      MIN_EDGE_LENGTH: 8,
-      CONNECTED_DISTANCE: 1,
-      wrap: function(obj) {
-        var k;
-        for (k in Config) {
-          if (k !== "wrap") {
-            defineProp(obj, k);
-          }
-        }
-        return obj;
-      }
+    return Make("Mask", function() {
+      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
     });
-    return defineProp = function(obj, k) {
-      return Object.defineProperty(obj, k, {
-        get: function() {
-          return Config[k];
-        },
-        set: function(v) {
-          return Config[k] = v;
-        }
-      });
-    };
   })();
-
-  Take(["Pressure", "SVG"], function(Pressure, SVG) {
-    return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
-      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible;
-      direction = 1;
-      flow = 1;
-      pressure = null;
-      scale = 1;
-      active = true;
-      enabled = true;
-      visible = true;
-      scope = {
-        element: SVG.create("g", parentElm),
-        reverse: function() {
-          return direction *= -1;
-        },
-        update: function(parentFlow, parentScale) {
-          var child, f, len, m, results, s;
-          if (active) {
-            f = flow * direction * parentFlow;
-            s = scale * parentScale;
-            results = [];
-            for (m = 0, len = children.length; m < len; m++) {
-              child = children[m];
-              results.push(child.update(f, s));
-            }
-            return results;
-          }
-        }
-      };
-      children = setupFn(scope);
-      updateActive = function() {
-        active = enabled && visible && flow !== 0;
-        return SVG.styles(scope.element, {
-          display: active ? null : "none"
-        });
-      };
-      Object.defineProperty(scope, 'enabled', {
-        set: function(val) {
-          if (visible !== val) {
-            return updateActive(visible = val);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'flow', {
-        get: function() {
-          return flow;
-        },
-        set: function(val) {
-          if (flow !== val) {
-            return updateActive(flow = val);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'pressure', {
-        get: function() {
-          return pressure;
-        },
-        set: function(val) {
-          var color;
-          if (pressure !== val) {
-            pressure = val;
-            color = Pressure(val);
-            return SVG.attrs(scope.element, {
-              fill: color,
-              stroke: color
-            });
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scale', {
-        get: function() {
-          return scale;
-        },
-        set: function(val) {
-          if (scale !== val) {
-            return scale = val;
-          }
-        }
-      });
-      Object.defineProperty(scope, 'visible', {
-        get: function() {
-          return visible;
-        },
-        set: function(val) {
-          if (visible !== val) {
-            return updateActive(visible = val);
-          }
-        }
-      });
-      return scope;
-    });
-  });
-
-  Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
-    var animateMode, enableAll, sets, visible;
-    sets = [];
-    visible = true;
-    animateMode = true;
-    enableAll = function() {
-      var len, m, results, set;
-      results = [];
-      for (m = 0, len = sets.length; m < len; m++) {
-        set = sets[m];
-        results.push(set.enabled = visible && animateMode);
-      }
-      return results;
-    };
-    Tick(function(time, dt) {
-      var f, len, m, results, s, set;
-      if (visible && animateMode) {
-        results = [];
-        for (m = 0, len = sets.length; m < len; m++) {
-          set = sets[m];
-          if (set.parentScope.visible) {
-            f = dt * Config.SPEED;
-            s = Config.SCALE;
-            results.push(set.update(f, s));
-          } else {
-            results.push(void 0);
-          }
-        }
-        return results;
-      }
-    });
-    Reaction("Schematic:Hide", function() {
-      return setTimeout(function() {
-        return enableAll(animateMode = true);
-      });
-    });
-    Reaction("Schematic:Show", function() {
-      return enableAll(animateMode = false);
-    });
-    Reaction("FlowArrows:Show", function() {
-      return enableAll(visible = true);
-    });
-    Reaction("FlowArrows:Hide", function() {
-      return enableAll(visible = false);
-    });
-    return Make("FlowArrows", Config.wrap(function() {
-      var elm, lineData, parentScope, set, setData;
-      parentScope = arguments[0], lineData = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      elm = parentScope.element;
-      if (elm.querySelector("[id^=markerBox]")) {
-        while (elm.hasChildNodes()) {
-          elm.removeChild(elm.firstChild);
-        }
-      }
-      setData = Process(lineData);
-      set = Set(elm, setData);
-      set.parentScope = parentScope;
-      sets.push(set);
-      return set;
-    }));
-  });
-
-  Take("FlowArrows:Config", function(Config) {
-    var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
-    Make("FlowArrows:Process", function(lineData) {
-      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
-    });
-    log = function(a) {
-      console.dir(a);
-      return a;
-    };
-    formSegments = function(lineData) {
-      var i, m, pointA, pointB, ref, segmentEdges, segments;
-      segments = [];
-      segmentEdges = null;
-      for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
-        pointA = lineData[i];
-        pointB = lineData[i + 1];
-        if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1])) {
-          segmentEdges.push(pointB);
-        } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1])) {
-          segmentEdges.push(pointA);
-        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB)) {
-          segmentEdges.unshift(pointA);
-        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA)) {
-          segmentEdges.unshift(pointB);
-        } else {
-          segments.push(segmentEdges = [pointA, pointB]);
-        }
-      }
-      return segments;
-    };
-    joinSegments = function(segments) {
-      var i, j, pointA, pointB, segA, segB;
-      segA = null;
-      segB = null;
-      pointA = null;
-      pointB = null;
-      i = segments.length;
-      while (i--) {
-        j = segments.length;
-        while (--j > i) {
-          segA = segments[i];
-          segB = segments[j];
-          pointA = segA[0];
-          pointB = segB[0];
-          if (isConnected(pointA, pointB)) {
-            segB.reverse();
-            segB.pop();
-            segments[i] = segB.concat(segA);
-            segments.splice(j, 1);
-            continue;
-          }
-          pointA = segA[segA.length - 1];
-          pointB = segB[segB.length - 1];
-          if (isConnected(pointA, pointB)) {
-            segB.reverse();
-            segB.unshift();
-            segments[i] = segA.concat(segB);
-            segments.splice(j, 1);
-            continue;
-          }
-          pointA = segA[segA.length - 1];
-          pointB = segB[0];
-          if (isConnected(pointA, pointB)) {
-            segments[i] = segA.concat(segB);
-            segments.splice(j, 1);
-            continue;
-          }
-          pointA = segA[0];
-          pointB = segB[segB.length - 1];
-          if (isConnected(pointA, pointB)) {
-            segments[i] = segB.concat(segA);
-            segments.splice(j, 1);
-            continue;
-          }
-        }
-      }
-      return segments;
-    };
-    cullShortEdges = function(segments) {
-      var i, j, pointA, pointB, seg;
-      i = segments.length;
-      seg = [];
-      pointA = pointB = null;
-      while (i--) {
-        seg = segments[i];
-        j = seg.length - 1;
-        while (j-- > 0) {
-          pointA = seg[j];
-          pointB = seg[j + 1];
-          if (distance(pointA, pointB) < Config.MIN_EDGE_LENGTH) {
-            pointA.cull = true;
-          }
-        }
-      }
-      i = segments.length;
-      while (i--) {
-        seg = segments[i];
-        j = seg.length - 1;
-        while (j-- > 0) {
-          if (seg[j].cull) {
-            seg.splice(j, 1);
-          }
-        }
-      }
-      return segments;
-    };
-    cullInlinePoints = function(segments) {
-      var i, j, pointA, pointB, pointC, seg;
-      seg = [];
-      pointA = null;
-      pointB = null;
-      pointC = null;
-      i = segments.length;
-      while (i--) {
-        seg = segments[i];
-        j = seg.length - 2;
-        while (j-- > 0 && seg.length > 2) {
-          pointA = seg[j];
-          pointB = seg[j + 1];
-          pointC = seg[j + 2];
-          if (isInline(pointA, pointB, pointC)) {
-            seg.splice(j + 1, 1);
-          }
-        }
-      }
-      return segments;
-    };
-    reifyVectors = function(segments) {
-      var i, len, m, pointA, pointB, results, segment, vector;
-      results = [];
-      for (m = 0, len = segments.length; m < len; m++) {
-        segment = segments[m];
-        results.push((function() {
-          var len1, n, results1;
-          results1 = [];
-          for (i = n = 0, len1 = segment.length; n < len1; i = ++n) {
-            pointA = segment[i];
-            if (pointB = segment[i + 1]) {
-              results1.push(vector = {
-                x: pointA.x,
-                y: pointA.y,
-                dist: distance(pointA, pointB),
-                angle: angle(pointA, pointB)
-              });
-            }
-          }
-          return results1;
-        })());
-      }
-      return results;
-    };
-    reifySegments = function(set) {
-      var dist, len, len1, m, n, results, segment, segmentVectors, vector;
-      results = [];
-      for (m = 0, len = set.length; m < len; m++) {
-        segmentVectors = set[m];
-        dist = 0;
-        for (n = 0, len1 = segmentVectors.length; n < len1; n++) {
-          vector = segmentVectors[n];
-          dist += vector.dist;
-        }
-        results.push(segment = {
-          vectors: segmentVectors,
-          dist: dist
-        });
-      }
-      return results;
-    };
-    cullShortSegments = function(set) {
-      return set.filter(function(segment) {
-        return segment.dist >= Config.MIN_SEGMENT_LENGTH;
-      });
-    };
-    wrap = function(data) {
-      return {
-        process: function(fn) {
-          return wrap(fn(data));
-        },
-        result: data
-      };
-    };
-    isConnected = function(a, b) {
-      var dX, dY;
-      dX = Math.abs(a.x - b.x);
-      dY = Math.abs(a.y - b.y);
-      return dX < Config.CONNECTED_DISTANCE && dY < Config.CONNECTED_DISTANCE;
-    };
-    isInline = function(a, b, c) {
-      var crossproduct, dotproduct, squaredlengthba;
-      crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
-      if (Math.abs(crossproduct) > 0.01) {
-        return false;
-      }
-      dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
-      if (dotproduct < 0) {
-        return false;
-      }
-      squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
-      if (dotproduct > squaredlengthba) {
-        return false;
-      }
-      return true;
-    };
-    distance = function(a, b) {
-      var dx, dy;
-      dx = b.x - a.x;
-      dy = b.y - a.y;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-    return angle = function(a, b) {
-      return Math.atan2(b.y - a.y, b.x - a.x);
-    };
-  });
-
-  Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize"], function(Arrow, Config, Containerize) {
-    return Make("FlowArrows:Segment", function(parentElm, segmentData) {
-      return Containerize(parentElm, function(scope) {
-        var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
-        arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
-        segmentSpacing = segmentData.dist / arrowCount;
-        segmentPosition = 0;
-        vectorPosition = 0;
-        vectorIndex = 0;
-        vector = segmentData.vectors[vectorIndex];
-        results = [];
-        for (i = m = 0, ref = arrowCount; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
-          while (vectorPosition > vector.dist) {
-            vectorPosition -= vector.dist;
-            vector = segmentData.vectors[++vectorIndex];
-          }
-          arrow = Arrow(scope.element, segmentData, segmentPosition, vectorPosition, vectorIndex);
-          vectorPosition += segmentSpacing;
-          segmentPosition += segmentSpacing;
-          results.push(arrow);
-        }
-        return results;
-      });
-    });
-  });
-
-  Take(["Env", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Env, Config, Containerize, Segment) {
-    return Make("FlowArrows:Set", function(parentElm, setData) {
-      return Containerize(parentElm, function(scope) {
-        var child, childName, i, len, m, results, segmentData;
-        results = [];
-        for (i = m = 0, len = setData.length; m < len; i = ++m) {
-          segmentData = setData[i];
-          if (segmentData.dist < Config.FADE_LENGTH * 2) {
-            throw "You have a FlowArrows segment that is only " + (Math.round(segmentData.dist)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.";
-          }
-          childName = "segment" + i;
-          child = Segment(scope.element, segmentData);
-          if (Env.dev) {
-            child.element.addEventListener("mouseover", function() {
-              return console.log(childName);
-            });
-          }
-          results.push(scope[childName] = child);
-        }
-        return results;
-      });
-    });
-  });
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
     var root, schematic, update;
@@ -1336,6 +1349,17 @@
     });
   });
 
+  Take("AllReady", function() {
+    var elm, len, m, nodes, results;
+    nodes = Array.prototype.slice.call(document.querySelectorAll("#root [id]"));
+    results = [];
+    for (m = 0, len = nodes.length; m < len; m++) {
+      elm = nodes[m];
+      results.push(elm.removeAttribute("id"));
+    }
+    return results;
+  });
+
   Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
     return Registry.add("ScopeProcessor", function(scope) {
       var animate, running, startTime;
@@ -1381,11 +1405,11 @@
     return Registry.add("ScopeProcessor", function(scope) {
       var base1, name1, ref;
       if (scope.parent != null) {
-        if (((ref = scope.parent[scope.name]) != null ? ref.element.id : void 0) === scope.element.id) {
+        if (((ref = scope.parent[scope.instanceName]) != null ? ref.element.id : void 0) === scope.element.id) {
           console.log(scope.parent);
-          throw "Duplicate instance name detected in ^^^ " + scope.parent.name + ": " + scope.name;
+          throw "Duplicate instance name detected in ^^^ " + scope.parent.instanceName + ": " + scope.instanceName;
         }
-        if ((base1 = scope.parent)[name1 = scope.name] == null) {
+        if ((base1 = scope.parent)[name1 = scope.instanceName] == null) {
           base1[name1] = scope;
         }
         return scope.parent.children.push(scope);
@@ -3346,7 +3370,7 @@
     });
   });
 
-  Take(["Action", "Reaction", "DOMContentLoaded"], function(Action, Reaction) {
+  Take(["Action", "Reaction", "SVG", "DOMContentLoaded"], function(Action, Reaction, SVG) {
     var len, m, o, ref, setBackground, target;
     target = null;
     ref = window.parent.document.querySelectorAll("object");
@@ -3360,7 +3384,7 @@
     setBackground = function(v) {
       var c;
       c = "hsl(220, 0%, " + (v * 100) + "%)";
-      return target.style.background = c;
+      return SVG.style(target, "background-color", c);
     };
     Reaction("Background:Set", setBackground);
     return Take("ScopeReady", function() {

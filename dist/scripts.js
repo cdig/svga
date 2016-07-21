@@ -655,6 +655,18 @@
     return window.focus();
   });
 
+  (function() {
+    window.addEventListener("touchmove", function(e) {
+      return e.preventDefault();
+    });
+    window.addEventListener("scroll", function(e) {
+      return e.preventDefault();
+    });
+    return window.addEventListener("dragstart", function(e) {
+      return e.preventDefault();
+    });
+  })();
+
   Take(["Env", "Resize", "SVG", "Tick", "SVGReady"], function(Env, Resize, SVG, Tick) {
     var avgLength, avgList, count, freq, text, total;
     if (!Env.dev) {
@@ -949,15 +961,6 @@
       return Tween1(alpha, -1, 1.4, tick);
     });
   });
-
-  (function() {
-    window.addEventListener("touchmove", function(e) {
-      return e.preventDefault();
-    });
-    return window.addEventListener("scroll", function(e) {
-      return e.preventDefault();
-    });
-  })();
 
   Take(["Action", "Control", "GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween1", "ScopeReady"], function(Action, Control, GUI, Pressure, Reaction, Resize, SVG, TRS, Tween1) {
     var alpha, g, slider, sliders, tick;

@@ -8,13 +8,13 @@ Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
   offsetX = 0
   
   
-  topBar = SVG.create "g", SVG.root, class: "TopBar"
+  topBar = SVG.create "g", GUI.elm, class: "TopBar"
   bg = SVG.create "rect", topBar, height: GUI.TopBar.height, fill: "url(#TopBarGradient)"
   SVG.createGradient "TopBarGradient", false, "#35488d", "#5175bd", "#35488d"
   container = TRS SVG.create "g", topBar, class: "Elements"
     
   # Place us above the click-to-focus element
-  Take "ScopeReady", ()-> SVG.append SVG.root, topBar
+  Take "ScopeReady", ()-> SVG.append GUI.elm, topBar
   
   
   TopBar = (args...)->

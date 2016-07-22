@@ -2,7 +2,7 @@ Take ["GUI","Pressure","Reaction","Resize","SVG","TRS","Tween1","SVGReady"],
 (      GUI , Pressure , Reaction , Resize , SVG , TRS , Tween1)->
   
   u = 36
-  g = TRS SVG.create "g", SVG.root
+  g = TRS SVG.create "g", GUI.elm
   
   pressures = TRS SVG.create "g", g
   TRS.move pressures, -84, 0

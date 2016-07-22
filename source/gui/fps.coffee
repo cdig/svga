@@ -1,4 +1,4 @@
-Take ["Dev", "Resize", "SVG", "Tick", "SVGReady"], (Dev, Resize, SVG, Tick)->
+Take ["Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Dev, GUI, Resize, SVG, Tick)->
   return unless Dev
   
   count = 60 # Update immediately
@@ -6,7 +6,7 @@ Take ["Dev", "Resize", "SVG", "Tick", "SVGReady"], (Dev, Resize, SVG, Tick)->
   avgLength = 10 # Average of the last 10 frames
   avgList = []
   total = 0
-  text = SVG.create "text", SVG.root, fill: "#666"
+  text = SVG.create "text", GUI.elm, fill: "#666"
   
   Resize ()->
     SVG.attrs text, x: 10, y: 70

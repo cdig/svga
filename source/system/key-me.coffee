@@ -6,7 +6,7 @@
 # Note — shortcuts only work with 1 modifier. Command-g, perfect. Command-shift-g, no.
 
 
-Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
+Take ["KeyNames"], (KeyNames)->
   downHandlers = {}
   upHandlers = {}
   
@@ -36,7 +36,7 @@ Take ["KeyCodes", "KeyNames"], (KeyCodes, KeyNames)->
   
   
   keyDown = (e)->
-    code = e.keyCode
+    code = e.which or e.keyCode
     name = KeyNames[code]
     return unless name?
     return if KeyMe.pressing[name] # Swallow key repeat

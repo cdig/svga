@@ -1,5 +1,6 @@
-do ()->
+Take ["SVG", "SVGReady"], (SVG)->
   Make "GUI", GUI =
+    elm: SVG.create "g", SVG.root, "x-gui":""
     TopBar:
       buttonPadCustom: 16
       buttonPadStandard: 24

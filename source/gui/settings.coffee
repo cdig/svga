@@ -1,7 +1,7 @@
 Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween1","ScopeReady"],
 (      Action , Control , GUI , Pressure , Reaction , Resize , SVG , TRS , Tween1)->
   
-  g = TRS SVG.create "g", SVG.root
+  g = TRS SVG.create "g", GUI.elm
   
   sliders = TRS SVG.create "g", g, "text-anchor": "middle"
   TRS.move sliders, -128

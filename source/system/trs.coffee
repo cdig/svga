@@ -3,8 +3,7 @@ Take ["RAF", "SVG"], (RAF, SVG)->
   
   TRS = (elm, debugColor)->
     if not elm? then console.log elm; throw "^ Null element passed to TRS(elm)"
-    if not elm.parentNode? then console.log elm; throw "^ Element passed to TRS(elm) must have a parentNode"
-    wrapper = SVG.create "g", elm.parentNode, class: "TRS"
+    wrapper = SVG.create "g", elm.parentNode, "x-trs": ""
     SVG.append wrapper, elm
     if debugColor? then SVG.create "rect", wrapper, class: "Debug", x:-2, y:-2, width:4, height:4, fill:debugColor
     elm._trs = v =

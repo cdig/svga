@@ -4,9 +4,9 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
   consumedRows = 0
   rows = []
   
-  panelX = 0
+  panelX = 1
   
-  g = TRS SVG.create "g", SVG.root,
+  g = TRS SVG.create "g", GUI.elm,
     class: "Controls"
     "font-size": 20
     "text-anchor": "middle"

@@ -69,11 +69,6 @@
 #     Math.sqrt x*x + y*y + z*z
 #
 #
-#   eventInside = (x, y)->
-#     panelHidden = false # !Control.panelShowing # TODO
-#     insidePanel = x < window.innerWidth - GUI.ControlPanel.width
-#     insideTopBar = y > GUI.TopBar.height
-#     return insideTopBar and (panelHidden or insidePanel)
 
 
   # window.addEventListener "touchstart", touchStart

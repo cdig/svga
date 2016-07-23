@@ -117,6 +117,539 @@
     };
   });
 
+  Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
+    return Make("FlowArrows:Arrow", function(parentElm, segmentData, segmentPosition, vectorPosition, vectorIndex) {
+      var arrow, element, line, triangle, vector;
+      vector = segmentData.vectors[vectorIndex];
+      element = TRS(SVG.create("g", parentElm));
+      triangle = SVG.create("polyline", element, {
+        points: "0,-16 30,0 0,16"
+      });
+      line = SVG.create("line", element, {
+        x1: -23,
+        y1: 0,
+        x2: 5,
+        y2: 0,
+        "stroke-width": 11,
+        "stroke-linecap": "round"
+      });
+      return arrow = {
+        update: function(parentFlow, parentScale) {
+          var scale;
+          if (Config.SPACING < 60 * parentScale) {
+            throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay.";
+          }
+          if (parentScale < 0.1) {
+            throw "Your arrows are so small that they might not be visible. If this is necessary, then you are doing something suspicious and need to convince Ivan that what you are doing is okay.";
+          }
+          vectorPosition += parentFlow;
+          segmentPosition += parentFlow;
+          while (vectorPosition > vector.dist) {
+            vectorIndex++;
+            if (vectorIndex >= segmentData.vectors.length) {
+              vectorIndex = 0;
+              segmentPosition -= segmentData.dist;
+            }
+            vectorPosition -= vector.dist;
+            vector = segmentData.vectors[vectorIndex];
+          }
+          while (vectorPosition < 0) {
+            vectorIndex--;
+            if (vectorIndex < 0) {
+              vectorIndex = segmentData.vectors.length - 1;
+              segmentPosition += segmentData.dist;
+            }
+            vector = segmentData.vectors[vectorIndex];
+            vectorPosition += vector.dist;
+          }
+          if (segmentPosition < segmentData.dist / 2) {
+            scale = Math.max(0, Math.min(1, (segmentPosition / segmentData.dist) * segmentData.dist / Config.FADE_LENGTH));
+          } else {
+            scale = Math.max(0, Math.min(1, 1 - (segmentPosition - (segmentData.dist - Config.FADE_LENGTH)) / Config.FADE_LENGTH));
+          }
+          return TRS.abs(element, {
+            x: Math.cos(vector.angle) * vectorPosition + vector.x,
+            y: Math.sin(vector.angle) * vectorPosition + vector.y,
+            scale: scale * parentScale,
+            r: vector.angle / (2 * Math.PI) + (parentFlow < 0 ? 0.5 : 0)
+          });
+        }
+      };
+    });
+  });
+
+  (function() {
+    var Config, defineProp;
+    Make("FlowArrows:Config", Config = {
+      SCALE: 1,
+      SPACING: 600,
+      FADE_LENGTH: 50,
+      MIN_SEGMENT_LENGTH: 200,
+      SPEED: 200,
+      MIN_EDGE_LENGTH: 8,
+      CONNECTED_DISTANCE: 1,
+      wrap: function(obj) {
+        var k;
+        for (k in Config) {
+          if (k !== "wrap") {
+            defineProp(obj, k);
+          }
+        }
+        return obj;
+      }
+    });
+    return defineProp = function(obj, k) {
+      return Object.defineProperty(obj, k, {
+        get: function() {
+          return Config[k];
+        },
+        set: function(v) {
+          return Config[k] = v;
+        }
+      });
+    };
+  })();
+
+  Take(["Pressure", "SVG"], function(Pressure, SVG) {
+    return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
+      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible;
+      direction = 1;
+      flow = 1;
+      pressure = null;
+      scale = 1;
+      active = true;
+      enabled = true;
+      visible = true;
+      scope = {
+        element: SVG.create("g", parentElm),
+        reverse: function() {
+          return direction *= -1;
+        },
+        update: function(parentFlow, parentScale) {
+          var child, f, len, m, results, s;
+          if (active) {
+            f = flow * direction * parentFlow;
+            s = scale * parentScale;
+            results = [];
+            for (m = 0, len = children.length; m < len; m++) {
+              child = children[m];
+              results.push(child.update(f, s));
+            }
+            return results;
+          }
+        }
+      };
+      children = setupFn(scope);
+      updateActive = function() {
+        active = enabled && visible && flow !== 0;
+        return SVG.styles(scope.element, {
+          display: active ? null : "none"
+        });
+      };
+      Object.defineProperty(scope, 'enabled', {
+        set: function(val) {
+          if (visible !== val) {
+            return updateActive(visible = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'flow', {
+        get: function() {
+          return flow;
+        },
+        set: function(val) {
+          if (flow !== val) {
+            return updateActive(flow = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'pressure', {
+        get: function() {
+          return pressure;
+        },
+        set: function(val) {
+          var color;
+          if (pressure !== val) {
+            pressure = val;
+            color = Pressure(val);
+            return SVG.attrs(scope.element, {
+              fill: color,
+              stroke: color
+            });
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return scale;
+        },
+        set: function(val) {
+          if (scale !== val) {
+            return scale = val;
+          }
+        }
+      });
+      Object.defineProperty(scope, 'visible', {
+        get: function() {
+          return visible;
+        },
+        set: function(val) {
+          if (visible !== val) {
+            return updateActive(visible = val);
+          }
+        }
+      });
+      return scope;
+    });
+  });
+
+  Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
+    var animateMode, enableAll, sets, visible;
+    sets = [];
+    visible = true;
+    animateMode = true;
+    enableAll = function() {
+      var len, m, results, set;
+      results = [];
+      for (m = 0, len = sets.length; m < len; m++) {
+        set = sets[m];
+        results.push(set.enabled = visible && animateMode);
+      }
+      return results;
+    };
+    Tick(function(time, dt) {
+      var f, len, m, results, s, set;
+      if (visible && animateMode) {
+        results = [];
+        for (m = 0, len = sets.length; m < len; m++) {
+          set = sets[m];
+          if (set.parentScope.visible) {
+            f = dt * Config.SPEED;
+            s = Config.SCALE;
+            results.push(set.update(f, s));
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      }
+    });
+    Reaction("Schematic:Hide", function() {
+      return setTimeout(function() {
+        return enableAll(animateMode = true);
+      });
+    });
+    Reaction("Schematic:Show", function() {
+      return enableAll(animateMode = false);
+    });
+    Reaction("FlowArrows:Show", function() {
+      return enableAll(visible = true);
+    });
+    Reaction("FlowArrows:Hide", function() {
+      return enableAll(visible = false);
+    });
+    return Make("FlowArrows", Config.wrap(function() {
+      var elm, lineData, parentScope, set, setData;
+      parentScope = arguments[0], lineData = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      elm = parentScope.element;
+      if (elm.querySelector("[id^=markerBox]")) {
+        while (elm.hasChildNodes()) {
+          elm.removeChild(elm.firstChild);
+        }
+      }
+      setData = Process(lineData);
+      set = Set(elm, setData);
+      set.parentScope = parentScope;
+      sets.push(set);
+      return set;
+    }));
+  });
+
+  Take("FlowArrows:Config", function(Config) {
+    var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
+    Make("FlowArrows:Process", function(lineData) {
+      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
+    });
+    log = function(a) {
+      console.dir(a);
+      return a;
+    };
+    formSegments = function(lineData) {
+      var i, m, pointA, pointB, ref, segmentEdges, segments;
+      segments = [];
+      segmentEdges = null;
+      for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
+        pointA = lineData[i];
+        pointB = lineData[i + 1];
+        if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1])) {
+          segmentEdges.push(pointB);
+        } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1])) {
+          segmentEdges.push(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB)) {
+          segmentEdges.unshift(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA)) {
+          segmentEdges.unshift(pointB);
+        } else {
+          segments.push(segmentEdges = [pointA, pointB]);
+        }
+      }
+      return segments;
+    };
+    joinSegments = function(segments) {
+      var i, j, pointA, pointB, segA, segB;
+      segA = null;
+      segB = null;
+      pointA = null;
+      pointB = null;
+      i = segments.length;
+      while (i--) {
+        j = segments.length;
+        while (--j > i) {
+          segA = segments[i];
+          segB = segments[j];
+          pointA = segA[0];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB)) {
+            segB.reverse();
+            segB.pop();
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB)) {
+            segB.reverse();
+            segB.unshift();
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB)) {
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[0];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB)) {
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+        }
+      }
+      return segments;
+    };
+    cullShortEdges = function(segments) {
+      var i, j, pointA, pointB, seg;
+      i = segments.length;
+      seg = [];
+      pointA = pointB = null;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          if (distance(pointA, pointB) < Config.MIN_EDGE_LENGTH) {
+            pointA.cull = true;
+          }
+        }
+      }
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          if (seg[j].cull) {
+            seg.splice(j, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    cullInlinePoints = function(segments) {
+      var i, j, pointA, pointB, pointC, seg;
+      seg = [];
+      pointA = null;
+      pointB = null;
+      pointC = null;
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 2;
+        while (j-- > 0 && seg.length > 2) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          pointC = seg[j + 2];
+          if (isInline(pointA, pointB, pointC)) {
+            seg.splice(j + 1, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    reifyVectors = function(segments) {
+      var i, len, m, pointA, pointB, results, segment, vector;
+      results = [];
+      for (m = 0, len = segments.length; m < len; m++) {
+        segment = segments[m];
+        results.push((function() {
+          var len1, n, results1;
+          results1 = [];
+          for (i = n = 0, len1 = segment.length; n < len1; i = ++n) {
+            pointA = segment[i];
+            if (pointB = segment[i + 1]) {
+              results1.push(vector = {
+                x: pointA.x,
+                y: pointA.y,
+                dist: distance(pointA, pointB),
+                angle: angle(pointA, pointB)
+              });
+            }
+          }
+          return results1;
+        })());
+      }
+      return results;
+    };
+    reifySegments = function(set) {
+      var dist, len, len1, m, n, results, segment, segmentVectors, vector;
+      results = [];
+      for (m = 0, len = set.length; m < len; m++) {
+        segmentVectors = set[m];
+        dist = 0;
+        for (n = 0, len1 = segmentVectors.length; n < len1; n++) {
+          vector = segmentVectors[n];
+          dist += vector.dist;
+        }
+        results.push(segment = {
+          vectors: segmentVectors,
+          dist: dist
+        });
+      }
+      return results;
+    };
+    cullShortSegments = function(set) {
+      return set.filter(function(segment) {
+        return segment.dist >= Config.MIN_SEGMENT_LENGTH;
+      });
+    };
+    wrap = function(data) {
+      return {
+        process: function(fn) {
+          return wrap(fn(data));
+        },
+        result: data
+      };
+    };
+    isConnected = function(a, b) {
+      var dX, dY;
+      dX = Math.abs(a.x - b.x);
+      dY = Math.abs(a.y - b.y);
+      return dX < Config.CONNECTED_DISTANCE && dY < Config.CONNECTED_DISTANCE;
+    };
+    isInline = function(a, b, c) {
+      var crossproduct, dotproduct, squaredlengthba;
+      crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
+      if (Math.abs(crossproduct) > 0.01) {
+        return false;
+      }
+      dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
+      if (dotproduct < 0) {
+        return false;
+      }
+      squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+      if (dotproduct > squaredlengthba) {
+        return false;
+      }
+      return true;
+    };
+    distance = function(a, b) {
+      var dx, dy;
+      dx = b.x - a.x;
+      dy = b.y - a.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    return angle = function(a, b) {
+      return Math.atan2(b.y - a.y, b.x - a.x);
+    };
+  });
+
+  Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize"], function(Arrow, Config, Containerize) {
+    return Make("FlowArrows:Segment", function(parentElm, segmentData) {
+      return Containerize(parentElm, function(scope) {
+        var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
+        arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
+        segmentSpacing = segmentData.dist / arrowCount;
+        segmentPosition = 0;
+        vectorPosition = 0;
+        vectorIndex = 0;
+        vector = segmentData.vectors[vectorIndex];
+        results = [];
+        for (i = m = 0, ref = arrowCount; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
+          while (vectorPosition > vector.dist) {
+            vectorPosition -= vector.dist;
+            vector = segmentData.vectors[++vectorIndex];
+          }
+          arrow = Arrow(scope.element, segmentData, segmentPosition, vectorPosition, vectorIndex);
+          vectorPosition += segmentSpacing;
+          segmentPosition += segmentSpacing;
+          results.push(arrow);
+        }
+        return results;
+      });
+    });
+  });
+
+  Take(["Dev", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Dev, Config, Containerize, Segment) {
+    return Make("FlowArrows:Set", function(parentElm, setData) {
+      return Containerize(parentElm, function(scope) {
+        var child, childName, i, len, m, results, segmentData;
+        results = [];
+        for (i = m = 0, len = setData.length; m < len; i = ++m) {
+          segmentData = setData[i];
+          if (segmentData.dist < Config.FADE_LENGTH * 2) {
+            throw "You have a FlowArrows segment that is only " + (Math.round(segmentData.dist)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.";
+          }
+          childName = "segment" + i;
+          child = Segment(scope.element, segmentData);
+          if (Dev) {
+            child.element.addEventListener("click", function() {
+              return console.log(parentElm._scope.instanceName + "." + childName);
+            });
+          }
+          results.push(scope[childName] = child);
+        }
+        return results;
+      });
+    });
+  });
+
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  (function() {
+    return Make("Mask", function() {
+      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+    });
+  })();
+
   Take(["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(GUI, Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", GUI.elm));
@@ -690,539 +1223,6 @@
     }
   });
 
-  Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
-    return Make("FlowArrows:Arrow", function(parentElm, segmentData, segmentPosition, vectorPosition, vectorIndex) {
-      var arrow, element, line, triangle, vector;
-      vector = segmentData.vectors[vectorIndex];
-      element = TRS(SVG.create("g", parentElm));
-      triangle = SVG.create("polyline", element, {
-        points: "0,-16 30,0 0,16"
-      });
-      line = SVG.create("line", element, {
-        x1: -23,
-        y1: 0,
-        x2: 5,
-        y2: 0,
-        "stroke-width": 11,
-        "stroke-linecap": "round"
-      });
-      return arrow = {
-        update: function(parentFlow, parentScale) {
-          var scale;
-          if (Config.SPACING < 60 * parentScale) {
-            throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay.";
-          }
-          if (parentScale < 0.1) {
-            throw "Your arrows are so small that they might not be visible. If this is necessary, then you are doing something suspicious and need to convince Ivan that what you are doing is okay.";
-          }
-          vectorPosition += parentFlow;
-          segmentPosition += parentFlow;
-          while (vectorPosition > vector.dist) {
-            vectorIndex++;
-            if (vectorIndex >= segmentData.vectors.length) {
-              vectorIndex = 0;
-              segmentPosition -= segmentData.dist;
-            }
-            vectorPosition -= vector.dist;
-            vector = segmentData.vectors[vectorIndex];
-          }
-          while (vectorPosition < 0) {
-            vectorIndex--;
-            if (vectorIndex < 0) {
-              vectorIndex = segmentData.vectors.length - 1;
-              segmentPosition += segmentData.dist;
-            }
-            vector = segmentData.vectors[vectorIndex];
-            vectorPosition += vector.dist;
-          }
-          if (segmentPosition < segmentData.dist / 2) {
-            scale = Math.max(0, Math.min(1, (segmentPosition / segmentData.dist) * segmentData.dist / Config.FADE_LENGTH));
-          } else {
-            scale = Math.max(0, Math.min(1, 1 - (segmentPosition - (segmentData.dist - Config.FADE_LENGTH)) / Config.FADE_LENGTH));
-          }
-          return TRS.abs(element, {
-            x: Math.cos(vector.angle) * vectorPosition + vector.x,
-            y: Math.sin(vector.angle) * vectorPosition + vector.y,
-            scale: scale * parentScale,
-            r: vector.angle / (2 * Math.PI) + (parentFlow < 0 ? 0.5 : 0)
-          });
-        }
-      };
-    });
-  });
-
-  (function() {
-    var Config, defineProp;
-    Make("FlowArrows:Config", Config = {
-      SCALE: 1,
-      SPACING: 600,
-      FADE_LENGTH: 50,
-      MIN_SEGMENT_LENGTH: 200,
-      SPEED: 200,
-      MIN_EDGE_LENGTH: 8,
-      CONNECTED_DISTANCE: 1,
-      wrap: function(obj) {
-        var k;
-        for (k in Config) {
-          if (k !== "wrap") {
-            defineProp(obj, k);
-          }
-        }
-        return obj;
-      }
-    });
-    return defineProp = function(obj, k) {
-      return Object.defineProperty(obj, k, {
-        get: function() {
-          return Config[k];
-        },
-        set: function(v) {
-          return Config[k] = v;
-        }
-      });
-    };
-  })();
-
-  Take(["Pressure", "SVG"], function(Pressure, SVG) {
-    return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
-      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible;
-      direction = 1;
-      flow = 1;
-      pressure = null;
-      scale = 1;
-      active = true;
-      enabled = true;
-      visible = true;
-      scope = {
-        element: SVG.create("g", parentElm),
-        reverse: function() {
-          return direction *= -1;
-        },
-        update: function(parentFlow, parentScale) {
-          var child, f, len, m, results, s;
-          if (active) {
-            f = flow * direction * parentFlow;
-            s = scale * parentScale;
-            results = [];
-            for (m = 0, len = children.length; m < len; m++) {
-              child = children[m];
-              results.push(child.update(f, s));
-            }
-            return results;
-          }
-        }
-      };
-      children = setupFn(scope);
-      updateActive = function() {
-        active = enabled && visible && flow !== 0;
-        return SVG.styles(scope.element, {
-          display: active ? null : "none"
-        });
-      };
-      Object.defineProperty(scope, 'enabled', {
-        set: function(val) {
-          if (visible !== val) {
-            return updateActive(visible = val);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'flow', {
-        get: function() {
-          return flow;
-        },
-        set: function(val) {
-          if (flow !== val) {
-            return updateActive(flow = val);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'pressure', {
-        get: function() {
-          return pressure;
-        },
-        set: function(val) {
-          var color;
-          if (pressure !== val) {
-            pressure = val;
-            color = Pressure(val);
-            return SVG.attrs(scope.element, {
-              fill: color,
-              stroke: color
-            });
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scale', {
-        get: function() {
-          return scale;
-        },
-        set: function(val) {
-          if (scale !== val) {
-            return scale = val;
-          }
-        }
-      });
-      Object.defineProperty(scope, 'visible', {
-        get: function() {
-          return visible;
-        },
-        set: function(val) {
-          if (visible !== val) {
-            return updateActive(visible = val);
-          }
-        }
-      });
-      return scope;
-    });
-  });
-
-  Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
-    var animateMode, enableAll, sets, visible;
-    sets = [];
-    visible = true;
-    animateMode = true;
-    enableAll = function() {
-      var len, m, results, set;
-      results = [];
-      for (m = 0, len = sets.length; m < len; m++) {
-        set = sets[m];
-        results.push(set.enabled = visible && animateMode);
-      }
-      return results;
-    };
-    Tick(function(time, dt) {
-      var f, len, m, results, s, set;
-      if (visible && animateMode) {
-        results = [];
-        for (m = 0, len = sets.length; m < len; m++) {
-          set = sets[m];
-          if (set.parentScope.visible) {
-            f = dt * Config.SPEED;
-            s = Config.SCALE;
-            results.push(set.update(f, s));
-          } else {
-            results.push(void 0);
-          }
-        }
-        return results;
-      }
-    });
-    Reaction("Schematic:Hide", function() {
-      return setTimeout(function() {
-        return enableAll(animateMode = true);
-      });
-    });
-    Reaction("Schematic:Show", function() {
-      return enableAll(animateMode = false);
-    });
-    Reaction("FlowArrows:Show", function() {
-      return enableAll(visible = true);
-    });
-    Reaction("FlowArrows:Hide", function() {
-      return enableAll(visible = false);
-    });
-    return Make("FlowArrows", Config.wrap(function() {
-      var elm, lineData, parentScope, set, setData;
-      parentScope = arguments[0], lineData = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      elm = parentScope.element;
-      if (elm.querySelector("[id^=markerBox]")) {
-        while (elm.hasChildNodes()) {
-          elm.removeChild(elm.firstChild);
-        }
-      }
-      setData = Process(lineData);
-      set = Set(elm, setData);
-      set.parentScope = parentScope;
-      sets.push(set);
-      return set;
-    }));
-  });
-
-  Take("FlowArrows:Config", function(Config) {
-    var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
-    Make("FlowArrows:Process", function(lineData) {
-      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
-    });
-    log = function(a) {
-      console.dir(a);
-      return a;
-    };
-    formSegments = function(lineData) {
-      var i, m, pointA, pointB, ref, segmentEdges, segments;
-      segments = [];
-      segmentEdges = null;
-      for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
-        pointA = lineData[i];
-        pointB = lineData[i + 1];
-        if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1])) {
-          segmentEdges.push(pointB);
-        } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1])) {
-          segmentEdges.push(pointA);
-        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB)) {
-          segmentEdges.unshift(pointA);
-        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA)) {
-          segmentEdges.unshift(pointB);
-        } else {
-          segments.push(segmentEdges = [pointA, pointB]);
-        }
-      }
-      return segments;
-    };
-    joinSegments = function(segments) {
-      var i, j, pointA, pointB, segA, segB;
-      segA = null;
-      segB = null;
-      pointA = null;
-      pointB = null;
-      i = segments.length;
-      while (i--) {
-        j = segments.length;
-        while (--j > i) {
-          segA = segments[i];
-          segB = segments[j];
-          pointA = segA[0];
-          pointB = segB[0];
-          if (isConnected(pointA, pointB)) {
-            segB.reverse();
-            segB.pop();
-            segments[i] = segB.concat(segA);
-            segments.splice(j, 1);
-            continue;
-          }
-          pointA = segA[segA.length - 1];
-          pointB = segB[segB.length - 1];
-          if (isConnected(pointA, pointB)) {
-            segB.reverse();
-            segB.unshift();
-            segments[i] = segA.concat(segB);
-            segments.splice(j, 1);
-            continue;
-          }
-          pointA = segA[segA.length - 1];
-          pointB = segB[0];
-          if (isConnected(pointA, pointB)) {
-            segments[i] = segA.concat(segB);
-            segments.splice(j, 1);
-            continue;
-          }
-          pointA = segA[0];
-          pointB = segB[segB.length - 1];
-          if (isConnected(pointA, pointB)) {
-            segments[i] = segB.concat(segA);
-            segments.splice(j, 1);
-            continue;
-          }
-        }
-      }
-      return segments;
-    };
-    cullShortEdges = function(segments) {
-      var i, j, pointA, pointB, seg;
-      i = segments.length;
-      seg = [];
-      pointA = pointB = null;
-      while (i--) {
-        seg = segments[i];
-        j = seg.length - 1;
-        while (j-- > 0) {
-          pointA = seg[j];
-          pointB = seg[j + 1];
-          if (distance(pointA, pointB) < Config.MIN_EDGE_LENGTH) {
-            pointA.cull = true;
-          }
-        }
-      }
-      i = segments.length;
-      while (i--) {
-        seg = segments[i];
-        j = seg.length - 1;
-        while (j-- > 0) {
-          if (seg[j].cull) {
-            seg.splice(j, 1);
-          }
-        }
-      }
-      return segments;
-    };
-    cullInlinePoints = function(segments) {
-      var i, j, pointA, pointB, pointC, seg;
-      seg = [];
-      pointA = null;
-      pointB = null;
-      pointC = null;
-      i = segments.length;
-      while (i--) {
-        seg = segments[i];
-        j = seg.length - 2;
-        while (j-- > 0 && seg.length > 2) {
-          pointA = seg[j];
-          pointB = seg[j + 1];
-          pointC = seg[j + 2];
-          if (isInline(pointA, pointB, pointC)) {
-            seg.splice(j + 1, 1);
-          }
-        }
-      }
-      return segments;
-    };
-    reifyVectors = function(segments) {
-      var i, len, m, pointA, pointB, results, segment, vector;
-      results = [];
-      for (m = 0, len = segments.length; m < len; m++) {
-        segment = segments[m];
-        results.push((function() {
-          var len1, n, results1;
-          results1 = [];
-          for (i = n = 0, len1 = segment.length; n < len1; i = ++n) {
-            pointA = segment[i];
-            if (pointB = segment[i + 1]) {
-              results1.push(vector = {
-                x: pointA.x,
-                y: pointA.y,
-                dist: distance(pointA, pointB),
-                angle: angle(pointA, pointB)
-              });
-            }
-          }
-          return results1;
-        })());
-      }
-      return results;
-    };
-    reifySegments = function(set) {
-      var dist, len, len1, m, n, results, segment, segmentVectors, vector;
-      results = [];
-      for (m = 0, len = set.length; m < len; m++) {
-        segmentVectors = set[m];
-        dist = 0;
-        for (n = 0, len1 = segmentVectors.length; n < len1; n++) {
-          vector = segmentVectors[n];
-          dist += vector.dist;
-        }
-        results.push(segment = {
-          vectors: segmentVectors,
-          dist: dist
-        });
-      }
-      return results;
-    };
-    cullShortSegments = function(set) {
-      return set.filter(function(segment) {
-        return segment.dist >= Config.MIN_SEGMENT_LENGTH;
-      });
-    };
-    wrap = function(data) {
-      return {
-        process: function(fn) {
-          return wrap(fn(data));
-        },
-        result: data
-      };
-    };
-    isConnected = function(a, b) {
-      var dX, dY;
-      dX = Math.abs(a.x - b.x);
-      dY = Math.abs(a.y - b.y);
-      return dX < Config.CONNECTED_DISTANCE && dY < Config.CONNECTED_DISTANCE;
-    };
-    isInline = function(a, b, c) {
-      var crossproduct, dotproduct, squaredlengthba;
-      crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
-      if (Math.abs(crossproduct) > 0.01) {
-        return false;
-      }
-      dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
-      if (dotproduct < 0) {
-        return false;
-      }
-      squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
-      if (dotproduct > squaredlengthba) {
-        return false;
-      }
-      return true;
-    };
-    distance = function(a, b) {
-      var dx, dy;
-      dx = b.x - a.x;
-      dy = b.y - a.y;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-    return angle = function(a, b) {
-      return Math.atan2(b.y - a.y, b.x - a.x);
-    };
-  });
-
-  Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize"], function(Arrow, Config, Containerize) {
-    return Make("FlowArrows:Segment", function(parentElm, segmentData) {
-      return Containerize(parentElm, function(scope) {
-        var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
-        arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
-        segmentSpacing = segmentData.dist / arrowCount;
-        segmentPosition = 0;
-        vectorPosition = 0;
-        vectorIndex = 0;
-        vector = segmentData.vectors[vectorIndex];
-        results = [];
-        for (i = m = 0, ref = arrowCount; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
-          while (vectorPosition > vector.dist) {
-            vectorPosition -= vector.dist;
-            vector = segmentData.vectors[++vectorIndex];
-          }
-          arrow = Arrow(scope.element, segmentData, segmentPosition, vectorPosition, vectorIndex);
-          vectorPosition += segmentSpacing;
-          segmentPosition += segmentSpacing;
-          results.push(arrow);
-        }
-        return results;
-      });
-    });
-  });
-
-  Take(["Dev", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Dev, Config, Containerize, Segment) {
-    return Make("FlowArrows:Set", function(parentElm, setData) {
-      return Containerize(parentElm, function(scope) {
-        var child, childName, i, len, m, results, segmentData;
-        results = [];
-        for (i = m = 0, len = setData.length; m < len; i = ++m) {
-          segmentData = setData[i];
-          if (segmentData.dist < Config.FADE_LENGTH * 2) {
-            throw "You have a FlowArrows segment that is only " + (Math.round(segmentData.dist)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.";
-          }
-          childName = "segment" + i;
-          child = Segment(scope.element, segmentData);
-          if (Dev) {
-            child.element.addEventListener("click", function() {
-              return console.log(parentElm._scope.instanceName + "." + childName);
-            });
-          }
-          results.push(scope[childName] = child);
-        }
-        return results;
-      });
-    });
-  });
-
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  (function() {
-    return Make("Mask", function() {
-      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
-    });
-  })();
-
   Take(["KeyMe", "Nav", "Tick"], function(KeyMe, Nav, Tick) {
     var accel, decel, getAccel, maxVel, vel;
     decel = 1.25;
@@ -1278,8 +1278,41 @@
     };
   });
 
-  Take(["GUI", "Resize", "SVG", "ScopeReady"], function(GUI, Resize, SVG) {
-    var Nav, center, initialSize, limit, maxLimit, minLimit, nav, ox, oy, pos, render, root, zoom;
+  Take(["Nav", "TweenNav"], function(Nav, TweenNav) {
+    window.addEventListener("dblclick", function(e) {
+      if (Nav.eventInside(e.clientX, e.clientY)) {
+        e.preventDefault();
+        return TweenNav({
+          x: 0,
+          y: 0,
+          z: 0
+        });
+      }
+    });
+    return window.addEventListener("wheel", function(e) {
+      if (Nav.eventInside(e.clientX, e.clientY)) {
+        e.preventDefault();
+        if (e.ctrlKey) {
+          return Nav.by({
+            z: -e.deltaY / 100
+          });
+        } else if (e.metaKey) {
+          return Nav.by({
+            z: -e.deltaY / 200
+          });
+        } else {
+          return Nav.by({
+            x: -e.deltaX,
+            y: -e.deltaY,
+            z: -e.deltaZ
+          });
+        }
+      }
+    });
+  });
+
+  Take(["GUI", "RAF", "Resize", "SVG", "ScopeReady"], function(GUI, RAF, Resize, SVG) {
+    var Nav, center, initialSize, limit, nav, noReallyRender, ox, oy, pos, render, root, xLimit, yLimit, zLimit, zoom;
     pos = {
       x: 0,
       y: 0,
@@ -1290,11 +1323,11 @@
       y: 0,
       z: 0
     };
-    minLimit = {
-      z: 0
-    };
-    maxLimit = {
-      z: 3
+    xLimit = {};
+    yLimit = {};
+    zLimit = {
+      min: 0,
+      max: 3
     };
     zoom = SVG.create("g", null, {
       "x-zoom": ""
@@ -1308,10 +1341,10 @@
     initialSize = root.getBoundingClientRect();
     ox = root._scope.x - initialSize.left - initialSize.width / 2;
     oy = root._scope.y - initialSize.top - initialSize.height / 2;
-    maxLimit.x = initialSize.width / 2;
-    maxLimit.y = initialSize.height / 2;
-    minLimit.x = -maxLimit.x;
-    minLimit.y = -maxLimit.y;
+    xLimit.max = initialSize.width / 2;
+    yLimit.max = initialSize.height / 2;
+    xLimit.min = -xLimit.max;
+    yLimit.min = -yLimit.max;
     Resize(function() {
       var hFrac, height, wFrac, width;
       width = window.innerWidth - GUI.ControlPanel.width;
@@ -1324,22 +1357,42 @@
       return render();
     });
     render = function() {
+      return RAF(noReallyRender, true);
+    };
+    noReallyRender = function() {
       var z;
       z = center.z * Math.pow(2, pos.z);
       SVG.attr(nav, "transform", "translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
       return SVG.attr(zoom, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ")");
     };
-    limit = function(prop, v) {
-      return Math.min(maxLimit[prop], Math.max(minLimit[prop], v));
+    limit = function(l, v) {
+      return Math.min(l.max, Math.max(l.min, v));
     };
     return Make("Nav", Nav = {
       by: function(p) {
-        pos.z = limit("z", pos.z + p.z);
-        pos.x = limit("x", pos.x + p.x / (1 + pos.z));
-        pos.y = limit("y", pos.y + p.y / (1 + pos.z));
+        if (p.z != null) {
+          pos.z = limit(zLimit, pos.z + p.z);
+        }
+        if (p.x != null) {
+          pos.x = limit(xLimit, pos.x + p.x / (1 + pos.z));
+        }
+        if (p.y != null) {
+          pos.y = limit(yLimit, pos.y + p.y / (1 + pos.z));
+        }
         return render();
+      },
+      eventInside: function(x, y) {
+        var insidePanel, insideTopBar, panelHidden;
+        panelHidden = false;
+        insidePanel = x < window.innerWidth - GUI.ControlPanel.width;
+        insideTopBar = y > GUI.TopBar.height;
+        return insideTopBar && (panelHidden || insidePanel);
       }
     });
+  });
+
+  Take("Nav", function(Nav) {
+    return Make("TweenNav", function(p) {});
   });
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
@@ -1486,6 +1539,395 @@
       results.push(elm.removeAttribute("id"));
     }
     return results;
+  });
+
+  Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var animate, running, startTime;
+      if (scope.animate == null) {
+        return;
+      }
+      running = false;
+      startTime = 0;
+      animate = scope.animate;
+      scope.animate = function() {
+        throw "@animate() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return animate.call(scope, dt, time - startTime);
+      });
+      Reaction("Schematic:Hide", function() {
+        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        return running = true;
+      });
+      return Reaction("Schematic:Show", function() {
+        return running = false;
+      });
+    });
+  });
+
+  Take(["Registry"], function(Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please use FlowArrows instead.";
+        }
+      });
+      return scope.getElement != null ? scope.getElement : scope.getElement = function() {
+        throw "@getElement() has been removed. Please use @element instead.";
+      };
+    });
+  });
+
+  Take(["Registry"], function(Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var base, name1, ref;
+      if (scope.parent != null) {
+        if (((ref = scope.parent[scope.instanceName]) != null ? ref.element.id : void 0) === scope.element.id) {
+          console.log(scope.parent);
+          throw "Duplicate instance name detected in ^^^ " + scope.parent.instanceName + ": " + scope.instanceName;
+        }
+        if ((base = scope.parent)[name1 = scope.instanceName] == null) {
+          base[name1] = scope;
+        }
+        return scope.parent.children.push(scope);
+      }
+    });
+  });
+
+  Take(["Reaction", "Registry"], function(Reaction, Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      Reaction("Schematic:Hide", function() {
+        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
+      });
+      return Reaction("Schematic:Show", function() {
+        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
+      });
+    });
+  });
+
+  Take(["Registry"], function(Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      return Take("ScopeSetup", function() {
+        return typeof scope.setup === "function" ? scope.setup() : void 0;
+      });
+    });
+  });
+
+  Take(["Pressure", "Registry", "SVG"], function(Pressure, Registry, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var alpha, element, fillPath, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, strokePath, text, textElement, visible;
+      element = scope.element;
+      parent = element.parentNode;
+      placeholder = SVG.create("g");
+      strokePath = fillPath = element.querySelector("path");
+      isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
+      textElement = element.querySelector("tspan" || element.querySelector("text"));
+      ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        prop = ref1[m];
+        if (scope[prop] != null) {
+          console.log("ERROR ############################################");
+          console.log("scope:");
+          console.log(scope);
+          console.log("element:");
+          console.log(element);
+          throw "^ SVGA will overwrite @" + prop + " on this element. Please find a different name for your child/property named \"" + prop + "\".";
+        }
+      }
+      scope.stype = function() {
+        throw "@style is up for debate. Please show Ivan what you're using it to do.";
+      };
+      pressure = null;
+      Object.defineProperty(scope, 'pressure', {
+        get: function() {
+          return pressure;
+        },
+        set: function(val) {
+          if (pressure !== val) {
+            pressure = val;
+            if (isLine && !scope.root.BROKEN_LINES) {
+              return scope.stroke(Pressure(scope.pressure));
+            } else {
+              return scope.fill(Pressure(scope.pressure));
+            }
+          }
+        }
+      });
+      text = textElement != null ? textElement.textContent : void 0;
+      Object.defineProperty(scope, 'text', {
+        get: function() {
+          return text;
+        },
+        set: function(val) {
+          if (text !== val) {
+            return SVG.attr("textContent", text = val);
+          }
+        }
+      });
+      visible = true;
+      Object.defineProperty(scope, 'visible', {
+        get: function() {
+          return visible;
+        },
+        set: function(val) {
+          if (visible !== val) {
+            if (visible = val) {
+              return parent.replaceChild(element, placeholder);
+            } else {
+              return parent.replaceChild(placeholder, element);
+            }
+          }
+        }
+      });
+      alpha = 1;
+      Object.defineProperty(scope, 'alpha', {
+        get: function() {
+          return alpha;
+        },
+        set: function(val) {
+          if (alpha !== val) {
+            return SVG.style(element, "opacity", alpha = val);
+          }
+        }
+      });
+      scope.stroke = function(color) {
+        if (strokePath != null) {
+          SVG.attr(strokePath, "stroke", null);
+          strokePath = null;
+        }
+        return SVG.attr(element, "stroke", color);
+      };
+      scope.fill = function(color) {
+        if (fillPath != null) {
+          SVG.attr(fillPath, "fill", null);
+          fillPath = null;
+        }
+        return SVG.attr(element, "fill", color);
+      };
+      scope.linearGradient = function(stops, x1, y1, x2, y2) {
+        if (x1 == null) {
+          x1 = 0;
+        }
+        if (y1 == null) {
+          y1 = 0;
+        }
+        if (x2 == null) {
+          x2 = 1;
+        }
+        if (y2 == null) {
+          y2 = 0;
+        }
+      };
+      scope.radialGradient = function(stops, cx, cy, radius) {};
+      scope.getPressure = function() {
+        throw "@getPressure() has been removed. Please use @pressure instead.";
+      };
+      scope.setPressure = function() {
+        throw "@setPressure(x) has been removed. Please use @pressure = x instead.";
+      };
+      scope.getPressureColor = function(pressure) {
+        throw "@getPressureColor() has been removed. Please Take and use Pressure() instead.";
+      };
+      return scope.setText = function(text) {
+        throw "@setText(x) has been removed. Please @text = x instead.";
+      };
+    });
+  });
+
+  Take(["RAF", "Registry", "DOMContentLoaded"], function(RAF, Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var applyTransform, denom, element, len, m, matrix, prop, ref, ref1, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
+      element = scope.element;
+      transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
+      transform = document.rootElement.createSVGTransform();
+      matrix = document.rootElement.createSVGMatrix();
+      x = 0;
+      y = 0;
+      rotation = 0;
+      scaleX = 1;
+      scaleY = 1;
+      ref1 = ["x", "y", "rotation", "scale", "scaleX", "scaleY"];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        prop = ref1[m];
+        if (scope[prop] != null) {
+          console.log(element);
+          throw "^ Transform will clobber @" + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
+        }
+      }
+      if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
+        t = transformBaseVal.getItem(0);
+        switch (t.type) {
+          case SVGTransform.SVG_TRANSFORM_MATRIX:
+            x = t.matrix.e;
+            y = t.matrix.f;
+            rotation = 180 / Math.PI * Math.atan2(t.matrix.b, t.matrix.a);
+            denom = Math.pow(t.matrix.a, 2) + Math.pow(t.matrix.c, 2);
+            scaleX = Math.sqrt(denom);
+            scaleY = (t.matrix.a * t.matrix.d - t.matrix.b * t.matrix.c) / scaleX;
+            break;
+          default:
+            throw new Error("^ Transform encountered an SVG element with a non-matrix transform");
+        }
+      } else if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) > 1) {
+        console.log(element);
+        throw new Error("^ Transform encountered an SVG element with more than one transform");
+      }
+      applyTransform = function() {
+        matrix.a = scaleX;
+        matrix.d = scaleY;
+        matrix.e = x;
+        matrix.f = y;
+        transform.setMatrix(matrix.rotate(rotation));
+        return element.transform.baseVal.initialize(transform);
+      };
+      Object.defineProperty(scope, 'x', {
+        get: function() {
+          return x;
+        },
+        set: function(val) {
+          if (x !== val) {
+            x = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'y', {
+        get: function() {
+          return y;
+        },
+        set: function(val) {
+          if (y !== val) {
+            y = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'rotation', {
+        get: function() {
+          return rotation;
+        },
+        set: function(val) {
+          if (rotation !== val) {
+            rotation = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return (scaleX + scaleY) / 2;
+        },
+        set: function(val) {
+          if (scaleX !== val || scaleY !== val) {
+            scaleX = scaleY = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scaleX', {
+        get: function() {
+          return scaleX;
+        },
+        set: function(val) {
+          if (scaleX !== val) {
+            scaleX = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scaleY', {
+        get: function() {
+          return scaleY;
+        },
+        set: function(val) {
+          if (scaleY !== val) {
+            scaleY = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'cx', {
+        get: function() {
+          throw "cx has been removed from the SVGA Transform system.";
+        },
+        set: function() {
+          throw "cx has been removed from the SVGA Transform system.";
+        }
+      });
+      Object.defineProperty(scope, 'cy', {
+        get: function() {
+          throw "cy has been removed from the SVGA Transform system.";
+        },
+        set: function() {
+          throw "cy has been removed from the SVGA Transform system.";
+        }
+      });
+      Object.defineProperty(scope, 'angle', {
+        get: function() {
+          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
+        },
+        set: function() {
+          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
+        }
+      });
+      Object.defineProperty(scope, 'turns', {
+        get: function() {
+          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
+        },
+        set: function() {
+          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
+        }
+      });
+      return Object.defineProperty(scope, "transform", {
+        get: function() {
+          throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
+        }
+      });
+    });
+  });
+
+  Take(["Registry", "Tick"], function(Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var running, startTime, update;
+      if (scope.update == null) {
+        return;
+      }
+      running = false;
+      startTime = null;
+      update = scope.update;
+      scope.update = function() {
+        throw "@update() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        return update.call(scope, dt, time - startTime);
+      });
+      scope.update.start = function() {
+        if (startTime == null) {
+          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        }
+        return running = true;
+      };
+      scope.update.stop = function() {
+        return running = false;
+      };
+      scope.update.toggle = function() {
+        if (running) {
+          return scope.update.stop();
+        } else {
+          return scope.update.start();
+        }
+      };
+      return scope.update.restart = function() {
+        return startTime = null;
+      };
+    });
   });
 
   Take(["Symbol"], function(Symbol) {
@@ -2687,395 +3129,6 @@
     };
     Tween1.cancel = gc;
     return Make("Tween1", Tween1);
-  });
-
-  Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var animate, running, startTime;
-      if (scope.animate == null) {
-        return;
-      }
-      running = false;
-      startTime = 0;
-      animate = scope.animate;
-      scope.animate = function() {
-        throw "@animate() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return animate.call(scope, dt, time - startTime);
-      });
-      Reaction("Schematic:Hide", function() {
-        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        return running = true;
-      });
-      return Reaction("Schematic:Show", function() {
-        return running = false;
-      });
-    });
-  });
-
-  Take(["Registry"], function(Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please use FlowArrows instead.";
-        }
-      });
-      return scope.getElement != null ? scope.getElement : scope.getElement = function() {
-        throw "@getElement() has been removed. Please use @element instead.";
-      };
-    });
-  });
-
-  Take(["Registry"], function(Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var base, name1, ref;
-      if (scope.parent != null) {
-        if (((ref = scope.parent[scope.instanceName]) != null ? ref.element.id : void 0) === scope.element.id) {
-          console.log(scope.parent);
-          throw "Duplicate instance name detected in ^^^ " + scope.parent.instanceName + ": " + scope.instanceName;
-        }
-        if ((base = scope.parent)[name1 = scope.instanceName] == null) {
-          base[name1] = scope;
-        }
-        return scope.parent.children.push(scope);
-      }
-    });
-  });
-
-  Take(["Reaction", "Registry"], function(Reaction, Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      Reaction("Schematic:Hide", function() {
-        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
-      });
-      return Reaction("Schematic:Show", function() {
-        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
-      });
-    });
-  });
-
-  Take(["Registry"], function(Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      return Take("ScopeSetup", function() {
-        return typeof scope.setup === "function" ? scope.setup() : void 0;
-      });
-    });
-  });
-
-  Take(["Pressure", "Registry", "SVG"], function(Pressure, Registry, SVG) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var alpha, element, fillPath, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, strokePath, text, textElement, visible;
-      element = scope.element;
-      parent = element.parentNode;
-      placeholder = SVG.create("g");
-      strokePath = fillPath = element.querySelector("path");
-      isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
-      textElement = element.querySelector("tspan" || element.querySelector("text"));
-      ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
-      for (m = 0, len = ref1.length; m < len; m++) {
-        prop = ref1[m];
-        if (scope[prop] != null) {
-          console.log("ERROR ############################################");
-          console.log("scope:");
-          console.log(scope);
-          console.log("element:");
-          console.log(element);
-          throw "^ SVGA will overwrite @" + prop + " on this element. Please find a different name for your child/property named \"" + prop + "\".";
-        }
-      }
-      scope.stype = function() {
-        throw "@style is up for debate. Please show Ivan what you're using it to do.";
-      };
-      pressure = null;
-      Object.defineProperty(scope, 'pressure', {
-        get: function() {
-          return pressure;
-        },
-        set: function(val) {
-          if (pressure !== val) {
-            pressure = val;
-            if (isLine && !scope.root.BROKEN_LINES) {
-              return scope.stroke(Pressure(scope.pressure));
-            } else {
-              return scope.fill(Pressure(scope.pressure));
-            }
-          }
-        }
-      });
-      text = textElement != null ? textElement.textContent : void 0;
-      Object.defineProperty(scope, 'text', {
-        get: function() {
-          return text;
-        },
-        set: function(val) {
-          if (text !== val) {
-            return SVG.attr("textContent", text = val);
-          }
-        }
-      });
-      visible = true;
-      Object.defineProperty(scope, 'visible', {
-        get: function() {
-          return visible;
-        },
-        set: function(val) {
-          if (visible !== val) {
-            if (visible = val) {
-              return parent.replaceChild(element, placeholder);
-            } else {
-              return parent.replaceChild(placeholder, element);
-            }
-          }
-        }
-      });
-      alpha = 1;
-      Object.defineProperty(scope, 'alpha', {
-        get: function() {
-          return alpha;
-        },
-        set: function(val) {
-          if (alpha !== val) {
-            return SVG.style(element, "opacity", alpha = val);
-          }
-        }
-      });
-      scope.stroke = function(color) {
-        if (strokePath != null) {
-          SVG.attr(strokePath, "stroke", null);
-          strokePath = null;
-        }
-        return SVG.attr(element, "stroke", color);
-      };
-      scope.fill = function(color) {
-        if (fillPath != null) {
-          SVG.attr(fillPath, "fill", null);
-          fillPath = null;
-        }
-        return SVG.attr(element, "fill", color);
-      };
-      scope.linearGradient = function(stops, x1, y1, x2, y2) {
-        if (x1 == null) {
-          x1 = 0;
-        }
-        if (y1 == null) {
-          y1 = 0;
-        }
-        if (x2 == null) {
-          x2 = 1;
-        }
-        if (y2 == null) {
-          y2 = 0;
-        }
-      };
-      scope.radialGradient = function(stops, cx, cy, radius) {};
-      scope.getPressure = function() {
-        throw "@getPressure() has been removed. Please use @pressure instead.";
-      };
-      scope.setPressure = function() {
-        throw "@setPressure(x) has been removed. Please use @pressure = x instead.";
-      };
-      scope.getPressureColor = function(pressure) {
-        throw "@getPressureColor() has been removed. Please Take and use Pressure() instead.";
-      };
-      return scope.setText = function(text) {
-        throw "@setText(x) has been removed. Please @text = x instead.";
-      };
-    });
-  });
-
-  Take(["RAF", "Registry", "DOMContentLoaded"], function(RAF, Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var applyTransform, denom, element, len, m, matrix, prop, ref, ref1, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
-      element = scope.element;
-      transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
-      transform = document.rootElement.createSVGTransform();
-      matrix = document.rootElement.createSVGMatrix();
-      x = 0;
-      y = 0;
-      rotation = 0;
-      scaleX = 1;
-      scaleY = 1;
-      ref1 = ["x", "y", "rotation", "scale", "scaleX", "scaleY"];
-      for (m = 0, len = ref1.length; m < len; m++) {
-        prop = ref1[m];
-        if (scope[prop] != null) {
-          console.log(element);
-          throw "^ Transform will clobber @" + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
-        }
-      }
-      if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
-        t = transformBaseVal.getItem(0);
-        switch (t.type) {
-          case SVGTransform.SVG_TRANSFORM_MATRIX:
-            x = t.matrix.e;
-            y = t.matrix.f;
-            rotation = 180 / Math.PI * Math.atan2(t.matrix.b, t.matrix.a);
-            denom = Math.pow(t.matrix.a, 2) + Math.pow(t.matrix.c, 2);
-            scaleX = Math.sqrt(denom);
-            scaleY = (t.matrix.a * t.matrix.d - t.matrix.b * t.matrix.c) / scaleX;
-            break;
-          default:
-            throw new Error("^ Transform encountered an SVG element with a non-matrix transform");
-        }
-      } else if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) > 1) {
-        console.log(element);
-        throw new Error("^ Transform encountered an SVG element with more than one transform");
-      }
-      applyTransform = function() {
-        matrix.a = scaleX;
-        matrix.d = scaleY;
-        matrix.e = x;
-        matrix.f = y;
-        transform.setMatrix(matrix.rotate(rotation));
-        return element.transform.baseVal.initialize(transform);
-      };
-      Object.defineProperty(scope, 'x', {
-        get: function() {
-          return x;
-        },
-        set: function(val) {
-          if (x !== val) {
-            x = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'y', {
-        get: function() {
-          return y;
-        },
-        set: function(val) {
-          if (y !== val) {
-            y = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'rotation', {
-        get: function() {
-          return rotation;
-        },
-        set: function(val) {
-          if (rotation !== val) {
-            rotation = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scale', {
-        get: function() {
-          return (scaleX + scaleY) / 2;
-        },
-        set: function(val) {
-          if (scaleX !== val || scaleY !== val) {
-            scaleX = scaleY = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scaleX', {
-        get: function() {
-          return scaleX;
-        },
-        set: function(val) {
-          if (scaleX !== val) {
-            scaleX = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'scaleY', {
-        get: function() {
-          return scaleY;
-        },
-        set: function(val) {
-          if (scaleY !== val) {
-            scaleY = val;
-            return RAF(applyTransform, true, 1);
-          }
-        }
-      });
-      Object.defineProperty(scope, 'cx', {
-        get: function() {
-          throw "cx has been removed from the SVGA Transform system.";
-        },
-        set: function() {
-          throw "cx has been removed from the SVGA Transform system.";
-        }
-      });
-      Object.defineProperty(scope, 'cy', {
-        get: function() {
-          throw "cy has been removed from the SVGA Transform system.";
-        },
-        set: function() {
-          throw "cy has been removed from the SVGA Transform system.";
-        }
-      });
-      Object.defineProperty(scope, 'angle', {
-        get: function() {
-          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
-        },
-        set: function() {
-          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
-        }
-      });
-      Object.defineProperty(scope, 'turns', {
-        get: function() {
-          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
-        },
-        set: function() {
-          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
-        }
-      });
-      return Object.defineProperty(scope, "transform", {
-        get: function() {
-          throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
-        }
-      });
-    });
-  });
-
-  Take(["Registry", "Tick"], function(Registry, Tick) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var running, startTime, update;
-      if (scope.update == null) {
-        return;
-      }
-      running = false;
-      startTime = null;
-      update = scope.update;
-      scope.update = function() {
-        throw "@update() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return update.call(scope, dt, time - startTime);
-      });
-      scope.update.start = function() {
-        if (startTime == null) {
-          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        }
-        return running = true;
-      };
-      scope.update.stop = function() {
-        return running = false;
-      };
-      scope.update.toggle = function() {
-        if (running) {
-          return scope.update.stop();
-        } else {
-          return scope.update.start();
-        }
-      };
-      return scope.update.restart = function() {
-        return startTime = null;
-      };
-    });
   });
 
   Take(["Component", "ControlPanelView"], function(Component, ControlPanelView) {

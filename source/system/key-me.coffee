@@ -48,9 +48,8 @@ Take ["KeyNames"], (KeyNames)->
     
     handleKey name, e, downHandlers
     
-    # NOT SURE IF WE STILL NEED THIS
-    # Pressing a Command key shortcut doesn't release properly, so we need to release it now
-    # keyUp e if e.ctrlKey
+    # NOT SURE IF WE STILL NEED THIS:
+    # keyUp e if e.ctrlKey # Pressing a Command key shortcut doesn't release properly, so we need to release it now
 
 
   keyUp = (e)->

@@ -4,6 +4,7 @@ Take ["GUI", "RAF", "Resize", "SVG", "ScopeReady"], (GUI, RAF, Resize, SVG)->
   xLimit = {}
   yLimit = {}
   zLimit = min: 0, max: 3
+  scaleStartPosZ = 0
   
   zoom = SVG.create "g", null, "x-zoom":""
   nav = SVG.create "g", zoom, "x-nav":""
@@ -47,12 +48,18 @@ Take ["GUI", "RAF", "Resize", "SVG", "ScopeReady"], (GUI, RAF, Resize, SVG)->
   limit = (l, v)->
     Math.min l.max, Math.max l.min, v
   
-  
   Make "Nav", Nav =
     by: (p)->
       pos.z = limit zLimit, pos.z + p.z if p.z?
       pos.x = limit xLimit, pos.x + p.x / (1 + pos.z) if p.x?
       pos.y = limit yLimit, pos.y + p.y / (1 + pos.z) if p.y?
+      render()
+    
+    startScale: ()->
+      scaleStartPosZ = pos.z
+    
+    scale: (s)->
+      pos.z = limit zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s)
       render()
     
     eventInside: (x, y)->

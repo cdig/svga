@@ -629,27 +629,6 @@
     });
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  (function() {
-    return Make("Mask", function() {
-      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
-    });
-  })();
-
   Take(["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(GUI, Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", GUI.elm));
@@ -1223,6 +1202,38 @@
     }
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  (function() {
+    return Make("Mask", function() {
+      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+    });
+  })();
+
+  Take(["Nav"], function(Nav) {
+    window.addEventListener("gesturestart", function(e) {
+      e.preventDefault();
+      return Nav.startScale();
+    });
+    return window.addEventListener("gesturechange", function(e) {
+      e.preventDefault();
+      return Nav.scale(e.scale);
+    });
+  });
+
   Take(["KeyMe", "Nav", "Tick"], function(KeyMe, Nav, Tick) {
     var accel, decel, getAccel, maxVel, vel;
     decel = 1.25;
@@ -1292,19 +1303,25 @@
     return window.addEventListener("wheel", function(e) {
       if (Nav.eventInside(e.clientX, e.clientY)) {
         e.preventDefault();
-        if (e.ctrlKey) {
-          return Nav.by({
-            z: -e.deltaY / 100
-          });
-        } else if (e.metaKey) {
-          return Nav.by({
-            z: -e.deltaY / 200
-          });
+        if (e.deltaMode === WheelEvent.DOM_DELTA_PIXEL) {
+          if (e.ctrlKey) {
+            return Nav.by({
+              z: -e.deltaY / 100
+            });
+          } else if (e.metaKey) {
+            return Nav.by({
+              z: -e.deltaY / 200
+            });
+          } else {
+            return Nav.by({
+              x: -e.deltaX,
+              y: -e.deltaY,
+              z: -e.deltaZ
+            });
+          }
         } else {
           return Nav.by({
-            x: -e.deltaX,
-            y: -e.deltaY,
-            z: -e.deltaZ
+            z: -e.deltaY / 200
           });
         }
       }
@@ -1312,7 +1329,7 @@
   });
 
   Take(["GUI", "RAF", "Resize", "SVG", "ScopeReady"], function(GUI, RAF, Resize, SVG) {
-    var Nav, center, initialSize, limit, nav, noReallyRender, ox, oy, pos, render, root, xLimit, yLimit, zLimit, zoom;
+    var Nav, center, initialSize, limit, nav, noReallyRender, ox, oy, pos, render, root, scaleStartPosZ, xLimit, yLimit, zLimit, zoom;
     pos = {
       x: 0,
       y: 0,
@@ -1329,6 +1346,7 @@
       min: 0,
       max: 3
     };
+    scaleStartPosZ = 0;
     zoom = SVG.create("g", null, {
       "x-zoom": ""
     });
@@ -1379,6 +1397,13 @@
         if (p.y != null) {
           pos.y = limit(yLimit, pos.y + p.y / (1 + pos.z));
         }
+        return render();
+      },
+      startScale: function() {
+        return scaleStartPosZ = pos.z;
+      },
+      scale: function(s) {
+        pos.z = limit(zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s));
         return render();
       },
       eventInside: function(x, y) {

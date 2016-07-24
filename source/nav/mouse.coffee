@@ -1,13 +1,13 @@
 Take ["Nav", "TweenNav"], (Nav, TweenNav)->
   
   window.addEventListener "dblclick", (e)->
-    if Nav.eventInside e.clientX, e.clientY
+    if Nav.eventInside e
       e.preventDefault()
       TweenNav x:0, y:0, z:0
   
   
   window.addEventListener "wheel", (e)->
-    if Nav.eventInside e.clientX, e.clientY
+    if Nav.eventInside e
       e.preventDefault()
       
       # Is this a pixel-precise input device (eg: magic trackpad)?

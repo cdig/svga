@@ -62,8 +62,28 @@ Take ["GUI", "RAF", "Resize", "SVG", "ScopeReady"], (GUI, RAF, Resize, SVG)->
       pos.z = limit zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s)
       render()
     
-    eventInside: (x, y)->
-      panelHidden = false # !Control.panelShowing # TODO
-      insidePanel = x < window.innerWidth - GUI.ControlPanel.width
-      insideTopBar = y > GUI.TopBar.height
-      return insideTopBar and (panelHidden or insidePanel)
+    eventInside: (e)->
+      e = e.touches[0] if e.touches?.length > 0
+      a = e.target is document.rootElement or zoom.contains e.target
+      return a
+
+
+
+  # to = (x, y, z)->
+  #   target =
+  #     x: if x? then x else pos.x
+  #     y: if y? then y else pos.y
+  #     z: if z? then z else pos.z
+  #   time = Math.sqrt(distTo pos, target) / 30
+  #   if time > 0
+  #     Tween on:pos, to:target, time: time, tick: render
+  #
+  #
+  # distTo = (a, b)->
+  #   dx = a.x - b.x
+  #   dy = a.y - b.y
+  #   dz = 200 * a.z - b.z
+  #   dist dx, dy, dz
+  #
+  # dist = (x, y, z = 0)->
+  #   Math.sqrt x*x + y*y + z*z

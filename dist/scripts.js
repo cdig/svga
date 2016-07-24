@@ -1225,12 +1225,16 @@
 
   Take(["Nav"], function(Nav) {
     window.addEventListener("gesturestart", function(e) {
-      e.preventDefault();
-      return Nav.startScale();
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return Nav.startScale();
+      }
     });
     return window.addEventListener("gesturechange", function(e) {
-      e.preventDefault();
-      return Nav.scale(e.scale);
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return Nav.scale(e.scale);
+      }
     });
   });
 
@@ -1291,7 +1295,7 @@
 
   Take(["Nav", "TweenNav"], function(Nav, TweenNav) {
     window.addEventListener("dblclick", function(e) {
-      if (Nav.eventInside(e.clientX, e.clientY)) {
+      if (Nav.eventInside(e)) {
         e.preventDefault();
         return TweenNav({
           x: 0,
@@ -1301,7 +1305,7 @@
       }
     });
     return window.addEventListener("wheel", function(e) {
-      if (Nav.eventInside(e.clientX, e.clientY)) {
+      if (Nav.eventInside(e)) {
         e.preventDefault();
         if (e.deltaMode === WheelEvent.DOM_DELTA_PIXEL) {
           if (e.ctrlKey) {
@@ -1406,12 +1410,40 @@
         pos.z = limit(zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s));
         return render();
       },
-      eventInside: function(x, y) {
-        var insidePanel, insideTopBar, panelHidden;
-        panelHidden = false;
-        insidePanel = x < window.innerWidth - GUI.ControlPanel.width;
-        insideTopBar = y > GUI.TopBar.height;
-        return insideTopBar && (panelHidden || insidePanel);
+      eventInside: function(e) {
+        var a, ref;
+        if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+          e = e.touches[0];
+        }
+        a = e.target === document.rootElement || zoom.contains(e.target);
+        return a;
+      }
+    });
+  });
+
+  Take(["Nav"], function(Nav) {
+    var lastX, lastY, touchMove, touchStart;
+    lastX = 0;
+    lastY = 0;
+    window.addEventListener("touchstart", touchStart = function(e) {
+      if (e.touches.length === 1 && Nav.eventInside(e)) {
+        e.preventDefault();
+        lastX = e.touches[0].clientX;
+        return lastY = e.touches[0].clientY;
+      }
+    });
+    return window.addEventListener("touchmove", touchMove = function(e) {
+      var newX, newY;
+      if (e.touches.length === 1 && Nav.eventInside(e)) {
+        e.preventDefault();
+        newX = e.touches[0].clientX;
+        newY = e.touches[0].clientY;
+        Nav.by({
+          x: newX - lastX,
+          y: newY - lastY
+        });
+        lastX = newX;
+        return lastY = newY;
       }
     });
   });

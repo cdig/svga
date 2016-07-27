@@ -968,17 +968,13 @@
   })();
 
   Take(["Reaction", "SVG", "Tween1", "ScopeReady"], function(Reaction, SVG, Tween1) {
-    var alpha, root, tick;
-    alpha = 1;
+    var root;
     root = document.querySelector("#root");
-    tick = function(v) {
-      return root._scope.alpha = alpha = v;
-    };
     Reaction("Root:Show", function() {
-      return Tween1(alpha, 1, 1.2, tick);
+      return root._scope.show(1);
     });
     return Reaction("Root:Hide", function() {
-      return Tween1(alpha, -1, 1.2, tick);
+      return root._scope.hide(1);
     });
   });
 
@@ -1293,11 +1289,34 @@
     };
   });
 
-  Take(["Nav", "TweenNav"], function(Nav, TweenNav) {
+  Take(["Nav"], function(Nav) {
+    var down, lastX, lastY;
+    lastX = 0;
+    lastY = 0;
+    down = false;
+    window.addEventListener("mousedown", function(e) {
+      e.preventDefault();
+      down = true;
+      lastX = e.clientX;
+      return lastY = e.clientY;
+    });
+    window.addEventListener("mousemove", function(e) {
+      if (down && Nav.eventInside(e)) {
+        Nav.by({
+          x: e.clientX - lastX,
+          y: e.clientY - lastY
+        });
+        lastX = e.clientX;
+        return lastY = e.clientY;
+      }
+    });
+    window.addEventListener("mouseup", function(e) {
+      return down = false;
+    });
     window.addEventListener("dblclick", function(e) {
       if (Nav.eventInside(e)) {
         e.preventDefault();
-        return TweenNav({
+        return Nav.to({
           x: 0,
           y: 0,
           z: 0
@@ -1332,8 +1351,8 @@
     });
   });
 
-  Take(["GUI", "RAF", "Resize", "SVG", "ScopeReady"], function(GUI, RAF, Resize, SVG) {
-    var Nav, center, initialSize, limit, nav, noReallyRender, ox, oy, pos, render, root, scaleStartPosZ, xLimit, yLimit, zLimit, zoom;
+  Take(["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], function(GUI, RAF, Resize, SVG, Tween) {
+    var Nav, center, dist, distTo, initialSize, limit, nav, ox, oy, pos, render, requestRender, root, scaleStartPosZ, xLimit, yLimit, zLimit, zoom;
     pos = {
       x: 0,
       y: 0,
@@ -1378,10 +1397,10 @@
       center.z = .9 * Math.min(wFrac, hFrac);
       return render();
     });
-    render = function() {
-      return RAF(noReallyRender, true);
+    requestRender = function() {
+      return RAF(render, true);
     };
-    noReallyRender = function() {
+    render = function() {
       var z;
       z = center.z * Math.pow(2, pos.z);
       SVG.attr(nav, "transform", "translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
@@ -1390,7 +1409,24 @@
     limit = function(l, v) {
       return Math.min(l.max, Math.max(l.min, v));
     };
-    return Make("Nav", Nav = {
+    Make("Nav", Nav = {
+      to: function(p) {
+        var target, time;
+        target = {
+          x: p.x != null ? p.x : pos.x,
+          y: p.y != null ? p.y : pos.y,
+          z: p.z != null ? p.z : pos.z
+        };
+        time = Math.sqrt(distTo(pos, target)) / 30;
+        if (time > 0) {
+          return Tween({
+            on: pos,
+            to: target,
+            time: time,
+            tick: requestRender
+          });
+        }
+      },
       by: function(p) {
         if (p.z != null) {
           pos.z = limit(zLimit, pos.z + p.z);
@@ -1401,14 +1437,14 @@
         if (p.y != null) {
           pos.y = limit(yLimit, pos.y + p.y / (1 + pos.z));
         }
-        return render();
+        return requestRender();
       },
       startScale: function() {
         return scaleStartPosZ = pos.z;
       },
       scale: function(s) {
         pos.z = limit(zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s));
-        return render();
+        return requestRender();
       },
       eventInside: function(e) {
         var a, ref;
@@ -1419,6 +1455,19 @@
         return a;
       }
     });
+    distTo = function(a, b) {
+      var dx, dy, dz;
+      dx = a.x - b.x;
+      dy = a.y - b.y;
+      dz = 200 * a.z - b.z;
+      return dist(dx, dy, dz);
+    };
+    return dist = function(x, y, z) {
+      if (z == null) {
+        z = 0;
+      }
+      return Math.sqrt(x * x + y * y + z * z);
+    };
   });
 
   Take(["Nav"], function(Nav) {
@@ -1432,7 +1481,7 @@
         return lastY = e.touches[0].clientY;
       }
     });
-    return window.addEventListener("touchmove", touchMove = function(e) {
+    window.addEventListener("touchmove", touchMove = function(e) {
       var newX, newY;
       if (e.touches.length === 1 && Nav.eventInside(e)) {
         e.preventDefault();
@@ -1446,10 +1495,9 @@
         return lastY = newY;
       }
     });
-  });
-
-  Take("Nav", function(Nav) {
-    return Make("TweenNav", function(p) {});
+    return window.addEventListener("pointermove", function(e) {
+      return console.log(e);
+    });
   });
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
@@ -1626,16 +1674,54 @@
     });
   });
 
-  Take(["Registry"], function(Registry) {
+  Take(["Registry", "ScopeCheck"], function(Registry, ScopeCheck) {
     return Registry.add("ScopeProcessor", function(scope) {
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please use FlowArrows instead.";
-        }
-      });
-      return scope.getElement != null ? scope.getElement : scope.getElement = function() {
+      ScopeCheck(scope, "getElement", "getPressure", "setPressure", "getPressureColor", "setText", "FlowArrows", "cx", "cy", "angle", "turns", "transform");
+      scope.getElement = function() {
         throw "@getElement() has been removed. Please use @element instead.";
       };
+      scope.getPressure = function() {
+        throw "@getPressure() has been removed. Please use @pressure instead.";
+      };
+      scope.setPressure = function() {
+        throw "@setPressure(x) has been removed. Please use @pressure = x instead.";
+      };
+      scope.getPressureColor = function() {
+        throw "@getPressureColor() has been removed. Please Take and use Pressure() instead.";
+      };
+      scope.setText = function() {
+        throw "@setText(x) has been removed. Please @text = x instead.";
+      };
+      Object.defineProperty(scope, "FlowArrows", {
+        get: function() {
+          throw "root.FlowArrows has been removed. Please access FlowArrows via Take.";
+        }
+      });
+      Object.defineProperty(scope, "cx", {
+        get: function() {
+          throw "cx has been removed.";
+        }
+      });
+      Object.defineProperty(scope, "cy", {
+        get: function() {
+          throw "cy has been removed.";
+        }
+      });
+      Object.defineProperty(scope, "angle", {
+        get: function() {
+          throw "angle has been removed. Please use @rotation instead.";
+        }
+      });
+      Object.defineProperty(scope, "turns", {
+        get: function() {
+          throw "turns has been removed. Please use @rotation instead.";
+        }
+      });
+      return Object.defineProperty(scope, "transform", {
+        get: function() {
+          throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
+        }
+      });
     });
   });
 
@@ -1674,27 +1760,45 @@
     });
   });
 
-  Take(["Pressure", "Registry", "SVG"], function(Pressure, Registry, SVG) {
+  Take(["Registry", "ScopeCheck", "Tween1"], function(Registry, ScopeCheck, Tween1) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var alpha, element, fillPath, isLine, len, m, parent, placeholder, pressure, prop, ref, ref1, strokePath, text, textElement, visible;
+      var tick;
+      ScopeCheck(scope, "show", "hide");
+      tick = function(v) {
+        return scope.alpha = v;
+      };
+      scope.show = function(d) {
+        if (d == null) {
+          d = 1;
+        }
+        return Tween1(scope.alpha, 1, d, tick);
+      };
+      return scope.hide = function(d) {
+        if (d == null) {
+          d = 1;
+        }
+        return Tween1(scope.alpha, -1, d, tick);
+      };
+    });
+  });
+
+  Take(["Pressure", "Registry", "ScopeCheck", "SVG"], function(Pressure, Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var alpha, applyVisibility, element, fillPath, isLine, parent, placeholder, pressure, ref, strokePath, text, textElement, visible;
       element = scope.element;
       parent = element.parentNode;
       placeholder = SVG.create("g");
       strokePath = fillPath = element.querySelector("path");
       isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
       textElement = element.querySelector("tspan" || element.querySelector("text"));
-      ref1 = ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"];
-      for (m = 0, len = ref1.length; m < len; m++) {
-        prop = ref1[m];
-        if (scope[prop] != null) {
-          console.log("ERROR ############################################");
-          console.log("scope:");
-          console.log(scope);
-          console.log("element:");
-          console.log(element);
-          throw "^ SVGA will overwrite @" + prop + " on this element. Please find a different name for your child/property named \"" + prop + "\".";
+      ScopeCheck(scope, "pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style");
+      applyVisibility = function() {
+        if (visible && alpha > 0) {
+          return parent.replaceChild(element, placeholder);
+        } else {
+          return parent.replaceChild(placeholder, element);
         }
-      }
+      };
       scope.stype = function() {
         throw "@style is up for debate. Please show Ivan what you're using it to do.";
       };
@@ -1732,11 +1836,7 @@
         },
         set: function(val) {
           if (visible !== val) {
-            if (visible = val) {
-              return parent.replaceChild(element, placeholder);
-            } else {
-              return parent.replaceChild(placeholder, element);
-            }
+            return applyVisibility(visible = val);
           }
         }
       });
@@ -1747,7 +1847,8 @@
         },
         set: function(val) {
           if (alpha !== val) {
-            return SVG.style(element, "opacity", alpha = val);
+            SVG.style(element, "opacity", alpha = val);
+            return applyVisibility();
           }
         }
       });
@@ -1779,25 +1880,13 @@
           y2 = 0;
         }
       };
-      scope.radialGradient = function(stops, cx, cy, radius) {};
-      scope.getPressure = function() {
-        throw "@getPressure() has been removed. Please use @pressure instead.";
-      };
-      scope.setPressure = function() {
-        throw "@setPressure(x) has been removed. Please use @pressure = x instead.";
-      };
-      scope.getPressureColor = function(pressure) {
-        throw "@getPressureColor() has been removed. Please Take and use Pressure() instead.";
-      };
-      return scope.setText = function(text) {
-        throw "@setText(x) has been removed. Please @text = x instead.";
-      };
+      return scope.radialGradient = function(stops, cx, cy, radius) {};
     });
   });
 
-  Take(["RAF", "Registry", "DOMContentLoaded"], function(RAF, Registry) {
+  Take(["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], function(RAF, Registry, ScopeCheck) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var applyTransform, denom, element, len, m, matrix, prop, ref, ref1, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
+      var applyTransform, denom, element, matrix, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
       element = scope.element;
       transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
       transform = document.rootElement.createSVGTransform();
@@ -1807,14 +1896,7 @@
       rotation = 0;
       scaleX = 1;
       scaleY = 1;
-      ref1 = ["x", "y", "rotation", "scale", "scaleX", "scaleY"];
-      for (m = 0, len = ref1.length; m < len; m++) {
-        prop = ref1[m];
-        if (scope[prop] != null) {
-          console.log(element);
-          throw "^ Transform will clobber @" + prop + " on this element. Please find a different name for your child/property \"" + prop + "\".";
-        }
-      }
+      ScopeCheck(scope, "x", "y", "rotation", "scale", "scaleX", "scaleY", "skewX", "skewY");
       if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
         t = transformBaseVal.getItem(0);
         switch (t.type) {
@@ -1896,7 +1978,7 @@
           }
         }
       });
-      Object.defineProperty(scope, 'scaleY', {
+      return Object.defineProperty(scope, 'scaleY', {
         get: function() {
           return scaleY;
         },
@@ -1905,43 +1987,6 @@
             scaleY = val;
             return RAF(applyTransform, true, 1);
           }
-        }
-      });
-      Object.defineProperty(scope, 'cx', {
-        get: function() {
-          throw "cx has been removed from the SVGA Transform system.";
-        },
-        set: function() {
-          throw "cx has been removed from the SVGA Transform system.";
-        }
-      });
-      Object.defineProperty(scope, 'cy', {
-        get: function() {
-          throw "cy has been removed from the SVGA Transform system.";
-        },
-        set: function() {
-          throw "cy has been removed from the SVGA Transform system.";
-        }
-      });
-      Object.defineProperty(scope, 'angle', {
-        get: function() {
-          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
-        },
-        set: function() {
-          throw "angle has been removed from the SVGA Transform system. Please use @rotation instead.";
-        }
-      });
-      Object.defineProperty(scope, 'turns', {
-        get: function() {
-          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
-        },
-        set: function() {
-          throw "turns has been removed from the SVGA Transform system. Please use @rotation instead.";
-        }
-      });
-      return Object.defineProperty(scope, "transform", {
-        get: function() {
-          throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
         }
       });
     });
@@ -1988,14 +2033,9 @@
   });
 
   Take(["Symbol"], function(Symbol) {
-    return Symbol("DefaultElement", [], function(svgElement) {
-      var ref, scope, textElement;
-      textElement = (ref = svgElement.querySelector("text")) != null ? ref.querySelector("tspan") : void 0;
-      return scope = {
-        setText: function(text) {
-          return textElement != null ? textElement.textContent = text : void 0;
-        }
-      };
+    return Symbol("DefaultElement", [], function(element) {
+      var scope;
+      return scope = {};
     });
   });
 
@@ -2478,6 +2518,21 @@
       })();
       return window.addEventListener("resize", r);
     });
+  });
+
+  Make("ScopeCheck", function() {
+    var len, m, prop, props, results, scope;
+    scope = arguments[0], props = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    results = [];
+    for (m = 0, len = props.length; m < len; m++) {
+      prop = props[m];
+      if (!(scope[prop] != null)) {
+        continue;
+      }
+      console.log(scope.element);
+      throw "^ @" + prop + " is a reserved name. Please choose a different name for your child/property \"" + prop + "\".";
+    }
+    return results;
   });
 
   (function() {

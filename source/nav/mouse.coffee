@@ -1,10 +1,30 @@
-Take ["Nav", "TweenNav"], (Nav, TweenNav)->
+Take ["Nav"], (Nav)->
+  
+  lastX = 0
+  lastY = 0
+  down = false
+  
+  window.addEventListener "mousedown", (e)->
+    e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?
+    down = true
+    lastX = e.clientX
+    lastY = e.clientY
+  
+  window.addEventListener "mousemove", (e)->
+    if down and Nav.eventInside e
+      Nav.by
+        x: e.clientX - lastX
+        y: e.clientY - lastY
+      lastX = e.clientX
+      lastY = e.clientY
+  
+  window.addEventListener "mouseup", (e)->
+    down = false
   
   window.addEventListener "dblclick", (e)->
     if Nav.eventInside e
       e.preventDefault()
-      TweenNav x:0, y:0, z:0
-  
+      Nav.to x:0, y:0, z:0
   
   window.addEventListener "wheel", (e)->
     if Nav.eventInside e

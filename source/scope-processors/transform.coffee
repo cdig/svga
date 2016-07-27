@@ -1,4 +1,4 @@
-Take ["RAF", "Registry", "DOMContentLoaded"], (RAF, Registry)->
+Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, ScopeCheck)->
   Registry.add "ScopeProcessor", (scope)->
     element = scope.element
     transformBaseVal = element.transform?.baseVal
@@ -13,13 +13,7 @@ Take ["RAF", "Registry", "DOMContentLoaded"], (RAF, Registry)->
     # skewX = 0
     # skewY = 0
     
-    
-    # Check that we aren't about to clobber anything
-    for prop in ["x", "y", "rotation", "scale", "scaleX", "scaleY"] #, "skewX", "skewY"]
-      if scope[prop]?
-        console.log element
-        throw "^ Transform will clobber @#{prop} on this element. Please find a different name for your child/property \"#{prop}\"."
-    
+    ScopeCheck scope, "x", "y", "rotation", "scale", "scaleX", "scaleY", "skewX", "skewY"
     
     # Extract the existing transform value from the element
     if transformBaseVal?.numberOfItems is 1
@@ -106,28 +100,6 @@ Take ["RAF", "Registry", "DOMContentLoaded"], (RAF, Registry)->
     #   set: (val)->
     #     rotation = val
     #     RAF applyTransform, true, 1
-    
-    
-    # OBSOLETE ####################################################################################
-    
-    Object.defineProperty scope, 'cx',
-      get: ()-> throw "cx has been removed from the SVGA Transform system."
-      set: ()-> throw "cx has been removed from the SVGA Transform system."
-    
-    Object.defineProperty scope, 'cy',
-      get: ()-> throw "cy has been removed from the SVGA Transform system."
-      set: ()-> throw "cy has been removed from the SVGA Transform system."
-    
-    Object.defineProperty scope, 'angle',
-      get: ()-> throw "angle has been removed from the SVGA Transform system. Please use @rotation instead."
-      set: ()-> throw "angle has been removed from the SVGA Transform system. Please use @rotation instead."
-    
-    Object.defineProperty scope, 'turns',
-      get: ()-> throw "turns has been removed from the SVGA Transform system. Please use @rotation instead."
-      set: ()-> throw "turns has been removed from the SVGA Transform system. Please use @rotation instead."
-
-    Object.defineProperty scope, "transform",
-      get: ()-> throw "@transform has been removed. You can just delete the \"transform.\" and things should work."
     
     
     # LEGACY

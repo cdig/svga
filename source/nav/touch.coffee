@@ -3,6 +3,8 @@ Take ["Nav"], (Nav)->
   lastX = 0
   lastY = 0
   
+  
+  
   window.addEventListener "touchstart", touchStart = (e)->
     if e.touches.length is 1 and Nav.eventInside e
       e.preventDefault()
@@ -19,3 +21,6 @@ Take ["Nav"], (Nav)->
         y: newY - lastY
       lastX = newX
       lastY = newY
+  
+  window.addEventListener "pointermove", (e)->
+    console.log e

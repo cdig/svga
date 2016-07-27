@@ -1,4 +1,4 @@
-Take ["Pressure", "Registry", "SVG"], (Pressure, Registry, SVG)->
+Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCheck, SVG)->
   Registry.add "ScopeProcessor", (scope)->
     element = scope.element
     parent = element.parentNode
@@ -8,20 +8,18 @@ Take ["Pressure", "Registry", "SVG"], (Pressure, Registry, SVG)->
     textElement = element.querySelector "tspan" or element.querySelector "text"
     
     # Check that we aren't about to clobber anything
-    for prop in ["pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"]
-      if scope[prop]?
-        console.log "ERROR ############################################"
-        console.log "scope:"
-        console.log scope
-        console.log "element:"
-        console.log element
-        throw "^ SVGA will overwrite @#{prop} on this element. Please find a different name for your child/property named \"#{prop}\"."
+    ScopeCheck scope, "pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"
     
     
-    # scope.style = (key, val)->
-    #   SVG.style element, key, val
-    scope.stype = ()->
-      throw "@style is up for debate. Please show Ivan what you're using it to do."
+    applyVisibility = ()->
+      if visible and alpha > 0
+        parent.replaceChild element, placeholder
+      else
+        parent.replaceChild placeholder, element
+
+    
+    # scope.style = (key, val)-> SVG.style element, key, val
+    scope.stype = ()-> throw "@style is up for debate. Please show Ivan what you're using it to do."
     
     
     pressure = null
@@ -49,10 +47,7 @@ Take ["Pressure", "Registry", "SVG"], (Pressure, Registry, SVG)->
       get: ()-> visible
       set: (val)->
         if visible isnt val
-          if visible = val
-            parent.replaceChild element, placeholder
-          else
-            parent.replaceChild placeholder, element
+          applyVisibility visible = val
     
     
     alpha = 1
@@ -61,6 +56,7 @@ Take ["Pressure", "Registry", "SVG"], (Pressure, Registry, SVG)->
       set: (val)->
         if alpha isnt val
           SVG.style element, "opacity", alpha = val
+          applyVisibility()
     
     
     scope.stroke = (color)->
@@ -120,18 +116,3 @@ Take ["Pressure", "Registry", "SVG"], (Pressure, Registry, SVG)->
       #   gradient.appendChild(gradientStop)
       # fillUrl = "url(##{gradientName})"
       # scope.fill(fillUrl)
-    
-    
-    # REMOVED #####################################################################################
-    
-    scope.getPressure = ()->
-      throw "@getPressure() has been removed. Please use @pressure instead."
-
-    scope.setPressure = ()->
-      throw "@setPressure(x) has been removed. Please use @pressure = x instead."
-
-    scope.getPressureColor = (pressure)->
-      throw "@getPressureColor() has been removed. Please Take and use Pressure() instead."
-    
-    scope.setText = (text)->
-      throw "@setText(x) has been removed. Please @text = x instead."

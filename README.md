@@ -13,7 +13,7 @@ Todo:
 * labels above controls
 * Control: separator line
 * Control: spacer
-* Animate mode by default
+* Schematic button
 
 Carl Requested:
 * Background Color

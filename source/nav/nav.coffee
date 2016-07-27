@@ -1,4 +1,4 @@
-Take ["GUI", "RAF", "Resize", "SVG", "ScopeReady"], (GUI, RAF, Resize, SVG)->
+Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, SVG, Tween)->
   pos = x: 0, y: 0, z: 0
   center = x: 0, y: 0, z: 0
   xLimit = {}
@@ -36,10 +36,11 @@ Take ["GUI", "RAF", "Resize", "SVG", "ScopeReady"], (GUI, RAF, Resize, SVG)->
     render()
   
   
-  render = ()->
-    RAF noReallyRender, true
+  requestRender = ()->
+    RAF render, true
   
-  noReallyRender = ()->
+  
+  render = ()->
     z = center.z * Math.pow 2, pos.z
     SVG.attr nav, "transform", "translate(#{pos.x+ox},#{pos.y+oy})"
     SVG.attr zoom, "transform", "translate(#{center.x},#{center.y}) scale(#{z})"
@@ -49,41 +50,39 @@ Take ["GUI", "RAF", "Resize", "SVG", "ScopeReady"], (GUI, RAF, Resize, SVG)->
     Math.min l.max, Math.max l.min, v
   
   Make "Nav", Nav =
+    to: (p)->
+      target =
+        x: if p.x? then p.x else pos.x
+        y: if p.y? then p.y else pos.y
+        z: if p.z? then p.z else pos.z
+      time = Math.sqrt(distTo pos, target) / 30
+      if time > 0
+        Tween on:pos, to:target, time: time, tick: requestRender
+    
     by: (p)->
       pos.z = limit zLimit, pos.z + p.z if p.z?
       pos.x = limit xLimit, pos.x + p.x / (1 + pos.z) if p.x?
       pos.y = limit yLimit, pos.y + p.y / (1 + pos.z) if p.y?
-      render()
+      requestRender()
     
     startScale: ()->
       scaleStartPosZ = pos.z
     
     scale: (s)->
       pos.z = limit zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s)
-      render()
+      requestRender()
     
     eventInside: (e)->
       e = e.touches[0] if e.touches?.length > 0
       a = e.target is document.rootElement or zoom.contains e.target
       return a
-
-
-
-  # to = (x, y, z)->
-  #   target =
-  #     x: if x? then x else pos.x
-  #     y: if y? then y else pos.y
-  #     z: if z? then z else pos.z
-  #   time = Math.sqrt(distTo pos, target) / 30
-  #   if time > 0
-  #     Tween on:pos, to:target, time: time, tick: render
-  #
-  #
-  # distTo = (a, b)->
-  #   dx = a.x - b.x
-  #   dy = a.y - b.y
-  #   dz = 200 * a.z - b.z
-  #   dist dx, dy, dz
-  #
-  # dist = (x, y, z = 0)->
-  #   Math.sqrt x*x + y*y + z*z
+  
+  
+  distTo = (a, b)->
+    dx = a.x - b.x
+    dy = a.y - b.y
+    dz = 200 * a.z - b.z
+    dist dx, dy, dz
+  
+  dist = (x, y, z = 0)->
+    Math.sqrt x*x + y*y + z*z

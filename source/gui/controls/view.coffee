@@ -1,5 +1,5 @@
-Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
-(      GUI , Reaction , Resize , SVG , TopBar , TRS , Tween1)->
+Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween","SVGReady"],
+(      GUI , Reaction , Resize , SVG , TopBar , TRS , Tween)->
   consumedCols = 0
   consumedRows = 0
   rows = []
@@ -34,8 +34,8 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween1","SVGReady"],
     positionPanel()
   
   
-  Reaction "ControlPanel:Show", ()-> Tween1 panelX, 1, 0.7, tick
-  Reaction "ControlPanel:Hide", ()-> Tween1 panelX, -.2, 0.7, tick
+  Reaction "ControlPanel:Show", ()-> Tween panelX, 1, 0.7, tick
+  Reaction "ControlPanel:Hide", ()-> Tween panelX, -.2, 0.7, tick
   
   
   Reaction "Background:Set", (v)->

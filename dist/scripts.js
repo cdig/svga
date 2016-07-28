@@ -752,7 +752,7 @@
     });
   });
 
-  Take(["GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween1", "SVGReady"], function(GUI, Pressure, Reaction, Resize, SVG, TRS, Tween1) {
+  Take(["GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween", "SVGReady"], function(GUI, Pressure, Reaction, Resize, SVG, TRS, Tween) {
     var alpha, atmLabel, atmRect, g, maxLabel, maxRect, medLabel, medRect, minLabel, minRect, pressures, tick, title, u, vacLabel, vacRect;
     u = 36;
     g = TRS(SVG.create("g", GUI.elm));
@@ -847,10 +847,10 @@
       });
     })(0);
     Reaction("Help:Show", function() {
-      return Tween1(alpha, 1, 1.2, tick);
+      return Tween(alpha, 1, 1.2, tick);
     });
     return Reaction("Help:Hide", function() {
-      return Tween1(alpha, 0, 1.2, tick);
+      return Tween(alpha, 0, 1.2, tick);
     });
   });
 
@@ -968,7 +968,7 @@
     });
   })();
 
-  Take(["Reaction", "SVG", "Tween1", "ScopeReady"], function(Reaction, SVG, Tween1) {
+  Take(["Reaction", "SVG", "Tween", "ScopeReady"], function(Reaction, SVG, Tween) {
     var root;
     root = document.querySelector("#root");
     Reaction("Root:Show", function() {
@@ -979,7 +979,7 @@
     });
   });
 
-  Take(["Action", "Control", "GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween1", "ScopeReady"], function(Action, Control, GUI, Pressure, Reaction, Resize, SVG, TRS, Tween1) {
+  Take(["Action", "Control", "GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween", "ScopeReady"], function(Action, Control, GUI, Pressure, Reaction, Resize, SVG, TRS, Tween) {
     var alpha, g, slider, sliders, tick;
     g = TRS(SVG.create("g", GUI.elm));
     sliders = TRS(SVG.create("g", g, {
@@ -1014,10 +1014,10 @@
       });
     })(0);
     Reaction("Settings:Show", function() {
-      return Tween1(alpha, 1, 1.2, tick);
+      return Tween(alpha, 1, 1.2, tick);
     });
     return Reaction("Settings:Hide", function() {
-      return Tween1(alpha, 0, 1.2, tick);
+      return Tween(alpha, 0, 1.2, tick);
     });
   });
 
@@ -1187,13 +1187,13 @@
     return Make("TopBar", TopBar);
   });
 
-  Take(["Dev", "RAF", "Tween1", "AllReady"], function(Dev, RAF, Tween1) {
+  Take(["Dev", "RAF", "Tween", "AllReady"], function(Dev, RAF, Tween) {
     if (Dev) {
       return RAF(function() {
         return document.rootElement.style.opacity = 1;
       });
     } else {
-      return Tween1(0, 1, .5, function(v) {
+      return Tween(0, 1, .5, function(v) {
         return document.rootElement.style.opacity = v;
       });
     }
@@ -1412,20 +1412,20 @@
     };
     Make("Nav", Nav = {
       to: function(p) {
-        var target, time;
-        target = {
-          x: p.x != null ? p.x : pos.x,
-          y: p.y != null ? p.y : pos.y,
-          z: p.z != null ? p.z : pos.z
-        };
-        time = Math.sqrt(distTo(pos, target)) / 30;
-        if (time > 0) {
-          return Tween({
-            on: pos,
-            to: target,
-            time: time,
-            tick: requestRender
-          });
+        if (p.x != null) {
+          Tween(pos.x, p.x, .07 * Math.sqrt(Math.abs(p.x - pos.x)), (function(v) {
+            return pos.x = v;
+          }));
+        }
+        if (p.y != null) {
+          Tween(pos.y, p.y, .07 * Math.sqrt(Math.abs(p.y - pos.y)), (function(v) {
+            return pos.y = v;
+          }));
+        }
+        if (p.z != null) {
+          return Tween(pos.z, p.z, .7 * Math.sqrt(Math.abs(p.z - pos.z)), (function(v) {
+            return pos.z = v;
+          }));
         }
       },
       by: function(p) {
@@ -1801,7 +1801,7 @@
     });
   });
 
-  Take(["Registry", "ScopeCheck", "Tween1"], function(Registry, ScopeCheck, Tween1) {
+  Take(["Registry", "ScopeCheck", "Tween"], function(Registry, ScopeCheck, Tween) {
     return Registry.add("ScopeProcessor", function(scope) {
       var tick;
       ScopeCheck(scope, "show", "hide");
@@ -1812,13 +1812,13 @@
         if (d == null) {
           d = 1;
         }
-        return Tween1(scope.alpha, 1, d, tick);
+        return Tween(scope.alpha, 1, d, tick);
       };
       return scope.hide = function(d) {
         if (d == null) {
           d = 1;
         }
-        return Tween1(scope.alpha, -1, d, tick);
+        return Tween(scope.alpha, -1, d, tick);
       };
     });
   });
@@ -3072,117 +3072,10 @@
     return Make("TRS", TRS);
   });
 
-  Take(["RAF"], function(RAF) {
-    var Tween, cloneObj, cubic, diffObj, tweens, update, updateTween;
-    tweens = [];
-    Tween = function(tween) {
-      if (tween.on == null) {
-        tween.on = cloneObj(tween.from);
-      }
-      if (tween.from == null) {
-        tween.from = cloneObj(tween.on);
-      }
-      tween.delta = diffObj(tween.to, tween.from);
-      tweens.push(tween);
-      RAF(update, true);
-      return tween;
-    };
-    Tween.cancel = function(tween) {
-      return tween != null ? tween.cancelled = true : void 0;
-    };
-    update = function(t) {
-      var tween;
-      tweens = ((function() {
-        var len, m, results;
-        results = [];
-        for (m = 0, len = tweens.length; m < len; m++) {
-          tween = tweens[m];
-          results.push(updateTween(tween, t / 1000));
-        }
-        return results;
-      })()).filter(function(t) {
-        return t != null;
-      });
-      if (tweens.length > 0) {
-        return RAF(update, true);
-      }
-    };
-    updateTween = function(tween, time) {
-      var k, pos, ref, v;
-      if (tween.started == null) {
-        tween.started = time;
-      }
-      pos = Math.min(1, (time - tween.started) / tween.time);
-      ref = tween.delta;
-      for (k in ref) {
-        v = ref[k];
-        tween.on[k] = v * cubic(pos) + tween.from[k];
-      }
-      if (typeof tween.tick === "function") {
-        tween.tick(pos, tween);
-      }
-      if (pos < 1 && !tween.cancelled) {
-        return tween;
-      }
-    };
-    cloneObj = function(obj) {
-      var k, out, v;
-      out = {};
-      for (k in obj) {
-        v = obj[k];
-        out[k] = obj[k];
-      }
-      return out;
-    };
-    diffObj = function(a, b) {
-      var diff, k, v;
-      diff = {};
-      for (k in a) {
-        v = a[k];
-        diff[k] = a[k] - b[k];
-      }
-      return diff;
-    };
-    cubic = function(input, inputMin, inputMax, outputMin, outputMax, clip) {
-      var inputDiff, outputDiff, p, power;
-      if (inputMin == null) {
-        inputMin = 0;
-      }
-      if (inputMax == null) {
-        inputMax = 1;
-      }
-      if (outputMin == null) {
-        outputMin = 0;
-      }
-      if (outputMax == null) {
-        outputMax = 1;
-      }
-      if (clip == null) {
-        clip = true;
-      }
-      if (inputMin === inputMax) {
-        return outputMin;
-      }
-      if (clip) {
-        input = Math.max(inputMin, Math.min(inputMax, input));
-      }
-      outputDiff = outputMax - outputMin;
-      inputDiff = inputMax - inputMin;
-      p = (input - inputMin) / (inputDiff / 2);
-      power = 3;
-      if (p < 1) {
-        return outputMin + outputDiff / 2 * Math.pow(p, power);
-      } else {
-        return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
-      }
-    };
-    return Make("Tween", Tween);
-  });
-
   Take(["Tick"], function(Tick) {
-    var Tween1, cubic, gc, tweens;
+    var Tween, cubic, gc, tweens;
     tweens = [];
-    Tween1 = function(from, to, time, opts, next) {
+    Tween = function(from, to, time, opts, next) {
       var tween;
       if (typeof opts === "function") {
         tween = {
@@ -3280,8 +3173,8 @@
         return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
       }
     };
-    Tween1.cancel = gc;
-    return Make("Tween1", Tween1);
+    Tween.cancel = gc;
+    return Make("Tween", Tween);
   });
 
   Take(["Component", "ControlPanelView"], function(Component, ControlPanelView) {
@@ -3327,7 +3220,7 @@
     };
   });
 
-  Take(["GUI", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween1", "SVGReady"], function(GUI, Reaction, Resize, SVG, TopBar, TRS, Tween1) {
+  Take(["GUI", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween", "SVGReady"], function(GUI, Reaction, Resize, SVG, TopBar, TRS, Tween) {
     var ControlPanelView, bg, consumedCols, consumedRows, g, panelX, positionPanel, rows, tick;
     consumedCols = 0;
     consumedRows = 0;
@@ -3360,10 +3253,10 @@
       return positionPanel();
     });
     Reaction("ControlPanel:Show", function() {
-      return Tween1(panelX, 1, 0.7, tick);
+      return Tween(panelX, 1, 0.7, tick);
     });
     Reaction("ControlPanel:Hide", function() {
-      return Tween1(panelX, -.2, 0.7, tick);
+      return Tween(panelX, -.2, 0.7, tick);
     });
     Reaction("Background:Set", function(v) {
       var l;

@@ -1,5 +1,5 @@
-Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween1","ScopeReady"],
-(      Action , Control , GUI , Pressure , Reaction , Resize , SVG , TRS , Tween1)->
+Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween","ScopeReady"],
+(      Action , Control , GUI , Pressure , Reaction , Resize , SVG , TRS , Tween)->
   
   g = TRS SVG.create "g", GUI.elm
   
@@ -25,5 +25,5 @@ Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween
     alpha = v
     SVG.styles g, opacity: alpha * 2 - 1
   
-  Reaction "Settings:Show", ()-> Tween1 alpha, 1, 1.2, tick
-  Reaction "Settings:Hide", ()-> Tween1 alpha, 0, 1.2, tick
+  Reaction "Settings:Show", ()-> Tween alpha, 1, 1.2, tick
+  Reaction "Settings:Hide", ()-> Tween alpha, 0, 1.2, tick

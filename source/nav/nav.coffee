@@ -68,6 +68,7 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
       requestRender()
     
     startScale: ()->
+      console.log pos.z
       scaleStartPosZ = pos.z
     
     scale: (s)->

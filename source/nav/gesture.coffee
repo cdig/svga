@@ -1,8 +1,8 @@
-# This only works in Safari and Mobile Safari
-# On Mobile Safari, it fights a bit with touchmove.
-# One of them will win and overwrite the other. Not a big deal.
-
 Take ["Nav"], (Nav)->
+  
+  # This only works in Safari and Mobile Safari
+  # On Mobile Safari, it fights a bit with touchmove.
+  # One of them will win and overwrite the other. Not a big deal.
   
   window.addEventListener "gesturestart", (e)->
     if Nav.eventInside e

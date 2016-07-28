@@ -630,27 +630,6 @@
     });
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  (function() {
-    return Make("Mask", function() {
-      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
-    });
-  })();
-
   Take(["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(GUI, Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", GUI.elm));
@@ -1225,6 +1204,27 @@
     }
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  (function() {
+    return Make("Mask", function() {
+      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+    });
+  })();
+
   Take(["Nav"], function(Nav) {
     window.addEventListener("gesturestart", function(e) {
       if (Nav.eventInside(e)) {
@@ -1453,6 +1453,7 @@
         return requestRender();
       },
       startScale: function() {
+        console.log(pos.z);
         return scaleStartPosZ = pos.z;
       },
       scale: function(s) {
@@ -1480,6 +1481,31 @@
       }
       return Math.sqrt(x * x + y * y + z * z);
     };
+  });
+
+  Take(["Nav"], function(Nav) {
+    var gesture;
+    if (!(navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 1)) {
+      return;
+    }
+    gesture = new MSGesture();
+    gesture.target = document.rootElement;
+    gesture.target.addEventListener("pointerdown", function(e) {
+      if (Nav.eventInside(e)) {
+        if (touches > 0) {
+          e.preventDefault();
+        }
+        return gesture.addPointer(e.pointerId);
+      }
+    });
+    return gesture.target.addEventListener("MSGestureChange", function(e) {
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return Nav.by({
+          z: Math.log2(e.scale)
+        });
+      }
+    });
   });
 
   Take(["Nav"], function(Nav) {
@@ -1547,6 +1573,12 @@
         node = node.parentNode;
       }
       return false;
+    };
+  }
+
+  if (Math.log2 == null) {
+    Math.log2 = function(x) {
+      return Math.log(x) / Math.LN2;
     };
   }
 

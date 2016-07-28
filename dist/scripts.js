@@ -630,6 +630,27 @@
     });
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
+  (function() {
+    return Make("Mask", function() {
+      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+    });
+  })();
+
   Take(["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(GUI, Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", GUI.elm));
@@ -669,6 +690,11 @@
     window.addEventListener("focus", hide);
     window.addEventListener("touchstart", hide);
     window.addEventListener("blur", show);
+    window.addEventListener("mousedown", function() {
+      if (document.activeElement === SVG.root) {
+        return window.focus();
+      }
+    });
     window.focus();
     return hide();
   });
@@ -1198,27 +1224,6 @@
       });
     }
   });
-
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  (function() {
-    return Make("Mask", function() {
-      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
-    });
-  })();
 
   Take(["Nav"], function(Nav) {
     window.addEventListener("gesturestart", function(e) {

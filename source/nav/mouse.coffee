@@ -11,7 +11,8 @@ Take ["Nav"], (Nav)->
     lastY = e.clientY
 
   window.addEventListener "mousemove", (e)->
-    if down and Nav.eventInside e
+    # Windows fires this event every tick when touch-dragging, even when the input doesn't move
+    if down and (e.clientX isnt lastX or e.clientY isnt lastY) and Nav.eventInside(e)
       Nav.by
         x: e.clientX - lastX
         y: e.clientY - lastY

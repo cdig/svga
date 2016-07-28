@@ -1302,7 +1302,7 @@
       return lastY = e.clientY;
     });
     window.addEventListener("mousemove", function(e) {
-      if (down && Nav.eventInside(e)) {
+      if (down && (e.clientX !== lastX || e.clientY !== lastY) && Nav.eventInside(e)) {
         Nav.by({
           x: e.clientX - lastX,
           y: e.clientY - lastY
@@ -1455,12 +1455,11 @@
         return requestRender();
       },
       eventInside: function(e) {
-        var a, ref;
+        var ref;
         if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
           e = e.touches[0];
         }
-        a = e.target === document.rootElement || zoom.contains(e.target);
-        return a;
+        return e.target === document.rootElement || zoom.contains(e.target);
       }
     });
     distTo = function(a, b) {
@@ -1535,9 +1534,9 @@
   });
 
   if ((base = SVGElement.prototype).contains == null) {
-    base.contains = function(root, node) {
-      while (node) {
-        if (node === root) {
+    base.contains = function(node) {
+      while (node != null) {
+        if (this === node) {
           return true;
         }
         node = node.parentNode;

@@ -7,6 +7,7 @@ A framework for making interactive animations with SVG.
 * [Wiki Documentation](https://github.com/cdig/lunchboxsessions/wiki)
 
 Todo:
+* IE Nav — pinch? Do we bother?
 
 * horizontal controls when height-constrained
 * drag controls with 4-way arrow in outside corner

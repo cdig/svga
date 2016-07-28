@@ -76,8 +76,7 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
     
     eventInside: (e)->
       e = e.touches[0] if e.touches?.length > 0
-      a = e.target is document.rootElement or zoom.contains e.target
-      return a
+      return e.target is document.rootElement or zoom.contains e.target
   
   
   distTo = (a, b)->

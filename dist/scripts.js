@@ -1492,9 +1492,6 @@
     gesture.target = document.rootElement;
     gesture.target.addEventListener("pointerdown", function(e) {
       if (Nav.eventInside(e)) {
-        if (touches > 0) {
-          e.preventDefault();
-        }
         return gesture.addPointer(e.pointerId);
       }
     });

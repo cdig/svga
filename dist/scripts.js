@@ -1412,18 +1412,23 @@
     };
     Make("Nav", Nav = {
       to: function(p) {
+        var time, timeX, timeY, timeZ;
+        timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
+        timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
+        timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
+        time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
         if (p.x != null) {
-          Tween(pos.x, p.x, .07 * Math.sqrt(Math.abs(p.x - pos.x)), (function(v) {
+          Tween(pos.x, p.x, time, (function(v) {
             return pos.x = v;
           }));
         }
         if (p.y != null) {
-          Tween(pos.y, p.y, .07 * Math.sqrt(Math.abs(p.y - pos.y)), (function(v) {
+          Tween(pos.y, p.y, time, (function(v) {
             return pos.y = v;
           }));
         }
         if (p.z != null) {
-          return Tween(pos.z, p.z, .7 * Math.sqrt(Math.abs(p.z - pos.z)), (function(v) {
+          return Tween(pos.z, p.z, time, (function(v) {
             return pos.z = v;
           }));
         }

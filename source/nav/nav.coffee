@@ -51,9 +51,14 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   
   Make "Nav", Nav =
     to: (p)->
-      Tween pos.x, p.x, .07 * Math.sqrt(Math.abs(p.x-pos.x)), ((v)->pos.x=v) if p.x?
-      Tween pos.y, p.y, .07 * Math.sqrt(Math.abs(p.y-pos.y)), ((v)->pos.y=v) if p.y?
-      Tween pos.z, p.z, .7 * Math.sqrt(Math.abs(p.z-pos.z)), ((v)->pos.z=v) if p.z?
+      timeX = .03 * Math.sqrt(Math.abs(p.x-pos.x)) or 0
+      timeY = .03 * Math.sqrt(Math.abs(p.y-pos.y)) or 0
+      timeZ = .7 * Math.sqrt(Math.abs(p.z-pos.z)) or 0
+      time = Math.sqrt timeX*timeX + timeY*timeY + timeZ*timeZ
+      
+      Tween pos.x, p.x, time, ((v)->pos.x=v) if p.x?
+      Tween pos.y, p.y, time, ((v)->pos.y=v) if p.y?
+      Tween pos.z, p.z, time, ((v)->pos.z=v) if p.z?
     
     by: (p)->
       pos.z = limit zLimit, pos.z + p.z if p.z?

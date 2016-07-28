@@ -22,5 +22,5 @@ Take ["Nav"], (Nav)->
       lastX = newX
       lastY = newY
   
-  window.addEventListener "pointermove", (e)->
-    console.log e
+  # window.addEventListener "pointermove", (e)->
+  #   console.log e

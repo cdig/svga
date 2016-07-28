@@ -1,5 +1,6 @@
 (function() {
-  var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  var base,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice;
 
   Take(["Registry", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Registry, ScopeBuilder, SVGCrawler) {
@@ -1481,7 +1482,7 @@
         return lastY = e.touches[0].clientY;
       }
     });
-    window.addEventListener("touchmove", touchMove = function(e) {
+    return window.addEventListener("touchmove", touchMove = function(e) {
       var newX, newY;
       if (e.touches.length === 1 && Nav.eventInside(e)) {
         e.preventDefault();
@@ -1495,10 +1496,19 @@
         return lastY = newY;
       }
     });
-    return window.addEventListener("pointermove", function(e) {
-      return console.log(e);
-    });
   });
+
+  if ((base = SVGElement.prototype).contains == null) {
+    base.contains = function(root, node) {
+      while (node) {
+        if (node === root) {
+          return true;
+        }
+        node = node.parentNode;
+      }
+      return false;
+    };
+  }
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
     var root, schematic, update;
@@ -1727,14 +1737,14 @@
 
   Take(["Registry"], function(Registry) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var base, name1, ref;
+      var base1, name1, ref;
       if (scope.parent != null) {
         if (((ref = scope.parent[scope.instanceName]) != null ? ref.element.id : void 0) === scope.element.id) {
           console.log(scope.parent);
           throw "Duplicate instance name detected in ^^^ " + scope.parent.instanceName + ": " + scope.instanceName;
         }
-        if ((base = scope.parent)[name1 = scope.instanceName] == null) {
-          base[name1] = scope;
+        if ((base1 = scope.parent)[name1 = scope.instanceName] == null) {
+          base1[name1] = scope;
         }
         return scope.parent.children.push(scope);
       }
@@ -2641,7 +2651,7 @@
         return elm;
       },
       attr: function(elm, k, v) {
-        var base, ns;
+        var base1, ns;
         if (!elm) {
           throw "SVG.attr was called with a null element";
         }
@@ -2650,7 +2660,7 @@
           throw "SVG.attr requires a string as the second argument, got ^";
         }
         if (v === void 0) {
-          return (base = elm._SVG_attr)[k] != null ? base[k] : base[k] = elm.getAttribute(k);
+          return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
         }
         if (elm._SVG_attr == null) {
           elm._SVG_attr = {};
@@ -2685,7 +2695,7 @@
         return elm;
       },
       style: function(elm, k, v) {
-        var base;
+        var base1;
         if (!elm) {
           throw "SVG.style was called with a null element";
         }
@@ -2697,7 +2707,7 @@
           elm._SVG_style = {};
         }
         if (v === void 0) {
-          return (base = elm._SVG_style)[k] != null ? base[k] : base[k] = elm.style[k];
+          return (base1 = elm._SVG_style)[k] != null ? base1[k] : base1[k] = elm.style[k];
         }
         if (elm._SVG_style[k] !== v) {
           elm.style[k] = elm._SVG_style[k] = v;
@@ -3256,7 +3266,7 @@
       }
     });
     return instantiate = function(props) {
-      var base, defn, elm, instancesByName, name, scope, type;
+      var base1, defn, elm, instancesByName, name, scope, type;
       type = props.type;
       name = props.name || props.type;
       defn = Component.take("Control", type);
@@ -3279,8 +3289,8 @@
           props: props
         };
       }
-      if (typeof (base = instancesByName[name].scope).attach === "function") {
-        base.attach(props);
+      if (typeof (base1 = instancesByName[name].scope).attach === "function") {
+        base1.attach(props);
       }
       return instancesByName[name].scope;
     };

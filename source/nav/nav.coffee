@@ -1,6 +1,6 @@
 Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, SVG, Tween)->
   pos = x: 0, y: 0, z: 0
-  center = x: 0, y: 0, z: 0
+  center = x: 0, y: 0, z: 1
   xLimit = {}
   yLimit = {}
   zLimit = min: 0, max: 3
@@ -61,8 +61,9 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
     
     by: (p)->
       pos.z = limit zLimit, pos.z + p.z if p.z?
-      pos.x = limit xLimit, pos.x + p.x / (1 + pos.z) if p.x?
-      pos.y = limit yLimit, pos.y + p.y / (1 + pos.z) if p.y?
+      scale = center.z * Math.pow 2, pos.z
+      pos.x = limit xLimit, pos.x + p.x / scale if p.x?
+      pos.y = limit yLimit, pos.y + p.y / scale if p.y?
       requestRender()
     
     startScale: ()->

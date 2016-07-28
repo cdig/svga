@@ -1362,7 +1362,7 @@
     center = {
       x: 0,
       y: 0,
-      z: 0
+      z: 1
     };
     xLimit = {};
     yLimit = {};
@@ -1429,14 +1429,16 @@
         }
       },
       by: function(p) {
+        var scale;
         if (p.z != null) {
           pos.z = limit(zLimit, pos.z + p.z);
         }
+        scale = center.z * Math.pow(2, pos.z);
         if (p.x != null) {
-          pos.x = limit(xLimit, pos.x + p.x / (1 + pos.z));
+          pos.x = limit(xLimit, pos.x + p.x / scale);
         }
         if (p.y != null) {
-          pos.y = limit(yLimit, pos.y + p.y / (1 + pos.z));
+          pos.y = limit(yLimit, pos.y + p.y / scale);
         }
         return requestRender();
       },
@@ -1472,30 +1474,59 @@
   });
 
   Take(["Nav"], function(Nav) {
-    var lastX, lastY, touchMove, touchStart;
-    lastX = 0;
-    lastY = 0;
+    var cloneTouches, distTouches, lastTouches, touchMove, touchStart;
+    lastTouches = null;
     window.addEventListener("touchstart", touchStart = function(e) {
-      if (e.touches.length === 1 && Nav.eventInside(e)) {
+      if (Nav.eventInside(e)) {
         e.preventDefault();
-        lastX = e.touches[0].clientX;
-        return lastY = e.touches[0].clientY;
+        return cloneTouches(e);
       }
     });
-    return window.addEventListener("touchmove", touchMove = function(e) {
-      var newX, newY;
-      if (e.touches.length === 1 && Nav.eventInside(e)) {
+    window.addEventListener("touchmove", touchMove = function(e) {
+      var a, b;
+      if (Nav.eventInside(e)) {
         e.preventDefault();
-        newX = e.touches[0].clientX;
-        newY = e.touches[0].clientY;
-        Nav.by({
-          x: newX - lastX,
-          y: newY - lastY
-        });
-        lastX = newX;
-        return lastY = newY;
+        if (e.touches.length !== lastTouches.length) {
+
+        } else if (e.touches.length > 1) {
+          a = distTouches(lastTouches);
+          b = distTouches(e.touches);
+          Nav.by({
+            z: (b - a) / 200
+          });
+        } else {
+          Nav.by({
+            x: e.touches[0].clientX - lastTouches[0].clientX,
+            y: e.touches[0].clientY - lastTouches[0].clientY
+          });
+        }
+        return cloneTouches(e);
       }
     });
+    cloneTouches = function(e) {
+      var t;
+      return lastTouches = (function() {
+        var len, m, ref, results;
+        ref = e.touches;
+        results = [];
+        for (m = 0, len = ref.length; m < len; m++) {
+          t = ref[m];
+          results.push({
+            clientX: t.clientX,
+            clientY: t.clientY
+          });
+        }
+        return results;
+      })();
+    };
+    return distTouches = function(touches) {
+      var a, b, dx, dy;
+      a = touches[0];
+      b = touches[1];
+      dx = a.clientX - b.clientX;
+      dy = a.clientY - b.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
   });
 
   if ((base = SVGElement.prototype).contains == null) {

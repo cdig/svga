@@ -6,6 +6,9 @@ A framework for making interactive animations with SVG.
 * [SVGA Starter](https://github.com/cdig/svg-activity-starter)
 * [Wiki Documentation](https://github.com/cdig/lunchboxsessions/wiki)
 
+
+If IE breaks, perhaps change back to text/ecmascript?
+
 Todo:
 * horizontal controls when height-constrained
 * drag controls with 4-way arrow in outside corner

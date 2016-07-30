@@ -109,7 +109,7 @@
       }
       scope = Scope(tree.elm, parentScope);
       if (scope.setup != null) {
-        setups.push(scope.setup);
+        setups.push(scope.setup.bind(scope));
       }
       ref = tree.sub;
       results = [];

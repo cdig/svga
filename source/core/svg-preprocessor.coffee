@@ -16,7 +16,7 @@ Take ["Scope", "SVG"], (Scope, SVG)->
   
   buildScopes = (tree, setups, parentScope = null)->
     scope = Scope tree.elm, parentScope
-    setups.push scope.setup if scope.setup?
+    setups.push scope.setup.bind(scope) if scope.setup?
     buildScopes subTarget, setups, scope for subTarget in tree.sub
 
   

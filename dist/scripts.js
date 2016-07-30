@@ -3,104 +3,136 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice;
 
-  Take(["Registry", "ScopeBuilder", "SVGCrawler", "DOMContentLoaded"], function(Registry, ScopeBuilder, SVGCrawler) {
-    var crawlerData;
-    crawlerData = SVGCrawler(document.getElementById("root"));
+  Take(["Registry", "SVGPreprocessor", "DOMContentLoaded"], function(Registry, SVGPreprocessor) {
+    var svgData;
+    svgData = SVGPreprocessor.crawl(document.getElementById("root"));
     Make("SVGReady");
     return setTimeout(function() {
       Registry.closeRegistration();
-      ScopeBuilder(crawlerData);
-      Make("ScopeSetup");
+      SVGPreprocessor.build(svgData);
+      svgData = null;
       Make("ScopeReady");
       return Make("AllReady");
     });
   });
 
-  Take(["Dev", "Registry", "Symbol"], function(Dev, Registry, Symbol) {
-    var ScopeBuilder;
-    return Make("ScopeBuilder", ScopeBuilder = function(target, parentScope) {
-      var attr, attrs, element, instanceName, len, len1, len2, m, n, q, ref, ref1, ref2, results, scope, scopeProcessor, strippedName, subTarget, symbol, symbolForInstanceName, symbolName;
+  Take(["Dev", "Registry", "ScopeCheck", "Symbol"], function(Dev, Registry, ScopeCheck, Symbol) {
+    var Scope;
+    return Make("Scope", Scope = function(element, parentScope, symbol) {
+      var attr, attrs, instanceName, len, len1, m, n, name1, ref, ref1, ref2, ref3, ref4, s, scope, scopeProcessor;
       if (parentScope == null) {
         parentScope = null;
       }
-      element = target.elm;
-      strippedName = (ref = element.id) != null ? ref.split("_")[0] : void 0;
-      symbolForInstanceName = Symbol.forInstanceName(element.id);
-      if (symbolForInstanceName != null) {
-        instanceName = element.id;
-        symbol = symbolForInstanceName;
-      } else if ((strippedName != null ? strippedName.indexOf("Line") : void 0) > -1) {
-        symbolName = "HydraulicLine";
-        symbol = Symbol.forSymbolName(symbolName);
-      } else if ((strippedName != null ? strippedName.indexOf("Field") : void 0) > -1) {
-        symbolName = "HydraulicField";
-        symbol = Symbol.forSymbolName(symbolName);
-      } else if ((strippedName != null ? strippedName.indexOf("Mask") : void 0) > -1) {
-        symbolName = "Mask";
-        symbol = Symbol.forSymbolName(symbolName);
-      } else {
-        symbolName = "DefaultElement";
-        symbol = Symbol.forSymbolName(symbolName);
+      if (symbol == null) {
+        symbol = null;
       }
-      scope = symbol.create(element);
+      instanceName = ((ref = element.id) != null ? ref.split("_")[0] : void 0) || ("child" + ((parentScope != null ? parentScope.children.length : void 0) || 0));
+      if (parentScope != null) {
+        ScopeCheck(parentScope, instanceName);
+      }
+      if ((s = Symbol.forInstanceName(element.id)) != null) {
+        symbol = s;
+        instanceName = element.id;
+      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
+        symbol = Symbol.forSymbolName("HydraulicLine");
+      } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
+        symbol = Symbol.forSymbolName("HydraulicField");
+      }
+      scope = symbol != null ? symbol.create(element) : {};
+      ScopeCheck(scope, "_symbol", "children", "element", "instanceName", "parent", "root");
       element._scope = scope;
-      scope.element = element;
-      scope.children = [];
-      scope.parent = parentScope;
-      scope.root = (parentScope != null ? parentScope.root : void 0) || scope;
-      scope.childName = "child" + ((parentScope != null ? parentScope.children.length : void 0) || 0);
-      scope.instanceName = instanceName || strippedName || scope.childName;
       scope._symbol = symbol;
-      element.setAttribute("scope-name", scope.instanceName);
-      if (Dev) {
-        attrs = Array.prototype.slice.call(element.attributes);
-        for (m = 0, len = attrs.length; m < len; m++) {
-          attr = attrs[m];
-          if (attr.name !== "scope-name") {
-            element.removeAttributeNS(attr.namespaceURI, attr.name);
-            element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
-          }
+      scope.children = [];
+      scope.element = element;
+      scope.instanceName = instanceName;
+      scope.parent = parentScope;
+      scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
+      if (((ref1 = scope.parent) != null ? ref1[scope.instanceName] : void 0) != null) {
+        console.log(scope.parent);
+        throw "^^^ Has multiple children with the instance name \"" + scope.instanceName + "\".";
+      }
+      if ((ref2 = scope.parent) != null) {
+        if (ref2[name1 = scope.instanceName] == null) {
+          ref2[name1] = scope;
         }
       }
-      ref1 = Registry.all("ScopeProcessor");
-      for (n = 0, len1 = ref1.length; n < len1; n++) {
-        scopeProcessor = ref1[n];
+      if ((ref3 = scope.parent) != null) {
+        ref3.children.push(scope);
+      }
+      ref4 = Registry.all("ScopeProcessor");
+      for (m = 0, len = ref4.length; m < len; m++) {
+        scopeProcessor = ref4[m];
         scopeProcessor(scope);
       }
-      ref2 = target.sub;
-      results = [];
-      for (q = 0, len2 = ref2.length; q < len2; q++) {
-        subTarget = ref2[q];
-        results.push(ScopeBuilder(subTarget, scope));
+      if (Dev) {
+        element.setAttribute("instance-name", scope.instanceName);
+        attrs = Array.prototype.slice.call(element.attributes);
+        for (n = 0, len1 = attrs.length; n < len1; n++) {
+          attr = attrs[n];
+          if (!(attr.name !== "instance-name")) {
+            continue;
+          }
+          element.removeAttributeNS(attr.namespaceURI, attr.name);
+          element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
+        }
       }
-      return results;
+      return scope;
     });
   });
 
-  Take(["SVG"], function(SVG) {
-    var SVGCrawler, crawl, defs, deprecations;
+  Take(["Scope", "SVG"], function(Scope, SVG) {
+    var SVGPreprocessor, buildScopes, defs, deprecations, processElm;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     defs = {};
-    Make("SVGCrawler", SVGCrawler = function(elm) {
-      var tree;
-      tree = crawl(elm);
-      defs = null;
-      return tree;
+    Make("SVGPreprocessor", SVGPreprocessor = {
+      crawl: function(elm) {
+        var tree;
+        tree = processElm(elm);
+        defs = null;
+        return tree;
+      },
+      build: function(tree) {
+        var m, results, setup, setups;
+        buildScopes(tree, setups = []);
+        results = [];
+        for (m = setups.length - 1; m >= 0; m += -1) {
+          setup = setups[m];
+          results.push(setup());
+        }
+        return results;
+      }
     });
-    return crawl = function(elm) {
-      var childElm, childNodes, clone, def, defId, len, m, ref, target;
-      target = {
+    buildScopes = function(tree, setups, parentScope) {
+      var len, m, ref, results, scope, subTarget;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      scope = Scope(tree.elm, parentScope);
+      if (scope.setup != null) {
+        setups.push(scope.setup);
+      }
+      ref = tree.sub;
+      results = [];
+      for (m = 0, len = ref.length; m < len; m++) {
+        subTarget = ref[m];
+        results.push(buildScopes(subTarget, setups, scope));
+      }
+      return results;
+    };
+    return processElm = function(elm) {
+      var childElm, childNodes, clone, def, defId, len, m, ref, ref1, tree;
+      tree = {
         elm: elm,
         sub: []
       };
       childNodes = Array.prototype.slice.call(elm.childNodes);
       for (m = 0, len = childNodes.length; m < len; m++) {
         childElm = childNodes[m];
-        if (ref = childElm.id, indexOf.call(deprecations, ref) >= 0) {
+        if ((ref = childElm.id, indexOf.call(deprecations, ref) >= 0) || ((ref1 = childElm.id) != null ? ref1.indexOf("Mask") : void 0) > -1) {
           console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
           elm.removeChild(childElm);
         } else if (childElm instanceof SVGGElement) {
-          target.sub.push(crawl(childElm));
+          tree.sub.push(processElm(childElm));
         } else if (childElm instanceof SVGUseElement) {
           defId = childElm.getAttribute("xlink:href");
           def = defs[defId] != null ? defs[defId] : defs[defId] = SVG.defs.querySelector(defId);
@@ -110,11 +142,11 @@
             def.parentNode.removeChild(def);
           }
           if (clone instanceof SVGGElement) {
-            target.sub.push(crawl(clone));
+            tree.sub.push(processElm(clone));
           }
         }
       }
-      return target;
+      return tree;
     };
   });
 
@@ -211,9 +243,9 @@
     };
   })();
 
-  Take(["Pressure", "SVG"], function(Pressure, SVG) {
+  Take(["Pressure", "Scope", "SVG"], function(Pressure, Scope, SVG) {
     return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
-      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible;
+      var active, children, direction, element, enabled, flow, pressure, scale, scope, updateActive, visible;
       direction = 1;
       flow = 1;
       pressure = null;
@@ -221,29 +253,31 @@
       active = true;
       enabled = true;
       visible = true;
-      scope = {
-        element: SVG.create("g", parentElm),
-        reverse: function() {
-          return direction *= -1;
-        },
-        update: function(parentFlow, parentScale) {
-          var child, f, len, m, results, s;
-          if (active) {
-            f = flow * direction * parentFlow;
-            s = scale * parentScale;
-            results = [];
-            for (m = 0, len = children.length; m < len; m++) {
-              child = children[m];
-              results.push(child.update(f, s));
+      element = SVG.create("g", parentElm);
+      scope = Scope(element, parentElm._scope, function() {
+        return {
+          reverse: function() {
+            return direction *= -1;
+          },
+          update: function(parentFlow, parentScale) {
+            var child, f, len, m, results, s;
+            if (active) {
+              f = flow * direction * parentFlow;
+              s = scale * parentScale;
+              results = [];
+              for (m = 0, len = children.length; m < len; m++) {
+                child = children[m];
+                results.push(child.update(f, s));
+              }
+              return results;
             }
-            return results;
           }
-        }
-      };
+        };
+      });
       children = setupFn(scope);
       updateActive = function() {
         active = enabled && visible && flow !== 0;
-        return SVG.styles(scope.element, {
+        return SVG.styles(element, {
           display: active ? null : "none"
         });
       };
@@ -273,7 +307,7 @@
           if (pressure !== val) {
             pressure = val;
             color = Pressure(val);
-            return SVG.attrs(scope.element, {
+            return SVG.attrs(element, {
               fill: color,
               stroke: color
             });
@@ -1221,7 +1255,7 @@
 
   (function() {
     return Make("Mask", function() {
-      throw "Mask has been removed. Please find a different way to acheive your desired effect.";
+      throw "Mask() has been removed. Please find a different way to acheive your desired effect.";
     });
   })();
 
@@ -1725,6 +1759,17 @@
     return results;
   });
 
+  Take(["Reaction", "Registry"], function(Reaction, Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      Reaction("Schematic:Hide", function() {
+        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
+      });
+      return Reaction("Schematic:Show", function() {
+        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
+      });
+    });
+  });
+
   Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
     return Registry.add("ScopeProcessor", function(scope) {
       var animate, running, startTime;
@@ -1800,41 +1845,6 @@
         get: function() {
           throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
         }
-      });
-    });
-  });
-
-  Take(["Registry"], function(Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var base1, name1, ref;
-      if (scope.parent != null) {
-        if (((ref = scope.parent[scope.instanceName]) != null ? ref.element.id : void 0) === scope.element.id) {
-          console.log(scope.parent);
-          throw "Duplicate instance name detected in ^^^ " + scope.parent.instanceName + ": " + scope.instanceName;
-        }
-        if ((base1 = scope.parent)[name1 = scope.instanceName] == null) {
-          base1[name1] = scope;
-        }
-        return scope.parent.children.push(scope);
-      }
-    });
-  });
-
-  Take(["Reaction", "Registry"], function(Reaction, Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      Reaction("Schematic:Hide", function() {
-        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
-      });
-      return Reaction("Schematic:Show", function() {
-        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
-      });
-    });
-  });
-
-  Take(["Registry"], function(Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      return Take("ScopeSetup", function() {
-        return typeof scope.setup === "function" ? scope.setup() : void 0;
       });
     });
   });
@@ -2111,13 +2121,6 @@
     });
   });
 
-  Take(["Symbol"], function(Symbol) {
-    return Symbol("DefaultElement", [], function(element) {
-      var scope;
-      return scope = {};
-    });
-  });
-
   Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
     return Symbol("HydraulicField", [], function(svgElement) {
       var scope;
@@ -2211,14 +2214,6 @@
           });
         }
       };
-    });
-  });
-
-  Take(["SVG", "Symbol"], function(SVG, Symbol) {
-    return Symbol("Mask", [], function(svgElement) {
-      var scope;
-      svgElement.parentNode.removeChild(svgElement);
-      return scope = {};
     });
   });
 
@@ -2566,10 +2561,15 @@
     tooLate = false;
     return Make("Registry", Registry = {
       add: function(type, item, name) {
+        var ref;
         if (name != null) {
           if (tooLate) {
             console.log(item);
             throw "^ Registry.add was called after registration closed. Please make " + type + ": " + name + " init faster.";
+          }
+          if (((ref = items[type]) != null ? ref[name] : void 0) != null) {
+            console.log(item);
+            throw "^ Registry.add(" + type + ", ^^^, " + name + ") is a duplicate. Please pick a different name.";
           }
           return (items[type] != null ? items[type] : items[type] = {})[name] = item;
         } else {
@@ -2631,19 +2631,19 @@
         if (y == null) {
           y = 0;
         }
-        throw "MOVE";
+        throw "Don't use SVG.move()";
       },
       rotate: function(elm, r) {
-        throw "ROTATE";
+        throw "Don't use SVG.rotate()";
       },
       origin: function(elm, ox, oy) {
-        throw "ORIGIN";
+        throw "Don't use SVG.origin()";
       },
       scale: function(elm, x, y) {
         if (y == null) {
           y = x;
         }
-        throw "SCALE";
+        throw "Don't use SVG.scale()";
       },
       create: function(type, parent, attrs) {
         var elm;
@@ -2849,47 +2849,32 @@
     return Make("SVG", SVG);
   })();
 
-  (function() {
-    var Symbol, byInstanceName, bySymbolName, tooLate;
-    bySymbolName = {};
-    byInstanceName = {};
-    tooLate = false;
+  Take("Registry", function(Registry) {
+    var Symbol;
     Symbol = function(symbolName, instanceNames, symbolFn) {
       var instanceName, len, m, results, symbol;
-      if (bySymbolName[symbolName] != null) {
-        throw "The symbol \"" + symbolName + "\" is defined more than once. You'll need to change one of the definitions to use a more unique name.";
-      }
-      if (tooLate) {
-        throw "The symbol \"" + symbolName + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
-      }
       symbol = {
         create: symbolFn,
         name: symbolName
       };
-      bySymbolName[symbolName] = symbol;
+      Registry.add("Symbol:BySymbolName", symbol, symbolName);
       results = [];
       for (m = 0, len = instanceNames.length; m < len; m++) {
         instanceName = instanceNames[m];
-        if (byInstanceName[instanceName] != null) {
-          throw "The instance \"" + instanceName + "\" is defined more than once, by Symbol \"" + byInstanceName[instanceName].symbolName + "\" and Symbol \"" + symbolName + "\". You'll need to change one of these instances to use a more unique name. You might need to change your FLA. This is a shortcoming of SVGA — sorry!";
-        }
-        results.push(byInstanceName[instanceName] = symbol);
+        results.push(Registry.add("Symbol:ByInstanceName", symbol, instanceName));
       }
       return results;
     };
     Symbol.forSymbolName = function(symbolName) {
-      tooLate = true;
-      return bySymbolName[symbolName];
+      var ref;
+      return (ref = Registry.all("Symbol:BySymbolName")) != null ? ref[symbolName] : void 0;
     };
     Symbol.forInstanceName = function(instanceName) {
-      if (instanceName == null) {
-        return;
-      }
-      tooLate = true;
-      return byInstanceName[instanceName];
+      var ref;
+      return (ref = Registry.all("Symbol:ByInstanceName")) != null ? ref[instanceName] : void 0;
     };
     return Make("Symbol", Symbol);
-  })();
+  });
 
   Take("RAF", function(RAF) {
     var callbacks, tick, time;

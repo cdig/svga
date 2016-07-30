@@ -1,7 +1,7 @@
 
 do ()->
   Make "Mask", ()->
-    throw "Mask has been removed. Please find a different way to acheive your desired effect."
+    throw "Mask() has been removed. Please find a different way to acheive your desired effect."
 
 
 #the root is the svg element at the root

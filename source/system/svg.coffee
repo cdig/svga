@@ -20,10 +20,10 @@ do ()->
     root: root
     defs: defs
     
-    move: (elm, x, y = 0)-> throw "MOVE"
-    rotate: (elm, r)-> throw "ROTATE"
-    origin: (elm, ox, oy)-> throw "ORIGIN"
-    scale: (elm, x, y = x)-> throw "SCALE"
+    move: (elm, x, y = 0)-> throw "Don't use SVG.move()"
+    rotate: (elm, r)-> throw "Don't use SVG.rotate()"
+    origin: (elm, ox, oy)-> throw "Don't use SVG.origin()"
+    scale: (elm, x, y = x)-> throw "Don't use SVG.scale()"
     
     create: (type, parent, attrs)->
       elm = document.createElementNS svgNS, type

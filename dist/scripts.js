@@ -243,9 +243,9 @@
     };
   })();
 
-  Take(["Pressure", "Scope", "SVG"], function(Pressure, Scope, SVG) {
+  Take(["Pressure", "SVG"], function(Pressure, SVG) {
     return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
-      var active, children, direction, element, enabled, flow, pressure, scale, scope, updateActive, visible;
+      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible;
       direction = 1;
       flow = 1;
       pressure = null;
@@ -253,31 +253,29 @@
       active = true;
       enabled = true;
       visible = true;
-      element = SVG.create("g", parentElm);
-      scope = Scope(element, parentElm._scope, function() {
-        return {
-          reverse: function() {
-            return direction *= -1;
-          },
-          update: function(parentFlow, parentScale) {
-            var child, f, len, m, results, s;
-            if (active) {
-              f = flow * direction * parentFlow;
-              s = scale * parentScale;
-              results = [];
-              for (m = 0, len = children.length; m < len; m++) {
-                child = children[m];
-                results.push(child.update(f, s));
-              }
-              return results;
+      scope = {
+        element: SVG.create("g", parentElm),
+        reverse: function() {
+          return direction *= -1;
+        },
+        update: function(parentFlow, parentScale) {
+          var child, f, len, m, results, s;
+          if (active) {
+            f = flow * direction * parentFlow;
+            s = scale * parentScale;
+            results = [];
+            for (m = 0, len = children.length; m < len; m++) {
+              child = children[m];
+              results.push(child.update(f, s));
             }
+            return results;
           }
-        };
-      });
+        }
+      };
       children = setupFn(scope);
       updateActive = function() {
         active = enabled && visible && flow !== 0;
-        return SVG.styles(element, {
+        return SVG.styles(scope.element, {
           display: active ? null : "none"
         });
       };
@@ -307,7 +305,7 @@
           if (pressure !== val) {
             pressure = val;
             color = Pressure(val);
-            return SVG.attrs(element, {
+            return SVG.attrs(scope.element, {
               fill: color,
               stroke: color
             });

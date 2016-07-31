@@ -11,11 +11,11 @@ Take ["Action", "Reaction", "SVG", "DOMContentLoaded"], (Action, Reaction, SVG)-
   
   
   setBackground = (v)->
-    c = "hsl(220, 0%, #{v*100}%)"
+    c = "hsl(220, 5%, #{v*100}%)"
     SVG.style target, "background-color", c
       
   
   Reaction "Background:Set", setBackground
   
   Take "ScopeReady", ()->
-    Action "Background:Set", .75
+    Action "Background:Set", .70

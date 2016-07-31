@@ -13,16 +13,15 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween","SVGReady"],
   
   bg = SVG.create "rect", g,
     class: "BG"
-    width: GUI.ControlPanel.width + GUI.ControlPanel.borderRadius
-    y: -GUI.ControlPanel.borderRadius
+    width: GUI.ControlPanel.width
     rx: GUI.ControlPanel.borderRadius
     ry: GUI.ControlPanel.borderRadius
     fill: "hsl(230, 6%, 17%)"
   
   
   positionPanel = ()->
-    x = window.innerWidth - GUI.ControlPanel.width * panelX
-    y = TopBar.height
+    x = window.innerWidth/2 - GUI.ControlPanel.width/2
+    y = window.innerHeight/2 - GUI.ControlPanel.width/2
     TRS.move g, x, y
   
   tick = (v)->
@@ -59,7 +58,7 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween","SVGReady"],
         scope.resize w, h
         TRS.move scope.element, x, y
         consumedHeight = Math.max consumedHeight, y + h
-    SVG.attr bg, "height", consumedHeight + padY + GUI.ControlPanel.borderRadius
+    SVG.attr bg, "height", consumedHeight + padY
 
   
   

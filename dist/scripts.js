@@ -3167,6 +3167,102 @@
     return Make("Tween", Tween);
   });
 
+  Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, GUI, Input, SVG, TRS, Tween) {
+    return Control("button", function(elm, props) {
+      var c, depress, enabled, handlers, innerBG, label, outerBG, release, scope, tickBG, u;
+      handlers = [];
+      enabled = true;
+      u = GUI.ControlPanel.unit;
+      outerBG = TRS(SVG.create("rect", elm, {
+        fill: "hsl(220, 12%, 30%)",
+        stroke: "hsl(220, 12%, 42%)",
+        "stroke-width": 1,
+        x: 0.5,
+        y: 0.5,
+        rx: 2,
+        ry: 2
+      }));
+      innerBG = SVG.create("rect", elm, {
+        fill: "transparent",
+        stroke: "hsl(220, 12%, 24%)",
+        "stroke-width": 1,
+        x: 1.5,
+        y: 1.5,
+        rx: 2,
+        ry: 2
+      });
+      label = SVG.create("text", elm, {
+        textContent: props.name,
+        fill: "white"
+      });
+      c = 1;
+      tickBG = function(v) {
+        c = v;
+        return SVG.attrs(outerBG, {
+          fill: "hsl(220, 12%, " + (v * 30) + "%)"
+        });
+      };
+      depress = function() {
+        return Tween(c, .6, 0, tickBG);
+      };
+      release = function() {
+        return Tween(c, 1, .2, tickBG);
+      };
+      Input(elm, {
+        click: function() {
+          var handler, len, m, results;
+          if (enabled) {
+            results = [];
+            for (m = 0, len = handlers.length; m < len; m++) {
+              handler = handlers[m];
+              results.push(handler());
+            }
+            return results;
+          }
+        },
+        down: depress,
+        drag: depress,
+        out: release,
+        up: release
+      });
+      return scope = {
+        w: props.w || 2,
+        h: props.h || 1,
+        attach: function(props) {
+          if (props.action != null) {
+            return handlers.push(props.action);
+          }
+        },
+        resize: function(w, h) {
+          SVG.attrs(outerBG, {
+            width: w,
+            height: h
+          });
+          SVG.attrs(innerBG, {
+            width: w - 2,
+            height: h - 2
+          });
+          return SVG.attrs(label, {
+            x: w / 2,
+            y: h / 2 + 8
+          });
+        },
+        disable: function() {
+          SVG.attrs(elm, {
+            disabled: true
+          });
+          return enabled = false;
+        },
+        enable: function() {
+          SVG.attrs(elm, {
+            disabled: null
+          });
+          return enabled = true;
+        }
+      };
+    });
+  });
+
   Take(["ControlPanelView", "Registry", "Scope"], function(ControlPanelView, Registry, Scope) {
     var Control, build, instancesByNameByType, instantiate;
     instancesByNameByType = {};
@@ -3220,6 +3316,96 @@
     };
   });
 
+  Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, GUI, Input, SVG, TRS, Tween) {
+    return Control("slider", function(elm, props) {
+      var c, depress, handlers, label, range, release, scope, startDrag, thumb, thumbBG, tickBG, track, u, update, v;
+      handlers = [];
+      u = GUI.ControlPanel.unit;
+      v = 0;
+      range = u * 2;
+      startDrag = 0;
+      track = TRS(SVG.create("rect", elm, {
+        fill: "hsl(220, 12%, 14%)",
+        stroke: "hsl(220, 12%, 42%)",
+        "stroke-width": 1,
+        x: 0.5,
+        y: 0.5,
+        rx: u / 2,
+        ry: u / 2
+      }));
+      thumb = TRS(SVG.create("g", elm));
+      thumbBG = SVG.create("rect", thumb, {
+        fill: "hsl(220, 12%, 30%)",
+        "stroke-width": 1,
+        x: 1.5,
+        y: 1.5,
+        rx: u / 2 - 1,
+        ry: u / 2 - 1,
+        width: u * 2 - 2,
+        height: u - 2
+      });
+      label = SVG.create("text", thumb, {
+        textContent: props.name,
+        fill: "white",
+        x: u,
+        y: u / 2 + 8
+      });
+      c = 1;
+      tickBG = function(v) {
+        c = v;
+        return SVG.attrs(thumbBG, {
+          fill: "hsl(220, 12%, " + (v * 30) + "%)"
+        });
+      };
+      depress = function() {
+        return Tween(c, 1.4, 0, tickBG);
+      };
+      release = function() {
+        return Tween(c, 1, .2, tickBG);
+      };
+      update = function(V) {
+        v = V;
+        return TRS.abs(thumb, {
+          x: v * range
+        });
+      };
+      Input(elm, {
+        down: function(e) {
+          startDrag = e.clientX / range - v;
+          return depress();
+        },
+        drag: function(e) {
+          var handler, len, m, results;
+          update(Math.max(0, Math.min(1, e.clientX / range - startDrag)));
+          results = [];
+          for (m = 0, len = handlers.length; m < len; m++) {
+            handler = handlers[m];
+            results.push(handler(v));
+          }
+          return results;
+        },
+        up: release
+      });
+      return scope = {
+        w: props.w || 4,
+        h: props.h || 1,
+        attach: function(props) {
+          if (props.change != null) {
+            return handlers.push(props.change);
+          }
+        },
+        resize: function(w, h) {
+          range = w - u * 2;
+          return SVG.attrs(track, {
+            width: w,
+            height: h
+          });
+        },
+        set: update
+      };
+    });
+  });
+
   Take(["GUI", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween", "SVGReady"], function(GUI, Reaction, Resize, SVG, TopBar, TRS, Tween) {
     var ControlPanelView, bg, consumedCols, consumedRows, g, panelX, positionPanel, rows, tick;
     consumedCols = 0;
@@ -3233,16 +3419,15 @@
     }));
     bg = SVG.create("rect", g, {
       "class": "BG",
-      width: GUI.ControlPanel.width + GUI.ControlPanel.borderRadius,
-      y: -GUI.ControlPanel.borderRadius,
+      width: GUI.ControlPanel.width,
       rx: GUI.ControlPanel.borderRadius,
       ry: GUI.ControlPanel.borderRadius,
       fill: "hsl(230, 6%, 17%)"
     });
     positionPanel = function() {
       var x, y;
-      x = window.innerWidth - GUI.ControlPanel.width * panelX;
-      y = TopBar.height;
+      x = window.innerWidth / 2 - GUI.ControlPanel.width / 2;
+      y = window.innerHeight / 2 - GUI.ControlPanel.width / 2;
       return TRS.move(g, x, y);
     };
     tick = function(v) {
@@ -3284,7 +3469,7 @@
           consumedHeight = Math.max(consumedHeight, y + h);
         }
       }
-      return SVG.attr(bg, "height", consumedHeight + padY + GUI.ControlPanel.borderRadius);
+      return SVG.attr(bg, "height", consumedHeight + padY);
     });
     return Make("ControlPanelView", ControlPanelView = {
       createElement: function(props) {
@@ -3327,12 +3512,12 @@
     }
     setBackground = function(v) {
       var c;
-      c = "hsl(220, 0%, " + (v * 100) + "%)";
+      c = "hsl(220, 5%, " + (v * 100) + "%)";
       return SVG.style(target, "background-color", c);
     };
     Reaction("Background:Set", setBackground);
     return Take("ScopeReady", function() {
-      return Action("Background:Set", .75);
+      return Action("Background:Set", .70);
     });
   });
 

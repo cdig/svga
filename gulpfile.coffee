@@ -49,7 +49,11 @@ gulp.task "scss", ()->
     .pipe gulp.dest "dist"
 
 
-gulp.task "default", ["coffee", "html", "scss"], ()->
-  gulp.watch paths.coffee, ["coffee"]
-  gulp.watch paths.html, ["html"]
-  gulp.watch paths.scss, ["scss"]
+gulp.task "watch", (cb)->
+  gulp.watch paths.coffee, gulp.series "coffee"
+  gulp.watch paths.html, gulp.series "html"
+  gulp.watch paths.scss, gulp.series "scss"
+  cb()
+
+
+gulp.task "default", gulp.parallel "coffee", "html", "scss", "watch"

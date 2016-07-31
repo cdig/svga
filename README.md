@@ -7,7 +7,10 @@ A framework for making interactive animations with SVG.
 * [Wiki Documentation](https://github.com/cdig/lunchboxsessions/wiki)
 
 
-If IE breaks, perhaps change back to text/ecmascript?
+NEXT: Figure out the right way to do GUI stuff
+  Using scope, now that it's nicer
+  Based on re-frame FRP / dataflow
+
 
 Todo:
 * horizontal controls when height-constrained
@@ -15,6 +18,7 @@ Todo:
 * labels above controls
 * Control: separator line
 * Control: spacer
+* Control: N-state toggle
 * Schematic button
 
 Carl Requested:

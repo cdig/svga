@@ -1,5 +1,5 @@
-Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
-(      Component , GUI , Input , Reaction , Resize , SVG , TRS)->
+Take ["Registry","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
+(      Registry , GUI , Input , Reaction , Resize , SVG , TRS)->
   requested = []
   instances = {}
   menu = null
@@ -20,7 +20,7 @@ Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
   TopBar = (args...)->
     # This is used by TopBar definitions
     if typeof args[1] is "object"
-      Component.make "TopBar", args...
+      Registry.set "TopBar", args...
     
     # Called by, most likely, the setup function in the content creator's "root" symbol
     else
@@ -30,11 +30,11 @@ Take ["Component","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
 
   
   Take "ScopeReady", ()->
-    definitions = Component.take "TopBar"
-    construct i, name, definitions[name] for name, i in requested
-    menu = construct -1, "Menu", definitions["Menu"]
-    settings = construct -1, "Settings", definitions["Settings"]
-    help = construct -1, "Help", definitions["Help"]
+    for name, i in requested
+      construct i, name, Registry.get "TopBar", name
+    menu = construct -1, "Menu", Registry.get "TopBar", "Menu"
+    settings = construct -1, "Settings", Registry.get "TopBar", "Settings"
+    help = construct -1, "Help", Registry.get "TopBar", "Help"
     Resize resize
   
   resize = ()->

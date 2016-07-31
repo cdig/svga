@@ -18,7 +18,7 @@
 
   Take(["Dev", "Registry", "ScopeCheck", "Symbol"], function(Dev, Registry, ScopeCheck, Symbol) {
     var Scope;
-    return Make("Scope", Scope = function(element, parentScope, symbol) {
+    return Make("Scope", Scope = function(element, parentScope, symbol, props) {
       var attr, attrs, instanceName, len, len1, m, n, name1, ref, ref1, ref2, ref3, ref4, s, scope, scopeProcessor;
       if (parentScope == null) {
         parentScope = null;
@@ -26,25 +26,23 @@
       if (symbol == null) {
         symbol = null;
       }
-      instanceName = ((ref = element.id) != null ? ref.split("_")[0] : void 0) || ("child" + ((parentScope != null ? parentScope.children.length : void 0) || 0));
+      if (props == null) {
+        props = null;
+      }
+      instanceName = (ref = element.id) != null ? ref.split("_")[0] : void 0;
       if (parentScope != null) {
         ScopeCheck(parentScope, instanceName);
       }
-      if ((s = Symbol.forInstanceName(element.id)) != null) {
-        symbol = s;
-        instanceName = element.id;
-      } else if ((instanceName != null ? instanceName.indexOf("Line") : void 0) > -1) {
-        symbol = Symbol.forSymbolName("HydraulicLine");
-      } else if ((instanceName != null ? instanceName.indexOf("Field") : void 0) > -1) {
-        symbol = Symbol.forSymbolName("HydraulicField");
+      if (symbol == null) {
+        symbol = (s = Symbol.forInstanceName(element.id)) != null ? s : (instanceName != null ? instanceName.indexOf("Line") : void 0) > -1 ? Symbol.forSymbolName("HydraulicLine") : (instanceName != null ? instanceName.indexOf("Field") : void 0) > -1 ? Symbol.forSymbolName("HydraulicField") : void 0;
       }
-      scope = symbol != null ? symbol.create(element) : {};
+      scope = symbol != null ? symbol(element, props) : {};
       ScopeCheck(scope, "_symbol", "children", "element", "instanceName", "parent", "root");
       element._scope = scope;
       scope._symbol = symbol;
       scope.children = [];
       scope.element = element;
-      scope.instanceName = instanceName;
+      scope.instanceName = instanceName || ("child" + ((parentScope != null ? parentScope.children.length : void 0) || 0));
       scope.parent = parentScope;
       scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
       if (((ref1 = scope.parent) != null ? ref1[scope.instanceName] : void 0) != null) {
@@ -1025,7 +1023,7 @@
     TRS.move(sliders, -128);
     slider = Control({
       name: "Background",
-      type: "Slider",
+      type: "slider",
       parent: sliders,
       change: function(v) {
         return Action("Background:Set", v * .7 + 0.3);
@@ -1058,7 +1056,7 @@
     });
   });
 
-  Take(["Component", "GUI", "Input", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Component, GUI, Input, Reaction, Resize, SVG, TRS) {
+  Take(["Registry", "GUI", "Input", "Reaction", "Resize", "SVG", "TRS", "SVGReady"], function(Registry, GUI, Input, Reaction, Resize, SVG, TRS) {
     var TopBar, bg, construct, container, help, instances, menu, offsetX, requested, resize, settings, topBar;
     requested = [];
     instances = {};
@@ -1084,22 +1082,21 @@
       var args;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       if (typeof args[1] === "object") {
-        return Component.make.apply(Component, ["TopBar"].concat(slice.call(args)));
+        return Registry.set.apply(Registry, ["TopBar"].concat(slice.call(args)));
       } else {
         return requested.push.apply(requested, args);
       }
     };
     TopBar.height = GUI.TopBar.height;
     Take("ScopeReady", function() {
-      var definitions, i, len, m, name;
-      definitions = Component.take("TopBar");
+      var i, len, m, name;
       for (i = m = 0, len = requested.length; m < len; i = ++m) {
         name = requested[i];
-        construct(i, name, definitions[name]);
+        construct(i, name, Registry.get("TopBar", name));
       }
-      menu = construct(-1, "Menu", definitions["Menu"]);
-      settings = construct(-1, "Settings", definitions["Settings"]);
-      help = construct(-1, "Help", definitions["Help"]);
+      menu = construct(-1, "Menu", Registry.get("TopBar", "Menu"));
+      settings = construct(-1, "Settings", Registry.get("TopBar", "Settings"));
+      help = construct(-1, "Help", Registry.get("TopBar", "Help"));
       return Resize(resize);
     });
     resize = function() {
@@ -2236,32 +2233,6 @@
     });
   })();
 
-  (function() {
-    var Component, definitions, instantiatedStarted;
-    definitions = {};
-    instantiatedStarted = false;
-    return Make("Component", Component = {
-      make: function() {
-        var args, name, type;
-        type = arguments[0], name = arguments[1], args = 3 <= arguments.length ? slice.call(arguments, 2) : [];
-        if (instantiatedStarted) {
-          throw "The component \"" + name + "\" arrived after setup started. Please figure out a way to make it initialize faster.";
-        }
-        return (definitions[type] != null ? definitions[type] : definitions[type] = {})[name] = args.length === 1 ? args[0] : args;
-      },
-      take: function(type, name) {
-        var ofType;
-        instantiatedStarted = true;
-        ofType = definitions[type] || {};
-        if (name != null) {
-          return ofType[name];
-        } else {
-          return ofType;
-        }
-      }
-    });
-  })();
-
   Make("Dev", window.top.location.hostname === "localhost");
 
   Take(["KeyNames"], function(KeyNames) {
@@ -2554,32 +2525,36 @@
   })();
 
   (function() {
-    var Registry, items, tooLate;
-    items = {};
+    var Registry, named, tooLate, unnamed;
+    named = {};
+    unnamed = {};
     tooLate = false;
     return Make("Registry", Registry = {
-      add: function(type, item, name) {
-        var ref;
-        if (name != null) {
-          if (tooLate) {
-            console.log(item);
-            throw "^ Registry.add was called after registration closed. Please make " + type + ": " + name + " init faster.";
-          }
-          if (((ref = items[type]) != null ? ref[name] : void 0) != null) {
-            console.log(item);
-            throw "^ Registry.add(" + type + ", ^^^, " + name + ") is a duplicate. Please pick a different name.";
-          }
-          return (items[type] != null ? items[type] : items[type] = {})[name] = item;
-        } else {
-          if (tooLate) {
-            console.log(item);
-            throw "^ Registry.add was called after registration closed. Please make this " + type + " init faster.";
-          }
-          return (items[type] != null ? items[type] : items[type] = []).push(item);
+      add: function(type, item) {
+        if (tooLate) {
+          console.log(item);
+          throw "^ Registry.add was called after registration closed. Please make this " + type + " init faster.";
         }
+        return (unnamed[type] != null ? unnamed[type] : unnamed[type] = []).push(item);
       },
       all: function(type) {
-        return items[type];
+        return unnamed[type];
+      },
+      set: function(type, name, item) {
+        var ref;
+        if (tooLate) {
+          console.log(item);
+          throw "^ Registry.set was called after registration closed. Please make " + type + ": " + name + " init faster.";
+        }
+        if (((ref = named[type]) != null ? ref[name] : void 0) != null) {
+          console.log(item);
+          throw "^ Registry.add(" + type + ", ^^^, " + name + ") is a duplicate. Please pick a different name.";
+        }
+        return (named[type] != null ? named[type] : named[type] = {})[name] = item;
+      },
+      get: function(type, name) {
+        var ref;
+        return (ref = named[type]) != null ? ref[name] : void 0;
       },
       closeRegistration: function() {
         return tooLate = true;
@@ -2849,27 +2824,21 @@
 
   Take("Registry", function(Registry) {
     var Symbol;
-    Symbol = function(symbolName, instanceNames, symbolFn) {
-      var instanceName, len, m, results, symbol;
-      symbol = {
-        create: symbolFn,
-        name: symbolName
-      };
-      Registry.add("Symbol:BySymbolName", symbol, symbolName);
+    Symbol = function(symbolName, instanceNames, symbol) {
+      var instanceName, len, m, results;
+      Registry.set("Symbol:BySymbolName", symbolName, symbol);
       results = [];
       for (m = 0, len = instanceNames.length; m < len; m++) {
         instanceName = instanceNames[m];
-        results.push(Registry.add("Symbol:ByInstanceName", symbol, instanceName));
+        results.push(Registry.set("Symbol:ByInstanceName", instanceName, symbol));
       }
       return results;
     };
     Symbol.forSymbolName = function(symbolName) {
-      var ref;
-      return (ref = Registry.all("Symbol:BySymbolName")) != null ? ref[symbolName] : void 0;
+      return Registry.get("Symbol:BySymbolName", symbolName);
     };
     Symbol.forInstanceName = function(instanceName) {
-      var ref;
-      return (ref = Registry.all("Symbol:ByInstanceName")) != null ? ref[instanceName] : void 0;
+      return Registry.get("Symbol:ByInstanceName", instanceName);
     };
     return Make("Symbol", Symbol);
   });
@@ -3198,36 +3167,46 @@
     return Make("Tween", Tween);
   });
 
-  Take(["Component", "ControlPanelView"], function(Component, ControlPanelView) {
-    var instancesByNameByType, instantiate;
+  Take(["ControlPanelView", "Registry", "Scope"], function(ControlPanelView, Registry, Scope) {
+    var Control, build, instancesByNameByType, instantiate;
     instancesByNameByType = {};
-    Make("Control", function() {
-      var args;
+    Make("Control", Control = function() {
+      var args, fn, type;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       if (typeof args[0] === "string") {
-        return Component.make.apply(Component, ["Control"].concat(slice.call(args)));
+        type = args[0], fn = args[1];
+        Control[type] = build(type);
+        return Registry.set("Control", type, fn);
       } else {
         return instantiate.apply(null, args);
       }
     });
+    build = function(type) {
+      return function(name, action) {
+        return instantiate({
+          type: type,
+          name: name,
+          action: action
+        });
+      };
+    };
     return instantiate = function(props) {
       var base1, defn, elm, instancesByName, name, scope, type;
       type = props.type;
       name = props.name || props.type;
-      defn = Component.take("Control", type);
+      defn = Registry.get("Control", type);
       if (type == null) {
         console.log(props);
-        throw "^ You must include a \"type\" property when creating a Control instance";
+        throw "^ You must include a \"type\" property when creating a Control instance.";
       }
       if (defn == null) {
         console.log(props);
-        throw "^ Unknown Control type: \"" + type + "\". First, check for typos. If everything looks good, this Control may have failed to load on time, which would mean there's a bug in the Control component.";
+        throw "^ Unknown Control type: \"" + type + "\".";
       }
       instancesByName = instancesByNameByType[type] != null ? instancesByNameByType[type] : instancesByNameByType[type] = {};
       if (!instancesByName[name]) {
         elm = ControlPanelView.createElement(props);
-        scope = defn(elm, props);
-        scope.element = elm;
+        scope = Scope(elm, null, defn, props);
         ControlPanelView.setup(scope, props);
         instancesByName[name] = {
           scope: scope,

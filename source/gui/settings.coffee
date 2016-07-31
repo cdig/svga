@@ -7,7 +7,7 @@ Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween
   TRS.move sliders, -128
   slider = Control
     name: "Background"
-    type: "Slider"
+    type: "slider"
     parent: sliders
     change: (v)->
       Action "Background:Set", v *.7 + 0.3

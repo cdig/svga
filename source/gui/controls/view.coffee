@@ -50,8 +50,8 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween","SVGReady"],
     consumedHeight = 0
     for row in rows
       for scope in row
-        w = scope.w * widthUnit + padX * (scope.w - 1)
-        h = scope.h * unit
+        w = 1 * widthUnit + padX * (scope.w - 1)
+        h = 1 * unit
         scope.x = scope.x * (widthUnit + padX) + padX
         scope.y = scope.y * unit + padY * (scope.y+1)
         scope.resize w, h
@@ -64,7 +64,7 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween","SVGReady"],
       elm = SVG.create "g", parent or g, ui: true
     
     layout: (scope)->
-      w = scope.w
+      w = 1
       if consumedCols + w > 4
         consumedCols = 0
         consumedRows++

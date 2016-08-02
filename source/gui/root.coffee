@@ -1,4 +1,4 @@
-Take ["Reaction", "SVG", "Tween", "ScopeReady"], (Reaction, SVG, Tween)->
+Take ["Reaction", "ScopeReady"], (Reaction)->
   
   root = document.querySelector "#root"
   

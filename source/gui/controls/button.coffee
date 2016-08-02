@@ -15,7 +15,7 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
       fill: "hsl(220, 0%, 30%)"
     
     w = label.getComputedTextLength()
-    h =
+    h = 10
     
     c = 1
     tickBG = (v)->
@@ -41,6 +41,7 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
         
       
       resize: (w, h)->
+        return
         SVG.attrs bg,
           width: w
           height: h

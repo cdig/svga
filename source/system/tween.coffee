@@ -41,7 +41,7 @@ Take ["Tick"], (Tick)->
   
   clone = (i, keys)->
     o = {}
-    o[key] = i[k] for key in keys
+    o[k] = i[k] for k in keys
     o
     
   

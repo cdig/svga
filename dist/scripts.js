@@ -9,46 +9,6 @@
         return console.log("start");
       };
     })(this));
-    Control.button("Reset", (function(_this) {
-      return function() {
-        return console.log("reset");
-      };
-    })(this));
-    Control.button("Start", (function(_this) {
-      return function() {
-        return console.log("start");
-      };
-    })(this));
-    Control.button("Reset", (function(_this) {
-      return function() {
-        return console.log("reset");
-      };
-    })(this));
-    Control.button("Start", (function(_this) {
-      return function() {
-        return console.log("start");
-      };
-    })(this));
-    Control.button("Reset", (function(_this) {
-      return function() {
-        return console.log("reset");
-      };
-    })(this));
-    Control.button("Start", (function(_this) {
-      return function() {
-        return console.log("start");
-      };
-    })(this));
-    Control.button("Reset", (function(_this) {
-      return function() {
-        return console.log("reset");
-      };
-    })(this));
-    Control.button("Start", (function(_this) {
-      return function() {
-        return console.log("start");
-      };
-    })(this));
     return Control.button("Reset", (function(_this) {
       return function() {
         return console.log("reset");
@@ -1073,7 +1033,7 @@
     });
   })();
 
-  Take(["Reaction", "SVG", "Tween", "ScopeReady"], function(Reaction, SVG, Tween) {
+  Take(["Reaction", "ScopeReady"], function(Reaction) {
     var root;
     root = document.querySelector("#root");
     Reaction("Root:Show", function() {
@@ -3126,64 +3086,96 @@
   });
 
   Take(["Tick"], function(Tick) {
-    var Tween, dist, eases, gc, getEase, tweens;
+    var Tween, clone, dist, eases, gc, getEaseFn, getSharedKeys, skipGC, tweens;
     tweens = [];
-    Tween = function(from, to, time, tween, next) {
-      if (next == null) {
-        next = null;
-      }
+    skipGC = false;
+    Tween = function(from, to, time, tween) {
+      var keys;
       if (typeof tween === "function") {
         tween = {
           tick: tween
         };
       }
       tween.multi = typeof from === "object";
-      tween.from = tween.multi ? clone(from) : {
+      if (tween.mutate == null) {
+        tween.mutate = tween.tick == null;
+      }
+      tween.keys = keys = tween.multi ? getSharedKeys(from, to) : ["v"];
+      tween.from = tween.multi ? clone(from, keys) : {
         v: from
       };
-      tween.to = tween.multi ? clone(to) : {
+      tween.to = tween.multi ? clone(to, keys) : {
         v: to
       };
-      tween.value = tween.mutate && tween.multi ? from : clone(tween.from);
-      tween.delta = dist(from, to);
+      tween.delta = dist(tween.from, tween.to, keys);
+      tween.value = tween.mutate && tween.multi ? from : clone(tween.from, keys);
       tween.time = Math.max(0, time);
-      if (tween.next == null) {
-        tween.next = next;
-      }
-      tween.ease = getEase(tween.ease);
+      tween.ease = getEaseFn(tween.ease);
       tween.pos = Math.min(1, tween.pos || 0);
+      tween.completed = false;
       tween.cancelled = false;
-      gc(tween.tick, tween.next, from);
+      gc(tween.tick, tween.from);
       tweens.push(tween);
       return tween;
     };
-    Tick(function(t, dt) {
-      var len, m, results, tween;
+    getSharedKeys = function(a, b) {
+      var k, results;
       results = [];
-      for (m = 0, len = tweens.length; m < len; m++) {
-        tween = tweens[m];
-        if (!tween.cancelled) {
-          if (tween.pos < 1) {
-            tween.pos = Math.min(1, tween.pos + dt / tween.time);
-            tween.value = tween.from + tween.delta * tween.ease(tween.pos);
-            results.push(tween.tick(tween.value, tween));
-          } else if (tween.next != null) {
-            if (typeof tween.next === "function") {
-              tween.next(tween.value, tween);
-            } else {
-              tweens.push(tween.next);
-            }
-            results.push(tween.next = null);
-          } else {
-            results.push(void 0);
-          }
+      for (k in a) {
+        if (b[k] != null) {
+          results.push(k);
         }
       }
       return results;
-    });
-    gc = function(tick, next, from) {
+    };
+    clone = function(i, keys) {
+      var k, len, m, o;
+      o = {};
+      for (m = 0, len = keys.length; m < len; m++) {
+        k = keys[m];
+        o[k] = i[k];
+      }
+      return o;
+    };
+    dist = function(from, to, keys) {
+      var k, len, m, o;
+      o = {};
+      for (m = 0, len = keys.length; m < len; m++) {
+        k = keys[m];
+        o[k] = to[k] - from[k];
+      }
+      return o;
+    };
+    getEaseFn = function(given) {
+      if (typeof given === "string") {
+        return eases[given] || (function() {
+          throw "Tween: \"" + given + "\" is not a value ease type.";
+        })();
+      } else if (typeof given === "function") {
+        return given;
+      } else {
+        return eases.cubic;
+      }
+    };
+    eases = {
+      linear: function(v) {
+        return v;
+      },
+      cubic: function(input) {
+        input = 2 * Math.min(1, Math.abs(input));
+        if (input < 1) {
+          return 0.5 * Math.pow(input, 3);
+        } else {
+          return 1 - 0.5 * Math.abs(Math.pow(input - 2, 3));
+        }
+      }
+    };
+    gc = function(tick, from) {
+      if (skipGC) {
+        return;
+      }
       return tweens = tweens.filter(function(tween) {
-        if (tween.pos >= 1) {
+        if (tween.completed) {
           return false;
         }
         if (tween.cancelled) {
@@ -3192,69 +3184,11 @@
         if ((tick != null) && tick === tween.tick) {
           return false;
         }
-        if ((next != null) && next === tween) {
-          return false;
-        }
         if ((from != null) && from === tween.from) {
           return false;
         }
         return true;
       });
-    };
-    eases = {
-      linear: function(v) {
-        return v;
-      },
-      cubic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
-        var inputDiff, outputDiff, p, power;
-        if (inputMin == null) {
-          inputMin = 0;
-        }
-        if (inputMax == null) {
-          inputMax = 1;
-        }
-        if (outputMin == null) {
-          outputMin = 0;
-        }
-        if (outputMax == null) {
-          outputMax = 1;
-        }
-        if (clip == null) {
-          clip = true;
-        }
-        if (inputMin === inputMax) {
-          return outputMin;
-        }
-        if (clip) {
-          input = Math.max(inputMin, Math.min(inputMax, input));
-        }
-        outputDiff = outputMax - outputMin;
-        inputDiff = inputMax - inputMin;
-        p = (input - inputMin) / (inputDiff / 2);
-        power = 3;
-        if (p < 1) {
-          return outputMin + outputDiff / 2 * Math.pow(p, power);
-        } else {
-          return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
-        }
-      }
-    };
-    getEase = function(given) {
-      if (typeof given === "string") {
-        return eases[given];
-      } else if (typeof given === "function") {
-        return given;
-      } else {
-        return eases.cubic;
-      }
-    };
-    dist = function(from, to) {
-      var k, o;
-      o = {};
-      for (k in from) {
-        o[k] = to[k] - from[k];
-      }
-      return o;
     };
     Tween.cancel = function() {
       var len, m, tween, tweensToCancel;
@@ -3265,26 +3199,34 @@
       }
       return gc();
     };
-    Tween.anima = function(current, opts) {
-      var _tick;
-      if (typeof opts === "function") {
-        opts;
-      } else {
-        opts.tick;
+    Tick(function(t, dt) {
+      var e, k, len, len1, m, n, ref, tween, v;
+      skipGC = true;
+      for (m = 0, len = tweens.length; m < len; m++) {
+        tween = tweens[m];
+        if (!(!tween.cancelled)) {
+          continue;
+        }
+        tween.pos = Math.min(1, tween.pos + dt / tween.time);
+        e = tween.ease(tween.pos);
+        ref = tween.keys;
+        for (n = 0, len1 = ref.length; n < len1; n++) {
+          k = ref[n];
+          tween.value[k] = tween.from[k] + tween.delta[k] * e;
+        }
+        v = tween.multi ? tween.value : tween.value.v;
+        if (typeof tween.tick === "function") {
+          tween.tick(v, tween);
+        }
+        if (tween.completed = tween.pos === 1) {
+          if (typeof tween.then === "function") {
+            tween.then(v, tween);
+          }
+        }
       }
-      _tick = function(value) {
-        return tick(current = value);
-      };
-      return function(to, time, next) {
-        if (time == null) {
-          time = 0;
-        }
-        if (next == null) {
-          next = null;
-        }
-        return Tween(current, to, time, _tick, next);
-      };
-    };
+      skipGC = false;
+      return gc();
+    });
     return Make("Tween", Tween);
   });
 
@@ -3303,7 +3245,8 @@
         fill: "hsl(220, 0%, 30%)"
       });
       w = label.getComputedTextLength();
-      h = c = 1;
+      h = 10;
+      c = 1;
       tickBG = function(v) {
         c = v;
         return SVG.attrs(bg, {
@@ -3339,6 +3282,7 @@
         },
         preferredSize: function() {},
         resize: function(w, h) {
+          return;
           SVG.attrs(bg, {
             width: w,
             height: h
@@ -3543,8 +3487,8 @@
         row = rows[m];
         for (n = 0, len1 = row.length; n < len1; n++) {
           scope = row[n];
-          w = scope.w * widthUnit + padX * (scope.w - 1);
-          h = scope.h * unit;
+          w = 1 * widthUnit + padX * (scope.w - 1);
+          h = 1 * unit;
           scope.x = scope.x * (widthUnit + padX) + padX;
           scope.y = scope.y * unit + padY * (scope.y + 1);
           scope.resize(w, h);
@@ -3565,7 +3509,7 @@
       },
       layout: function(scope) {
         var w;
-        w = scope.w;
+        w = 1;
         if (consumedCols + w > 4) {
           consumedCols = 0;
           consumedRows++;

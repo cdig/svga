@@ -3280,9 +3280,13 @@
             return handlers.push(props.action);
           }
         },
-        preferredSize: function() {},
+        preferredSize: function() {
+          return {
+            w: w,
+            h: h
+          };
+        },
         resize: function(w, h) {
-          return;
           SVG.attrs(bg, {
             width: w,
             height: h
@@ -3487,7 +3491,7 @@
         row = rows[m];
         for (n = 0, len1 = row.length; n < len1; n++) {
           scope = row[n];
-          w = 1 * widthUnit + padX * (scope.w - 1);
+          w = 2 * widthUnit + padX;
           h = 1 * unit;
           scope.x = scope.x * (widthUnit + padX) + padX;
           scope.y = scope.y * unit + padY * (scope.y + 1);
@@ -3509,7 +3513,7 @@
       },
       layout: function(scope) {
         var w;
-        w = 1;
+        w = 2;
         if (consumedCols + w > 4) {
           consumedCols = 0;
           consumedRows++;

@@ -38,10 +38,10 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
         handlers.push props.action if props.action?
       
       preferredSize: ()->
-        
+        w:w
+        h:h
       
       resize: (w, h)->
-        return
         SVG.attrs bg,
           width: w
           height: h

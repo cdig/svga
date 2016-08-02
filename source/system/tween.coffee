@@ -1,6 +1,6 @@
 # Tween
 # This is a half-decent value interpolator.
-# Note: If you are super good with CoffeeScript precedence rules, turn back now!
+# Note: If you aren't super good with CoffeeScript precedence rules, turn back now!
 
 Take ["Tick"], (Tick)->
   tweens = []
@@ -17,7 +17,7 @@ Take ["Tick"], (Tick)->
     # If you don't provide a tick function, we'll assume we're mutating the from object.
     tween.mutate ?= not tween.tick?
     
-    tween.keys = keys = if tween.multi then getKeys from, to else ["v"]
+    tween.keys = keys = if tween.multi then getSharedKeys from, to else ["v"]
     tween.from = if tween.multi then clone from, keys else {v:from}
     tween.to = if tween.multi then clone to, keys else {v:to}
     tween.delta = dist tween.from, tween.to, keys
@@ -25,6 +25,7 @@ Take ["Tick"], (Tick)->
     tween.time = Math.max 0, time
     tween.ease = getEaseFn tween.ease
     tween.pos = Math.min 1, tween.pos or 0
+    tween.completed = false
     tween.cancelled = false
     
     # Now is a great time to do some GC
@@ -34,8 +35,7 @@ Take ["Tick"], (Tick)->
     tween # Composable
 
   
-  getKeys = (a, b)->
-    # Returns an array of keys used by both a and b
+  getSharedKeys = (a, b)->
     k for k of a when b[k]?
   
   
@@ -74,7 +74,7 @@ Take ["Tick"], (Tick)->
   gc = (tick, from)->
     return if skipGC # Don't GC if we're in the middle of a tick!
     tweens = tweens.filter (tween)->
-      return false if tween.pos >= 1
+      return false if tween.completed
       return false if tween.cancelled
       return false if tick? and tick is tween.tick # this makes interruptions work normally
       return false if from? and from is tween.from # this makes interruptions work with mutate
@@ -98,19 +98,17 @@ Take ["Tick"], (Tick)->
   Tick (t, dt)->
     skipGC = true # It's probably not safe to GC in the middle of our tick loop
     for tween in tweens when not tween.cancelled
-      if tween.pos < 1
-        tween.pos = Math.min 1, tween.pos + dt / tween.time
-        e = tween.ease tween.pos
-        for k in tween.keys
-          tween.value[k] = tween.from[k] + tween.delta[k] * e
-        v = if tween.multi then tween.value else tween.value.v
-        tween.tick v, tween
-      else
-        v = if tween.multi then tween.value else tween.value.v
-        tween.then? v, tween
+      # It's safe for tween.time to be 0 because of the Math.min
+      tween.pos = Math.min 1, tween.pos + dt / tween.time
+      e = tween.ease tween.pos
+      for k in tween.keys
+        tween.value[k] = tween.from[k] + tween.delta[k] * e
+      v = if tween.multi then tween.value else tween.value.v
+      tween.tick? v, tween
+      tween.then? v, tween if tween.completed = tween.pos is 1
     # Hey, another great time to do some GC!
     skipGC = false
     gc()
-    
+  
   
   Make "Tween", Tween

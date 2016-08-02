@@ -3,6 +3,59 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice;
 
+  Take(["Control", "ScopeReady"], function(Control) {
+    Control.button("Start", (function(_this) {
+      return function() {
+        return console.log("start");
+      };
+    })(this));
+    Control.button("Reset", (function(_this) {
+      return function() {
+        return console.log("reset");
+      };
+    })(this));
+    Control.button("Start", (function(_this) {
+      return function() {
+        return console.log("start");
+      };
+    })(this));
+    Control.button("Reset", (function(_this) {
+      return function() {
+        return console.log("reset");
+      };
+    })(this));
+    Control.button("Start", (function(_this) {
+      return function() {
+        return console.log("start");
+      };
+    })(this));
+    Control.button("Reset", (function(_this) {
+      return function() {
+        return console.log("reset");
+      };
+    })(this));
+    Control.button("Start", (function(_this) {
+      return function() {
+        return console.log("start");
+      };
+    })(this));
+    Control.button("Reset", (function(_this) {
+      return function() {
+        return console.log("reset");
+      };
+    })(this));
+    Control.button("Start", (function(_this) {
+      return function() {
+        return console.log("start");
+      };
+    })(this));
+    return Control.button("Reset", (function(_this) {
+      return function() {
+        return console.log("reset");
+      };
+    })(this));
+  });
+
   Take(["Registry", "SVGPreprocessor", "DOMContentLoaded"], function(Registry, SVGPreprocessor) {
     var svgData;
     svgData = SVGPreprocessor.crawl(document.getElementById("root"));
@@ -17,57 +70,49 @@
   });
 
   Take(["Dev", "Registry", "ScopeCheck", "Symbol"], function(Dev, Registry, ScopeCheck, Symbol) {
-    var Scope;
-    return Make("Scope", Scope = function(element, parentScope, symbol, props) {
-      var attr, attrs, instanceName, len, len1, m, n, name1, ref, ref1, ref2, ref3, ref4, s, scope, scopeProcessor;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      if (symbol == null) {
-        symbol = null;
-      }
+    var Scope, findParent;
+    Make("Scope", Scope = function(symbol, element, props) {
+      var attr, attrs, base, len, len1, m, n, name1, parentScope, ref, scope, scopeProcessor;
       if (props == null) {
-        props = null;
+        props = {};
       }
-      instanceName = (ref = element.id) != null ? ref.split("_")[0] : void 0;
-      if (parentScope != null) {
-        ScopeCheck(parentScope, instanceName);
+      if (typeof symbol !== "function") {
+        throw "Scope() takes a function as the first arg. Got: " + symbol;
       }
-      if (symbol == null) {
-        symbol = (s = Symbol.forInstanceName(element.id)) != null ? s : (instanceName != null ? instanceName.indexOf("Line") : void 0) > -1 ? Symbol.forSymbolName("HydraulicLine") : (instanceName != null ? instanceName.indexOf("Field") : void 0) > -1 ? Symbol.forSymbolName("HydraulicField") : void 0;
+      if (!element instanceof SVGElement) {
+        throw "Scope() takes an element as the second argument. Got: " + element;
       }
       scope = symbol != null ? symbol(element, props) : {};
-      ScopeCheck(scope, "_symbol", "children", "element", "instanceName", "parent", "root");
+      parentScope = props.parent || findParent(element);
+      ScopeCheck(scope, "_symbol", "children", "element", "id", "parent", "root");
       element._scope = scope;
       scope._symbol = symbol;
       scope.children = [];
       scope.element = element;
-      scope.instanceName = instanceName || ("child" + ((parentScope != null ? parentScope.children.length : void 0) || 0));
+      scope.id = props.id || ("child" + ((parentScope != null ? parentScope.children.length : void 0) || 0));
       scope.parent = parentScope;
       scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
-      if (((ref1 = scope.parent) != null ? ref1[scope.instanceName] : void 0) != null) {
-        console.log(scope.parent);
-        throw "^^^ Has multiple children with the instance name \"" + scope.instanceName + "\".";
-      }
-      if ((ref2 = scope.parent) != null) {
-        if (ref2[name1 = scope.instanceName] == null) {
-          ref2[name1] = scope;
+      if (scope.parent != null) {
+        if (scope.parent[scope.id] != null) {
+          console.log(scope.parent);
+          throw "^ Has a child or property with the id \"" + scope.id + "\". This is conflicting with a child scope that wants to use that instance name.";
         }
+        if ((base = scope.parent)[name1 = scope.id] == null) {
+          base[name1] = scope;
+        }
+        scope.parent.children.push(scope);
       }
-      if ((ref3 = scope.parent) != null) {
-        ref3.children.push(scope);
-      }
-      ref4 = Registry.all("ScopeProcessor");
-      for (m = 0, len = ref4.length; m < len; m++) {
-        scopeProcessor = ref4[m];
+      ref = Registry.all("ScopeProcessor");
+      for (m = 0, len = ref.length; m < len; m++) {
+        scopeProcessor = ref[m];
         scopeProcessor(scope);
       }
       if (Dev) {
-        element.setAttribute("instance-name", scope.instanceName);
+        element.setAttribute("scope-id", scope.id);
         attrs = Array.prototype.slice.call(element.attributes);
         for (n = 0, len1 = attrs.length; n < len1; n++) {
           attr = attrs[n];
-          if (!(attr.name !== "instance-name")) {
+          if (!(attr.name !== "scope-id")) {
             continue;
           }
           element.removeAttributeNS(attr.namespaceURI, attr.name);
@@ -76,10 +121,19 @@
       }
       return scope;
     });
+    return findParent = function(element) {
+      while (element != null) {
+        if (element._scope != null) {
+          return element._scope;
+        }
+        element = element.parentNode;
+      }
+      return null;
+    };
   });
 
-  Take(["Scope", "SVG"], function(Scope, SVG) {
-    var SVGPreprocessor, buildScopes, defs, deprecations, processElm;
+  Take(["Scope", "SVG", "Symbol"], function(Scope, SVG, Symbol) {
+    var SVGPreprocessor, buildScopes, defs, deprecations, getSymbol, processElm;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     defs = {};
     Make("SVGPreprocessor", SVGPreprocessor = {
@@ -100,24 +154,7 @@
         return results;
       }
     });
-    buildScopes = function(tree, setups, parentScope) {
-      var len, m, ref, results, scope, subTarget;
-      if (parentScope == null) {
-        parentScope = null;
-      }
-      scope = Scope(tree.elm, parentScope);
-      if (scope.setup != null) {
-        setups.push(scope.setup.bind(scope));
-      }
-      ref = tree.sub;
-      results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        subTarget = ref[m];
-        results.push(buildScopes(subTarget, setups, scope));
-      }
-      return results;
-    };
-    return processElm = function(elm) {
+    processElm = function(elm) {
       var childElm, childNodes, clone, def, defId, len, m, ref, ref1, tree;
       tree = {
         elm: elm,
@@ -145,6 +182,39 @@
         }
       }
       return tree;
+    };
+    buildScopes = function(tree, setups, parentScope) {
+      var len, m, ref, results, scope, subTarget, symbol;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      symbol = getSymbol(tree.elm) || function() {
+        return {};
+      };
+      scope = Scope(symbol, tree.elm, {
+        parent: parentScope
+      });
+      if (scope.setup != null) {
+        setups.push(scope.setup.bind(scope));
+      }
+      ref = tree.sub;
+      results = [];
+      for (m = 0, len = ref.length; m < len; m++) {
+        subTarget = ref[m];
+        results.push(buildScopes(subTarget, setups, scope));
+      }
+      return results;
+    };
+    return getSymbol = function(elm) {
+      var baseName, ref;
+      baseName = (ref = elm.id) != null ? ref.split("_")[0] : void 0;
+      if ((baseName != null ? baseName.indexOf("Line") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicLine");
+      } else if ((baseName != null ? baseName.indexOf("Field") : void 0) > -1) {
+        return Symbol.forSymbolName("HydraulicField");
+      } else {
+        return Symbol.forInstanceName(elm.id);
+      }
     };
   });
 
@@ -780,9 +850,9 @@
       ControlPanel: {
         width: 240,
         unit: 48,
-        padX: 12,
-        padY: 12,
-        borderRadius: 8
+        padX: 0,
+        padY: 0,
+        borderRadius: 0
       }
     });
   });
@@ -1015,23 +1085,12 @@
   });
 
   Take(["Action", "Control", "GUI", "Pressure", "Reaction", "Resize", "SVG", "TRS", "Tween", "ScopeReady"], function(Action, Control, GUI, Pressure, Reaction, Resize, SVG, TRS, Tween) {
-    var alpha, g, slider, sliders, tick;
+    var alpha, g, sliders, tick;
     g = TRS(SVG.create("g", GUI.elm));
     sliders = TRS(SVG.create("g", g, {
       "text-anchor": "middle"
     }));
     TRS.move(sliders, -128);
-    slider = Control({
-      name: "Background",
-      type: "slider",
-      parent: sliders,
-      change: function(v) {
-        return Action("Background:Set", v * .7 + 0.3);
-      }
-    });
-    Reaction("Background:Set", function(v) {
-      return slider.set((v - .3) / .7);
-    });
     Resize(function() {
       var x, y;
       x = window.innerWidth / 2;
@@ -1415,6 +1474,9 @@
     SVG.prepend(document.rootElement, zoom);
     SVG.append(nav, root);
     initialSize = root.getBoundingClientRect();
+    if (!(initialSize.width > 0 && initialSize.height > 0)) {
+      return;
+    }
     ox = root._scope.x - initialSize.left - initialSize.width / 2;
     oy = root._scope.y - initialSize.top - initialSize.height / 2;
     xLimit.max = initialSize.width / 2;
@@ -1438,6 +1500,9 @@
     render = function() {
       var z;
       z = center.z * Math.pow(2, pos.z);
+      if (z === Infinity) {
+        throw "FUCK";
+      }
       SVG.attr(nav, "transform", "translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
       return SVG.attr(zoom, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ")");
     };
@@ -1482,7 +1547,6 @@
         return requestRender();
       },
       startScale: function() {
-        console.log(pos.z);
         return scaleStartPosZ = pos.z;
       },
       scale: function(s) {
@@ -1501,8 +1565,7 @@
       var dx, dy, dz;
       dx = a.x - b.x;
       dy = a.y - b.y;
-      dz = 200 * a.z - b.z;
-      return dist(dx, dy, dz);
+      return dz = 200 * a.z - b.z;
     };
     return dist = function(x, y, z) {
       if (z == null) {
@@ -2701,11 +2764,11 @@
           console.log(k);
           throw "SVG.attr requires a string as the second argument, got ^";
         }
-        if (v === void 0) {
-          return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
-        }
         if (elm._SVG_attr == null) {
           elm._SVG_attr = {};
+        }
+        if (v === void 0) {
+          return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
         }
         if (elm._SVG_attr[k] !== v) {
           elm._SVG_attr[k] = v;
@@ -2826,19 +2889,19 @@
     var Symbol;
     Symbol = function(symbolName, instanceNames, symbol) {
       var instanceName, len, m, results;
-      Registry.set("Symbol:BySymbolName", symbolName, symbol);
+      Registry.set("Symbols", symbolName, symbol);
       results = [];
       for (m = 0, len = instanceNames.length; m < len; m++) {
         instanceName = instanceNames[m];
-        results.push(Registry.set("Symbol:ByInstanceName", instanceName, symbol));
+        results.push(Registry.set("SymbolNames", instanceName, symbol));
       }
       return results;
     };
     Symbol.forSymbolName = function(symbolName) {
-      return Registry.get("Symbol:BySymbolName", symbolName);
+      return Registry.get("Symbols", symbolName);
     };
     Symbol.forInstanceName = function(instanceName) {
-      return Registry.get("Symbol:ByInstanceName", instanceName);
+      return Registry.get("SymbolNames", instanceName);
     };
     return Make("Symbol", Symbol);
   });
@@ -3063,33 +3126,34 @@
   });
 
   Take(["Tick"], function(Tick) {
-    var Tween, cubic, gc, tweens;
+    var Tween, dist, eases, gc, getEase, tweens;
     tweens = [];
-    Tween = function(from, to, time, opts, next) {
-      var tween;
-      if (typeof opts === "function") {
-        tween = {
-          tick: opts
-        };
-      } else {
-        tween = opts;
+    Tween = function(from, to, time, tween, next) {
+      if (next == null) {
+        next = null;
       }
-      tween.from = from;
-      tween.to = to;
-      tween.time = time;
-      if (next != null) {
+      if (typeof tween === "function") {
+        tween = {
+          tick: tween
+        };
+      }
+      tween.multi = typeof from === "object";
+      tween.from = tween.multi ? clone(from) : {
+        v: from
+      };
+      tween.to = tween.multi ? clone(to) : {
+        v: to
+      };
+      tween.value = tween.mutate && tween.multi ? from : clone(tween.from);
+      tween.delta = dist(from, to);
+      tween.time = Math.max(0, time);
+      if (tween.next == null) {
         tween.next = next;
       }
-      if (tween.pos == null) {
-        tween.pos = 0;
-      }
-      if (tween.ease == null) {
-        tween.ease = "easeInOut";
-      }
-      tween.value = 0;
-      tween.delta = to - from;
+      tween.ease = getEase(tween.ease);
+      tween.pos = Math.min(1, tween.pos || 0);
       tween.cancelled = false;
-      gc(tween.tick, tween.next);
+      gc(tween.tick, tween.next, from);
       tweens.push(tween);
       return tween;
     };
@@ -3100,11 +3164,15 @@
         tween = tweens[m];
         if (!tween.cancelled) {
           if (tween.pos < 1) {
-            tween.pos += dt / tween.time;
-            tween.value = tween.from + tween.delta * cubic(Math.min(1, tween.pos));
+            tween.pos = Math.min(1, tween.pos + dt / tween.time);
+            tween.value = tween.from + tween.delta * tween.ease(tween.pos);
             results.push(tween.tick(tween.value, tween));
           } else if (tween.next != null) {
-            tweens.push(tween.next);
+            if (typeof tween.next === "function") {
+              tween.next(tween.value, tween);
+            } else {
+              tweens.push(tween.next);
+            }
             results.push(tween.next = null);
           } else {
             results.push(void 0);
@@ -3113,7 +3181,7 @@
       }
       return results;
     });
-    gc = function(tick, next) {
+    gc = function(tick, next, from) {
       return tweens = tweens.filter(function(tween) {
         if (tween.pos >= 1) {
           return false;
@@ -3121,89 +3189,129 @@
         if (tween.cancelled) {
           return false;
         }
-        if (tween.tick === tick) {
+        if ((tick != null) && tick === tween.tick) {
           return false;
         }
-        if ((next != null) && tween === next) {
+        if ((next != null) && next === tween) {
+          return false;
+        }
+        if ((from != null) && from === tween.from) {
           return false;
         }
         return true;
       });
     };
-    cubic = function(input, inputMin, inputMax, outputMin, outputMax, clip) {
-      var inputDiff, outputDiff, p, power;
-      if (inputMin == null) {
-        inputMin = 0;
-      }
-      if (inputMax == null) {
-        inputMax = 1;
-      }
-      if (outputMin == null) {
-        outputMin = 0;
-      }
-      if (outputMax == null) {
-        outputMax = 1;
-      }
-      if (clip == null) {
-        clip = true;
-      }
-      if (inputMin === inputMax) {
-        return outputMin;
-      }
-      if (clip) {
-        input = Math.max(inputMin, Math.min(inputMax, input));
-      }
-      outputDiff = outputMax - outputMin;
-      inputDiff = inputMax - inputMin;
-      p = (input - inputMin) / (inputDiff / 2);
-      power = 3;
-      if (p < 1) {
-        return outputMin + outputDiff / 2 * Math.pow(p, power);
-      } else {
-        return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
+    eases = {
+      linear: function(v) {
+        return v;
+      },
+      cubic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        var inputDiff, outputDiff, p, power;
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        if (inputMin === inputMax) {
+          return outputMin;
+        }
+        if (clip) {
+          input = Math.max(inputMin, Math.min(inputMax, input));
+        }
+        outputDiff = outputMax - outputMin;
+        inputDiff = inputMax - inputMin;
+        p = (input - inputMin) / (inputDiff / 2);
+        power = 3;
+        if (p < 1) {
+          return outputMin + outputDiff / 2 * Math.pow(p, power);
+        } else {
+          return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
+        }
       }
     };
-    Tween.cancel = gc;
+    getEase = function(given) {
+      if (typeof given === "string") {
+        return eases[given];
+      } else if (typeof given === "function") {
+        return given;
+      } else {
+        return eases.cubic;
+      }
+    };
+    dist = function(from, to) {
+      var k, o;
+      o = {};
+      for (k in from) {
+        o[k] = to[k] - from[k];
+      }
+      return o;
+    };
+    Tween.cancel = function() {
+      var len, m, tween, tweensToCancel;
+      tweensToCancel = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      for (m = 0, len = tweensToCancel.length; m < len; m++) {
+        tween = tweensToCancel[m];
+        tween.cancelled = true;
+      }
+      return gc();
+    };
+    Tween.anima = function(current, opts) {
+      var _tick;
+      if (typeof opts === "function") {
+        opts;
+      } else {
+        opts.tick;
+      }
+      _tick = function(value) {
+        return tick(current = value);
+      };
+      return function(to, time, next) {
+        if (time == null) {
+          time = 0;
+        }
+        if (next == null) {
+          next = null;
+        }
+        return Tween(current, to, time, _tick, next);
+      };
+    };
     return Make("Tween", Tween);
   });
 
   Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, GUI, Input, SVG, TRS, Tween) {
     return Control("button", function(elm, props) {
-      var c, depress, enabled, handlers, innerBG, label, outerBG, release, scope, tickBG, u;
+      var bg, c, depress, h, handlers, label, release, scope, tickBG, u, w;
       handlers = [];
-      enabled = true;
       u = GUI.ControlPanel.unit;
-      outerBG = TRS(SVG.create("rect", elm, {
-        fill: "hsl(220, 12%, 30%)",
-        stroke: "hsl(220, 12%, 42%)",
-        "stroke-width": 1,
-        x: 0.5,
-        y: 0.5,
-        rx: 2,
-        ry: 2
+      bg = TRS(SVG.create("rect", elm, {
+        fill: "hsl(220, 12%, 80%)",
+        rx: 0,
+        ry: 0
       }));
-      innerBG = SVG.create("rect", elm, {
-        fill: "transparent",
-        stroke: "hsl(220, 12%, 24%)",
-        "stroke-width": 1,
-        x: 1.5,
-        y: 1.5,
-        rx: 2,
-        ry: 2
-      });
       label = SVG.create("text", elm, {
         textContent: props.name,
-        fill: "white"
+        fill: "hsl(220, 0%, 30%)"
       });
-      c = 1;
+      w = label.getComputedTextLength();
+      h = c = 1;
       tickBG = function(v) {
         c = v;
-        return SVG.attrs(outerBG, {
-          fill: "hsl(220, 12%, " + (v * 30) + "%)"
+        return SVG.attrs(bg, {
+          fill: "hsl(220, 12%, " + (v * 80) + "%)"
         });
       };
       depress = function() {
-        return Tween(c, .6, 0, tickBG);
+        return Tween(c, 0.9, 0, tickBG);
       };
       release = function() {
         return Tween(c, 1, .2, tickBG);
@@ -3211,14 +3319,12 @@
       Input(elm, {
         click: function() {
           var handler, len, m, results;
-          if (enabled) {
-            results = [];
-            for (m = 0, len = handlers.length; m < len; m++) {
-              handler = handlers[m];
-              results.push(handler());
-            }
-            return results;
+          results = [];
+          for (m = 0, len = handlers.length; m < len; m++) {
+            handler = handlers[m];
+            results.push(handler());
           }
+          return results;
         },
         down: depress,
         drag: depress,
@@ -3226,46 +3332,29 @@
         up: release
       });
       return scope = {
-        w: props.w || 2,
-        h: props.h || 1,
         attach: function(props) {
           if (props.action != null) {
             return handlers.push(props.action);
           }
         },
+        preferredSize: function() {},
         resize: function(w, h) {
-          SVG.attrs(outerBG, {
+          SVG.attrs(bg, {
             width: w,
             height: h
-          });
-          SVG.attrs(innerBG, {
-            width: w - 2,
-            height: h - 2
           });
           return SVG.attrs(label, {
             x: w / 2,
             y: h / 2 + 8
           });
-        },
-        disable: function() {
-          SVG.attrs(elm, {
-            disabled: true
-          });
-          return enabled = false;
-        },
-        enable: function() {
-          SVG.attrs(elm, {
-            disabled: null
-          });
-          return enabled = true;
         }
       };
     });
   });
 
   Take(["ControlPanelView", "Registry", "Scope"], function(ControlPanelView, Registry, Scope) {
-    var Control, build, instancesByNameByType, instantiate;
-    instancesByNameByType = {};
+    var Control, build, instancesById, instantiate;
+    instancesById = {};
     Make("Control", Control = function() {
       var args, fn, type;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
@@ -3287,32 +3376,27 @@
       };
     };
     return instantiate = function(props) {
-      var base1, defn, elm, instancesByName, name, scope, type;
-      type = props.type;
-      name = props.name || props.type;
-      defn = Registry.get("Control", type);
-      if (type == null) {
-        console.log(props);
-        throw "^ You must include a \"type\" property when creating a Control instance.";
+      var base1, defn, elm, scope, type;
+      if (instancesById[props.id] != null) {
+        return typeof (base1 = instancesById[props.id]).attach === "function" ? base1.attach(props) : void 0;
+      } else {
+        type = props.type;
+        if (type == null) {
+          console.log(props);
+          throw "^ You must include a \"type\" property when creating a Control instance.";
+        }
+        defn = Registry.get("Control", type);
+        if (defn == null) {
+          console.log(props);
+          throw "^ Unknown Control type: \"" + type + "\".";
+        }
+        elm = ControlPanelView.createElement(props.parent);
+        scope = Scope(defn, elm, props);
+        ControlPanelView.layout(scope);
+        if (props.id != null) {
+          return instancesById[props.id] = scope;
+        }
       }
-      if (defn == null) {
-        console.log(props);
-        throw "^ Unknown Control type: \"" + type + "\".";
-      }
-      instancesByName = instancesByNameByType[type] != null ? instancesByNameByType[type] : instancesByNameByType[type] = {};
-      if (!instancesByName[name]) {
-        elm = ControlPanelView.createElement(props);
-        scope = Scope(elm, null, defn, props);
-        ControlPanelView.setup(scope, props);
-        instancesByName[name] = {
-          scope: scope,
-          props: props
-        };
-      }
-      if (typeof (base1 = instancesByName[name].scope).attach === "function") {
-        base1.attach(props);
-      }
-      return instancesByName[name].scope;
     };
   });
 
@@ -3421,13 +3505,12 @@
       "class": "BG",
       width: GUI.ControlPanel.width,
       rx: GUI.ControlPanel.borderRadius,
-      ry: GUI.ControlPanel.borderRadius,
-      fill: "hsl(230, 6%, 17%)"
+      ry: GUI.ControlPanel.borderRadius
     });
     positionPanel = function() {
       var x, y;
-      x = window.innerWidth / 2 - GUI.ControlPanel.width / 2;
-      y = window.innerHeight / 2 - GUI.ControlPanel.width / 2;
+      x = (window.innerWidth / 2 - GUI.ControlPanel.width / 2) | 0;
+      y = (window.innerHeight / 2 - GUI.ControlPanel.width / 2) | 0;
       return TRS.move(g, x, y);
     };
     tick = function(v) {
@@ -3449,7 +3532,7 @@
       return SVG.attr(bg, "fill", "hsl(230, 10%, " + (l * 100) + "%)");
     });
     Take("ScopeReady", function() {
-      var consumedHeight, h, len, len1, m, n, padX, padY, panelWidth, row, scope, unit, w, widthUnit, x, y;
+      var consumedHeight, h, len, len1, m, n, padX, padY, panelWidth, row, scope, unit, w, widthUnit;
       padX = GUI.ControlPanel.padX;
       padY = GUI.ControlPanel.padY;
       unit = GUI.ControlPanel.unit;
@@ -3462,39 +3545,35 @@
           scope = row[n];
           w = scope.w * widthUnit + padX * (scope.w - 1);
           h = scope.h * unit;
-          x = scope.x * (widthUnit + padX) + padX;
-          y = scope.y * unit + padY * (scope.y + 1);
+          scope.x = scope.x * (widthUnit + padX) + padX;
+          scope.y = scope.y * unit + padY * (scope.y + 1);
           scope.resize(w, h);
-          TRS.move(scope.element, x, y);
-          consumedHeight = Math.max(consumedHeight, y + h);
+          consumedHeight = Math.max(consumedHeight, scope.y + h);
         }
       }
       return SVG.attr(bg, "height", consumedHeight + padY);
     });
     return Make("ControlPanelView", ControlPanelView = {
-      createElement: function(props) {
-        var parent;
-        parent = props.parent || g;
-        return TRS(SVG.create("g", parent, {
-          "class": props.name + " " + props.type,
-          ui: true
-        }));
-      },
-      setup: function(scope, props) {
-        var w;
-        if (props.parent != null) {
-          return scope.resize(256, 48);
-        } else {
-          w = scope.w;
-          if (consumedCols + w > 4) {
-            consumedCols = 0;
-            consumedRows++;
-          }
-          scope.x = consumedCols;
-          scope.y = consumedRows;
-          (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
-          return consumedCols += w;
+      createElement: function(parent) {
+        var elm;
+        if (parent == null) {
+          parent = null;
         }
+        return elm = SVG.create("g", parent || g, {
+          ui: true
+        });
+      },
+      layout: function(scope) {
+        var w;
+        w = scope.w;
+        if (consumedCols + w > 4) {
+          consumedCols = 0;
+          consumedRows++;
+        }
+        scope.x = consumedCols;
+        scope.y = consumedRows;
+        (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
+        return consumedCols += w;
       }
     });
   });

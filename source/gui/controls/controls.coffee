@@ -1,6 +1,6 @@
 Take ["ControlPanelView", "Registry", "Scope"], (ControlPanelView, Registry, Scope )->
   
-  instancesByNameByType = {}
+  instancesById = {}
   
   
   Make "Control", Control = (args...)->
@@ -17,27 +17,18 @@ Take ["ControlPanelView", "Registry", "Scope"], (ControlPanelView, Registry, Sco
     
   
   instantiate = (props)->
-    type = props.type
-    name = props.name or props.type
-    defn = Registry.get "Control", type
+    if instancesById[props.id]?
+      instancesById[props.id].attach? props
     
-    if not type? then console.log(props); throw "^ You must include a \"type\" property when creating a Control instance."
-    if not defn? then console.log(props); throw "^ Unknown Control type: \"#{type}\"."
-    
-    instancesByName = instancesByNameByType[type] ?= {}
-    
-    if not instancesByName[name]
-      elm = ControlPanelView.createElement props
+    else
+      type = props.type
+      if not type? then console.log(props); throw "^ You must include a \"type\" property when creating a Control instance."
       
-      # Can we get the View's scope in here?
-      scope = Scope elm, null, defn, props
+      defn = Registry.get "Control", type
+      if not defn? then console.log(props); throw "^ Unknown Control type: \"#{type}\"."
       
-      ControlPanelView.setup scope, props
+      elm = ControlPanelView.createElement props.parent
+      scope = Scope defn, elm, props
       
-      instancesByName[name] =
-        scope: scope
-        props: props
-    
-    instancesByName[name].scope.attach? props
-    
-    instancesByName[name].scope # Composable
+      ControlPanelView.layout scope
+      instancesById[props.id] = scope if props.id?

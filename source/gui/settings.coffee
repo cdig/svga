@@ -5,15 +5,16 @@ Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween
   
   sliders = TRS SVG.create "g", g, "text-anchor": "middle"
   TRS.move sliders, -128
-  slider = Control
-    name: "Background"
-    type: "slider"
-    parent: sliders
-    change: (v)->
-      Action "Background:Set", v *.7 + 0.3
-  
-  Reaction "Background:Set", (v)->
-    slider.set (v - .3) / .7
+
+  # slider = Control
+  #   name: "Background"
+  #   type: "slider"
+  #   parent: sliders
+  #   change: (v)->
+  #     Action "Background:Set", v *.7 + 0.3
+  #
+  # Reaction "Background:Set", (v)->
+  #   slider.set (v - .3) / .7
   
   Resize ()->
     x = window.innerWidth/2

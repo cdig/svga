@@ -16,12 +16,11 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween","SVGReady"],
     width: GUI.ControlPanel.width
     rx: GUI.ControlPanel.borderRadius
     ry: GUI.ControlPanel.borderRadius
-    fill: "hsl(230, 6%, 17%)"
   
   
   positionPanel = ()->
-    x = window.innerWidth/2 - GUI.ControlPanel.width/2
-    y = window.innerHeight/2 - GUI.ControlPanel.width/2
+    x = (window.innerWidth/2 - GUI.ControlPanel.width/2) |0
+    y = (window.innerHeight/2 - GUI.ControlPanel.width/2) |0
     TRS.move g, x, y
   
   tick = (v)->
@@ -53,30 +52,24 @@ Take ["GUI","Reaction","Resize","SVG","TopBar","TRS","Tween","SVGReady"],
       for scope in row
         w = scope.w * widthUnit + padX * (scope.w - 1)
         h = scope.h * unit
-        x = scope.x * (widthUnit + padX) + padX
-        y = scope.y * unit + padY * (scope.y+1)
+        scope.x = scope.x * (widthUnit + padX) + padX
+        scope.y = scope.y * unit + padY * (scope.y+1)
         scope.resize w, h
-        TRS.move scope.element, x, y
-        consumedHeight = Math.max consumedHeight, y + h
+        consumedHeight = Math.max consumedHeight, scope.y + h
     SVG.attr bg, "height", consumedHeight + padY
 
   
-  
   Make "ControlPanelView", ControlPanelView =
-    createElement: (props)->
-      parent = props.parent or g
-      TRS SVG.create "g", parent, class: "#{props.name} #{props.type}", ui: true
+    createElement: (parent = null)->
+      elm = SVG.create "g", parent or g, ui: true
     
-    setup: (scope, props)->
-      if props.parent?
-        scope.resize 256, 48
-      else
-        w = scope.w
-        if consumedCols + w > 4
-          consumedCols = 0
-          consumedRows++
-        scope.x = consumedCols
-        scope.y = consumedRows
-        (rows[consumedRows] ?= []).push scope
-        consumedCols += w
-        
+    layout: (scope)->
+      w = scope.w
+      if consumedCols + w > 4
+        consumedCols = 0
+        consumedRows++
+      scope.x = consumedCols
+      scope.y = consumedRows
+      (rows[consumedRows] ?= []).push scope
+      consumedCols += w
+      

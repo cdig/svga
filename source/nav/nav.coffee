@@ -17,13 +17,13 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   # SVG.create "rect", zoom, x:-6, y:-6, width:12, height:12, fill:"#F0F"
   
   initialSize = root.getBoundingClientRect()
+  return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty
   ox = root._scope.x - initialSize.left - initialSize.width/2
   oy = root._scope.y - initialSize.top - initialSize.height/2
   xLimit.max = initialSize.width/2
   yLimit.max = initialSize.height/2
   xLimit.min = -xLimit.max
   yLimit.min = -yLimit.max
-  
   
   Resize ()->
     width = window.innerWidth - GUI.ControlPanel.width
@@ -42,6 +42,7 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   
   render = ()->
     z = center.z * Math.pow 2, pos.z
+    if z is Infinity then throw "FUCK"
     SVG.attr nav, "transform", "translate(#{pos.x+ox},#{pos.y+oy})"
     SVG.attr zoom, "transform", "translate(#{center.x},#{center.y}) scale(#{z})"
   
@@ -55,7 +56,6 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
       timeY = .03 * Math.sqrt(Math.abs(p.y-pos.y)) or 0
       timeZ = .7 * Math.sqrt(Math.abs(p.z-pos.z)) or 0
       time = Math.sqrt timeX*timeX + timeY*timeY + timeZ*timeZ
-      
       Tween pos.x, p.x, time, ((v)->pos.x=v) if p.x?
       Tween pos.y, p.y, time, ((v)->pos.y=v) if p.y?
       Tween pos.z, p.z, time, ((v)->pos.z=v) if p.z?
@@ -68,7 +68,6 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
       requestRender()
     
     startScale: ()->
-      console.log pos.z
       scaleStartPosZ = pos.z
     
     scale: (s)->
@@ -84,7 +83,6 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
     dx = a.x - b.x
     dy = a.y - b.y
     dz = 200 * a.z - b.z
-    dist dx, dy, dz
   
   dist = (x, y, z = 0)->
     Math.sqrt x*x + y*y + z*z

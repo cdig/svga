@@ -1,4 +1,4 @@
-Take ["Scope", "SVG"], (Scope, SVG)->
+Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
   deprecations = ["controlPanel", "ctrlPanel", "navOverlay"]
   defs = {}
   
@@ -14,12 +14,6 @@ Take ["Scope", "SVG"], (Scope, SVG)->
       setup() for setup in setups by -1 # loop backwards, to set up children before parents
   
   
-  buildScopes = (tree, setups, parentScope = null)->
-    scope = Scope tree.elm, parentScope
-    setups.push scope.setup.bind(scope) if scope.setup?
-    buildScopes subTarget, setups, scope for subTarget in tree.sub
-
-  
   processElm = (elm)->
     tree =
       elm: elm
@@ -32,11 +26,12 @@ Take ["Scope", "SVG"], (Scope, SVG)->
       if (childElm.id in deprecations) or childElm.id?.indexOf("Mask") > -1
         console.log "##{childElm.id} is obsolete. Please remove it from your FLA and re-export this SVG."
         elm.removeChild childElm
-
+        
       else if childElm instanceof SVGGElement
         tree.sub.push processElm childElm
-
+        
       else if childElm instanceof SVGUseElement
+        # We make a clone of the use'd element in defs, so that we can reach in and change (eg) strokes/fills.
         defId = childElm.getAttribute "xlink:href"
         def = defs[defId] ?= SVG.defs.querySelector defId
         clone = def.cloneNode true
@@ -47,3 +42,25 @@ Take ["Scope", "SVG"], (Scope, SVG)->
           tree.sub.push processElm clone
     
     return tree
+  
+  
+  # BUILD SCOPES ##################################################################################
+  
+  
+  buildScopes = (tree, setups, parentScope = null)->
+    symbol = getSymbol(tree.elm) or ()-> {}
+    scope = Scope symbol, tree.elm, parent: parentScope
+    setups.push scope.setup.bind scope if scope.setup?
+    buildScopes subTarget, setups, scope for subTarget in tree.sub
+  
+  
+  getSymbol = (elm)->
+    # This is a bit of a legacy hack, where symbols are given names in Flash so that our code can hook up with them.
+    baseName = elm.id?.split("_")[0]
+    if baseName?.indexOf("Line") > -1
+      Symbol.forSymbolName "HydraulicLine"
+    else if baseName?.indexOf("Field") > -1
+      Symbol.forSymbolName "HydraulicField"
+    else
+      Symbol.forInstanceName elm.id
+  

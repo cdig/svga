@@ -64,9 +64,8 @@ do ()->
     attr: (elm, k, v)->
       unless elm then throw "SVG.attr was called with a null element"
       unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^"
-      # return elm.getAttribute k if v is undefined # TODO: try reading from the cache first
-      return elm._SVG_attr[k] ?= elm.getAttribute k if v is undefined
       elm._SVG_attr ?= {}
+      return elm._SVG_attr[k] ?= elm.getAttribute(k) if v is undefined
       if elm._SVG_attr[k] isnt v
         elm._SVG_attr[k] = v
         if props[k]?

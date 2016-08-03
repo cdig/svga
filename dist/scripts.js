@@ -4,8 +4,7 @@
     slice = [].slice;
 
   Take(["Control", "ScopeReady"], function(Control) {
-    Control({
-      type: "button",
+    Control.button({
       name: "Start",
       click: (function(_this) {
         return function() {
@@ -13,8 +12,71 @@
         };
       })(this)
     });
-    return Control({
-      type: "button",
+    Control.button({
+      name: "Reset",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "Start",
+      click: (function(_this) {
+        return function() {
+          return console.log("start");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "Reset",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "Start",
+      click: (function(_this) {
+        return function() {
+          return console.log("start");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "Reset",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "Start",
+      click: (function(_this) {
+        return function() {
+          return console.log("start");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "Reset",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "Start",
+      click: (function(_this) {
+        return function() {
+          return console.log("start");
+        };
+      })(this)
+    });
+    return Control.button({
       name: "Reset",
       click: (function(_this) {
         return function() {
@@ -1283,24 +1345,6 @@
     });
   })();
 
-  if ((base = SVGElement.prototype).contains == null) {
-    base.contains = function(node) {
-      while (node != null) {
-        if (this === node) {
-          return true;
-        }
-        node = node.parentNode;
-      }
-      return false;
-    };
-  }
-
-  if (Math.log2 == null) {
-    Math.log2 = function(x) {
-      return Math.log(x) / Math.LN2;
-    };
-  }
-
   Take(["Nav"], function(Nav) {
     window.addEventListener("gesturestart", function(e) {
       if (Nav.eventInside(e)) {
@@ -1640,6 +1684,24 @@
       return Math.sqrt(dx * dx + dy * dy);
     };
   });
+
+  if ((base = SVGElement.prototype).contains == null) {
+    base.contains = function(node) {
+      while (node != null) {
+        if (this === node) {
+          return true;
+        }
+        node = node.parentNode;
+      }
+      return false;
+    };
+  }
+
+  if (Math.log2 == null) {
+    Math.log2 = function(x) {
+      return Math.log(x) / Math.LN2;
+    };
+  }
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
     var root, schematic, update;
@@ -3297,44 +3359,23 @@
   });
 
   Take(["ControlPanel", "ControlPanelLayout", "Registry", "Scope"], function(ControlPanel, ControlPanelLayout, Registry, Scope) {
-    var Control, instancesById, instantiate;
-    instancesById = {};
-    Make("Control", Control = function() {
-      var args, defn, props, type;
-      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      if (typeof args[0] === "string") {
-        type = args[0], defn = args[1];
-        return Registry.set("Control", type, defn);
-      } else if (args[0] != null) {
-        props = args[0];
-        type = props.type;
-        if (type == null) {
-          console.log(props);
-          throw "^ You must include a \"type\" property when creating a Control instance.";
+    var Control, instances;
+    instances = {};
+    return Make("Control", Control = function(type, defn) {
+      return Control[type] = function(props) {
+        var base1, elm, scope;
+        if ((props.id != null) && (instances[props.id] != null)) {
+          return typeof (base1 = instances[props.id]).attach === "function" ? base1.attach(props) : void 0;
+        } else {
+          elm = ControlPanel.createElement(props.parent);
+          scope = Scope(elm, defn, props);
+          ControlPanelLayout.addScope(scope);
+          if (props.id != null) {
+            return instances[props.id] = scope;
+          }
         }
-        defn = Registry.get("Control", type);
-        if (defn == null) {
-          console.log(props);
-          throw "^ Unknown Control type: \"" + type + "\".";
-        }
-        return instantiate(defn, props);
-      } else {
-        throw "Control(null) is bad, don't do that.";
-      }
+      };
     });
-    return instantiate = function(defn, props) {
-      var base1, elm, scope;
-      if ((props.id != null) && (instancesById[props.id] != null)) {
-        return typeof (base1 = instancesById[props.id]).attach === "function" ? base1.attach(props) : void 0;
-      } else {
-        elm = ControlPanel.createElement(props.parent);
-        scope = Scope(elm, defn, props);
-        ControlPanelLayout.addScope(scope);
-        if (props.id != null) {
-          return instancesById[props.id] = scope;
-        }
-      }
-    };
   });
 
   Take(["GUI"], function(GUI) {

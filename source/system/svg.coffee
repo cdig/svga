@@ -58,25 +58,29 @@ do ()->
     attrs: (elm, attrs)->
       unless elm then throw "SVG.attrs was called with a null element"
       unless typeof attrs is "object" then console.log attrs; throw "SVG.attrs requires an object as the second argument, got ^"
-      SVG.attr elm, k, v for k, v of attrs
+      for k, v of attrs
+        SVG.attr elm, k, v
       elm # Composable
     
     attr: (elm, k, v)->
       unless elm then throw "SVG.attr was called with a null element"
-      unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^"
+      unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^^^"
       elm._SVG_attr ?= {}
-      return elm._SVG_attr[k] ?= elm.getAttribute(k) if v is undefined
-      if elm._SVG_attr[k] isnt v
-        elm._SVG_attr[k] = v
-        if props[k]?
-          elm[k] = v
-        else if v?
-          ns = if k is "xlink:href" then xlinkNS else null
-          elm.setAttributeNS ns, k, v
-        else
-          ns = if k is "xlink:href" then xlinkNS else null
-          elm.removeAttributeNS ns, k
-      v # Not Composable
+      # Note that we only do DOM->cache on a read call (not on a write call),
+      # to slightly avoid intermingling DOM reads and writes, which causes thrashing.
+      return elm._SVG_attr[k] ?= elm.getAttribute(k) if v is undefined # Read.
+      return v if elm._SVG_attr[k] is v # cache hit — bail
+      elm._SVG_attr[k] = v # update cache
+      return elm[k] = v if props[k]? # set DOM property
+      ns = if k is "xlink:href" then xlinkNS else null
+      # Turn camelCase into kebab-case, for convenience.
+      # CAUTION: This might cause cross-browser issues. If it does, handle this the way we handle props — a hash lookup.
+      _k = k.replace(/([A-Z])/g,"-$1").toLowerCase()
+      if v?
+        elm.setAttributeNS ns, _k, v # set DOM attribute
+      else
+        elm.removeAttributeNS ns, _k # remove DOM attribute
+      return v # Not Composable
 
     styles: (elm, styles)->
       unless elm then throw "SVG.styles was called with a null element"

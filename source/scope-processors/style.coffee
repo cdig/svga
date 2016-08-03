@@ -7,7 +7,6 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
     isLine = element.getAttribute("id")?.indexOf("Line") > -1
     textElement = element.querySelector "tspan" or element.querySelector "text"
     
-    # Check that we aren't about to clobber anything
     ScopeCheck scope, "pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"
     
     

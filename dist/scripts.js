@@ -3230,13 +3230,12 @@
     var gui;
     gui = GUI.ControlPanel;
     return Control("button", function(elm, props) {
-      var bg, depress, handlers, label, release, scope;
+      var bg, bgFill, depress, handlers, label, release, scope;
       handlers = [];
       SVG.attrs(elm, {
         ui: true
       });
       bg = Scope(SVG.create("rect", elm, {
-        fill: "hsl(220, 12%, 80%)",
         x: gui.pad,
         y: gui.pad,
         rx: gui.borderRadius
@@ -3245,16 +3244,17 @@
         textContent: props.name,
         fill: "hsl(220, 0%, 30%)"
       });
+      bgFill = function(v) {
+        return SVG.attrs(bg.element, {
+          fill: "hsl(220,12%," + (v * 80) + "%)"
+        });
+      };
+      bgFill(1);
       depress = function() {
-        return Tween(bg, {
-          alpha: 0.9
-        }, 0);
+        return Tween(1, .9, .2, bgFill);
       };
       release = function() {
-        bg.alpha = 0.8;
-        return Tween(bg, {
-          alpha: 1
-        }, .2);
+        return Tween(.8, 1, .2, bgFill);
       };
       Input(elm, {
         click: function() {

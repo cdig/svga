@@ -86,15 +86,6 @@ Take ["Tick"], (Tick)->
     gc() # Aww sure, let's do a GC!
   
   
-  # WE MIGHT NOT NEED THIS NOW THAT WE HAVE MUTATE
-  # Anima is a nice way to create a stateful animation that stores its state internally
-  # Tween.anima = (from, opts)->
-  #   tick = if typeof opts is "function" then opts else opts.tick
-  #   opts.tick = (value)-> tick? from = value
-  #   return (to, time = 0)-> # This is the "anima"
-  #     return Tween from, to, time, opts # This is the "animatween"
-  
-  
   Tick (t, dt)->
     skipGC = true # It's probably not safe to GC in the middle of our tick loop
     for tween in tweens when not tween.cancelled

@@ -7,7 +7,6 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, GUI, Input,
     SVG.attrs elm, ui: true
     
     bg = Scope SVG.create "rect", elm,
-      fill:"hsl(220, 12%, 80%)"
       x: gui.pad
       y: gui.pad
       rx: gui.borderRadius
@@ -15,9 +14,12 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, GUI, Input,
     label = SVG.create "text", elm,
       textContent: props.name
       fill: "hsl(220, 0%, 30%)"
-
-    depress = ()-> Tween bg, {alpha:0.9}, 0
-    release = ()-> bg.alpha=0.8; Tween bg, {alpha:1}, .2
+    
+    bgFill = (v)-> SVG.attrs bg.element, fill: "hsl(220,12%,#{v*80}%)"
+    bgFill 1
+    
+    depress = ()-> Tween 1, .9, .2, bgFill
+    release = ()-> Tween .8, 1, .2, bgFill
     
     Input elm,
       click: ()-> handler() for handler in handlers

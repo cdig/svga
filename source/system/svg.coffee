@@ -13,15 +13,18 @@ do ()->
   # This is used to distinguish props from attrs, so we can set both with SVG.attr
   propNames =
     textContent: true
-    # additional propNames will be listed here as needed
+    # additional prop names will be listed here as needed
   
   # This is used to cache normalized keys, and to provide defaults for keys that shouldn't be normalized
   attrNames =
     viewBox: "viewBox"
     # additional attr names will be listed here as needed
   
-  # See the comment in SVGReadyForMutation() below.
+  # We want to wait until SVGReady fires before we change the structure of the DOM.
+  # However, we can't just Take "SVGReady" at the top, because other systems want
+  # to use us in safe, non-structural ways before SVGReady has fired. So we do this:
   SVGReady = false
+  CheckSVGReady = ()-> SVGReady or (SVGReady = Take "SVGReady")
   
   
   Make "SVG", SVG =
@@ -36,7 +39,7 @@ do ()->
     
     clone: (source, parent, attrs)->
       throw "Clone source is undefined in SVG.clone(source, parent, attrs)" unless source?
-      throw "SVG.clone() called before SVGReady" unless SVGReadyForMutation()
+      throw "SVG.clone() called before SVGReady" unless CheckSVGReady()
       elm = document.createElementNS svgNS, "g"
       SVG.attr elm, attr.name, attr.value for attr in source.attributes
       SVG.attrs elm, id: null
@@ -46,12 +49,12 @@ do ()->
       elm # Composable
     
     append: (parent, child)->
-      throw "SVG.append() called before SVGReady" unless SVGReadyForMutation()
+      throw "SVG.append() called before SVGReady" unless CheckSVGReady()
       parent.appendChild child
       child # Composable
     
     prepend: (parent, child)->
-      throw "SVG.prepend() called before SVGReady" unless SVGReadyForMutation()
+      throw "SVG.prepend() called before SVGReady" unless CheckSVGReady()
       if parent.hasChildNodes()
         parent.insertBefore child, parent.firstChild
       else
@@ -97,12 +100,3 @@ do ()->
       if elm._SVG_style[k] isnt v
         elm.style[k] = elm._SVG_style[k] = v
       v # Not Composable
-  
-  
-  SVGReadyForMutation = ()->
-    # We have to do some extra nonsense to check that SVGReady has been fired,
-    # because other systems that want to use us might have SVGReady fire for them
-    # before it fires for us. So, the first time we run, we'll do a synchronous Take
-    # to make sure that SVGReady has indeed fired, and that we're not being called by
-    # a system too early in initialization (ie: before it's safe to mutate the DOM).
-    return SVGReady or (SVGReady = Take "SVGReady")

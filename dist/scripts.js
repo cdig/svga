@@ -1283,6 +1283,24 @@
     });
   })();
 
+  if ((base = SVGElement.prototype).contains == null) {
+    base.contains = function(node) {
+      while (node != null) {
+        if (this === node) {
+          return true;
+        }
+        node = node.parentNode;
+      }
+      return false;
+    };
+  }
+
+  if (Math.log2 == null) {
+    Math.log2 = function(x) {
+      return Math.log(x) / Math.LN2;
+    };
+  }
+
   Take(["Nav"], function(Nav) {
     window.addEventListener("gesturestart", function(e) {
       if (Nav.eventInside(e)) {
@@ -1622,24 +1640,6 @@
       return Math.sqrt(dx * dx + dy * dy);
     };
   });
-
-  if ((base = SVGElement.prototype).contains == null) {
-    base.contains = function(node) {
-      while (node != null) {
-        if (this === node) {
-          return true;
-        }
-        node = node.parentNode;
-      }
-      return false;
-    };
-  }
-
-  if (Math.log2 == null) {
-    Math.log2 = function(x) {
-      return Math.log(x) / Math.LN2;
-    };
-  }
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
     var root, schematic, update;
@@ -2679,7 +2679,7 @@
   });
 
   (function() {
-    var SVG, SVGReady, SVGReadyForMutation, attrNames, defs, propNames, root, svgNS, xlinkNS;
+    var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svgNS, xlinkNS;
     root = document.rootElement;
     defs = root.querySelector("defs");
     svgNS = "http://www.w3.org/2000/svg";
@@ -2691,7 +2691,10 @@
       viewBox: "viewBox"
     };
     SVGReady = false;
-    Make("SVG", SVG = {
+    CheckSVGReady = function() {
+      return SVGReady || (SVGReady = Take("SVGReady"));
+    };
+    return Make("SVG", SVG = {
       root: root,
       defs: defs,
       create: function(type, parent, attrs) {
@@ -2710,7 +2713,7 @@
         if (source == null) {
           throw "Clone source is undefined in SVG.clone(source, parent, attrs)";
         }
-        if (!SVGReadyForMutation()) {
+        if (!CheckSVGReady()) {
           throw "SVG.clone() called before SVGReady";
         }
         elm = document.createElementNS(svgNS, "g");
@@ -2736,14 +2739,14 @@
         return elm;
       },
       append: function(parent, child) {
-        if (!SVGReadyForMutation()) {
+        if (!CheckSVGReady()) {
           throw "SVG.append() called before SVGReady";
         }
         parent.appendChild(child);
         return child;
       },
       prepend: function(parent, child) {
-        if (!SVGReadyForMutation()) {
+        if (!CheckSVGReady()) {
           throw "SVG.prepend() called before SVGReady";
         }
         if (parent.hasChildNodes()) {
@@ -2835,9 +2838,6 @@
         return v;
       }
     });
-    return SVGReadyForMutation = function() {
-      return SVGReady || (SVGReady = Take("SVGReady"));
-    };
   })();
 
   Take("Registry", function(Registry) {

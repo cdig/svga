@@ -6,8 +6,8 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   zLimit = min: 0, max: 3
   scaleStartPosZ = 0
   
-  zoom = SVG.create "g", null, "x-zoom":""
-  nav = SVG.create "g", zoom, "x-nav":""
+  zoom = SVG.create "g", null, xZoom:""
+  nav = SVG.create "g", zoom, xNav:""
   root = document.getElementById "root" # This is the "root" symbol, not to be confused with the <svg> aka rootElement
   SVG.prepend document.rootElement, zoom
   SVG.append nav, root

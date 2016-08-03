@@ -13,9 +13,11 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
     
     applyVisibility = ()->
       if visible and alpha > 0
-        parent.replaceChild element, placeholder
+        if placeholder.parentNode?
+          parent.replaceChild element, placeholder
       else
-        parent.replaceChild placeholder, element
+        if element.parentNode?
+          parent.replaceChild placeholder, element
 
     
     # scope.style = (key, val)-> SVG.style element, key, val

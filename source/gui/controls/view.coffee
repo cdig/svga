@@ -3,12 +3,12 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "TRS"], (ControlPanelLayout,
   
   
   g = TRS SVG.create "g", GUI.elm,
-    "x-controls": ""
-    "font-size": 20
-    "text-anchor": "middle"
+    xControls: ""
+    fontSize: 20
+    textAnchor: "middle"
   
   bg = SVG.create "rect", g,
-    "x-bg": ""
+    xBg: ""
     x: -gui.pad
     y: -gui.pad
     width: gui.width + gui.pad*2
@@ -23,16 +23,16 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "TRS"], (ControlPanelLayout,
   
   Take "ScopeReady", ()->
     h = ControlPanelLayout.performLayout()
-    SVG.attr bg, "height", h + gui.pad*2
+    SVG.attrs bg, height: h + gui.pad*2
   
   
   Make "ControlPanel", ControlPanelView =
     createElement: (parent = null)->
       elm = SVG.create "g", parent or g
-
-
+  
+  
   # Reaction "ControlPanel:Show", ()-> Tween panelX, 1, 0.7, tick
   # Reaction "ControlPanel:Hide", ()-> Tween panelX, -.2, 0.7, tick
   # Reaction "Background:Set", (v)->
   #   l = (v + .4) % 1
-  #   SVG.attr bg, "fill", "hsl(230, 10%, #{l*100}%)"
+  #   SVG.attrs bg, fill: "hsl(230, 10%, #{l*100}%)"

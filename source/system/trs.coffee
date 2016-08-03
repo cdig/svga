@@ -1,9 +1,12 @@
+# These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
+# They're not to be used by content, since they might endure breaking changes at any time.
+# They may be used by Controls, since those are a more advanced feature of SVGA.
+
 Take ["RAF", "SVG"], (RAF, SVG)->
-  
   
   TRS = (elm, debugColor)->
     if not elm? then console.log elm; throw "^ Null element passed to TRS(elm)"
-    wrapper = SVG.create "g", elm.parentNode, "x-trs": ""
+    wrapper = SVG.create "g", elm.parentNode, xTrs: ""
     SVG.append wrapper, elm
     if debugColor? then SVG.create "rect", wrapper, class: "Debug", x:-2, y:-2, width:4, height:4, fill:debugColor
     elm._trs = v =

@@ -1,5 +1,6 @@
 # These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
 # They're not to be used by content, since they might endure breaking changes at any time.
+# They may be used by Controls, since those are a more advanced feature of SVGA.
 
 do ()->
   

@@ -6,7 +6,7 @@ Take ["Tick"], (Tick)->
   tweens = []
   skipGC = false
   
-  Tween = (from, to, time, tween)->
+  Tween = (from, to, time, tween = {})->
     
     # The 4th arg can be a tick function or an options object
     tween = {tick: tween} if typeof tween is "function"
@@ -17,7 +17,7 @@ Take ["Tick"], (Tick)->
     # If you don't provide a tick function, we'll assume we're mutating the from object.
     tween.mutate ?= not tween.tick?
     
-    tween.keys = keys = if tween.multi then getSharedKeys from, to else ["v"]
+    tween.keys = keys = if tween.multi then getKeys to else ["v"]
     tween.from = if tween.multi then clone from, keys else {v:from}
     tween.to = if tween.multi then clone to, keys else {v:to}
     tween.delta = dist tween.from, tween.to, keys
@@ -35,8 +35,8 @@ Take ["Tick"], (Tick)->
     tween # Composable
 
   
-  getSharedKeys = (a, b)->
-    k for k of a when b[k]?
+  getKeys = (o)->
+    k for k of o
   
   
   clone = (i, keys)->

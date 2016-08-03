@@ -34,3 +34,9 @@ Take "SVG", (SVG)->
   #                                                 .5  1   .5   0  20
   #                                                 0   0   .5   0   0
   #                                                 0   0   0    1   0"
+  #
+  # NOTE: SVG.createColorMatrixFilter has been removed, but here's what it did:
+  # createColorMatrixFilter: (name, values)->
+  #   filter = SVG.create "filter", defs, id: name
+  #   SVG.create "feColorMatrix", filter, in: "SourceGraphic", type: "matrix", values: values
+  #   filter # Not Composable

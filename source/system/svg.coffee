@@ -20,18 +20,13 @@ do ()->
     viewBox: "viewBox"
     # additional attr names will be listed here as needed
   
-  # We wait for the SVGReady event, fired by core/main.coffee, to tell us that it's safe to mutate the DOM.
+  # See the comment in SVGReadyForMutation() below.
   SVGReady = false
   
   
-  SVG =
+  Make "SVG", SVG =
     root: root
     defs: defs
-    
-    move: (elm, x, y = 0)-> throw "Don't use SVG.move()"
-    rotate: (elm, r)-> throw "Don't use SVG.rotate()"
-    origin: (elm, ox, oy)-> throw "Don't use SVG.origin()"
-    scale: (elm, x, y = x)-> throw "Don't use SVG.scale()"
     
     create: (type, parent, attrs)->
       elm = document.createElementNS svgNS, type
@@ -102,51 +97,12 @@ do ()->
       if elm._SVG_style[k] isnt v
         elm.style[k] = elm._SVG_style[k] = v
       v # Not Composable
-    
-    grey: (elm, l)->
-      SVG.attr elm, "fill", "hsl(0, 0%, #{l*100}%)"
-      elm # Composable
-    
-    hsl: (elm, h, s, l)->
-      SVG.attr elm, "fill", "hsl(#{h*360}, #{s*100}%, #{l*100}%)"
-      elm # Composable
-    
-    createGradient: (name, vertical, stops...)->
-      attrs = if vertical then { id: name, x2: 0, y2: 1 } else { id: name }
-      gradient = SVG.create "linearGradient", defs, attrs
-      createStops gradient, stops
-      gradient # Not Composable
-    
-    createRadialGradient: (name, stops...)->
-      gradient = SVG.create "radialGradient", defs, id: name
-      createStops gradient, stops
-      gradient # Not Composable
-    
-    createColorMatrixFilter: (name, values)->
-      filter = SVG.create "filter", defs, id: name
-      SVG.create "feColorMatrix", filter, in: "SourceGraphic", type: "matrix", values: values
-      filter # Not Composable
-  
-  
-  createStops = (gradient, stops)->
-    stops = if stops[0] instanceof Array then stops[0] else stops
-    for stop, i in stops
-      attrs = if typeof stop is "string"
-        { "stop-color": stop, offset: (100 * i/(stops.length-1)) + "%" }
-      else
-        { "stop-color": stop.color, offset: (100 * stop.offset) + "%" }
-      SVG.create "stop", gradient, attrs
-    null # Not Composable
   
   
   SVGReadyForMutation = ()->
     # We have to do some extra nonsense to check that SVGReady has been fired,
     # because other systems that want to use us might have SVGReady fire for them
-    # before it fires for us. So, the first time we run, we'll do a synchronous
-    # take to make sure that SVGReady has indeed fired, and that we're not being
-    # called by a system too early in initialization (ie: before it's safe to
-    # mutate the DOM).
+    # before it fires for us. So, the first time we run, we'll do a synchronous Take
+    # to make sure that SVGReady has indeed fired, and that we're not being called by
+    # a system too early in initialization (ie: before it's safe to mutate the DOM).
     return SVGReady or (SVGReady = Take "SVGReady")
-  
-  
-  Make "SVG", SVG

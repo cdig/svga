@@ -1,5 +1,5 @@
-Take ["Registry","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
-(      Registry , GUI , Input , Reaction , Resize , SVG , TRS)->
+Take ["Registry","Gradient","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
+(      Registry , Gradient , GUI , Input , Reaction , Resize , SVG , TRS)->
   requested = []
   instances = {}
   menu = null
@@ -10,7 +10,7 @@ Take ["Registry","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
   
   topBar = SVG.create "g", GUI.elm, class: "TopBar"
   bg = SVG.create "rect", topBar, height: GUI.TopBar.height, fill: "url(#TopBarGradient)"
-  SVG.createGradient "TopBarGradient", false, "#35488d", "#5175bd", "#35488d"
+  Gradient.createLinear "TopBarGradient", false, "#35488d", "#5175bd", "#35488d"
   container = TRS SVG.create "g", topBar, class: "Elements"
     
   # Place us above the click-to-focus element

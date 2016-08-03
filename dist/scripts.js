@@ -4,16 +4,24 @@
     slice = [].slice;
 
   Take(["Control", "ScopeReady"], function(Control) {
-    Control.button("Start", (function(_this) {
-      return function() {
-        return console.log("start");
-      };
-    })(this));
-    return Control.button("Reset", (function(_this) {
-      return function() {
-        return console.log("reset");
-      };
-    })(this));
+    Control({
+      type: "button",
+      name: "Start",
+      click: (function(_this) {
+        return function() {
+          return console.log("start");
+        };
+      })(this)
+    });
+    return Control({
+      type: "button",
+      name: "Reset",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
   });
 
   Take(["Registry", "SVGPreprocessor", "DOMContentLoaded"], function(Registry, SVGPreprocessor) {
@@ -31,7 +39,7 @@
 
   Take(["Dev", "Registry", "ScopeCheck", "Symbol"], function(Dev, Registry, ScopeCheck, Symbol) {
     var Scope, findParent;
-    Make("Scope", Scope = function(symbol, element, props) {
+    Make("Scope", Scope = function(element, symbol, props) {
       var attr, attrs, base, len, len1, m, n, name1, parentScope, ref, scope, scopeProcessor;
       if (props == null) {
         props = {};
@@ -151,7 +159,7 @@
       symbol = getSymbol(tree.elm) || function() {
         return {};
       };
-      scope = Scope(symbol, tree.elm, {
+      scope = Scope(tree.elm, symbol, {
         parent: parentScope
       });
       if (scope.setup != null) {
@@ -3257,7 +3265,7 @@
         return Tween(c, 0.9, 0, tickBG);
       };
       release = function() {
-        return Tween(c, 1, .2, tickBG);
+        return Tween(0.9, 1, .2, tickBG);
       };
       Input(elm, {
         click: function() {
@@ -3271,7 +3279,6 @@
         },
         down: depress,
         drag: depress,
-        out: release,
         up: release
       });
       return scope = {
@@ -3300,34 +3307,17 @@
     });
   });
 
-  Take(["ControlPanelView", "Registry", "Scope"], function(ControlPanelView, Registry, Scope) {
-    var Control, build, instancesById, instantiate;
+  Take(["ControlPanel", "ControlPanelLayout", "Registry", "Scope"], function(ControlPanel, ControlPanelLayout, Registry, Scope) {
+    var Control, instancesById, instantiate;
     instancesById = {};
     Make("Control", Control = function() {
-      var args, fn, type;
+      var args, defn, props, type;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       if (typeof args[0] === "string") {
-        type = args[0], fn = args[1];
-        Control[type] = build(type);
-        return Registry.set("Control", type, fn);
-      } else {
-        return instantiate.apply(null, args);
-      }
-    });
-    build = function(type) {
-      return function(name, action) {
-        return instantiate({
-          type: type,
-          name: name,
-          action: action
-        });
-      };
-    };
-    return instantiate = function(props) {
-      var base1, defn, elm, scope, type;
-      if (instancesById[props.id] != null) {
-        return typeof (base1 = instancesById[props.id]).attach === "function" ? base1.attach(props) : void 0;
-      } else {
+        type = args[0], defn = args[1];
+        return Registry.set("Control", type, defn);
+      } else if (args[0] != null) {
+        props = args[0];
         type = props.type;
         if (type == null) {
           console.log(props);
@@ -3338,14 +3328,67 @@
           console.log(props);
           throw "^ Unknown Control type: \"" + type + "\".";
         }
-        elm = ControlPanelView.createElement(props.parent);
-        scope = Scope(defn, elm, props);
-        ControlPanelView.layout(scope);
+        return instantiate(defn, props);
+      } else {
+        throw "Control(null) is bad, don't do that.";
+      }
+    });
+    return instantiate = function(defn, props) {
+      var base1, elm, scope;
+      if ((props.id != null) && (instancesById[props.id] != null)) {
+        return typeof (base1 = instancesById[props.id]).attach === "function" ? base1.attach(props) : void 0;
+      } else {
+        elm = ControlPanel.createElement(props.parent);
+        scope = Scope(elm, defn, props);
+        ControlPanelLayout.addScope(scope);
         if (props.id != null) {
           return instancesById[props.id] = scope;
         }
       }
     };
+  });
+
+  Take(["GUI"], function(GUI) {
+    var consumedCols, consumedRows, rows;
+    consumedCols = 0;
+    consumedRows = 0;
+    rows = [];
+    return Make("ControlPanelLayout", {
+      addScope: function(scope) {
+        var w;
+        w = 2;
+        if (consumedCols + w > 4) {
+          consumedCols = 0;
+          consumedRows++;
+        }
+        scope.x = consumedCols;
+        scope.y = consumedRows;
+        (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
+        return consumedCols += w;
+      },
+      performLayout: function() {
+        var consumedHeight, h, len, len1, m, n, padX, padY, panelWidth, row, scope, unit, w, widthUnit;
+        padX = GUI.ControlPanel.padX;
+        padY = GUI.ControlPanel.padY;
+        unit = GUI.ControlPanel.unit;
+        panelWidth = GUI.ControlPanel.width;
+        widthUnit = (panelWidth - padX * 5) / 4;
+        consumedHeight = 0;
+        for (m = 0, len = rows.length; m < len; m++) {
+          row = rows[m];
+          for (n = 0, len1 = row.length; n < len1; n++) {
+            scope = row[n];
+            w = 2 * widthUnit + padX;
+            h = 1 * unit;
+            scope.x = scope.x * (widthUnit + padX) + padX;
+            scope.y = scope.y * unit + padY * (scope.y + 1);
+            scope.resize(w, h);
+            consumedHeight = Math.max(consumedHeight, scope.y + h);
+          }
+        }
+        return consumedHeight + padY;
+      }
+    });
   });
 
   Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, GUI, Input, SVG, TRS, Tween) {
@@ -3438,70 +3481,31 @@
     });
   });
 
-  Take(["GUI", "Reaction", "Resize", "SVG", "TopBar", "TRS", "Tween", "SVGReady"], function(GUI, Reaction, Resize, SVG, TopBar, TRS, Tween) {
-    var ControlPanelView, bg, consumedCols, consumedRows, g, panelX, positionPanel, rows, tick;
-    consumedCols = 0;
-    consumedRows = 0;
-    rows = [];
-    panelX = 1;
+  Take(["ControlPanelLayout", "GUI", "Resize", "SVG", "TRS"], function(ControlPanelLayout, GUI, Resize, SVG, TRS) {
+    var ControlPanelView, bg, g;
     g = TRS(SVG.create("g", GUI.elm, {
-      "class": "Controls",
+      "x-controls": "",
       "font-size": 20,
       "text-anchor": "middle"
     }));
     bg = SVG.create("rect", g, {
-      "class": "BG",
+      "x-bg": "",
       width: GUI.ControlPanel.width,
       rx: GUI.ControlPanel.borderRadius,
       ry: GUI.ControlPanel.borderRadius
     });
-    positionPanel = function() {
+    Resize(function() {
       var x, y;
       x = (window.innerWidth / 2 - GUI.ControlPanel.width / 2) | 0;
       y = (window.innerHeight / 2 - GUI.ControlPanel.width / 2) | 0;
       return TRS.move(g, x, y);
-    };
-    tick = function(v) {
-      panelX = v;
-      return positionPanel();
-    };
-    Resize(function() {
-      return positionPanel();
-    });
-    Reaction("ControlPanel:Show", function() {
-      return Tween(panelX, 1, 0.7, tick);
-    });
-    Reaction("ControlPanel:Hide", function() {
-      return Tween(panelX, -.2, 0.7, tick);
-    });
-    Reaction("Background:Set", function(v) {
-      var l;
-      l = (v + .4) % 1;
-      return SVG.attr(bg, "fill", "hsl(230, 10%, " + (l * 100) + "%)");
     });
     Take("ScopeReady", function() {
-      var consumedHeight, h, len, len1, m, n, padX, padY, panelWidth, row, scope, unit, w, widthUnit;
-      padX = GUI.ControlPanel.padX;
-      padY = GUI.ControlPanel.padY;
-      unit = GUI.ControlPanel.unit;
-      panelWidth = GUI.ControlPanel.width;
-      widthUnit = (panelWidth - padX * 5) / 4;
-      consumedHeight = 0;
-      for (m = 0, len = rows.length; m < len; m++) {
-        row = rows[m];
-        for (n = 0, len1 = row.length; n < len1; n++) {
-          scope = row[n];
-          w = 2 * widthUnit + padX;
-          h = 1 * unit;
-          scope.x = scope.x * (widthUnit + padX) + padX;
-          scope.y = scope.y * unit + padY * (scope.y + 1);
-          scope.resize(w, h);
-          consumedHeight = Math.max(consumedHeight, scope.y + h);
-        }
-      }
-      return SVG.attr(bg, "height", consumedHeight + padY);
+      var h;
+      h = ControlPanelLayout.performLayout();
+      return SVG.attr(bg, "height", h);
     });
-    return Make("ControlPanelView", ControlPanelView = {
+    return Make("ControlPanel", ControlPanelView = {
       createElement: function(parent) {
         var elm;
         if (parent == null) {
@@ -3510,18 +3514,6 @@
         return elm = SVG.create("g", parent || g, {
           ui: true
         });
-      },
-      layout: function(scope) {
-        var w;
-        w = 2;
-        if (consumedCols + w > 4) {
-          consumedCols = 0;
-          consumedRows++;
-        }
-        scope.x = consumedCols;
-        scope.y = consumedRows;
-        (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
-        return consumedCols += w;
       }
     });
   });

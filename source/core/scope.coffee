@@ -1,5 +1,5 @@
 Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Symbol)->
-  Make "Scope", Scope = (symbol, element, props = {})->
+  Make "Scope", Scope = (element, symbol, props = {})->
     if typeof symbol isnt "function" then throw "Scope() takes a function as the first arg. Got: #{symbol}"
     if not element instanceof SVGElement then throw "Scope() takes an element as the second argument. Got: #{element}"
     

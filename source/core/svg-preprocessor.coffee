@@ -49,7 +49,7 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
   
   buildScopes = (tree, setups, parentScope = null)->
     symbol = getSymbol(tree.elm) or ()-> {}
-    scope = Scope symbol, tree.elm, parent: parentScope
+    scope = Scope tree.elm, symbol, parent: parentScope
     setups.push scope.setup.bind scope if scope.setup?
     buildScopes subTarget, setups, scope for subTarget in tree.sub
   

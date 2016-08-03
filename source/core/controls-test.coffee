@@ -1,6 +1,6 @@
 Take ["Control", "ScopeReady"], (Control)->
-  Control.button "Start", ()=> console.log "start"
-  Control.button "Reset", ()=> console.log "reset"
+  Control type:"button", name:"Start", click:()=> console.log "start"
+  Control type:"button", name:"Reset", click:()=> console.log "reset"
   # Control.button "Start", ()=> console.log "start"
   # Control.button "Reset", ()=> console.log "reset"
   # Control.button "Start", ()=> console.log "start"

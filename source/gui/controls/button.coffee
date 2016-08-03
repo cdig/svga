@@ -23,13 +23,12 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
       SVG.attrs bg, fill: "hsl(220, 12%, #{v*80}%)"
     
     depress = ()-> Tween c, 0.9, 0, tickBG
-    release = ()-> Tween c, 1, .2, tickBG
+    release = ()-> Tween 0.9, 1, .2, tickBG
     
     Input elm,
       click: ()-> handler() for handler in handlers
       down: depress
       drag: depress
-      out: release
       up: release
     
     

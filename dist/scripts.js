@@ -40,15 +40,18 @@
   Take(["Dev", "Registry", "ScopeCheck", "Symbol"], function(Dev, Registry, ScopeCheck, Symbol) {
     var Scope, findParent;
     Make("Scope", Scope = function(element, symbol, props) {
-      var attr, attrs, base, len, len1, m, n, name1, parentScope, ref, scope, scopeProcessor;
+      var attr, attrs, id, len, len1, m, n, parentScope, ref, scope, scopeProcessor;
       if (props == null) {
         props = {};
       }
-      if (typeof symbol !== "function") {
-        throw "Scope() takes a function as the first arg. Got: " + symbol;
-      }
       if (!element instanceof SVGElement) {
-        throw "Scope() takes an element as the second argument. Got: " + element;
+        throw "Scope() takes an element as the first argument. Got: " + element;
+      }
+      if (typeof symbol !== "function") {
+        throw "Scope() takes a function as the second arg. Got: " + symbol;
+      }
+      if (typeof props !== "object") {
+        throw "Scope() takes an optional object as the third arg. Got: " + props;
       }
       scope = symbol != null ? symbol(element, props) : {};
       parentScope = props.parent || findParent(element);
@@ -57,35 +60,35 @@
       scope._symbol = symbol;
       scope.children = [];
       scope.element = element;
-      scope.id = props.id || ("child" + ((parentScope != null ? parentScope.children.length : void 0) || 0));
-      scope.parent = parentScope;
       scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
-      if (scope.parent != null) {
-        if (scope.parent[scope.id] != null) {
-          console.log(scope.parent);
-          throw "^ Has a child or property with the id \"" + scope.id + "\". This is conflicting with a child scope that wants to use that instance name.";
+      if (parentScope != null) {
+        scope.parent = parentScope;
+        scope.id = id = props.id || ("child" + (parentScope.children.length || 0));
+        if (parentScope[id] != null) {
+          console.log(parentScope);
+          throw "^ Has a child or property with the id \"" + id + "\". This is conflicting with a child scope that wants to use that instance name.";
         }
-        if ((base = scope.parent)[name1 = scope.id] == null) {
-          base[name1] = scope;
+        if (parentScope[id] == null) {
+          parentScope[id] = scope;
         }
-        scope.parent.children.push(scope);
-      }
-      ref = Registry.all("ScopeProcessor");
-      for (m = 0, len = ref.length; m < len; m++) {
-        scopeProcessor = ref[m];
-        scopeProcessor(scope);
+        parentScope.children.push(scope);
       }
       if (Dev) {
-        element.setAttribute("scope-id", scope.id);
+        element.setAttribute("x-scope", scope.id || "");
         attrs = Array.prototype.slice.call(element.attributes);
-        for (n = 0, len1 = attrs.length; n < len1; n++) {
-          attr = attrs[n];
-          if (!(attr.name !== "scope-id")) {
+        for (m = 0, len = attrs.length; m < len; m++) {
+          attr = attrs[m];
+          if (!(attr.name !== "x-scope")) {
             continue;
           }
           element.removeAttributeNS(attr.namespaceURI, attr.name);
           element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
         }
+      }
+      ref = Registry.all("ScopeProcessor");
+      for (n = 0, len1 = ref.length; n < len1; n++) {
+        scopeProcessor = ref[n];
+        scopeProcessor(scope);
       }
       return scope;
     });
@@ -818,9 +821,8 @@
       ControlPanel: {
         width: 240,
         unit: 48,
-        padX: 0,
-        padY: 0,
-        borderRadius: 0
+        pad: 2,
+        borderRadius: 4
       }
     });
   });
@@ -3238,16 +3240,21 @@
     return Make("Tween", Tween);
   });
 
-  Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, GUI, Input, SVG, TRS, Tween) {
+  Take(["Control", "GUI", "Input", "SVG", "Tween"], function(Control, GUI, Input, SVG, Tween) {
+    var gui;
+    gui = GUI.ControlPanel;
     return Control("button", function(elm, props) {
-      var bg, c, depress, h, handlers, label, release, scope, tickBG, u, w;
+      var bg, c, depress, h, handlers, label, release, scope, tickBG, w;
       handlers = [];
-      u = GUI.ControlPanel.unit;
-      bg = TRS(SVG.create("rect", elm, {
+      SVG.attrs(elm, {
+        ui: true
+      });
+      bg = SVG.create("rect", elm, {
         fill: "hsl(220, 12%, 80%)",
-        rx: 0,
-        ry: 0
-      }));
+        x: gui.pad,
+        y: gui.pad,
+        rx: gui.borderRadius
+      });
       label = SVG.create("text", elm, {
         textContent: props.name,
         fill: "hsl(220, 0%, 30%)"
@@ -3295,8 +3302,8 @@
         },
         resize: function(w, h) {
           SVG.attrs(bg, {
-            width: w,
-            height: h
+            width: w - gui.pad * 2,
+            height: h - gui.pad * 2
           });
           return SVG.attrs(label, {
             x: w / 2,
@@ -3349,7 +3356,8 @@
   });
 
   Take(["GUI"], function(GUI) {
-    var consumedCols, consumedRows, rows;
+    var consumedCols, consumedRows, gui, rows;
+    gui = GUI.ControlPanel;
     consumedCols = 0;
     consumedRows = 0;
     rows = [];
@@ -3367,26 +3375,25 @@
         return consumedCols += w;
       },
       performLayout: function() {
-        var consumedHeight, h, len, len1, m, n, padX, padY, panelWidth, row, scope, unit, w, widthUnit;
-        padX = GUI.ControlPanel.padX;
-        padY = GUI.ControlPanel.padY;
-        unit = GUI.ControlPanel.unit;
-        panelWidth = GUI.ControlPanel.width;
-        widthUnit = (panelWidth - padX * 5) / 4;
+        var consumedHeight, h, len, len1, m, n, pad, panelWidth, row, scope, unit, w, widthUnit;
+        pad = gui.pad;
+        unit = gui.unit;
+        panelWidth = gui.width;
+        widthUnit = (panelWidth - pad * 5) / 4;
         consumedHeight = 0;
         for (m = 0, len = rows.length; m < len; m++) {
           row = rows[m];
           for (n = 0, len1 = row.length; n < len1; n++) {
             scope = row[n];
-            w = 2 * widthUnit + padX;
+            w = 2 * widthUnit + pad;
             h = 1 * unit;
-            scope.x = scope.x * (widthUnit + padX) + padX;
-            scope.y = scope.y * unit + padY * (scope.y + 1);
+            scope.x = scope.x * (widthUnit + pad) + pad;
+            scope.y = scope.y * unit + pad * (scope.y + 1);
             scope.resize(w, h);
             consumedHeight = Math.max(consumedHeight, scope.y + h);
           }
         }
-        return consumedHeight + padY;
+        return consumedHeight + pad;
       }
     });
   });
@@ -3482,7 +3489,8 @@
   });
 
   Take(["ControlPanelLayout", "GUI", "Resize", "SVG", "TRS"], function(ControlPanelLayout, GUI, Resize, SVG, TRS) {
-    var ControlPanelView, bg, g;
+    var ControlPanelView, bg, g, gui;
+    gui = GUI.ControlPanel;
     g = TRS(SVG.create("g", GUI.elm, {
       "x-controls": "",
       "font-size": 20,
@@ -3490,20 +3498,21 @@
     }));
     bg = SVG.create("rect", g, {
       "x-bg": "",
-      width: GUI.ControlPanel.width,
-      rx: GUI.ControlPanel.borderRadius,
-      ry: GUI.ControlPanel.borderRadius
+      x: -gui.pad,
+      y: -gui.pad,
+      width: gui.width + gui.pad * 2,
+      rx: gui.borderRadius + gui.pad * 2
     });
     Resize(function() {
       var x, y;
-      x = (window.innerWidth / 2 - GUI.ControlPanel.width / 2) | 0;
-      y = (window.innerHeight / 2 - GUI.ControlPanel.width / 2) | 0;
+      x = (window.innerWidth / 2 - gui.width / 2) | 0;
+      y = (window.innerHeight / 2 - gui.width / 2) | 0;
       return TRS.move(g, x, y);
     });
     Take("ScopeReady", function() {
       var h;
       h = ControlPanelLayout.performLayout();
-      return SVG.attr(bg, "height", h);
+      return SVG.attr(bg, "height", h + gui.pad * 2);
     });
     return Make("ControlPanel", ControlPanelView = {
       createElement: function(parent) {
@@ -3511,9 +3520,7 @@
         if (parent == null) {
           parent = null;
         }
-        return elm = SVG.create("g", parent || g, {
-          ui: true
-        });
+        return elm = SVG.create("g", parent || g);
       }
     });
   });

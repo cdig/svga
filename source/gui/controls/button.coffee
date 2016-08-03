@@ -1,19 +1,21 @@
-Take ["Control","GUI","Input","SVG","TRS","Tween"],
-(      Control , GUI , Input , SVG , TRS , Tween)->
-  
+Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, GUI, Input, SVG, Tween)->
+  gui = GUI.ControlPanel
+
   Control "button", (elm, props)->
     handlers = []
-    u = GUI.ControlPanel.unit
     
-    bg = TRS SVG.create "rect", elm,
+    SVG.attrs elm, ui: true
+    
+    bg = SVG.create "rect", elm,
       fill:"hsl(220, 12%, 80%)"
-      rx: 0
-      ry: 0
+      x: gui.pad
+      y: gui.pad
+      rx: gui.borderRadius
     
     label = SVG.create "text", elm,
       textContent: props.name
       fill: "hsl(220, 0%, 30%)"
-    
+
     w = label.getComputedTextLength()
     h = 10
     
@@ -25,6 +27,7 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
     depress = ()-> Tween c, 0.9, 0, tickBG
     release = ()-> Tween 0.9, 1, .2, tickBG
     
+    
     Input elm,
       click: ()-> handler() for handler in handlers
       down: depress
@@ -33,18 +36,8 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
     
     
     return scope =
-      attach: (props)->
-        handlers.push props.action if props.action?
-      
-      preferredSize: ()->
-        w:w
-        h:h
-      
+      attach: (props)-> handlers.push props.action if props.action?
+      preferredSize: ()-> w:w, h:h
       resize: (w, h)->
-        SVG.attrs bg,
-          width: w
-          height: h
-        
-        SVG.attrs label,
-          x: w/2
-          y: h/2 + 8
+        SVG.attrs bg, width:w-gui.pad*2, height:h-gui.pad*2
+        SVG.attrs label, x: w/2, y: h/2 + 8

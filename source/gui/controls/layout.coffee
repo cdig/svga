@@ -1,4 +1,5 @@
 Take ["GUI"], (GUI)->
+  gui = GUI.ControlPanel
   consumedCols = 0
   consumedRows = 0
   rows = []
@@ -15,18 +16,17 @@ Take ["GUI"], (GUI)->
       consumedCols += w
     
     performLayout: ()->
-      padX = GUI.ControlPanel.padX
-      padY = GUI.ControlPanel.padY
-      unit = GUI.ControlPanel.unit
-      panelWidth = GUI.ControlPanel.width
-      widthUnit = (panelWidth-padX*5)/4
+      pad = gui.pad
+      unit = gui.unit
+      panelWidth = gui.width
+      widthUnit = (panelWidth-pad*5)/4
       consumedHeight = 0
       for row in rows
         for scope in row
-          w = 2 * widthUnit + padX
+          w = 2 * widthUnit + pad
           h = 1 * unit
-          scope.x = scope.x * (widthUnit + padX) + padX
-          scope.y = scope.y * unit + padY * (scope.y + 1)
+          scope.x = scope.x * (widthUnit + pad) + pad
+          scope.y = scope.y * unit + pad * (scope.y + 1)
           scope.resize w, h
           consumedHeight = Math.max consumedHeight, scope.y + h
-      return consumedHeight + padY
+      return consumedHeight + pad

@@ -2730,7 +2730,7 @@
         return elm;
       },
       attr: function(elm, k, v) {
-        var _k, base1, ns;
+        var _k, base1, base2, ns;
         if (!elm) {
           throw "SVG.attr was called with a null element";
         }
@@ -2740,6 +2740,9 @@
         }
         if (elm._SVG_attr == null) {
           elm._SVG_attr = {};
+        }
+        if (elm._SVG_keys == null) {
+          elm._SVG_keys = {};
         }
         if (v === void 0) {
           return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
@@ -2752,7 +2755,7 @@
           return elm[k] = v;
         }
         ns = k === "xlink:href" ? xlinkNS : null;
-        _k = k.replace(/([A-Z])/g, "-$1").toLowerCase();
+        _k = (base2 = elm._SVG_keys)[k] != null ? base2[k] : base2[k] = k.replace(/([A-Z])/g, "-$1").toLowerCase();
         if (v != null) {
           elm.setAttributeNS(ns, _k, v);
         } else {

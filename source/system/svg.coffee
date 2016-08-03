@@ -67,6 +67,7 @@ do ()->
       unless elm then throw "SVG.attr was called with a null element"
       unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^^^"
       elm._SVG_attr ?= {}
+      elm._SVG_keys ?= {}
       # Note that we only do DOM->cache on a read call (not on a write call),
       # to slightly avoid intermingling DOM reads and writes, which causes thrashing.
       return elm._SVG_attr[k] ?= elm.getAttribute(k) if v is undefined # Read.
@@ -76,7 +77,7 @@ do ()->
       ns = if k is "xlink:href" then xlinkNS else null
       # Turn camelCase into kebab-case, for convenience.
       # CAUTION: This might cause cross-browser issues. If it does, handle this the way we handle props — a hash lookup.
-      _k = k.replace(/([A-Z])/g,"-$1").toLowerCase()
+      _k = elm._SVG_keys[k] ?= k.replace(/([A-Z])/g,"-$1").toLowerCase()
       if v?
         elm.setAttributeNS ns, _k, v # set DOM attribute
       else

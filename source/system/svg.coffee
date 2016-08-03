@@ -9,9 +9,16 @@ do ()->
   
   svgNS = "http://www.w3.org/2000/svg"
   xlinkNS = "http://www.w3.org/1999/xlink"
-  props =
+  
+  # This is used to distinguish props from attrs, so we can set both with SVG.attr
+  propNames =
     textContent: true
-    # additional props will be listed here as needed
+    # additional propNames will be listed here as needed
+  
+  # This is used to cache normalized keys, and to provide defaults for keys that shouldn't be normalized
+  attrNames =
+    viewBox: "viewBox"
+    # additional attr names will be listed here as needed
   
   # We wait for the SVGReady event, fired by core/main.coffee, to tell us that it's safe to mutate the DOM.
   SVGReady = false
@@ -67,23 +74,20 @@ do ()->
       unless elm then throw "SVG.attr was called with a null element"
       unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^^^"
       elm._SVG_attr ?= {}
-      elm._SVG_keys ?= {}
       # Note that we only do DOM->cache on a read call (not on a write call),
       # to slightly avoid intermingling DOM reads and writes, which causes thrashing.
-      return elm._SVG_attr[k] ?= elm.getAttribute(k) if v is undefined # Read.
+      return elm._SVG_attr[k] ?= elm.getAttribute(k) if v is undefined # Read
       return v if elm._SVG_attr[k] is v # cache hit — bail
       elm._SVG_attr[k] = v # update cache
-      return elm[k] = v if props[k]? # set DOM property
+      return elm[k] = v if propNames[k]? # set DOM property
       ns = if k is "xlink:href" then xlinkNS else null
-      # Turn camelCase into kebab-case, for convenience.
-      # CAUTION: This might cause cross-browser issues. If it does, handle this the way we handle props — a hash lookup.
-      _k = elm._SVG_keys[k] ?= k.replace(/([A-Z])/g,"-$1").toLowerCase()
+      k = attrNames[k] ?= k.replace(/([A-Z])/g,"-$1").toLowerCase() # Normalize camelCase into kebab-case
       if v?
-        elm.setAttributeNS ns, _k, v # set DOM attribute
-      else
-        elm.removeAttributeNS ns, _k # remove DOM attribute
+        elm.setAttributeNS ns, k, v # set DOM attribute
+      else # v is explicitly set to null (not undefined)
+        elm.removeAttributeNS ns, k # remove DOM attribute
       return v # Not Composable
-
+    
     styles: (elm, styles)->
       unless elm then throw "SVG.styles was called with a null element"
       unless typeof styles is "object" then console.log styles; throw "SVG.styles requires an object as the second argument, got ^"
@@ -102,7 +106,7 @@ do ()->
     grey: (elm, l)->
       SVG.attr elm, "fill", "hsl(0, 0%, #{l*100}%)"
       elm # Composable
-
+    
     hsl: (elm, h, s, l)->
       SVG.attr elm, "fill", "hsl(#{h*360}, #{s*100}%, #{l*100}%)"
       elm # Composable
@@ -122,7 +126,6 @@ do ()->
       filter = SVG.create "filter", defs, id: name
       SVG.create "feColorMatrix", filter, in: "SourceGraphic", type: "matrix", values: values
       filter # Not Composable
-  
   
   
   createStops = (gradient, stops)->

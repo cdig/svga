@@ -3,55 +3,6 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     slice = [].slice;
 
-  Take(["Control", "ScopeReady"], function(Control) {
-    Control.button({
-      name: "S"
-    });
-    Control.slider({
-      name: "S"
-    });
-    Control.divider();
-    Control.button({
-      name: "SS"
-    });
-    Control.button({
-      name: "SSS"
-    });
-    Control.divider();
-    Control.button({
-      name: "SSSS"
-    });
-    Control.button({
-      name: "SSSSS"
-    });
-    Control.slider({
-      name: "SSSSSSSSSS"
-    });
-    Control.button({
-      name: "SSSSSS"
-    });
-    Control.button({
-      name: "SSSSSSS"
-    });
-    Control.divider();
-    Control.button({
-      name: "S"
-    });
-    Control.divider();
-    Control.button({
-      name: "SSSSSSSS"
-    });
-    Control.button({
-      name: "SSSSSSSSS"
-    });
-    Control.button({
-      name: "SSSSSSSSSSSS"
-    });
-    return Control.button({
-      name: "S"
-    });
-  });
-
   Take(["Registry", "SVGPreprocessor", "DOMContentLoaded"], function(Registry, SVGPreprocessor) {
     var svgData;
     svgData = SVGPreprocessor.crawl(document.getElementById("root"));
@@ -68,18 +19,21 @@
   Take(["Dev", "Registry", "ScopeCheck", "Symbol"], function(Dev, Registry, ScopeCheck, Symbol) {
     var Scope, findParent;
     Make("Scope", Scope = function(element, symbol, props) {
-      var attr, attrs, id, len, len1, m, n, parentScope, ref, scope, scopeProcessor;
+      var attr, attrs, len, len1, m, n, name1, parentScope, ref, scope, scopeProcessor;
       if (props == null) {
         props = {};
       }
       if (!element instanceof SVGElement) {
-        throw "Scope() takes an element as the first argument. Got: " + element;
+        console.log(element);
+        throw "Scope() takes an element as the first argument. Got ^^^";
       }
       if ((symbol != null) && typeof symbol !== "function") {
-        throw "Scope() takes a function as the second arg. Got: " + symbol;
+        console.log(symbol);
+        throw "Scope() takes a function as the second arg. Got ^^^";
       }
       if (typeof props !== "object") {
-        throw "Scope() takes an optional object as the third arg. Got: " + props;
+        console.log(props);
+        throw "Scope() takes an optional object as the third arg. Got ^^^";
       }
       scope = symbol != null ? symbol(element, props) : {};
       parentScope = props.parent || findParent(element);
@@ -89,15 +43,18 @@
       scope.children = [];
       scope.element = element;
       scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
+      scope.id = props.id;
       if (parentScope != null) {
         scope.parent = parentScope;
-        scope.id = id = props.id || ("child" + (parentScope.children.length || 0));
-        if (parentScope[id] != null) {
-          console.log(parentScope);
-          throw "^ Has a child or property with the id \"" + id + "\". This is conflicting with a child scope that wants to use that instance name.";
+        if (scope.id == null) {
+          scope.id = "child" + (parentScope.children.length || 0);
         }
-        if (parentScope[id] == null) {
-          parentScope[id] = scope;
+        if (parentScope[scope.id] != null) {
+          console.log(parentScope);
+          throw "^ Has a child or property with the id \"" + scope.id + "\". This is conflicting with a child scope that wants to use that instance name.";
+        }
+        if (parentScope[name1 = scope.id] == null) {
+          parentScope[name1] = scope;
         }
         parentScope.children.push(scope);
       }
@@ -132,7 +89,7 @@
   });
 
   Take(["Scope", "SVG", "Symbol"], function(Scope, SVG, Symbol) {
-    var SVGPreprocessor, buildScopes, defs, deprecations, getSymbol, processElm;
+    var SVGPreprocessor, buildScopes, defs, deprecations, processElm;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     defs = {};
     Make("SVGPreprocessor", SVGPreprocessor = {
@@ -182,38 +139,35 @@
       }
       return tree;
     };
-    buildScopes = function(tree, setups, parentScope) {
-      var len, m, ref, results, scope, subTarget, symbol;
+    return buildScopes = function(tree, setups, parentScope) {
+      var baseName, len, m, props, ref, ref1, results, scope, subTarget, symbol;
       if (parentScope == null) {
         parentScope = null;
       }
-      symbol = getSymbol(tree.elm) || function() {
-        return {};
-      };
-      scope = Scope(tree.elm, symbol, {
+      props = {
         parent: parentScope
-      });
+      };
+      if (tree.elm.id.replace("_FL", "").length > 0) {
+        props.id = tree.elm.id.replace("_FL", "");
+      }
+      baseName = (ref = tree.elm.id) != null ? ref.split("_")[0] : void 0;
+      symbol = baseName.indexOf("Line") > -1 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 ? Symbol.forSymbolName("HydraulicField") : Symbol.forInstanceName(tree.elm.id);
+      if (symbol == null) {
+        symbol = function() {
+          return {};
+        };
+      }
+      scope = Scope(tree.elm, symbol, props);
       if (scope.setup != null) {
         setups.push(scope.setup.bind(scope));
       }
-      ref = tree.sub;
+      ref1 = tree.sub;
       results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        subTarget = ref[m];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        subTarget = ref1[m];
         results.push(buildScopes(subTarget, setups, scope));
       }
       return results;
-    };
-    return getSymbol = function(elm) {
-      var baseName, ref;
-      baseName = (ref = elm.id) != null ? ref.split("_")[0] : void 0;
-      if ((baseName != null ? baseName.indexOf("Line") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicLine");
-      } else if ((baseName != null ? baseName.indexOf("Field") : void 0) > -1) {
-        return Symbol.forSymbolName("HydraulicField");
-      } else {
-        return Symbol.forInstanceName(elm.id);
-      }
     };
   });
 
@@ -3282,6 +3236,13 @@
     return Make("Control", Control = function(type, defn) {
       return Control[type] = function(props) {
         var base1, elm, scope;
+        if (props == null) {
+          props = {};
+        }
+        if (typeof props !== "object") {
+          console.log(props);
+          throw "Control." + type + "(props) takes a optional props object. Got ^^^, which is not an object.";
+        }
         if (((props != null ? props.id : void 0) != null) && (instances[props.id] != null)) {
           return typeof (base1 = instances[props.id]).attach === "function" ? base1.attach(props) : void 0;
         } else {

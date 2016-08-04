@@ -1,8 +1,8 @@
 Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Symbol)->
   Make "Scope", Scope = (element, symbol, props = {})->
-    if not element instanceof SVGElement then throw "Scope() takes an element as the first argument. Got: #{element}"
-    if symbol? and typeof symbol isnt "function" then throw "Scope() takes a function as the second arg. Got: #{symbol}"
-    if typeof props isnt "object" then throw "Scope() takes an optional object as the third arg. Got: #{props}"
+    if not element instanceof SVGElement then console.log element; throw "Scope() takes an element as the first argument. Got ^^^"
+    if symbol? and typeof symbol isnt "function" then console.log symbol; throw "Scope() takes a function as the second arg. Got ^^^"
+    if typeof props isnt "object" then console.log props; throw "Scope() takes an optional object as the third arg. Got ^^^"
     
     scope = if symbol? then symbol element, props else {}
     parentScope = props.parent or findParent element
@@ -17,13 +17,14 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
     scope.children = []
     scope.element = element
     scope.root = Scope.root ?= scope # It is assumed that the very first scope created is the root scope.
+    scope.id = props.id
     
     # Set up parent-child relationship
     if parentScope?
       scope.parent = parentScope
-      scope.id = id = props.id or ("child" + (parentScope.children.length or 0))
-      if parentScope[id]? then console.log parentScope; throw "^ Has a child or property with the id \"#{id}\". This is conflicting with a child scope that wants to use that instance name."
-      parentScope[id] ?= scope
+      scope.id ?= "child" + (parentScope.children.length or 0)
+      if parentScope[scope.id]? then console.log parentScope; throw "^ Has a child or property with the id \"#{scope.id}\". This is conflicting with a child scope that wants to use that instance name."
+      parentScope[scope.id] ?= scope
       parentScope.children.push scope
     
     # Add some info to help devs locate scope elements in the DOM

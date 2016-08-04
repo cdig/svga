@@ -9,7 +9,8 @@ Take ["ControlPanel", "ControlPanelLayout", "Scope"], (ControlPanel, ControlPane
     # people creating controls will be able to work around this constraint, and that
     # the benefit to people using controls is well worth it.
     
-    Control[type] = (props)->
+    Control[type] = (props = {})->
+      if typeof props isnt "object" then console.log props; throw "Control.#{type}(props) takes a optional props object. Got ^^^, which is not an object."
       
       # Re-using an existing ID? Just attach to the existing control.
       if props?.id? and instances[props.id]?

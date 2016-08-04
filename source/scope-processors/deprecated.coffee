@@ -2,7 +2,6 @@
 
 Take ["Registry", "ScopeCheck"], (Registry, ScopeCheck)->
   Registry.add "ScopeProcessor", (scope)->
-    
     ScopeCheck scope, "getElement", "getPressure", "setPressure", "getPressureColor", "setText", "FlowArrows", "cx", "cy", "angle", "turns", "transform"
     
     scope.getElement = ()-> throw "@getElement() has been removed. Please use @element instead."

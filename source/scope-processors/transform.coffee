@@ -1,5 +1,7 @@
 Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, ScopeCheck)->
   Registry.add "ScopeProcessor", (scope)->
+    ScopeCheck scope, "x", "y", "rotation", "scale", "scaleX", "scaleY", "skewX", "skewY"
+    
     element = scope.element
     transformBaseVal = element.transform?.baseVal
     
@@ -12,8 +14,6 @@ Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, Scop
     scaleY = 1
     # skewX = 0
     # skewY = 0
-    
-    ScopeCheck scope, "x", "y", "rotation", "scale", "scaleX", "scaleY", "skewX", "skewY"
     
     # Extract the existing transform value from the element
     if transformBaseVal?.numberOfItems is 1

@@ -1,17 +1,13 @@
 Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCheck, SVG)->
   Registry.add "ScopeProcessor", (scope)->
+    ScopeCheck scope, "style", "pressure", "stroke", "fill", "linearGradient", "radialGradient"
+
     element = scope.element
-    parent = element.parentNode
-    placeholder = SVG.create "g"
     strokePath = fillPath = element.querySelector("path")
     isLine = element.getAttribute("id")?.indexOf("Line") > -1
-    textElement = element.querySelector "tspan" or element.querySelector "text"
-    
-    ScopeCheck scope, "pressure", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"
-
     
     # scope.style = (key, val)-> SVG.style element, key, val
-    scope.stype = ()-> throw "@style is up for debate. Please show Ivan what you're using it to do."
+    scope.style = ()-> throw "@style is up for debate. Please show Ivan what you're using it to do."
     
     
     pressure = null
@@ -25,28 +21,6 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
           else
             scope.fill Pressure scope.pressure
 
-    
-    text = textElement?.textContent
-    Object.defineProperty scope, 'text',
-      get: ()-> text
-      set: (val)->
-        if text isnt val
-          SVG.attr "textContent", text = val
-    
-    
-    alpha = 1
-    Object.defineProperty scope, 'alpha',
-      get: ()-> alpha
-      set: (val)->
-        val = 1 if val is true
-        val = 0 if val is false
-        if alpha isnt val
-          SVG.style element, "opacity", alpha = val
-          if alpha > 0
-            parent.replaceChild element, placeholder if placeholder.parentNode?
-          else
-            parent.replaceChild placeholder, element if element.parentNode?
-    
     
     scope.stroke = (color)->
       if strokePath?

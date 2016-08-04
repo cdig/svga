@@ -2,7 +2,6 @@
 
 Take ["Registry", "ScopeCheck", "Tween"], (Registry, ScopeCheck, Tween)->
   Registry.add "ScopeProcessor", (scope)->
-    
     ScopeCheck scope, "show", "hide"
     
     tick = (v)-> scope.alpha = v

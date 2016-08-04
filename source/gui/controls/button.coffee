@@ -12,23 +12,24 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
       x: GUI.pad
       y: GUI.pad
       rx: GUI.borderRadius
+      strokeWidth: 2
     
     # Button text label
     label = SVG.create "text", elm,
       textContent: props.name
-      fill: "hsl(220, 0%, 30%)"
-
+      fill: "hsl(220, 16%, 24%)"
+    
     # Pre-compute some size info that will be used later on for layout
     w = Math.max 48, label.getComputedTextLength() + GUI.pad*8
-    h = Math.max 48, 20 + GUI.pad*12
+    h = 48
     
     # Setup the bg fill color, and allow it to be easily animated later
-    bgFill = (v)-> SVG.attrs bg.element, fill: "hsl(220,12%,#{v*80}%)"
+    bgFill = (v)-> SVG.attrs bg.element, fill: "hsl(220,16%,#{v*83}%)", stroke: "hsl(220,16%,#{v*24}%)"
     bgFill 1
     
     # Animations for the bg fill color
-    depress = ()-> Tween 1, .9, .2, bgFill
-    release = ()-> Tween .8, 1, .2, bgFill
+    depress = ()-> Tween 1, .7, .2, bgFill
+    release = ()-> Tween .7, 1, .2, bgFill
     
     # Input event handling
     Input elm,
@@ -39,12 +40,10 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
     
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
-      attach: (props)->
-        handlers.push props.click if props.click?
+      attach: (props)-> handlers.push props.click if props.click?
       
-      getPreferredSize: ()->
-        w:w, h:h
+      getPreferredSize: ()-> w:w, h:h
       
       resize: ({w:w, h:h})->
-        SVG.attrs bg.element, width:w-GUI.pad*2, height:h-GUI.pad*2
+        SVG.attrs bg.element, width: w - GUI.pad*2, height: h - GUI.pad*2
         SVG.attrs label, x: w/2, y: h/2 + 8

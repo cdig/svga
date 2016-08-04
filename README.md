@@ -9,7 +9,6 @@ A framework for making interactive animations with SVG.
 Todo:
 * horizontal controls when height-constrained
 * drag controls with 4-way arrow in outside corner
-* Control: separator line
 * Control: spacer
 * Control: N-state toggle
 * Schematic button

@@ -5,124 +5,51 @@
 
   Take(["Control", "ScopeReady"], function(Control) {
     Control.button({
-      name: "S",
-      click: (function(_this) {
-        return function() {
-          return console.log("start");
-        };
-      })(this)
+      name: "S"
     });
     Control.button({
-      name: "SS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "SS"
     });
     Control.button({
-      name: "SSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("start");
-        };
-      })(this)
+      name: "SSS"
     });
     Control.button({
-      name: "SSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "SSSS"
     });
     Control.button({
-      name: "SSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("start");
-        };
-      })(this)
+      name: "SSSSS"
     });
     Control.button({
-      name: "SSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "SSSSSS"
     });
     Control.button({
-      name: "SSSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("start");
-        };
-      })(this)
+      name: "SSSSSSS"
+    });
+    Control.divider();
+    Control.button({
+      name: "S"
+    });
+    Control.divider();
+    Control.button({
+      name: "SSSSSSSS"
     });
     Control.button({
-      name: "S",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "SSSSSSSSS"
     });
     Control.button({
-      name: "SSSSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "SSSSSSSSSS"
     });
     Control.button({
-      name: "SSSSSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("start");
-        };
-      })(this)
+      name: "SSSSSSSSSSS"
     });
     Control.button({
-      name: "SSSSSSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "SSSSSSSSSSSS"
     });
     Control.button({
-      name: "SSSSSSSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
-    });
-    Control.button({
-      name: "SSSSSSSSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
-    });
-    Control.button({
-      name: "SSSSSSSSSSSS",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "SSSSSSSSSSSS"
     });
     return Control.button({
-      name: "S",
-      click: (function(_this) {
-        return function() {
-          return console.log("reset");
-        };
-      })(this)
+      name: "S"
     });
   });
 
@@ -3328,96 +3255,22 @@
     return Make("Tween", Tween);
   });
 
-  Take(["Control", "GUI", "Input", "Scope", "SVG", "Tween"], function(Control, arg, Input, Scope, SVG, Tween) {
-    var GUI;
-    GUI = arg.ControlPanel;
-    return Control("button", function(elm, props) {
-      var bg, bgFill, depress, h, handlers, label, release, scope, w;
-      handlers = [];
-      SVG.attrs(elm, {
-        ui: true
-      });
-      bg = Scope(SVG.create("rect", elm, {
-        x: GUI.pad,
-        y: GUI.pad,
-        rx: GUI.borderRadius
-      }));
-      label = SVG.create("text", elm, {
-        textContent: props.name,
-        fill: "hsl(220, 0%, 30%)"
-      });
-      w = Math.max(48, label.getComputedTextLength() + GUI.pad * 8);
-      h = Math.max(48, 20 + GUI.pad * 12);
-      bgFill = function(v) {
-        return SVG.attrs(bg.element, {
-          fill: "hsl(220,12%," + (v * 80) + "%)"
-        });
-      };
-      bgFill(1);
-      depress = function() {
-        return Tween(1, .9, .2, bgFill);
-      };
-      release = function() {
-        return Tween(.8, 1, .2, bgFill);
-      };
-      Input(elm, {
-        click: function() {
-          var handler, len, m, results;
-          results = [];
-          for (m = 0, len = handlers.length; m < len; m++) {
-            handler = handlers[m];
-            results.push(handler());
-          }
-          return results;
-        },
-        down: depress,
-        drag: depress,
-        up: release
-      });
-      return scope = {
-        attach: function(props) {
-          if (props.click != null) {
-            return handlers.push(props.click);
-          }
-        },
-        getPreferredSize: function() {
-          return {
-            w: w,
-            h: h
-          };
-        },
-        resize: function(arg1) {
-          var h, w;
-          w = arg1.w, h = arg1.h;
-          SVG.attrs(bg.element, {
-            width: w - GUI.pad * 2,
-            height: h - GUI.pad * 2
-          });
-          return SVG.attrs(label, {
-            x: w / 2,
-            y: h / 2 + 8
-          });
-        }
-      };
-    });
-  });
-
   Take(["ControlPanel", "ControlPanelLayout", "Scope"], function(ControlPanel, ControlPanelLayout, Scope) {
     var Control, instances;
     instances = {};
     return Make("Control", Control = function(type, defn) {
       return Control[type] = function(props) {
         var base1, elm, scope;
-        if ((props.id != null) && (instances[props.id] != null)) {
+        if (((props != null ? props.id : void 0) != null) && (instances[props.id] != null)) {
           return typeof (base1 = instances[props.id]).attach === "function" ? base1.attach(props) : void 0;
         } else {
-          elm = ControlPanel.createElement(props.parent);
+          elm = ControlPanel.createElement(props != null ? props.parent : void 0);
           scope = Scope(elm, defn, props);
           if (typeof scope.attach === "function") {
             scope.attach(props);
           }
           ControlPanelLayout.addScope(scope);
-          if (props.id != null) {
+          if ((props != null ? props.id : void 0) != null) {
             return instances[props.id] = scope;
           }
         }
@@ -3512,6 +3365,163 @@
     });
   });
 
+  Take(["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, GUI, Resize, SVG, Scope) {
+    var CP, ControlPanelView, bg, g, height, resize, setBG;
+    CP = GUI.ControlPanel;
+    height = 0;
+    g = Scope(SVG.create("g", GUI.elm, {
+      xControls: "",
+      fontSize: 20,
+      textAnchor: "middle"
+    }));
+    bg = SVG.create("rect", g.element, {
+      xBg: "",
+      x: -CP.pad,
+      y: -CP.pad,
+      width: CP.width + CP.pad * 8,
+      rx: CP.borderRadius + CP.pad * 2
+    });
+    setBG = function(l) {
+      return SVG.attrs(bg, {
+        fill: "hsl(220, 36%, " + (l * 100) + "%)"
+      });
+    };
+    setBG(0.36);
+    Resize(resize = function() {
+      g.x = (window.innerWidth - CP.width - CP.pad) | 0;
+      return g.y = (window.innerHeight / 2 - height / 2) | 0;
+    });
+    Take("ScopeReady", function() {
+      var size;
+      size = ControlPanelLayout.performLayout();
+      height = size.h + CP.pad * 2;
+      SVG.attrs(bg, {
+        height: height
+      });
+      return resize();
+    });
+    return Make("ControlPanel", ControlPanelView = {
+      createElement: function(parent) {
+        var elm;
+        if (parent == null) {
+          parent = null;
+        }
+        return elm = SVG.create("g", parent || g.element);
+      }
+    });
+  });
+
+  Take(["Control", "GUI", "Input", "Scope", "SVG", "Tween"], function(Control, arg, Input, Scope, SVG, Tween) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Control("button", function(elm, props) {
+      var bg, bgFill, depress, h, handlers, label, release, scope, w;
+      handlers = [];
+      SVG.attrs(elm, {
+        ui: true
+      });
+      bg = Scope(SVG.create("rect", elm, {
+        x: GUI.pad,
+        y: GUI.pad,
+        rx: GUI.borderRadius,
+        strokeWidth: 2
+      }));
+      label = SVG.create("text", elm, {
+        textContent: props.name,
+        fill: "hsl(220, 16%, 24%)"
+      });
+      w = Math.max(48, label.getComputedTextLength() + GUI.pad * 8);
+      h = 48;
+      bgFill = function(v) {
+        return SVG.attrs(bg.element, {
+          fill: "hsl(220,16%," + (v * 83) + "%)",
+          stroke: "hsl(220,16%," + (v * 24) + "%)"
+        });
+      };
+      bgFill(1);
+      depress = function() {
+        return Tween(1, .7, .2, bgFill);
+      };
+      release = function() {
+        return Tween(.7, 1, .2, bgFill);
+      };
+      Input(elm, {
+        click: function() {
+          var handler, len, m, results;
+          results = [];
+          for (m = 0, len = handlers.length; m < len; m++) {
+            handler = handlers[m];
+            results.push(handler());
+          }
+          return results;
+        },
+        down: depress,
+        drag: depress,
+        up: release
+      });
+      return scope = {
+        attach: function(props) {
+          if (props.click != null) {
+            return handlers.push(props.click);
+          }
+        },
+        getPreferredSize: function() {
+          return {
+            w: w,
+            h: h
+          };
+        },
+        resize: function(arg1) {
+          var h, w;
+          w = arg1.w, h = arg1.h;
+          SVG.attrs(bg.element, {
+            width: w - GUI.pad * 2,
+            height: h - GUI.pad * 2
+          });
+          return SVG.attrs(label, {
+            x: w / 2,
+            y: h / 2 + 8
+          });
+        }
+      };
+    });
+  });
+
+  Take(["Control", "GUI", "SVG"], function(Control, arg, SVG) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Control("divider", function(elm, props) {
+      var g, scope, setColor;
+      g = SVG.create("rect", elm, {
+        x: GUI.pad,
+        y: GUI.pad,
+        width: GUI.width - GUI.pad * 2,
+        height: GUI.pad * 3,
+        fill: "white",
+        rx: GUI.pad
+      });
+      setColor = function(l) {
+        return SVG.attrs(g, {
+          fill: "hsl(220, 16%, " + (l * 100) + "%)"
+        });
+      };
+      setColor(0.24);
+      return scope = {
+        attach: function(props) {},
+        getPreferredSize: function() {
+          return {
+            w: GUI.width,
+            h: GUI.pad * 5
+          };
+        },
+        resize: function(arg1) {
+          var h, w;
+          w = arg1.w, h = arg1.h;
+        }
+      };
+    });
+  });
+
   Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, GUI, Input, SVG, TRS, Tween) {
     return Control("slider", function(elm, props) {
       var c, depress, handlers, label, range, release, scope, startDrag, thumb, thumbBG, tickBG, track, u, update, v;
@@ -3599,46 +3609,6 @@
         },
         set: update
       };
-    });
-  });
-
-  Take(["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, GUI, Resize, SVG, Scope) {
-    var CP, ControlPanelView, bg, g, height, resize;
-    CP = GUI.ControlPanel;
-    height = 0;
-    g = Scope(SVG.create("g", GUI.elm, {
-      xControls: "",
-      fontSize: 20,
-      textAnchor: "middle"
-    }));
-    bg = SVG.create("rect", g.element, {
-      xBg: "",
-      x: -CP.pad,
-      y: -CP.pad,
-      width: CP.width + CP.pad * 2,
-      rx: CP.borderRadius + CP.pad * 2
-    });
-    Resize(resize = function() {
-      g.x = (window.innerWidth / 2 - CP.width / 2) | 0;
-      return g.y = (window.innerHeight / 2 - height / 2) | 0;
-    });
-    Take("ScopeReady", function() {
-      var size;
-      size = ControlPanelLayout.performLayout();
-      height = size.h + CP.pad * 2;
-      SVG.attrs(bg, {
-        height: height
-      });
-      return resize();
-    });
-    return Make("ControlPanel", ControlPanelView = {
-      createElement: function(parent) {
-        var elm;
-        if (parent == null) {
-          parent = null;
-        }
-        return elm = SVG.create("g", parent || g.element);
-      }
     });
   });
 

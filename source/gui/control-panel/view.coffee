@@ -11,12 +11,14 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayou
     xBg: ""
     x: -CP.pad
     y: -CP.pad
-    width: CP.width + CP.pad*2
+    width: CP.width + CP.pad*8
     rx: CP.borderRadius+CP.pad*2
   
+  setBG = (l)-> SVG.attrs bg, fill: "hsl(220, 36%, #{l*100}%)"
+  setBG 0.36
   
   Resize resize = ()->
-    g.x = (window.innerWidth/2 - CP.width/2) |0
+    g.x = (window.innerWidth - CP.width - CP.pad) |0
     g.y = (window.innerHeight/2 - height/2) |0
   
   
@@ -31,9 +33,7 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayou
     createElement: (parent = null)->
       elm = SVG.create "g", parent or g.element
   
-  
   # Reaction "ControlPanel:Show", ()-> Tween panelX, 1, 0.7, tick
   # Reaction "ControlPanel:Hide", ()-> Tween panelX, -.2, 0.7, tick
   # Reaction "Background:Set", (v)->
-  #   l = (v + .4) % 1
-  #   SVG.attrs bg, fill: "hsl(230, 10%, #{l*100}%)"
+  #   setBG l = (v + .4) % 1

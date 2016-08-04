@@ -21,8 +21,8 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
       fill: "hsl(227, 16%, 24%)"
     
     # Pre-compute some size info that will be used later on for layout
-    w = Math.max 48, label.getComputedTextLength() + GUI.pad*8
-    h = 48
+    w = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
+    h = GUI.unit
     
     # Setup the bg stroke color for tweening
     blueBG = r:34, g:46, b:89
@@ -35,10 +35,10 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
     Input elm,
       over: ()-> bgFill lightBG
       down: ()-> bgFill orangeBG
-      out: ()-> Tween lightBG, blueBG, .1, tick:bgFill, ease:"linear"
+      out: ()-> Tween lightBG, blueBG, .2, tick:bgFill
       click: ()->
         handler() for handler in handlers
-        Tween orangeBG, lightBG, .1, tick:bgFill, ease:"linear"
+        Tween orangeBG, lightBG, .2, tick:bgFill
     
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =

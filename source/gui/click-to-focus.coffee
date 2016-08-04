@@ -1,7 +1,7 @@
 Take ["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], (GUI, Resize, SVG, TopBar, TRS)->
   
   g = TRS SVG.create "g", GUI.elm
-  SVG.create "rect", g, x: -200, y:-30, width: 400, height: 60, rx: 30, ry: 30, fill: "#222", "fill-opacity": 0.9
+  SVG.create "rect", g, x: -200, y:-30, width: 400, height: 60, rx: 30, fill: "#222", "fill-opacity": 0.9
   SVG.create "text", g, y: 22, textContent: "Click To Focus", "font-size": 20, fill: "#FFF", "text-anchor": "middle"
   
   show = ()-> SVG.attrs g, style: "display: block"

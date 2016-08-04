@@ -25,9 +25,12 @@ Take "SVG", (SVG)->
   createStops = (gradient, stops)->
     stops = if stops[0] instanceof Array then stops[0] else stops
     for stop, i in stops
-      attrs = if typeof stop is "string"
-        { "stop-color": stop, offset: (100 * i/(stops.length-1)) + "%" }
+      if typeof stop is "string"
+        SVG.create "stop", gradient, stopColor: stop, offset: (100 * i/(stops.length-1)) + "%"
       else
-        { "stop-color": stop.color, offset: (100 * stop.offset) + "%" }
-      SVG.create "stop", gradient, attrs
+        attrs =
+          stopColor: stop.color
+          offset: 100 * (if stop.offset? then stop.offset else i/(stops.length-1)) + "%"
+        attrs.stopOpacity = stop.opacity if stop.opacity?
+        SVG.create "stop", gradient, attrs
     null # Not Composable

@@ -7,6 +7,9 @@
     Control.button({
       name: "S"
     });
+    Control.slider({
+      name: "S"
+    });
     Control.divider();
     Control.button({
       name: "SS"
@@ -20,6 +23,9 @@
     });
     Control.button({
       name: "SSSSS"
+    });
+    Control.slider({
+      name: "SSSSSSSSSS"
     });
     Control.button({
       name: "SSSSSS"
@@ -37,15 +43,6 @@
     });
     Control.button({
       name: "SSSSSSSSS"
-    });
-    Control.button({
-      name: "SSSSSSSSSS"
-    });
-    Control.button({
-      name: "SSSSSSSSSSS"
-    });
-    Control.button({
-      name: "SSSSSSSSSSSS"
     });
     Control.button({
       name: "SSSSSSSSSSSS"
@@ -741,7 +738,6 @@
       width: 400,
       height: 60,
       rx: 30,
-      ry: 30,
       fill: "#222",
       "fill-opacity": 0.9
     });
@@ -973,42 +969,42 @@
       over = function(e) {
         state.over = true;
         if (typeof calls.over === "function") {
-          calls.over(e);
+          calls.over(e, state);
         }
         if (state.down) {
-          return typeof calls.down === "function" ? calls.down(e) : void 0;
+          return typeof calls.down === "function" ? calls.down(e, state) : void 0;
         }
       };
       down = function(e) {
         state.down = true;
-        return typeof calls.down === "function" ? calls.down(e) : void 0;
+        return typeof calls.down === "function" ? calls.down(e, state) : void 0;
       };
       move = function(e) {
         if (!state.over) {
           over(e);
         }
         if (state.down && (calls.drag != null)) {
-          return calls.drag(e);
+          return calls.drag(e, state);
         } else {
-          return typeof calls.move === "function" ? calls.move(e) : void 0;
+          return typeof calls.move === "function" ? calls.move(e, state) : void 0;
         }
       };
       up = function(e) {
         state.down = false;
         if (state.over) {
           if (typeof calls.click === "function") {
-            calls.click(e);
+            calls.click(e, state);
           }
         } else {
           if (typeof calls.miss === "function") {
-            calls.miss(e);
+            calls.miss(e, state);
           }
         }
-        return typeof calls.up === "function" ? calls.up(e) : void 0;
+        return typeof calls.up === "function" ? calls.up(e, state) : void 0;
       };
       out = function(e) {
         state.over = false;
-        return typeof calls.out === "function" ? calls.out(e) : void 0;
+        return typeof calls.out === "function" ? calls.out(e, state) : void 0;
       };
       elm.addEventListener("mouseenter", function(e) {
         if (state.touch) {
@@ -2352,14 +2348,21 @@
       stops = stops[0] instanceof Array ? stops[0] : stops;
       for (i = m = 0, len = stops.length; m < len; i = ++m) {
         stop = stops[i];
-        attrs = typeof stop === "string" ? {
-          "stop-color": stop,
-          offset: (100 * i / (stops.length - 1)) + "%"
-        } : {
-          "stop-color": stop.color,
-          offset: (100 * stop.offset) + "%"
-        };
-        SVG.create("stop", gradient, attrs);
+        if (typeof stop === "string") {
+          SVG.create("stop", gradient, {
+            stopColor: stop,
+            offset: (100 * i / (stops.length - 1)) + "%"
+          });
+        } else {
+          attrs = {
+            stopColor: stop.color,
+            offset: 100 * (stop.offset != null ? stop.offset : i / (stops.length - 1)) + "%"
+          };
+          if (stop.opacity != null) {
+            attrs.stopOpacity = stop.opacity;
+          }
+          SVG.create("stop", gradient, attrs);
+        }
       }
       return null;
     };
@@ -3503,8 +3506,8 @@
         textContent: props.name,
         fill: "hsl(227, 16%, 24%)"
       });
-      w = Math.max(48, label.getComputedTextLength() + GUI.pad * 8);
-      h = 48;
+      w = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
+      h = GUI.unit;
       blueBG = {
         r: 34,
         g: 46,
@@ -3536,9 +3539,8 @@
           return bgFill(orangeBG);
         },
         out: function() {
-          return Tween(lightBG, blueBG, .1, {
-            tick: bgFill,
-            ease: "linear"
+          return Tween(lightBG, blueBG, .2, {
+            tick: bgFill
           });
         },
         click: function() {
@@ -3547,9 +3549,8 @@
             handler = handlers[m];
             handler();
           }
-          return Tween(orangeBG, lightBG, .1, {
-            tick: bgFill,
-            ease: "linear"
+          return Tween(orangeBG, lightBG, .2, {
+            tick: bgFill
           });
         }
       });
@@ -3589,20 +3590,15 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Control("divider", function(elm, props) {
-      var g, scope, setColor;
+      var g, scope;
       g = SVG.create("rect", elm, {
         x: GUI.pad,
         y: GUI.pad,
         width: GUI.width - GUI.pad * 2,
         height: GUI.pad * 3,
-        rx: GUI.pad
+        rx: GUI.pad,
+        fill: "hsl(227, 45%, 24%)"
       });
-      setColor = function(l) {
-        return SVG.attrs(g, {
-          fill: "hsl(227, 45%, " + (l * 100) + "%)"
-        });
-      };
-      setColor(0.24);
       return scope = {
         attach: function(props) {},
         getPreferredSize: function() {
@@ -3614,69 +3610,73 @@
         resize: function(arg1, view, vertical) {
           var h, w, x, y;
           w = arg1.w, h = arg1.h, x = arg1.x, y = arg1.y;
-          if (this.visible = vertical) {
-            return {
-              w: GUI.width,
-              h: GUI.pad * 5
-            };
-          } else {
-            return {
-              w: 0,
-              h: 0
-            };
-          }
+          return {
+            w: GUI.width,
+            h: GUI.pad * 5
+          };
         }
       };
     });
   });
 
-  Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, GUI, Input, SVG, TRS, Tween) {
+  Take(["Control", "GUI", "Input", "SVG", "TRS", "Tween"], function(Control, arg, Input, SVG, TRS, Tween) {
+    var GUI;
+    GUI = arg.ControlPanel;
     return Control("slider", function(elm, props) {
-      var c, depress, handlers, label, range, release, scope, startDrag, thumb, thumbBG, tickBG, track, u, update, v;
+      var bgFill, blueBG, handlers, label, labelWidth, lightBG, orangeBG, range, scope, startDrag, thumb, thumbBG, track, update, v;
       handlers = [];
-      u = GUI.ControlPanel.unit;
       v = 0;
-      range = u * 2;
+      range = 0;
       startDrag = 0;
       track = TRS(SVG.create("rect", elm, {
-        fill: "hsl(227, 12%, 14%)",
-        stroke: "hsl(227, 12%, 42%)",
-        "stroke-width": 1,
-        x: 0.5,
-        y: 0.5,
-        rx: u / 2,
-        ry: u / 2
+        x: GUI.pad,
+        y: GUI.pad,
+        strokeWidth: 2,
+        fill: "hsl(227, 45%, 24%)",
+        stroke: "hsl(227, 45%, 24%)"
       }));
       thumb = TRS(SVG.create("g", elm));
       thumbBG = SVG.create("rect", thumb, {
-        fill: "hsl(227, 12%, 30%)",
-        "stroke-width": 1,
-        x: 1.5,
-        y: 1.5,
-        rx: u / 2 - 1,
-        ry: u / 2 - 1,
-        width: u * 2 - 2,
-        height: u - 2
+        x: GUI.pad,
+        y: GUI.pad,
+        strokeWidth: 2,
+        fill: "hsl(220, 10%, 92%)"
       });
       label = SVG.create("text", thumb, {
         textContent: props.name,
-        fill: "white",
-        x: u,
-        y: u / 2 + 8
+        fill: "hsl(227, 16%, 24%)",
+        y: GUI.unit / 2 + 6
       });
-      c = 1;
-      tickBG = function(v) {
-        c = v;
+      labelWidth = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
+      SVG.attrs(thumbBG, {
+        width: labelWidth
+      });
+      SVG.attrs(label, {
+        x: GUI.pad + labelWidth / 2
+      });
+      blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      bgFill = function(arg1) {
+        var b, g, r;
+        r = arg1.r, g = arg1.g, b = arg1.b;
         return SVG.attrs(thumbBG, {
-          fill: "hsl(227, 12%, " + (v * 30) + "%)"
+          stroke: "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")"
         });
       };
-      depress = function() {
-        return Tween(c, 1.4, 0, tickBG);
-      };
-      release = function() {
-        return Tween(c, 1, .2, tickBG);
-      };
+      bgFill(blueBG);
       update = function(V) {
         v = V;
         return TRS.abs(thumb, {
@@ -3684,9 +3684,24 @@
         });
       };
       Input(elm, {
+        over: function() {
+          return bgFill(lightBG);
+        },
         down: function(e) {
           startDrag = e.clientX / range - v;
-          return depress();
+          return bgFill(orangeBG);
+        },
+        out: function(e, state) {
+          if (!state.down) {
+            return Tween(lightBG, blueBG, .1, {
+              tick: bgFill
+            });
+          }
+        },
+        miss: function() {
+          return Tween(orangeBG, blueBG, .1, {
+            tick: bgFill
+          });
         },
         drag: function(e) {
           var handler, len, m, results;
@@ -3698,24 +3713,42 @@
           }
           return results;
         },
-        up: release
+        click: function() {
+          return Tween(orangeBG, lightBG, .2, {
+            tick: bgFill
+          });
+        }
       });
       return scope = {
-        w: props.w || 4,
-        h: props.h || 1,
         attach: function(props) {
           if (props.change != null) {
             return handlers.push(props.change);
           }
         },
-        resize: function(w, h) {
-          range = w - u * 2;
-          return SVG.attrs(track, {
-            width: w,
-            height: h
-          });
+        getPreferredSize: function() {
+          return {
+            w: GUI.width,
+            h: GUI.unit
+          };
         },
-        set: update
+        resize: function(arg1) {
+          var h, w;
+          w = arg1.w, h = arg1.h;
+          range = w - GUI.pad * 2 - labelWidth;
+          SVG.attrs(track, {
+            width: w - GUI.pad * 2,
+            height: h - GUI.pad * 2,
+            rx: (h - GUI.pad * 2) / 2
+          });
+          SVG.attrs(thumbBG, {
+            height: h - GUI.pad * 2,
+            rx: (h - GUI.pad * 2) / 2
+          });
+          return {
+            w: w,
+            h: h
+          };
+        }
       };
     });
   });

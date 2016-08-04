@@ -7,33 +7,33 @@ do ()->
     
     over = (e)->
       state.over = true
-      calls.over? e
+      calls.over? e, state
       if state.down
-        calls.down? e
+        calls.down? e, state
     
     down = (e)->
       state.down = true
-      calls.down? e
+      calls.down? e, state
     
     move = (e)->
       if not state.over
         over e
       if state.down and calls.drag?
-        calls.drag e
+        calls.drag e, state
       else
-        calls.move? e
+        calls.move? e, state
     
     up = (e)->
       state.down = false
       if state.over
-        calls.click? e
+        calls.click? e, state
       else
-        calls.miss? e
-      calls.up? e
+        calls.miss? e, state
+      calls.up? e, state
     
     out = (e)->
       state.over = false
-      calls.out? e
+      calls.out? e, state
     
     
     # MOUSE #####################################################################################

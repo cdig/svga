@@ -12,6 +12,7 @@ Todo:
 
 * Test upgrade process
 * SVGA in cd-module
+* Make alpha take booleans and remap them true:1, false: 0.. then we don't need to worry about conflict between alpha and visible
 
 * Schematic button
 * Background Color

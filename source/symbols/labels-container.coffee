@@ -9,5 +9,5 @@ Take ["Reaction", "Symbol", "SVG"], (Reaction, Symbol, SVG)->
         Reaction "Labels:Show", ()-> scope.visible = true
         Reaction "Background:Set", (v)->
           l = (v/2 + .8) % 1
-          SVG.attr svgElement, "fill", "hsl(220, 4%, #{l*100}%)"
+          SVG.attr svgElement, "fill", "hsl(227, 4%, #{l*100}%)"
             

@@ -851,7 +851,9 @@
         width: 240,
         unit: 48,
         pad: 3,
-        borderRadius: 4
+        borderRadius: 4,
+        light: "hsl(220, 45%, 50%)",
+        dark: "hsl(227, 45%, 35%)"
       }
     });
   });
@@ -960,7 +962,7 @@
 
   (function() {
     return Make("Input", function(elm, calls) {
-      var down, mouseleave, mousemove, mouseup, move, out, over, prepTouchEvent, state, touchend, touchmove, up;
+      var down, mouseleave, mouseup, move, out, over, prepTouchEvent, state, touchend, touchmove, up;
       state = {
         down: false,
         over: false,
@@ -968,13 +970,21 @@
       };
       over = function(e) {
         state.over = true;
-        return typeof calls.over === "function" ? calls.over(e) : void 0;
+        if (typeof calls.over === "function") {
+          calls.over(e);
+        }
+        if (state.down) {
+          return typeof calls.down === "function" ? calls.down(e) : void 0;
+        }
       };
       down = function(e) {
         state.down = true;
         return typeof calls.down === "function" ? calls.down(e) : void 0;
       };
       move = function(e) {
+        if (!state.over) {
+          over(e);
+        }
         if (state.down && (calls.drag != null)) {
           return calls.drag(e);
         } else {
@@ -1010,21 +1020,19 @@
           return;
         }
         down(e);
-        elm.addEventListener("mousemove", mousemove);
         return window.addEventListener("mouseup", mouseup);
       });
-      mousemove = function(e) {
+      elm.addEventListener("mousemove", function(e) {
         if (state.touch) {
           return;
         }
         return move(e);
-      };
+      });
       mouseup = function(e) {
         if (state.touch) {
           return;
         }
         up(e);
-        elm.removeEventListener("mousemove", mousemove);
         return window.removeEventListener("mouseup", mouseup);
       };
       mouseleave = function(e) {
@@ -2271,7 +2279,7 @@
           return Reaction("Background:Set", function(v) {
             var l;
             l = (v / 2 + .8) % 1;
-            return SVG.attr(svgElement, "fill", "hsl(220, 4%, " + (l * 100) + "%)");
+            return SVG.attr(svgElement, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
           });
         }
       };
@@ -3365,10 +3373,11 @@
     });
   });
 
-  Take(["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, GUI, Resize, SVG, Scope) {
-    var CP, ControlPanelView, bg, g, height, resize, setBG;
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
+    var CP, ControlPanelView, bg, g, height, resize;
     CP = GUI.ControlPanel;
     height = 0;
+    Gradient.createLinear("CPGradient", false, "#5175bd", "#35488d");
     g = Scope(SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 16,
@@ -3379,14 +3388,9 @@
       x: -CP.pad * 2,
       y: -CP.pad * 2,
       width: CP.width + CP.pad * 8,
-      rx: CP.borderRadius + CP.pad * 2
+      rx: CP.borderRadius + CP.pad * 2,
+      fill: "url(#CPGradient)"
     });
-    setBG = function(l) {
-      return SVG.attrs(bg, {
-        fill: "hsl(220, 36%, " + (l * 100) + "%)"
-      });
-    };
-    setBG(0.36);
     Resize(resize = function() {
       g.x = (window.innerWidth - CP.width - CP.pad) | 0;
       return g.y = (window.innerHeight / 2 - height / 2) | 0;
@@ -3415,7 +3419,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Control("button", function(elm, props) {
-      var bg, bgFill, depress, h, handlers, label, release, scope, w;
+      var bg, bgFill, blueBG, h, handlers, label, lightBG, orangeBG, scope, w;
       handlers = [];
       SVG.attrs(elm, {
         ui: true
@@ -3424,39 +3428,62 @@
         x: GUI.pad,
         y: GUI.pad,
         rx: GUI.borderRadius,
-        strokeWidth: 2
+        strokeWidth: 2,
+        fill: "hsl(220, 10%, 92%)"
       }));
       label = SVG.create("text", elm, {
         textContent: props.name,
-        fill: "hsl(220, 16%, 24%)"
+        fill: "hsl(227, 16%, 24%)"
       });
       w = Math.max(48, label.getComputedTextLength() + GUI.pad * 8);
       h = 48;
-      bgFill = function(v) {
+      blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      bgFill = function(arg1) {
+        var b, g, r;
+        r = arg1.r, g = arg1.g, b = arg1.b;
         return SVG.attrs(bg.element, {
-          fill: "hsl(220,16%," + (v * 83) + "%)",
-          stroke: "hsl(220,16%," + (v * 24) + "%)"
+          stroke: "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")"
         });
       };
-      bgFill(1);
-      depress = function() {
-        return Tween(1, .7, .2, bgFill);
-      };
-      release = function() {
-        return Tween(.7, 1, .2, bgFill);
-      };
+      bgFill(blueBG);
       Input(elm, {
+        over: function() {
+          return bgFill(lightBG);
+        },
+        down: function() {
+          return bgFill(orangeBG);
+        },
+        out: function() {
+          return Tween(lightBG, blueBG, .1, {
+            tick: bgFill,
+            ease: "linear"
+          });
+        },
         click: function() {
-          var handler, len, m, results;
-          results = [];
+          var handler, len, m;
           for (m = 0, len = handlers.length; m < len; m++) {
             handler = handlers[m];
-            results.push(handler());
+            handler();
           }
-          return results;
-        },
-        down: depress,
-        up: release
+          return Tween(orangeBG, lightBG, .1, {
+            tick: bgFill,
+            ease: "linear"
+          });
+        }
       });
       return scope = {
         attach: function(props) {
@@ -3496,12 +3523,11 @@
         y: GUI.pad,
         width: GUI.width - GUI.pad * 2,
         height: GUI.pad * 3,
-        fill: "white",
         rx: GUI.pad
       });
       setColor = function(l) {
         return SVG.attrs(g, {
-          fill: "hsl(220, 16%, " + (l * 100) + "%)"
+          fill: "hsl(227, 45%, " + (l * 100) + "%)"
         });
       };
       setColor(0.24);
@@ -3530,8 +3556,8 @@
       range = u * 2;
       startDrag = 0;
       track = TRS(SVG.create("rect", elm, {
-        fill: "hsl(220, 12%, 14%)",
-        stroke: "hsl(220, 12%, 42%)",
+        fill: "hsl(227, 12%, 14%)",
+        stroke: "hsl(227, 12%, 42%)",
         "stroke-width": 1,
         x: 0.5,
         y: 0.5,
@@ -3540,7 +3566,7 @@
       }));
       thumb = TRS(SVG.create("g", elm));
       thumbBG = SVG.create("rect", thumb, {
-        fill: "hsl(220, 12%, 30%)",
+        fill: "hsl(227, 12%, 30%)",
         "stroke-width": 1,
         x: 1.5,
         y: 1.5,
@@ -3559,7 +3585,7 @@
       tickBG = function(v) {
         c = v;
         return SVG.attrs(thumbBG, {
-          fill: "hsl(220, 12%, " + (v * 30) + "%)"
+          fill: "hsl(227, 12%, " + (v * 30) + "%)"
         });
       };
       depress = function() {
@@ -3624,7 +3650,7 @@
     }
     setBackground = function(v) {
       var c;
-      c = "hsl(220, 5%, " + (v * 100) + "%)";
+      c = "hsl(227, 5%, " + (v * 100) + "%)";
       return SVG.style(target, "background-color", c);
     };
     Reaction("Background:Set", setBackground);

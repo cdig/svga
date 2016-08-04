@@ -9,7 +9,8 @@ A framework for making interactive animations with SVG.
 Todo:
 * horizontal controls when height-constrained
 * drag controls with 4-way arrow in outside corner
-* Control: spacer
+* divider should only show when vertical
+* Control: vertical divider (only shows in horizontal)
 * Control: N-state toggle
 * Schematic button
 * labels above controls

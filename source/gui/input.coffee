@@ -8,12 +8,16 @@ do ()->
     over = (e)->
       state.over = true
       calls.over? e
+      if state.down
+        calls.down? e
     
     down = (e)->
       state.down = true
       calls.down? e
     
     move = (e)->
+      if not state.over
+        over e
       if state.down and calls.drag?
         calls.drag e
       else
@@ -44,10 +48,9 @@ do ()->
       return if state.touch
       # console.log "mousedown"
       down e
-      elm.addEventListener "mousemove", mousemove
       window.addEventListener "mouseup", mouseup
     
-    mousemove = (e)->
+    elm.addEventListener "mousemove", (e)->
       return if state.touch
       # console.log "mousemove"
       move e
@@ -56,7 +59,6 @@ do ()->
       return if state.touch
       # console.log "mouseup"
       up e
-      elm.removeEventListener "mousemove", mousemove
       window.removeEventListener "mouseup", mouseup
     
     mouseleave = (e)->

@@ -6,10 +6,9 @@ Take ["Control", "GUI", "SVG"], (Control, {ControlPanel:GUI}, SVG)->
       y: GUI.pad
       width: GUI.width - GUI.pad*2
       height: GUI.pad*3
-      fill: "white"
       rx: GUI.pad
     
-    setColor = (l)-> SVG.attrs g, fill: "hsl(220, 16%, #{l*100}%)"
+    setColor = (l)-> SVG.attrs g, fill: "hsl(227, 45%, #{l*100}%)"
     setColor 0.24
     
     return scope =

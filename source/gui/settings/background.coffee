@@ -11,7 +11,7 @@ Take ["Action", "Reaction", "SVG", "DOMContentLoaded"], (Action, Reaction, SVG)-
   
   
   setBackground = (v)->
-    c = "hsl(220, 5%, #{v*100}%)"
+    c = "hsl(227, 5%, #{v*100}%)"
     SVG.style target, "background-color", c
       
   

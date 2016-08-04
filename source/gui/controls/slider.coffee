@@ -10,8 +10,8 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
     
     
     track = TRS SVG.create "rect", elm,
-      fill:"hsl(220, 12%, 14%)"
-      stroke:"hsl(220, 12%, 42%)"
+      fill:"hsl(227, 12%, 14%)"
+      stroke:"hsl(227, 12%, 42%)"
       "stroke-width": 1
       x: 0.5
       y: 0.5
@@ -21,7 +21,7 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
     thumb = TRS SVG.create "g", elm
     
     thumbBG = SVG.create "rect", thumb,
-      fill: "hsl(220, 12%, 30%)"
+      fill: "hsl(227, 12%, 30%)"
       "stroke-width":1
       x: 1.5
       y: 1.5
@@ -39,7 +39,7 @@ Take ["Control","GUI","Input","SVG","TRS","Tween"],
     c = 1
     tickBG = (v)->
       c = v
-      SVG.attrs thumbBG, fill: "hsl(220, 12%, #{v*30}%)"
+      SVG.attrs thumbBG, fill: "hsl(227, 12%, #{v*30}%)"
     
     depress = ()-> Tween c, 1.4, 0, tickBG
     release = ()-> Tween c, 1, .2, tickBG

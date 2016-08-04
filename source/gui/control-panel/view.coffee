@@ -1,6 +1,8 @@
-Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayout, GUI, Resize, SVG, Scope)->
+Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope)->
   CP = GUI.ControlPanel
   height = 0
+  
+  Gradient.createLinear "CPGradient", false, "#5175bd", "#35488d"
   
   g = Scope SVG.create "g", GUI.elm,
     xControls: ""
@@ -13,9 +15,8 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayou
     y: -CP.pad*2
     width: CP.width + CP.pad*8
     rx: CP.borderRadius+CP.pad*2
+    fill: "url(#CPGradient)"
   
-  setBG = (l)-> SVG.attrs bg, fill: "hsl(220, 36%, #{l*100}%)"
-  setBG 0.36
   
   Resize resize = ()->
     g.x = (window.innerWidth - CP.width - CP.pad) |0
@@ -32,8 +33,3 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayou
   Make "ControlPanel", ControlPanelView =
     createElement: (parent = null)->
       elm = SVG.create "g", parent or g.element
-  
-  # Reaction "ControlPanel:Show", ()-> Tween panelX, 1, 0.7, tick
-  # Reaction "ControlPanel:Hide", ()-> Tween panelX, -.2, 0.7, tick
-  # Reaction "Background:Set", (v)->
-  #   setBG l = (v + .4) % 1

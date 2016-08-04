@@ -13,29 +13,32 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
       y: GUI.pad
       rx: GUI.borderRadius
       strokeWidth: 2
+      fill: "hsl(220, 10%, 92%)"
     
     # Button text label
     label = SVG.create "text", elm,
       textContent: props.name
-      fill: "hsl(220, 16%, 24%)"
+      fill: "hsl(227, 16%, 24%)"
     
     # Pre-compute some size info that will be used later on for layout
     w = Math.max 48, label.getComputedTextLength() + GUI.pad*8
     h = 48
     
-    # Setup the bg fill color, and allow it to be easily animated later
-    bgFill = (v)-> SVG.attrs bg.element, fill: "hsl(220,16%,#{v*83}%)", stroke: "hsl(220,16%,#{v*24}%)"
-    bgFill 1
-    
-    # Animations for the bg fill color
-    depress = ()-> Tween 1, .7, .2, bgFill
-    release = ()-> Tween .7, 1, .2, bgFill
+    # Setup the bg stroke color for tweening
+    blueBG = r:34, g:46, b:89
+    lightBG = r:133, g:163, b:224
+    orangeBG = r:255, g:196, b:46
+    bgFill = ({r:r,g:g,b:b})-> SVG.attrs bg.element, stroke: "rgb(#{r|0},#{g|0},#{b|0})"
+    bgFill blueBG
     
     # Input event handling
     Input elm,
-      click: ()-> handler() for handler in handlers
-      down: depress
-      up: release
+      over: ()-> bgFill lightBG
+      down: ()-> bgFill orangeBG
+      out: ()-> Tween lightBG, blueBG, .1, tick:bgFill, ease:"linear"
+      click: ()->
+        handler() for handler in handlers
+        Tween orangeBG, lightBG, .1, tick:bgFill, ease:"linear"
     
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =

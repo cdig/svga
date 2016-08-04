@@ -11,7 +11,7 @@ Take ["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick
   Tick (time, dt)->
     if visible and animateMode
       for set in sets
-        if set.parentScope.visible
+        if set.parentScope.alpha > 0
           f = dt * Config.SPEED
           s = Config.SCALE
           set.update f, s

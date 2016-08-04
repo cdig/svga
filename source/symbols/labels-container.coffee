@@ -5,8 +5,8 @@ Take ["Reaction", "Symbol", "SVG"], (Reaction, Symbol, SVG)->
     
     return scope =
       setup: ()->
-        Reaction "Labels:Hide", ()-> scope.visible = false
-        Reaction "Labels:Show", ()-> scope.visible = true
+        Reaction "Labels:Hide", ()-> scope.alpha = false
+        Reaction "Labels:Show", ()-> scope.alpha = true
         Reaction "Background:Set", (v)->
           l = (v/2 + .8) % 1
           SVG.attr svgElement, "fill", "hsl(227, 4%, #{l*100}%)"

@@ -377,7 +377,7 @@
         results = [];
         for (m = 0, len = sets.length; m < len; m++) {
           set = sets[m];
-          if (set.parentScope.visible) {
+          if (set.parentScope.alpha > 0) {
             f = dt * Config.SPEED;
             s = Config.SCALE;
             results.push(set.update(f, s));
@@ -2231,10 +2231,10 @@
       return scope = {
         setup: function() {
           Reaction("Labels:Hide", function() {
-            return scope.visible = false;
+            return scope.alpha = false;
           });
           Reaction("Labels:Show", function() {
-            return scope.visible = true;
+            return scope.alpha = true;
           });
           return Reaction("Background:Set", function(v) {
             var l;

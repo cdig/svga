@@ -6,10 +6,6 @@ A framework for making interactive animations with SVG.
 * [Issues](https://github.com/cdig/svga/issues)
 * [Starter Project](https://github.com/cdig/svg-activity-starter)
 
-Todo:
-* Control: Slider
-* Control: N-state toggle
-
 * Test upgrade process
 * SVGA in cd-module
 * Make alpha take booleans and remap them true:1, false: 0.. then we don't need to worry about conflict between alpha and visible

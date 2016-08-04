@@ -7,16 +7,7 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
     isLine = element.getAttribute("id")?.indexOf("Line") > -1
     textElement = element.querySelector "tspan" or element.querySelector "text"
     
-    ScopeCheck scope, "pressure", "visible", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"
-    
-    
-    applyVisibility = ()->
-      if visible and alpha > 0
-        if placeholder.parentNode?
-          parent.replaceChild element, placeholder
-      else
-        if element.parentNode?
-          parent.replaceChild placeholder, element
+    ScopeCheck scope, "pressure", "alpha", "stroke", "fill", "linearGradient", "radialGradient", "text", "style"
 
     
     # scope.style = (key, val)-> SVG.style element, key, val
@@ -43,21 +34,18 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
           SVG.attr "textContent", text = val
     
     
-    visible = true
-    Object.defineProperty scope, 'visible',
-      get: ()-> visible
-      set: (val)->
-        if visible isnt val
-          applyVisibility visible = val
-    
-    
     alpha = 1
     Object.defineProperty scope, 'alpha',
       get: ()-> alpha
       set: (val)->
+        val = 1 if val is true
+        val = 0 if val is false
         if alpha isnt val
           SVG.style element, "opacity", alpha = val
-          applyVisibility()
+          if alpha > 0
+            parent.replaceChild element, placeholder if placeholder.parentNode?
+          else
+            parent.replaceChild placeholder, element if element.parentNode?
     
     
     scope.stroke = (color)->

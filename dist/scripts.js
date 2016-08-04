@@ -3371,13 +3371,13 @@
     height = 0;
     g = Scope(SVG.create("g", GUI.elm, {
       xControls: "",
-      fontSize: 20,
+      fontSize: 16,
       textAnchor: "middle"
     }));
     bg = SVG.create("rect", g.element, {
       xBg: "",
-      x: -CP.pad,
-      y: -CP.pad,
+      x: -CP.pad * 2,
+      y: -CP.pad * 2,
       width: CP.width + CP.pad * 8,
       rx: CP.borderRadius + CP.pad * 2
     });
@@ -3394,7 +3394,7 @@
     Take("ScopeReady", function() {
       var size;
       size = ControlPanelLayout.performLayout();
-      height = size.h + CP.pad * 2;
+      height = size.h + CP.pad * 4;
       SVG.attrs(bg, {
         height: height
       });
@@ -3456,7 +3456,6 @@
           return results;
         },
         down: depress,
-        drag: depress,
         up: release
       });
       return scope = {
@@ -3480,7 +3479,7 @@
           });
           return SVG.attrs(label, {
             x: w / 2,
-            y: h / 2 + 8
+            y: h / 2 + 6
           });
         }
       };

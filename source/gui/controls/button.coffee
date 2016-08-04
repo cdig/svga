@@ -35,7 +35,6 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
     Input elm,
       click: ()-> handler() for handler in handlers
       down: depress
-      drag: depress
       up: release
     
     # Our scope just has the 3 mandatory control functions, nothing special.
@@ -46,4 +45,4 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
       
       resize: ({w:w, h:h})->
         SVG.attrs bg.element, width: w - GUI.pad*2, height: h - GUI.pad*2
-        SVG.attrs label, x: w/2, y: h/2 + 8
+        SVG.attrs label, x: w/2, y: h/2 + 6

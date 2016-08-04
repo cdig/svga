@@ -4,13 +4,13 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayou
   
   g = Scope SVG.create "g", GUI.elm,
     xControls: ""
-    fontSize: 20
+    fontSize: 16
     textAnchor: "middle"
   
   bg = SVG.create "rect", g.element,
     xBg: ""
-    x: -CP.pad
-    y: -CP.pad
+    x: -CP.pad*2
+    y: -CP.pad*2
     width: CP.width + CP.pad*8
     rx: CP.borderRadius+CP.pad*2
   
@@ -24,7 +24,7 @@ Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayou
   
   Take "ScopeReady", ()->
     size = ControlPanelLayout.performLayout()
-    height = size.h + CP.pad*2
+    height = size.h + CP.pad*4
     SVG.attrs bg, height: height
     resize()
   

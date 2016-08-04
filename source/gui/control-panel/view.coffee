@@ -1,5 +1,6 @@
 Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope)->
   CP = GUI.ControlPanel
+  panelRadius = CP.borderRadius+CP.pad*2
   
   Gradient.createLinear "CPGradient", false, "#5175bd", "#35488d"
   
@@ -9,23 +10,37 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Contr
     textAnchor: "middle"
   
   bg = SVG.create "rect", g.element,
-    rx: CP.borderRadius+CP.pad*2
+    rx: panelRadius
     fill: "url(#CPGradient)"
   
   panelElms = Scope SVG.create "g", g.element
   panelElms.x = panelElms.y = CP.pad*2
   
+  
   Take "ScopeReady", ()->
     Resize resize = ()->
       view = w:window.innerWidth, h:window.innerHeight
-      size = ControlPanelLayout.performLayout view
+      vertical = view.w >= view.h
+      size = if vertical
+        ControlPanelLayout.vertical view
+      else
+        ControlPanelLayout.horizontal view
+      
       panelWidth = size.w + CP.pad*4
       panelHeight = size.h + CP.pad*4
-      SVG.attrs bg,
-        width: panelWidth
-        height: panelHeight
-      g.x = view.w/2 - panelWidth/2 |0
-      g.y = view.h/2 - panelHeight/2 |0
+      
+      if vertical
+        g.x = view.w - panelWidth |0
+        g.y = view.h/2 - panelHeight/2 |0
+        SVG.attrs bg,
+          width: panelWidth + panelRadius
+          height: panelHeight
+      else
+        g.x = view.w/2 - panelWidth/2 |0
+        g.y = view.h - panelHeight |0
+        SVG.attrs bg,
+          width: panelWidth
+          height: panelHeight + panelRadius
   
   
   Make "ControlPanel", ControlPanelView =

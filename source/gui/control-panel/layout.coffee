@@ -10,33 +10,23 @@ Take ["GUI", "LayoutRow"], ({ControlPanel:GUI}, LayoutRow)->
       else
         rows.push currentRow = LayoutRow()
         currentRow.add scope, size
+  
+    vertical: (view)->
+      size = w:0, h:0
+      for row in rows
+        s = row.resize x:0, y:size.h, view, true
+        size.w = s.w
+        size.h += s.h
+      return size
     
-    performLayout: (view)->
-      aspect = view.w / view.h
-      vertical = aspect > 1
-      if vertical
-        verticalLayout view, vertical
-      else
-        horizontalLayout view, vertical
-  
-  
-  verticalLayout = (view, vertical)->
-    size = w:0, h:0
-    for row in rows
-      s = row.resize x:0, y:size.h, view, vertical
-      size.w = s.w
-      size.h += s.h
-    return size
-
-  
-  horizontalLayout = (view, vertical)->
-    return {w:0, h:0} unless view.w > 1
-    rowsPerCol = 0
-    result = null
-    while !result?
-      rowsPerCol++
-      result = attemptHorizontalLayout view, vertical, rowsPerCol
-    return result
+    horizontal: (view)->
+      return {w:0, h:0} unless view.w > 1
+      rowsPerCol = 0
+      result = null
+      while !result?
+        rowsPerCol++
+        result = attemptHorizontalLayout view, false, rowsPerCol
+      return result
   
   
   attemptHorizontalLayout = (view, vertical, rowsPerCol)->

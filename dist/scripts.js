@@ -3345,7 +3345,7 @@
   });
 
   Take(["GUI", "LayoutRow"], function(arg, LayoutRow) {
-    var GUI, attemptHorizontalLayout, horizontalLayout, rows, verticalLayout;
+    var GUI, attemptHorizontalLayout, rows;
     GUI = arg.ControlPanel;
     rows = [LayoutRow()];
     Make("ControlPanelLayout", {
@@ -3360,50 +3360,40 @@
           return currentRow.add(scope, size);
         }
       },
-      performLayout: function(view) {
-        var aspect, vertical;
-        aspect = view.w / view.h;
-        vertical = aspect > 1;
-        if (vertical) {
-          return verticalLayout(view, vertical);
-        } else {
-          return horizontalLayout(view, vertical);
-        }
-      }
-    });
-    verticalLayout = function(view, vertical) {
-      var len, m, row, s, size;
-      size = {
-        w: 0,
-        h: 0
-      };
-      for (m = 0, len = rows.length; m < len; m++) {
-        row = rows[m];
-        s = row.resize({
-          x: 0,
-          y: size.h
-        }, view, vertical);
-        size.w = s.w;
-        size.h += s.h;
-      }
-      return size;
-    };
-    horizontalLayout = function(view, vertical) {
-      var result, rowsPerCol;
-      if (!(view.w > 1)) {
-        return {
+      vertical: function(view) {
+        var len, m, row, s, size;
+        size = {
           w: 0,
           h: 0
         };
+        for (m = 0, len = rows.length; m < len; m++) {
+          row = rows[m];
+          s = row.resize({
+            x: 0,
+            y: size.h
+          }, view, true);
+          size.w = s.w;
+          size.h += s.h;
+        }
+        return size;
+      },
+      horizontal: function(view) {
+        var result, rowsPerCol;
+        if (!(view.w > 1)) {
+          return {
+            w: 0,
+            h: 0
+          };
+        }
+        rowsPerCol = 0;
+        result = null;
+        while (result == null) {
+          rowsPerCol++;
+          result = attemptHorizontalLayout(view, false, rowsPerCol);
+        }
+        return result;
       }
-      rowsPerCol = 0;
-      result = null;
-      while (result == null) {
-        rowsPerCol++;
-        result = attemptHorizontalLayout(view, vertical, rowsPerCol);
-      }
-      return result;
-    };
+    });
     return attemptHorizontalLayout = function(view, vertical, rowsPerCol) {
       var consumedRows, h, i, len, m, row, s, xOffset, yOffset;
       xOffset = 0;
@@ -3438,8 +3428,9 @@
   });
 
   Take(["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
-    var CP, ControlPanelView, bg, g, panelElms;
+    var CP, ControlPanelView, bg, g, panelElms, panelRadius;
     CP = GUI.ControlPanel;
+    panelRadius = CP.borderRadius + CP.pad * 2;
     Gradient.createLinear("CPGradient", false, "#5175bd", "#35488d");
     g = Scope(SVG.create("g", GUI.elm, {
       xControls: "",
@@ -3447,7 +3438,7 @@
       textAnchor: "middle"
     }));
     bg = SVG.create("rect", g.element, {
-      rx: CP.borderRadius + CP.pad * 2,
+      rx: panelRadius,
       fill: "url(#CPGradient)"
     });
     panelElms = Scope(SVG.create("g", g.element));
@@ -3455,20 +3446,30 @@
     Take("ScopeReady", function() {
       var resize;
       return Resize(resize = function() {
-        var panelHeight, panelWidth, size, view;
+        var panelHeight, panelWidth, size, vertical, view;
         view = {
           w: window.innerWidth,
           h: window.innerHeight
         };
-        size = ControlPanelLayout.performLayout(view);
+        vertical = view.w >= view.h;
+        size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
         panelWidth = size.w + CP.pad * 4;
         panelHeight = size.h + CP.pad * 4;
-        SVG.attrs(bg, {
-          width: panelWidth,
-          height: panelHeight
-        });
-        g.x = view.w / 2 - panelWidth / 2 | 0;
-        return g.y = view.h / 2 - panelHeight / 2 | 0;
+        if (vertical) {
+          g.x = view.w - panelWidth | 0;
+          g.y = view.h / 2 - panelHeight / 2 | 0;
+          return SVG.attrs(bg, {
+            width: panelWidth + panelRadius,
+            height: panelHeight
+          });
+        } else {
+          g.x = view.w / 2 - panelWidth / 2 | 0;
+          g.y = view.h - panelHeight | 0;
+          return SVG.attrs(bg, {
+            width: panelWidth,
+            height: panelHeight + panelRadius
+          });
+        }
       });
     });
     return Make("ControlPanel", ControlPanelView = {

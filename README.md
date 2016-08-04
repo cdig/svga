@@ -2,24 +2,18 @@
 
 A framework for making interactive animations with SVG.
 
+* [Wiki](https://github.com/cdig/svga/wiki)
 * [Issues](https://github.com/cdig/svga/issues)
-* [SVGA Starter](https://github.com/cdig/svg-activity-starter)
-* [Wiki Documentation](https://github.com/cdig/lunchboxsessions/wiki)
-
-
-NEXT: Figure out the right way to do GUI stuff
-  Using scope, now that it's nicer
-  Based on re-frame FRP / dataflow
-
+* [Starter Project](https://github.com/cdig/svg-activity-starter)
 
 Todo:
 * horizontal controls when height-constrained
 * drag controls with 4-way arrow in outside corner
-* labels above controls
 * Control: separator line
 * Control: spacer
 * Control: N-state toggle
 * Schematic button
+* labels above controls
 
 Carl Requested:
 * Background Color

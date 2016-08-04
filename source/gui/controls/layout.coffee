@@ -1,32 +1,21 @@
-Take ["GUI"], (GUI)->
-  gui = GUI.ControlPanel
-  consumedCols = 0
-  consumedRows = 0
-  rows = []
+Take ["GUI", "LayoutRow"], ({ControlPanel:GUI}, LayoutRow)->
+  rows = [LayoutRow()]
   
   Make "ControlPanelLayout",
     addScope: (scope)->
-      w = 2
-      if consumedCols + w > 4
-        consumedCols = 0
-        consumedRows++
-      scope.x = consumedCols
-      scope.y = consumedRows
-      (rows[consumedRows] ?= []).push scope
-      consumedCols += w
+      size = scope.getPreferredSize()
+      currentRow = rows[rows.length-1]
+      if currentRow.hasSpace size
+        currentRow.add scope, size
+      else
+        rows.push currentRow = LayoutRow()
+        currentRow.add scope, size
+      
     
     performLayout: ()->
-      pad = gui.pad
-      unit = gui.unit
-      panelWidth = gui.width
-      widthUnit = (panelWidth-pad*5)/4
-      consumedHeight = 0
+      size = w:0, h:0
       for row in rows
-        for scope in row
-          w = 2 * widthUnit + pad
-          h = 1 * unit
-          scope.x = scope.x * (widthUnit + pad) + pad
-          scope.y = scope.y * unit + pad * (scope.y + 1)
-          scope.resize w, h
-          consumedHeight = Math.max consumedHeight, scope.y + h
-      return consumedHeight + pad
+        s = row.resize x:0, y:size.h
+        size.w += s.w
+        size.h += s.h
+      return size

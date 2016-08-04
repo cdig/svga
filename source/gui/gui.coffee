@@ -15,5 +15,5 @@ Take ["SVG", "SVGReady"], (SVG)->
     ControlPanel:
       width: 240
       unit: 48
-      pad: 2
+      pad: 3
       borderRadius: 4

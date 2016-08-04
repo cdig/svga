@@ -1,34 +1,35 @@
-Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "TRS"], (ControlPanelLayout, GUI, Resize, SVG, TRS)->
-  gui = GUI.ControlPanel
+Take ["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayout, GUI, Resize, SVG, Scope)->
+  CP = GUI.ControlPanel
+  height = 0
   
-  
-  g = TRS SVG.create "g", GUI.elm,
+  g = Scope SVG.create "g", GUI.elm,
     xControls: ""
     fontSize: 20
     textAnchor: "middle"
   
-  bg = SVG.create "rect", g,
+  bg = SVG.create "rect", g.element,
     xBg: ""
-    x: -gui.pad
-    y: -gui.pad
-    width: gui.width + gui.pad*2
-    rx: gui.borderRadius+gui.pad*2
+    x: -CP.pad
+    y: -CP.pad
+    width: CP.width + CP.pad*2
+    rx: CP.borderRadius+CP.pad*2
   
   
-  Resize ()->
-    x = (window.innerWidth/2 - gui.width/2) |0
-    y = (window.innerHeight/2 - gui.width/2) |0
-    TRS.move g, x, y
+  Resize resize = ()->
+    g.x = (window.innerWidth/2 - CP.width/2) |0
+    g.y = (window.innerHeight/2 - height/2) |0
   
   
   Take "ScopeReady", ()->
-    h = ControlPanelLayout.performLayout()
-    SVG.attrs bg, height: h + gui.pad*2
+    size = ControlPanelLayout.performLayout()
+    height = size.h + CP.pad*2
+    SVG.attrs bg, height: height
+    resize()
   
   
   Make "ControlPanel", ControlPanelView =
     createElement: (parent = null)->
-      elm = SVG.create "g", parent or g
+      elm = SVG.create "g", parent or g.element
   
   
   # Reaction "ControlPanel:Show", ()-> Tween panelX, 1, 0.7, tick

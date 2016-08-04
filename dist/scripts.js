@@ -5,7 +5,7 @@
 
   Take(["Control", "ScopeReady"], function(Control) {
     Control.button({
-      name: "Start",
+      name: "S",
       click: (function(_this) {
         return function() {
           return console.log("start");
@@ -13,7 +13,7 @@
       })(this)
     });
     Control.button({
-      name: "Reset",
+      name: "SS",
       click: (function(_this) {
         return function() {
           return console.log("reset");
@@ -21,7 +21,7 @@
       })(this)
     });
     Control.button({
-      name: "Start",
+      name: "SSS",
       click: (function(_this) {
         return function() {
           return console.log("start");
@@ -29,7 +29,7 @@
       })(this)
     });
     Control.button({
-      name: "Reset",
+      name: "SSSS",
       click: (function(_this) {
         return function() {
           return console.log("reset");
@@ -37,7 +37,7 @@
       })(this)
     });
     Control.button({
-      name: "Start",
+      name: "SSSSS",
       click: (function(_this) {
         return function() {
           return console.log("start");
@@ -45,7 +45,7 @@
       })(this)
     });
     Control.button({
-      name: "Reset",
+      name: "SSSSSS",
       click: (function(_this) {
         return function() {
           return console.log("reset");
@@ -53,7 +53,7 @@
       })(this)
     });
     Control.button({
-      name: "Start",
+      name: "SSSSSSS",
       click: (function(_this) {
         return function() {
           return console.log("start");
@@ -61,7 +61,7 @@
       })(this)
     });
     Control.button({
-      name: "Reset",
+      name: "S",
       click: (function(_this) {
         return function() {
           return console.log("reset");
@@ -69,15 +69,55 @@
       })(this)
     });
     Control.button({
-      name: "Start",
+      name: "SSSSSSSS",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "SSSSSSSSS",
       click: (function(_this) {
         return function() {
           return console.log("start");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "SSSSSSSSSS",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "SSSSSSSSSSS",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "SSSSSSSSSSSS",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
+        };
+      })(this)
+    });
+    Control.button({
+      name: "SSSSSSSSSSSS",
+      click: (function(_this) {
+        return function() {
+          return console.log("reset");
         };
       })(this)
     });
     return Control.button({
-      name: "Reset",
+      name: "S",
       click: (function(_this) {
         return function() {
           return console.log("reset");
@@ -883,7 +923,7 @@
       ControlPanel: {
         width: 240,
         unit: 48,
-        pad: 2,
+        pad: 3,
         borderRadius: 4
       }
     });
@@ -3288,24 +3328,26 @@
     return Make("Tween", Tween);
   });
 
-  Take(["Control", "GUI", "Input", "Scope", "SVG", "Tween"], function(Control, GUI, Input, Scope, SVG, Tween) {
-    var gui;
-    gui = GUI.ControlPanel;
+  Take(["Control", "GUI", "Input", "Scope", "SVG", "Tween"], function(Control, arg, Input, Scope, SVG, Tween) {
+    var GUI;
+    GUI = arg.ControlPanel;
     return Control("button", function(elm, props) {
-      var bg, bgFill, depress, handlers, label, release, scope;
+      var bg, bgFill, depress, h, handlers, label, release, scope, w;
       handlers = [];
       SVG.attrs(elm, {
         ui: true
       });
       bg = Scope(SVG.create("rect", elm, {
-        x: gui.pad,
-        y: gui.pad,
-        rx: gui.borderRadius
+        x: GUI.pad,
+        y: GUI.pad,
+        rx: GUI.borderRadius
       }));
       label = SVG.create("text", elm, {
         textContent: props.name,
         fill: "hsl(220, 0%, 30%)"
       });
+      w = Math.max(48, label.getComputedTextLength() + GUI.pad * 8);
+      h = Math.max(48, 20 + GUI.pad * 12);
       bgFill = function(v) {
         return SVG.attrs(bg.element, {
           fill: "hsl(220,12%," + (v * 80) + "%)"
@@ -3334,20 +3376,22 @@
       });
       return scope = {
         attach: function(props) {
-          if (props.action != null) {
-            return handlers.push(props.action);
+          if (props.click != null) {
+            return handlers.push(props.click);
           }
         },
-        preferredSize: function() {
+        getPreferredSize: function() {
           return {
             w: w,
             h: h
           };
         },
-        resize: function(w, h) {
+        resize: function(arg1) {
+          var h, w;
+          w = arg1.w, h = arg1.h;
           SVG.attrs(bg.element, {
-            width: w - gui.pad * 2,
-            height: h - gui.pad * 2
+            width: w - GUI.pad * 2,
+            height: h - GUI.pad * 2
           });
           return SVG.attrs(label, {
             x: w / 2,
@@ -3358,7 +3402,7 @@
     });
   });
 
-  Take(["ControlPanel", "ControlPanelLayout", "Registry", "Scope"], function(ControlPanel, ControlPanelLayout, Registry, Scope) {
+  Take(["ControlPanel", "ControlPanelLayout", "Scope"], function(ControlPanel, ControlPanelLayout, Scope) {
     var Control, instances;
     instances = {};
     return Make("Control", Control = function(type, defn) {
@@ -3369,6 +3413,9 @@
         } else {
           elm = ControlPanel.createElement(props.parent);
           scope = Scope(elm, defn, props);
+          if (typeof scope.attach === "function") {
+            scope.attach(props);
+          }
           ControlPanelLayout.addScope(scope);
           if (props.id != null) {
             return instances[props.id] = scope;
@@ -3378,45 +3425,89 @@
     });
   });
 
-  Take(["GUI"], function(GUI) {
-    var consumedCols, consumedRows, gui, rows;
-    gui = GUI.ControlPanel;
-    consumedCols = 0;
-    consumedRows = 0;
-    rows = [];
+  Take(["GUI"], function(arg) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Make("LayoutRow", function() {
+      var api, consumedHeight, consumedWidth, elements;
+      consumedWidth = 0;
+      consumedHeight = 0;
+      elements = [];
+      return api = {
+        hasSpace: function(size) {
+          return consumedWidth + size.w <= GUI.width;
+        },
+        add: function(scope, size) {
+          elements.push({
+            scope: scope,
+            size: size
+          });
+          consumedWidth += size.w;
+          return consumedHeight = Math.max(consumedHeight, size.h);
+        },
+        getSize: function() {
+          return {
+            w: consumedWidth,
+            h: consumedHeight
+          };
+        },
+        resize: function(arg1) {
+          var element, extraSpace, h, len, m, w, x, y;
+          x = arg1.x, y = arg1.y;
+          extraSpace = (GUI.width - consumedWidth) / elements.length;
+          for (m = 0, len = elements.length; m < len; m++) {
+            element = elements[m];
+            w = element.size.w + extraSpace;
+            h = consumedHeight;
+            element.scope.resize({
+              w: w,
+              h: h
+            });
+            element.scope.x = x;
+            element.scope.y = y;
+            x += w;
+          }
+          return {
+            w: GUI.width,
+            h: consumedHeight
+          };
+        }
+      };
+    });
+  });
+
+  Take(["GUI", "LayoutRow"], function(arg, LayoutRow) {
+    var GUI, rows;
+    GUI = arg.ControlPanel;
+    rows = [LayoutRow()];
     return Make("ControlPanelLayout", {
       addScope: function(scope) {
-        var w;
-        w = 2;
-        if (consumedCols + w > 4) {
-          consumedCols = 0;
-          consumedRows++;
+        var currentRow, size;
+        size = scope.getPreferredSize();
+        currentRow = rows[rows.length - 1];
+        if (currentRow.hasSpace(size)) {
+          return currentRow.add(scope, size);
+        } else {
+          rows.push(currentRow = LayoutRow());
+          return currentRow.add(scope, size);
         }
-        scope.x = consumedCols;
-        scope.y = consumedRows;
-        (rows[consumedRows] != null ? rows[consumedRows] : rows[consumedRows] = []).push(scope);
-        return consumedCols += w;
       },
       performLayout: function() {
-        var consumedHeight, h, len, len1, m, n, pad, panelWidth, row, scope, unit, w, widthUnit;
-        pad = gui.pad;
-        unit = gui.unit;
-        panelWidth = gui.width;
-        widthUnit = (panelWidth - pad * 5) / 4;
-        consumedHeight = 0;
+        var len, m, row, s, size;
+        size = {
+          w: 0,
+          h: 0
+        };
         for (m = 0, len = rows.length; m < len; m++) {
           row = rows[m];
-          for (n = 0, len1 = row.length; n < len1; n++) {
-            scope = row[n];
-            w = 2 * widthUnit + pad;
-            h = 1 * unit;
-            scope.x = scope.x * (widthUnit + pad) + pad;
-            scope.y = scope.y * unit + pad * (scope.y + 1);
-            scope.resize(w, h);
-            consumedHeight = Math.max(consumedHeight, scope.y + h);
-          }
+          s = row.resize({
+            x: 0,
+            y: size.h
+          });
+          size.w += s.w;
+          size.h += s.h;
         }
-        return consumedHeight + pad;
+        return size;
       }
     });
   });
@@ -3511,33 +3602,34 @@
     });
   });
 
-  Take(["ControlPanelLayout", "GUI", "Resize", "SVG", "TRS"], function(ControlPanelLayout, GUI, Resize, SVG, TRS) {
-    var ControlPanelView, bg, g, gui;
-    gui = GUI.ControlPanel;
-    g = TRS(SVG.create("g", GUI.elm, {
+  Take(["ControlPanelLayout", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, GUI, Resize, SVG, Scope) {
+    var CP, ControlPanelView, bg, g, height, resize;
+    CP = GUI.ControlPanel;
+    height = 0;
+    g = Scope(SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 20,
       textAnchor: "middle"
     }));
-    bg = SVG.create("rect", g, {
+    bg = SVG.create("rect", g.element, {
       xBg: "",
-      x: -gui.pad,
-      y: -gui.pad,
-      width: gui.width + gui.pad * 2,
-      rx: gui.borderRadius + gui.pad * 2
+      x: -CP.pad,
+      y: -CP.pad,
+      width: CP.width + CP.pad * 2,
+      rx: CP.borderRadius + CP.pad * 2
     });
-    Resize(function() {
-      var x, y;
-      x = (window.innerWidth / 2 - gui.width / 2) | 0;
-      y = (window.innerHeight / 2 - gui.width / 2) | 0;
-      return TRS.move(g, x, y);
+    Resize(resize = function() {
+      g.x = (window.innerWidth / 2 - CP.width / 2) | 0;
+      return g.y = (window.innerHeight / 2 - height / 2) | 0;
     });
     Take("ScopeReady", function() {
-      var h;
-      h = ControlPanelLayout.performLayout();
-      return SVG.attrs(bg, {
-        height: h + gui.pad * 2
+      var size;
+      size = ControlPanelLayout.performLayout();
+      height = size.h + CP.pad * 2;
+      SVG.attrs(bg, {
+        height: height
       });
+      return resize();
     });
     return Make("ControlPanel", ControlPanelView = {
       createElement: function(parent) {
@@ -3545,7 +3637,7 @@
         if (parent == null) {
           parent = null;
         }
-        return elm = SVG.create("g", parent || g);
+        return elm = SVG.create("g", parent || g.element);
       }
     });
   });

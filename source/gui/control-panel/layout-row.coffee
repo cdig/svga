@@ -19,13 +19,16 @@ Take ["GUI"], ({ControlPanel:GUI})->
         w: consumedWidth
         h: consumedHeight
       
-      resize: ({x:x,y:y})->
+      resize: ({x:x,y:y}, view, vertical)->
         extraSpace = (GUI.width-consumedWidth)/elements.length
+        consumedX = 0
+        consumedY = 0
         for element in elements
           w = element.size.w + extraSpace
           h = consumedHeight
-          element.scope.resize w:w, h:h
-          element.scope.x = x
+          actual = element.scope.resize w:w, h:h, x:x, y:y, view, vertical
+          element.scope.x = x + consumedX
           element.scope.y = y
-          x += w
-        return w:GUI.width, h:consumedHeight
+          consumedX += actual.w
+          consumedY = Math.max consumedY, actual.h
+        return w:consumedX, h:consumedY

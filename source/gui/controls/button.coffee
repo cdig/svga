@@ -49,3 +49,4 @@ Take ["Control", "GUI", "Input", "Scope", "SVG", "Tween"], (Control, {ControlPan
       resize: ({w:w, h:h})->
         SVG.attrs bg.element, width: w - GUI.pad*2, height: h - GUI.pad*2
         SVG.attrs label, x: w/2, y: h/2 + 6
+        return w:w, h:h

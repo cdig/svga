@@ -1,7 +1,9 @@
 Take ["Control", "ScopeReady"], (Control)->
   Control.button name:"S"
+  Control.divider()
   Control.button name:"SS"
   Control.button name:"SSS"
+  Control.divider()
   Control.button name:"SSSS"
   Control.button name:"SSSSS"
   Control.button name:"SSSSSS"

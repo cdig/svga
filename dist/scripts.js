@@ -7,12 +7,14 @@
     Control.button({
       name: "S"
     });
+    Control.divider();
     Control.button({
       name: "SS"
     });
     Control.button({
       name: "SSS"
     });
+    Control.divider();
     Control.button({
       name: "SSSS"
     });
@@ -3312,25 +3314,30 @@
             h: consumedHeight
           };
         },
-        resize: function(arg1) {
-          var element, extraSpace, h, len, m, w, x, y;
+        resize: function(arg1, view, vertical) {
+          var actual, consumedX, consumedY, element, extraSpace, h, len, m, w, x, y;
           x = arg1.x, y = arg1.y;
           extraSpace = (GUI.width - consumedWidth) / elements.length;
+          consumedX = 0;
+          consumedY = 0;
           for (m = 0, len = elements.length; m < len; m++) {
             element = elements[m];
             w = element.size.w + extraSpace;
             h = consumedHeight;
-            element.scope.resize({
+            actual = element.scope.resize({
               w: w,
-              h: h
-            });
-            element.scope.x = x;
+              h: h,
+              x: x,
+              y: y
+            }, view, vertical);
+            element.scope.x = x + consumedX;
             element.scope.y = y;
-            x += w;
+            consumedX += actual.w;
+            consumedY = Math.max(consumedY, actual.h);
           }
           return {
-            w: GUI.width,
-            h: consumedHeight
+            w: consumedX,
+            h: consumedY
           };
         }
       };
@@ -3338,10 +3345,10 @@
   });
 
   Take(["GUI", "LayoutRow"], function(arg, LayoutRow) {
-    var GUI, rows;
+    var GUI, attemptHorizontalLayout, horizontalLayout, rows, verticalLayout;
     GUI = arg.ControlPanel;
     rows = [LayoutRow()];
-    return Make("ControlPanelLayout", {
+    Make("ControlPanelLayout", {
       addScope: function(scope) {
         var currentRow, size;
         size = scope.getPreferredSize();
@@ -3353,30 +3360,86 @@
           return currentRow.add(scope, size);
         }
       },
-      performLayout: function() {
-        var len, m, row, s, size;
-        size = {
+      performLayout: function(view) {
+        var aspect, vertical;
+        aspect = view.w / view.h;
+        vertical = aspect > 1;
+        if (vertical) {
+          return verticalLayout(view, vertical);
+        } else {
+          return horizontalLayout(view, vertical);
+        }
+      }
+    });
+    verticalLayout = function(view, vertical) {
+      var len, m, row, s, size;
+      size = {
+        w: 0,
+        h: 0
+      };
+      for (m = 0, len = rows.length; m < len; m++) {
+        row = rows[m];
+        s = row.resize({
+          x: 0,
+          y: size.h
+        }, view, vertical);
+        size.w = s.w;
+        size.h += s.h;
+      }
+      return size;
+    };
+    horizontalLayout = function(view, vertical) {
+      var result, rowsPerCol;
+      if (!(view.w > 1)) {
+        return {
           w: 0,
           h: 0
         };
-        for (m = 0, len = rows.length; m < len; m++) {
-          row = rows[m];
-          s = row.resize({
-            x: 0,
-            y: size.h
-          });
-          size.w += s.w;
-          size.h += s.h;
-        }
-        return size;
       }
-    });
+      rowsPerCol = 0;
+      result = null;
+      while (result == null) {
+        rowsPerCol++;
+        result = attemptHorizontalLayout(view, vertical, rowsPerCol);
+      }
+      return result;
+    };
+    return attemptHorizontalLayout = function(view, vertical, rowsPerCol) {
+      var consumedRows, h, i, len, m, row, s, xOffset, yOffset;
+      xOffset = 0;
+      yOffset = 0;
+      h = 0;
+      consumedRows = 0;
+      for (i = m = 0, len = rows.length; m < len; i = ++m) {
+        row = rows[i];
+        if (consumedRows >= rowsPerCol) {
+          consumedRows = 0;
+          xOffset += GUI.width;
+          if (xOffset + GUI.width >= view.w) {
+            return null;
+          }
+          h = Math.max(h, yOffset);
+          yOffset = 0;
+        }
+        s = row.resize({
+          x: xOffset,
+          y: yOffset
+        }, view, vertical);
+        yOffset += s.h;
+        if (s.h > 0) {
+          consumedRows++;
+        }
+      }
+      return {
+        w: xOffset + GUI.width,
+        h: Math.max(h, yOffset)
+      };
+    };
   });
 
   Take(["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
-    var CP, ControlPanelView, bg, g, height, resize;
+    var CP, ControlPanelView, bg, g, panelElms;
     CP = GUI.ControlPanel;
-    height = 0;
     Gradient.createLinear("CPGradient", false, "#5175bd", "#35488d");
     g = Scope(SVG.create("g", GUI.elm, {
       xControls: "",
@@ -3384,25 +3447,29 @@
       textAnchor: "middle"
     }));
     bg = SVG.create("rect", g.element, {
-      xBg: "",
-      x: -CP.pad * 2,
-      y: -CP.pad * 2,
-      width: CP.width + CP.pad * 8,
       rx: CP.borderRadius + CP.pad * 2,
       fill: "url(#CPGradient)"
     });
-    Resize(resize = function() {
-      g.x = (window.innerWidth - CP.width - CP.pad) | 0;
-      return g.y = (window.innerHeight / 2 - height / 2) | 0;
-    });
+    panelElms = Scope(SVG.create("g", g.element));
+    panelElms.x = panelElms.y = CP.pad * 2;
     Take("ScopeReady", function() {
-      var size;
-      size = ControlPanelLayout.performLayout();
-      height = size.h + CP.pad * 4;
-      SVG.attrs(bg, {
-        height: height
+      var resize;
+      return Resize(resize = function() {
+        var panelHeight, panelWidth, size, view;
+        view = {
+          w: window.innerWidth,
+          h: window.innerHeight
+        };
+        size = ControlPanelLayout.performLayout(view);
+        panelWidth = size.w + CP.pad * 4;
+        panelHeight = size.h + CP.pad * 4;
+        SVG.attrs(bg, {
+          width: panelWidth,
+          height: panelHeight
+        });
+        g.x = view.w / 2 - panelWidth / 2 | 0;
+        return g.y = view.h / 2 - panelHeight / 2 | 0;
       });
-      return resize();
     });
     return Make("ControlPanel", ControlPanelView = {
       createElement: function(parent) {
@@ -3410,7 +3477,7 @@
         if (parent == null) {
           parent = null;
         }
-        return elm = SVG.create("g", parent || g.element);
+        return elm = SVG.create("g", parent || panelElms.element);
       }
     });
   });
@@ -3504,10 +3571,14 @@
             width: w - GUI.pad * 2,
             height: h - GUI.pad * 2
           });
-          return SVG.attrs(label, {
+          SVG.attrs(label, {
             x: w / 2,
             y: h / 2 + 6
           });
+          return {
+            w: w,
+            h: h
+          };
         }
       };
     });
@@ -3539,9 +3610,20 @@
             h: GUI.pad * 5
           };
         },
-        resize: function(arg1) {
-          var h, w;
-          w = arg1.w, h = arg1.h;
+        resize: function(arg1, view, vertical) {
+          var h, w, x, y;
+          w = arg1.w, h = arg1.h, x = arg1.x, y = arg1.y;
+          if (this.visible = vertical) {
+            return {
+              w: GUI.width,
+              h: GUI.pad * 5
+            };
+          } else {
+            return {
+              w: 0,
+              h: 0
+            };
+          }
         }
       };
     });

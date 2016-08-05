@@ -25,16 +25,6 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   xLimit.min = -xLimit.max
   yLimit.min = -yLimit.max
   
-  Resize ()->
-    width = window.innerWidth - GUI.ControlPanel.width
-    height = window.innerHeight - GUI.TopBar.height
-    wFrac = width / initialSize.width
-    hFrac = height / initialSize.height
-    center.x = width/2
-    center.y = height/2 + GUI.TopBar.height
-    center.z = .9 * Math.min wFrac, hFrac
-    render()
-  
   
   requestRender = ()->
     RAF render, true
@@ -75,7 +65,15 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
     eventInside: (e)->
       e = e.touches[0] if e.touches?.length > 0
       return e.target is document.rootElement or zoom.contains e.target
-  
+    
+    assignSpace: (rect)->
+      wFrac = rect.w / initialSize.width
+      hFrac = rect.h / initialSize.height
+      center.x = rect.x + rect.w/2
+      center.y = rect.y + rect.h/2
+      center.z = .9 * Math.min wFrac, hFrac
+      render()
+      
   
   distTo = (a, b)->
     dx = a.x - b.x

@@ -1,6 +1,9 @@
 Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope)->
   CP = GUI.ControlPanel
   panelRadius = CP.borderRadius+CP.pad*2
+  vertical = true
+  panelWidth = 0
+  panelHeight = 0
   
   Gradient.createLinear "CPGradient", false, "#5175bd", "#35488d"
   
@@ -46,3 +49,9 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Contr
   Make "ControlPanel", ControlPanelView =
     createElement: (parent = null)->
       elm = SVG.create "g", parent or panelElms.element
+    
+    claimSpace: (rect)->
+      if vertical
+        rect.w -= panelWidth
+      else
+        rect.h -= panelHeight

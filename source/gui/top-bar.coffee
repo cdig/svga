@@ -26,7 +26,9 @@ Take ["Registry","Gradient","GUI","Input","Reaction","Resize","SVG","TRS","SVGRe
     else
       requested.push args...
   
-  TopBar.height = GUI.TopBar.height
+  TopBar.claimSpace = (rect)->
+    rect.y += GUI.TopBar.height
+    rect.h -= GUI.TopBar.height
 
   
   Take "ScopeReady", ()->

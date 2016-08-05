@@ -6,7 +6,7 @@ Take ["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], (GUI, Resize, SVG, T
   
   show = ()-> SVG.attrs g, style: "display: block"
   hide = ()-> SVG.attrs g, style: "display: none"
-  Resize ()-> TRS.abs g, x: window.innerWidth/2, y: TopBar.height
+  Resize ()-> TRS.abs g, x: window.innerWidth/2, y: GUI.TopBar.height
   
   window.addEventListener "focus", hide
   window.addEventListener "touchstart", hide

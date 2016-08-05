@@ -6,8 +6,9 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-* Test upgrade process
+* Cut down on mask warnings
 * SVGA in cd-module
+* Optional-ize Live Schematic features (background, nav, topbar, control panel)
 * Schematic button
 * Background Color
 * Floating Mimic

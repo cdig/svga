@@ -531,7 +531,7 @@
     });
   });
 
-  Take(["Action", "Control", "GUI", "Pressure", "Reaction", "Resize", "SVG", "Scope", "Tween", "ScopeReady"], function(Action, Control, GUI, Pressure, Reaction, Resize, SVG, Scope, Tween) {
+  Take(["GUI", "Reaction", "Resize", "Scope", "SVG", "ScopeReady"], function(GUI, Reaction, Resize, Scope, SVG) {
     var g, sliders;
     g = Scope(SVG.create("g", GUI.elm));
     g.alpha = 0;
@@ -1464,21 +1464,7 @@
         timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
         timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
         time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
-        if (p.x != null) {
-          Tween(pos.x, p.x, time, (function(v) {
-            return pos.x = v;
-          }));
-        }
-        if (p.y != null) {
-          Tween(pos.y, p.y, time, (function(v) {
-            return pos.y = v;
-          }));
-        }
-        if (p.z != null) {
-          return Tween(pos.z, p.z, time, (function(v) {
-            return pos.z = v;
-          }));
-        }
+        return Tween(pos, p, time);
       },
       by: function(p) {
         var scale;

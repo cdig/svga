@@ -1,12 +1,5 @@
-del = require "del"
 gulp = require "gulp"
-gulp_concat = require "gulp-concat"
-gulp_inject = require "gulp-inject"
-gulp_rename = require "gulp-rename"
 gulp_replace = require "gulp-replace"
-gulp_shell = require "gulp-shell"
-# gulp_using = require "gulp-using" # Uncomment and npm install for debug
-run_sequence = require "run-sequence"
 
 gulp.task "default", ()->
   gulp.src "source/**/*.coffee"

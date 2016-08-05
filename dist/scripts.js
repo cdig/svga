@@ -2910,7 +2910,7 @@
     time = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
     RAF(tick = function(t) {
       var cb, dt, len, m;
-      dt = t / 1000 - time;
+      dt = Math.max(t / 1000 - time, 0.25);
       time += dt;
       for (m = 0, len = callbacks.length; m < len; m++) {
         cb = callbacks[m];

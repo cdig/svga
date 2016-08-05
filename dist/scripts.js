@@ -730,6 +730,36 @@
     return hide();
   });
 
+  Take(["ControlPanel", "ControlPanelLayout", "Scope"], function(ControlPanel, ControlPanelLayout, Scope) {
+    var Control, instances;
+    instances = {};
+    return Make("Control", Control = function(type, defn) {
+      return Control[type] = function(props) {
+        var base, elm, scope;
+        if (props == null) {
+          props = {};
+        }
+        if (typeof props !== "object") {
+          console.log(props);
+          throw "Control." + type + "(props) takes a optional props object. Got ^^^, which is not an object.";
+        }
+        if (((props != null ? props.id : void 0) != null) && (instances[props.id] != null)) {
+          return typeof (base = instances[props.id]).attach === "function" ? base.attach(props) : void 0;
+        } else {
+          elm = ControlPanel.createElement(props != null ? props.parent : void 0);
+          scope = Scope(elm, defn, props);
+          if (typeof scope.attach === "function") {
+            scope.attach(props);
+          }
+          ControlPanelLayout.addScope(scope);
+          if ((props != null ? props.id : void 0) != null) {
+            return instances[props.id] = scope;
+          }
+        }
+      };
+    });
+  });
+
   (function() {
     window.addEventListener("touchmove", function(e) {
       return e.preventDefault();
@@ -3239,33 +3269,69 @@
     return Make("Tween", Tween);
   });
 
-  Take(["ControlPanel", "ControlPanelLayout", "Scope"], function(ControlPanel, ControlPanelLayout, Scope) {
-    var Control, instances;
-    instances = {};
-    return Make("Control", Control = function(type, defn) {
-      return Control[type] = function(props) {
-        var base1, elm, scope;
-        if (props == null) {
-          props = {};
-        }
-        if (typeof props !== "object") {
-          console.log(props);
-          throw "Control." + type + "(props) takes a optional props object. Got ^^^, which is not an object.";
-        }
-        if (((props != null ? props.id : void 0) != null) && (instances[props.id] != null)) {
-          return typeof (base1 = instances[props.id]).attach === "function" ? base1.attach(props) : void 0;
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
+    var CP, ControlPanelView, bg, g, panelElms, panelHeight, panelRadius, panelWidth, vertical;
+    CP = GUI.ControlPanel;
+    panelRadius = CP.borderRadius + CP.pad * 2;
+    vertical = true;
+    panelWidth = 0;
+    panelHeight = 0;
+    Gradient.createLinear("CPGradient", false, "#5175bd", "#35488d");
+    g = Scope(SVG.create("g", GUI.elm, {
+      xControls: "",
+      fontSize: 16,
+      textAnchor: "middle"
+    }));
+    bg = SVG.create("rect", g.element, {
+      rx: panelRadius,
+      fill: "url(#CPGradient)"
+    });
+    panelElms = Scope(SVG.create("g", g.element));
+    panelElms.x = panelElms.y = CP.pad * 2;
+    Take("ScopeReady", function() {
+      var resize;
+      return Resize(resize = function() {
+        var size, view;
+        view = {
+          w: window.innerWidth,
+          h: window.innerHeight
+        };
+        vertical = view.w >= view.h * 1.3;
+        size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
+        panelWidth = size.w + CP.pad * 4;
+        panelHeight = size.h + CP.pad * 4;
+        if (vertical) {
+          g.x = view.w - panelWidth | 0;
+          g.y = view.h / 2 - panelHeight / 2 | 0;
+          return SVG.attrs(bg, {
+            width: panelWidth + panelRadius,
+            height: panelHeight
+          });
         } else {
-          elm = ControlPanel.createElement(props != null ? props.parent : void 0);
-          scope = Scope(elm, defn, props);
-          if (typeof scope.attach === "function") {
-            scope.attach(props);
-          }
-          ControlPanelLayout.addScope(scope);
-          if ((props != null ? props.id : void 0) != null) {
-            return instances[props.id] = scope;
-          }
+          g.x = view.w / 2 - panelWidth / 2 | 0;
+          g.y = view.h - panelHeight | 0;
+          return SVG.attrs(bg, {
+            width: panelWidth,
+            height: panelHeight + panelRadius
+          });
         }
-      };
+      });
+    });
+    return Make("ControlPanel", ControlPanelView = {
+      createElement: function(parent) {
+        var elm;
+        if (parent == null) {
+          parent = null;
+        }
+        return elm = SVG.create("g", parent || panelElms.element);
+      },
+      claimSpace: function(rect) {
+        if (vertical) {
+          return rect.w -= panelWidth;
+        } else {
+          return rect.h -= panelHeight;
+        }
+      }
     });
   });
 
@@ -3406,72 +3472,6 @@
         h: Math.max(h, yOffset)
       };
     };
-  });
-
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
-    var CP, ControlPanelView, bg, g, panelElms, panelHeight, panelRadius, panelWidth, vertical;
-    CP = GUI.ControlPanel;
-    panelRadius = CP.borderRadius + CP.pad * 2;
-    vertical = true;
-    panelWidth = 0;
-    panelHeight = 0;
-    Gradient.createLinear("CPGradient", false, "#5175bd", "#35488d");
-    g = Scope(SVG.create("g", GUI.elm, {
-      xControls: "",
-      fontSize: 16,
-      textAnchor: "middle"
-    }));
-    bg = SVG.create("rect", g.element, {
-      rx: panelRadius,
-      fill: "url(#CPGradient)"
-    });
-    panelElms = Scope(SVG.create("g", g.element));
-    panelElms.x = panelElms.y = CP.pad * 2;
-    Take("ScopeReady", function() {
-      var resize;
-      return Resize(resize = function() {
-        var size, view;
-        view = {
-          w: window.innerWidth,
-          h: window.innerHeight
-        };
-        vertical = view.w >= view.h * 1.3;
-        size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
-        panelWidth = size.w + CP.pad * 4;
-        panelHeight = size.h + CP.pad * 4;
-        if (vertical) {
-          g.x = view.w - panelWidth | 0;
-          g.y = view.h / 2 - panelHeight / 2 | 0;
-          return SVG.attrs(bg, {
-            width: panelWidth + panelRadius,
-            height: panelHeight
-          });
-        } else {
-          g.x = view.w / 2 - panelWidth / 2 | 0;
-          g.y = view.h - panelHeight | 0;
-          return SVG.attrs(bg, {
-            width: panelWidth,
-            height: panelHeight + panelRadius
-          });
-        }
-      });
-    });
-    return Make("ControlPanel", ControlPanelView = {
-      createElement: function(parent) {
-        var elm;
-        if (parent == null) {
-          parent = null;
-        }
-        return elm = SVG.create("g", parent || panelElms.element);
-      },
-      claimSpace: function(rect) {
-        if (vertical) {
-          return rect.w -= panelWidth;
-        } else {
-          return rect.h -= panelHeight;
-        }
-      }
-    });
   });
 
   Take(["Control", "GUI", "Input", "Scope", "SVG", "Tween"], function(Control, arg, Input, Scope, SVG, Tween) {

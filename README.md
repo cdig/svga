@@ -2,13 +2,12 @@
 
 A framework for making interactive animations with SVG.
 
-* [Wiki](https://github.com/cdig/svga/wiki)
-* [Issues](https://github.com/cdig/svga/issues)
-* [Starter Project](https://github.com/cdig/svg-activity-starter)
+### [Starter Project](https://github.com/cdig/svg-activity-starter) • [Issues](https://github.com/cdig/svga/issues) • [Wiki](https://github.com/cdig/svga/wiki)
+
+## Todos:
 
 * Test upgrade process
 * SVGA in cd-module
-
 * Schematic button
 * Background Color
 * Floating Mimic

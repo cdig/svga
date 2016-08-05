@@ -1,4 +1,4 @@
-Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, SVG, Tween)->
+Take ["RAF", "SVG", "Tween", "ScopeReady"], (RAF, SVG, Tween)->
   pos = x: 0, y: 0, z: 0
   center = x: 0, y: 0, z: 1
   xLimit = {}
@@ -9,13 +9,6 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   
   # This is the #root symbol, not the rootElement aka <svg>
   root = document.getElementById "root"
-  
-  nav = SVG.create "g", null, xNav:""
-  SVG.prepend document.rootElement, nav
-  SVG.append nav, root
-  
-  # Debug points
-  SVG.create "rect", nav, x:-8, y:-8, width:16, height:16, fill:"#F00"
   
   initialSize = root.getBoundingClientRect()
   return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty
@@ -33,8 +26,7 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   
   render = ()->
     z = center.z * Math.pow 2, pos.z
-    return if z is Infinity # This might happen if the stage is empty
-    SVG.attr nav, "transform", "translate(#{center.x},#{center.y}) scale(#{z}) translate(#{pos.x+ox},#{pos.y+oy})"
+    SVG.attr root, "transform", "translate(#{center.x},#{center.y}) scale(#{z}) translate(#{pos.x+ox},#{pos.y+oy})"
   
   
   limit = (l, v)->
@@ -66,7 +58,7 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
     
     eventInside: (e)->
       e = e.touches[0] if e.touches?.length > 0
-      return e.target is document.rootElement or nav.contains e.target
+      return e.target is document.rootElement or root.contains e.target
     
     assignSpace: (rect)->
       wFrac = rect.w / initialSize.width

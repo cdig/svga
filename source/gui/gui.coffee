@@ -13,8 +13,8 @@ Take ["SVG", "SVGReady"], (SVG)->
       Settings:
         inset: 200
     ControlPanel:
-      width: 240
-      unit: 48
+      width: 200
+      unit: 42
       pad: 3
       borderRadius: 4
       light: "hsl(220, 45%, 50%)"

@@ -817,8 +817,8 @@
         }
       },
       ControlPanel: {
-        width: 240,
-        unit: 48,
+        width: 200,
+        unit: 42,
         pad: 3,
         borderRadius: 4,
         light: "hsl(220, 45%, 50%)",
@@ -1416,8 +1416,8 @@
     });
   });
 
-  Take(["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], function(GUI, RAF, Resize, SVG, Tween) {
-    var Nav, center, dist, distTo, initialSize, limit, nav, ox, oy, pos, render, requestRender, root, scaleStartPosZ, tween, xLimit, yLimit, zLimit;
+  Take(["RAF", "SVG", "Tween", "ScopeReady"], function(RAF, SVG, Tween) {
+    var Nav, center, dist, distTo, initialSize, limit, ox, oy, pos, render, requestRender, root, scaleStartPosZ, tween, xLimit, yLimit, zLimit;
     pos = {
       x: 0,
       y: 0,
@@ -1437,18 +1437,6 @@
     scaleStartPosZ = 0;
     tween = null;
     root = document.getElementById("root");
-    nav = SVG.create("g", null, {
-      xNav: ""
-    });
-    SVG.prepend(document.rootElement, nav);
-    SVG.append(nav, root);
-    SVG.create("rect", nav, {
-      x: -8,
-      y: -8,
-      width: 16,
-      height: 16,
-      fill: "#F00"
-    });
     initialSize = root.getBoundingClientRect();
     if (!(initialSize.width > 0 && initialSize.height > 0)) {
       return;
@@ -1465,10 +1453,7 @@
     render = function() {
       var z;
       z = center.z * Math.pow(2, pos.z);
-      if (z === Infinity) {
-        return;
-      }
-      return SVG.attr(nav, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
+      return SVG.attr(root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
     };
     limit = function(l, v) {
       return Math.min(l.max, Math.max(l.min, v));
@@ -1517,7 +1502,7 @@
         if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
           e = e.touches[0];
         }
-        return e.target === document.rootElement || nav.contains(e.target);
+        return e.target === document.rootElement || root.contains(e.target);
       },
       assignSpace: function(rect) {
         var c, hFrac, wFrac;

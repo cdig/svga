@@ -23,6 +23,8 @@ Take ["KeyMe", "Nav", "Tick"], (KeyMe, Nav, Tick)->
     vel.d /= decel if inputX is 0 and inputY is 0
     vel.a = Math.atan2 inputY, inputX if inputY or inputX
     vel.d = Math.min maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY))
+
+    return unless Math.abs(vel.d) > 0.01 or Math.abs(vel.z) > 0.01
     
     Nav.by
       x: Math.cos(vel.a) * vel.d

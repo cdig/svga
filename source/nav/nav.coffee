@@ -5,16 +5,17 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   yLimit = {}
   zLimit = min: 0, max: 3
   scaleStartPosZ = 0
+  tween = null
   
-  zoom = SVG.create "g", null, xZoom:""
-  nav = SVG.create "g", zoom, xNav:""
-  root = document.getElementById "root" # This is the "root" symbol, not to be confused with the <svg> aka rootElement
-  SVG.prepend document.rootElement, zoom
+  # This is the #root symbol, not the rootElement aka <svg>
+  root = document.getElementById "root"
+  
+  nav = SVG.create "g", null, xNav:""
+  SVG.prepend document.rootElement, nav
   SVG.append nav, root
   
   # Debug points
-  # SVG.create "rect", nav, x:-8, y:-8, width:16, height:16, fill:"#F00"
-  # SVG.create "rect", zoom, x:-6, y:-6, width:12, height:12, fill:"#F0F"
+  SVG.create "rect", nav, x:-8, y:-8, width:16, height:16, fill:"#F00"
   
   initialSize = root.getBoundingClientRect()
   return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty
@@ -32,9 +33,8 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
   
   render = ()->
     z = center.z * Math.pow 2, pos.z
-    if z is Infinity then throw "FUCK"
-    SVG.attr nav, "transform", "translate(#{pos.x+ox},#{pos.y+oy})"
-    SVG.attr zoom, "transform", "translate(#{center.x},#{center.y}) scale(#{z})"
+    return if z is Infinity # This might happen if the stage is empty
+    SVG.attr nav, "transform", "translate(#{center.x},#{center.y}) scale(#{z}) translate(#{pos.x+ox},#{pos.y+oy})"
   
   
   limit = (l, v)->
@@ -46,9 +46,10 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
       timeY = .03 * Math.sqrt(Math.abs(p.y-pos.y)) or 0
       timeZ = .7 * Math.sqrt(Math.abs(p.z-pos.z)) or 0
       time = Math.sqrt timeX*timeX + timeY*timeY + timeZ*timeZ
-      Tween pos, p, time
+      tween = Tween pos, p, time, mutate:true, tick:render
     
     by: (p)->
+      Tween.cancel tween if tween?
       pos.z = limit zLimit, pos.z + p.z if p.z?
       scale = center.z * Math.pow 2, pos.z
       pos.x = limit xLimit, pos.x + p.x / scale if p.x?
@@ -59,12 +60,13 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
       scaleStartPosZ = pos.z
     
     scale: (s)->
+      Tween.cancel tween if tween?
       pos.z = limit zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s)
       requestRender()
     
     eventInside: (e)->
       e = e.touches[0] if e.touches?.length > 0
-      return e.target is document.rootElement or zoom.contains e.target
+      return e.target is document.rootElement or nav.contains e.target
     
     assignSpace: (rect)->
       wFrac = rect.w / initialSize.width
@@ -77,7 +79,7 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
         center = c
         render()
       else # Resize
-        Tween center, c, 0.5, mutate:true, tick: render
+        Tween center, c, 0.5, mutate:true, tick:render
   
   distTo = (a, b)->
     dx = a.x - b.x

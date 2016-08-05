@@ -69,11 +69,15 @@ Take ["GUI", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (GUI, RAF, Resize, 
     assignSpace: (rect)->
       wFrac = rect.w / initialSize.width
       hFrac = rect.h / initialSize.height
-      center.x = rect.x + rect.w/2
-      center.y = rect.y + rect.h/2
-      center.z = .9 * Math.min wFrac, hFrac
-      render()
-      
+      c =
+       x: rect.x + rect.w/2
+       y: rect.y + rect.h/2
+       z: .9 * Math.min wFrac, hFrac
+      if center.x is 0 # Initial render
+        center = c
+        render()
+      else # Resize
+        Tween center, c, 0.5, mutate:true, tick: render
   
   distTo = (a, b)->
     dx = a.x - b.x

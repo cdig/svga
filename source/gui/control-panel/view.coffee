@@ -23,7 +23,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Contr
   Take "ScopeReady", ()->
     Resize resize = ()->
       view = w:window.innerWidth, h:window.innerHeight
-      vertical = view.w >= view.h
+      vertical = view.w >= view.h * 1.3
       size = if vertical
         ControlPanelLayout.vertical view
       else

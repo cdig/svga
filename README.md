@@ -9,6 +9,7 @@ A framework for making interactive animations with SVG.
 * Cut down on mask warnings
 * SVGA in cd-module
 * Optional-ize Live Schematic features (background, nav, topbar, control panel)
+* Change @stroke and @fill to be properties, not functions.
 * New BakeLines
 * Schematic button
 * Background Color

@@ -3,7 +3,6 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
     ScopeCheck scope, "alpha"
     
     element = scope.element
-    parent = element.parentNode
     placeholder = SVG.create "g"
     alpha = 1
     
@@ -15,6 +14,6 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
         if alpha isnt val
           SVG.style element, "opacity", alpha = val
           if alpha > 0
-            parent.replaceChild element, placeholder if placeholder.parentNode?
+            placeholder.parentNode.replaceChild element, placeholder if placeholder.parentNode?
           else
-            parent.replaceChild placeholder, element if element.parentNode?
+            element.parentNode.replaceChild placeholder, element if element.parentNode?

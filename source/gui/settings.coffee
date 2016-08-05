@@ -1,10 +1,11 @@
-Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween","ScopeReady"],
-(      Action , Control , GUI , Pressure , Reaction , Resize , SVG , TRS , Tween)->
+Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","Scope","Tween","ScopeReady"],
+(      Action , Control , GUI , Pressure , Reaction , Resize , SVG , Scope , Tween)->
   
-  g = TRS SVG.create "g", GUI.elm
+  g = Scope SVG.create "g", GUI.elm
+  g.alpha = 0
   
-  sliders = TRS SVG.create "g", g, "text-anchor": "middle"
-  TRS.move sliders, -128
+  sliders = Scope SVG.create "g", g.element, "text-anchor": "middle"
+  sliders.x = -128
 
   # slider = Control
   #   name: "Background"
@@ -17,14 +18,8 @@ Take ["Action","Control","GUI","Pressure","Reaction","Resize","SVG","TRS","Tween
   #   slider.set (v - .3) / .7
   
   Resize ()->
-    x = window.innerWidth/2
-    y = GUI.TopBar.height * 2
-    TRS.abs g, x: x, y: y
+    g.x = window.innerWidth/2
+    g.y = GUI.TopBar.height * 2
   
-  alpha = 1
-  do tick = (v = 0)->
-    alpha = v
-    SVG.styles g, opacity: alpha * 2 - 1
-  
-  Reaction "Settings:Show", ()-> Tween alpha, 1, 1.2, tick
-  Reaction "Settings:Hide", ()-> Tween alpha, 0, 1.2, tick
+  Reaction "Settings:Show", ()-> g.show()
+  Reaction "Settings:Hide", ()-> g.hide()

@@ -810,18 +810,16 @@
 
   Take(["ControlPanel", "Nav", "RAF", "Resize", "TopBar"], function(ControlPanel, Nav, RAF, Resize, TopBar) {
     return Resize(function() {
-      return RAF(function() {
-        var rect;
-        rect = {
-          x: 0,
-          y: 0,
-          w: window.innerWidth,
-          h: window.innerHeight
-        };
-        TopBar.claimSpace(rect);
-        ControlPanel.claimSpace(rect);
-        return Nav.assignSpace(rect);
-      });
+      var rect;
+      rect = {
+        x: 0,
+        y: 0,
+        w: window.innerWidth,
+        h: window.innerHeight
+      };
+      TopBar.claimSpace(rect);
+      ControlPanel.claimSpace(rect);
+      return Nav.assignSpace(rect);
     });
   });
 
@@ -2697,11 +2695,19 @@
   })();
 
   Take(["RAF"], function(RAF) {
-    return Make("Resize", function(cb) {
+    return Make("Resize", function(cb, now) {
       var r;
-      (r = function() {
+      if (now == null) {
+        now = false;
+      }
+      r = function() {
         return RAF(cb, true);
-      })();
+      };
+      if (now) {
+        cb();
+      } else {
+        r();
+      }
       return window.addEventListener("resize", r);
     });
   });
@@ -3270,7 +3276,7 @@
   });
 
   Take(["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
-    var CP, ControlPanelView, bg, g, panelElms, panelHeight, panelRadius, panelWidth, vertical;
+    var CP, ControlPanelView, bg, g, panelElms, panelHeight, panelRadius, panelWidth, resize, vertical;
     CP = GUI.ControlPanel;
     panelRadius = CP.borderRadius + CP.pad * 2;
     vertical = true;
@@ -3288,34 +3294,34 @@
     });
     panelElms = Scope(SVG.create("g", g.element));
     panelElms.x = panelElms.y = CP.pad * 2;
+    resize = function() {
+      var size, view;
+      view = {
+        w: window.innerWidth,
+        h: window.innerHeight
+      };
+      vertical = view.w >= view.h * 1.3;
+      size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
+      panelWidth = size.w + CP.pad * 4;
+      panelHeight = size.h + CP.pad * 4;
+      if (vertical) {
+        g.x = view.w - panelWidth | 0;
+        g.y = view.h / 2 - panelHeight / 2 | 0;
+        return SVG.attrs(bg, {
+          width: panelWidth + panelRadius,
+          height: panelHeight
+        });
+      } else {
+        g.x = view.w / 2 - panelWidth / 2 | 0;
+        g.y = view.h - panelHeight | 0;
+        return SVG.attrs(bg, {
+          width: panelWidth,
+          height: panelHeight + panelRadius
+        });
+      }
+    };
     Take("ScopeReady", function() {
-      var resize;
-      return Resize(resize = function() {
-        var size, view;
-        view = {
-          w: window.innerWidth,
-          h: window.innerHeight
-        };
-        vertical = view.w >= view.h * 1.3;
-        size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
-        panelWidth = size.w + CP.pad * 4;
-        panelHeight = size.h + CP.pad * 4;
-        if (vertical) {
-          g.x = view.w - panelWidth | 0;
-          g.y = view.h / 2 - panelHeight / 2 | 0;
-          return SVG.attrs(bg, {
-            width: panelWidth + panelRadius,
-            height: panelHeight
-          });
-        } else {
-          g.x = view.w / 2 - panelWidth / 2 | 0;
-          g.y = view.h - panelHeight | 0;
-          return SVG.attrs(bg, {
-            width: panelWidth,
-            height: panelHeight + panelRadius
-          });
-        }
-      });
+      return Resize(resize, true);
     });
     return Make("ControlPanel", ControlPanelView = {
       createElement: function(parent) {

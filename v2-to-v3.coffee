@@ -41,6 +41,7 @@ gulp.task "default", ()->
     .pipe gulp_replace /\.getPressure\(\)/g, ".pressure"
     .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
     .pipe gulp_replace /getElement:\s*?\(\)->[^]*?svgElement[^]*?(\S)/gm, "$1"
+    .pipe gulp_replace "svgElement", "element"
     
     # Overwrite the original file
     .pipe gulp.dest "source"

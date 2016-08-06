@@ -19,6 +19,7 @@ gulp.task "default", ()->
 
     # General
     .pipe gulp_replace "scope.", "@"
+    .pipe gulp_replace /(.*enableHydraulicLines.*)/g, "#X $1"
     .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X"
     .pipe gulp_replace /.*=.*SVGAnimation.*/g, "#X"
     .pipe gulp_replace /SVGAnimation\s?/g, ""

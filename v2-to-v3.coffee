@@ -28,7 +28,7 @@ gulp.task "default", ()->
     .pipe gulp_replace "PointerInput", "#X Input"
     .pipe gulp_replace "@root.FlowArrows", "FlowArrows"
     .pipe gulp_replace "@FlowArrows", "FlowArrows"
-    .pipe gulp_replace ".getElement()", ".element"
+    .pipe gulp_replace "getElement()", "element"
     .pipe gulp_replace "style.", ""
     .pipe gulp_replace "transform.", ""
     .pipe gulp_replace ".angle", ".rotation"

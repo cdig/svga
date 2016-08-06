@@ -10,6 +10,7 @@ A framework for making interactive animations with SVG.
 * SVGA in cd-module
 * Optional-ize Live Schematic features (background, nav, topbar, control panel)
 * Change @stroke and @fill to be properties, not functions.
+* Make pilot work on the line itself, not just children.
 * New BakeLines
 * Schematic button
 * Background Color

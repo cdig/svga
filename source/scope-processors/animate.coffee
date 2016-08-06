@@ -14,10 +14,11 @@ Take ["Reaction", "Registry", "Tick"], (Reaction, Registry, Tick)->
     
     Tick (time, dt)->
       return unless running
-      animate.call scope, dt, time - startTime # Yes, the dt & time arguments are switched — legacy reasons :(
+      startTime ?= time
+      animate.call scope, time - startTime, dt
     
     Reaction "Schematic:Hide", ()->
-      startTime = (performance?.now() or 0)/1000
+      startTime = null
       running = true
     
     Reaction "Schematic:Show", ()->

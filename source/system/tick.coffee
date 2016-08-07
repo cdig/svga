@@ -6,7 +6,7 @@ Take "RAF", (RAF)->
   time = (performance?.now() or 0)/1000
   
   RAF tick = (t)->
-    dt = Math.max t/1000 - time, 0.25
+    dt = Math.min t/1000 - time, 0.25
     time += dt
     cb time, dt for cb in callbacks
     RAF tick

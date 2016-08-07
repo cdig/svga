@@ -54,6 +54,8 @@ gulp.task "default", ()->
     .pipe gulp_replace ".getPressure()", ".pressure"
     .pipe gulp_replace /scope(.*)getPressureColor()(.*)/, "# scope$1getPressureColor$2 #X getPressureColor() has been removed. Use .pressure instead."
     .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
+    .pipe gulp_replace /\.fill\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
+    .pipe gulp_replace /\.stroke\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
     
     # These have been removed
     .pipe gulp_replace "SVGMask", "#X SVGMask"

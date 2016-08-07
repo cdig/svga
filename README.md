@@ -6,6 +6,7 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
+* Add a scope function that draws a marker point at the transform origin with axis markers
 * Cut down on mask warnings
 * SVGA in cd-module
 * Optional-ize Live Schematic features (background, nav, topbar, control panel)

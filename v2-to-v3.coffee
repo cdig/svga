@@ -28,6 +28,7 @@ gulp.task "default", ()->
     .pipe gulp_replace /scope(.*)animation(.*)/g, "null # scope$1animate$2 #X scope.animate has changed meaning - revise accordingly"
     .pipe gulp_replace /scope(.*)update(.*)/g, "null # scope$1update$2 #X scope.update has changed meaning - revise accordingly"
     .pipe gulp_replace /scope(.*)ctrlPanel(.*)/g, "null # scope$1ctrlPanel$2 #X ctrlPanel has been removed"
+    .pipe gulp_replace "dT, time", "time, dT"
     
     # Pressure is now easier to use
     .pipe gulp_replace "vacuumPressure: -2", ""

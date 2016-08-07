@@ -1889,29 +1889,14 @@
     });
   });
 
-  Take(["Registry", "ScopeCheck"], function(Registry, ScopeCheck) {
+  Take(["Registry"], function(Registry) {
     return Registry.add("ScopeProcessor", function(scope) {
-      ScopeCheck(scope, "getElement", "getPressure", "setPressure", "getPressureColor", "setText", "FlowArrows", "cx", "cy", "angle", "turns", "transform");
-      scope.getElement = function() {
-        throw "@getElement() has been removed. Please use @element instead.";
-      };
-      scope.getPressure = function() {
-        throw "@getPressure() has been removed. Please use @pressure instead.";
-      };
-      scope.setPressure = function() {
-        throw "@setPressure(x) has been removed. Please use @pressure = x instead.";
-      };
       scope.getPressureColor = function() {
         throw "@getPressureColor() has been removed. Please Take and use Pressure() instead.";
       };
       scope.setText = function() {
         throw "@setText(x) has been removed. Please @text = x instead.";
       };
-      Object.defineProperty(scope, "FlowArrows", {
-        get: function() {
-          throw "root.FlowArrows has been removed. Please access FlowArrows via Take.";
-        }
-      });
       Object.defineProperty(scope, "cx", {
         get: function() {
           throw "cx has been removed.";
@@ -1922,19 +1907,9 @@
           throw "cy has been removed.";
         }
       });
-      Object.defineProperty(scope, "angle", {
-        get: function() {
-          throw "angle has been removed. Please use @rotation instead.";
-        }
-      });
-      Object.defineProperty(scope, "turns", {
+      return Object.defineProperty(scope, "turns", {
         get: function() {
           throw "turns has been removed. Please use @rotation instead.";
-        }
-      });
-      return Object.defineProperty(scope, "transform", {
-        get: function() {
-          throw "@transform has been removed. You can just delete the \"transform.\" and things should work.";
         }
       });
     });

@@ -6,6 +6,7 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
+* Rename flow arrows .visible to .alpha
 * Add a scope function that draws a marker point at the transform origin with axis markers
 * Cut down on mask warnings
 * SVGA in cd-module

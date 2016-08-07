@@ -74,6 +74,7 @@ gulp.task "default", ()->
     # Clean up FlowArrows
     .pipe gulp_replace "@root.FlowArrows", "FlowArrows"
     .pipe gulp_replace "@FlowArrows", "FlowArrows"
+    .pipe gulp_replace "FlowArrows.show()", "# FlowArrows.show() #X No longer necessary"
     .pipe gulp_replace "FlowArrows.hide()", "# FlowArrows.hide() #X No longer necessary"
     .pipe gulp_replace "FlowArrows.scale", "FlowArrows.SCALE"
     .pipe gulp_replace "FlowArrows.start()", "# FlowArrows.start() #X No longer necessary"

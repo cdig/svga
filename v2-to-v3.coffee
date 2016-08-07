@@ -24,7 +24,7 @@ gulp.task "default", ()->
     
     # These behviours have changed
     .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
-    .pipe gulp_replace /(.*)\.animation\.(.*)/g, "$1.animate.$2 #X No longer necessary"
+    .pipe gulp_replace /(.*)\.animation\.(.*)/g, "#X $1.animate.$2 #X No longer necessary"
     
     # These properties have been collapsed
     .pipe gulp_replace ".style.", "."
@@ -42,9 +42,9 @@ gulp.task "default", ()->
     # These have been removed
     .pipe gulp_replace "SVGMask", "#X SVGMask"
     .pipe gulp_replace "PointerInput", "#X PointerInput"
-    .pipe gulp_replace "scope.global.", "#X scope.global."
-    .pipe gulp_replace /(.*enableHydraulicLines.*)/g, "#X $1"
-    .pipe gulp_replace /.*=.*SVGAnimation.*/g, "#X"
+    .pipe gulp_replace /scope\.global\.(.*)/, "#X scope.global.$1 #X @global has been removed"
+    .pipe gulp_replace /(.*enableHydraulicLines.*)/g, "#X $1 #X This behaviour has changed"
+    .pipe gulp_replace /.*=.*SVGAnimation.*/g, "#X Removed SVGAnimation"
     .pipe gulp_replace /SVGAnimation\s?(.*)/g, "$1 #X Removed SVGAnimation"
     
     # Normalize element references

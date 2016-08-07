@@ -24,7 +24,7 @@ gulp.task "default", ()->
     
     # These behviours have changed
     .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
-    .pipe gulp_replace /scope.animation\.(.*)/g, "#X scope.animate.$1 #X No longer necessary"
+    .pipe gulp_replace /scope.animation\.(.*)/g, "# scope.animate.$1 #X No longer necessary"
     
     # These properties have been collapsed
     .pipe gulp_replace ".style.", "."
@@ -43,7 +43,7 @@ gulp.task "default", ()->
     .pipe gulp_replace "SVGMask", "#X SVGMask"
     .pipe gulp_replace "PointerInput", "#X PointerInput"
     .pipe gulp_replace /scope\.global\.(.*)/, "#X scope.global.$1 #X scope.global has been removed"
-    .pipe gulp_replace /(.*enableHydraulicLines.*)/g, "#X $1 #X This behaviour has changed"
+    .pipe gulp_replace /(.*enableHydraulicLines.*)/g, "# $1 #X This behaviour has changed"
     .pipe gulp_replace /.*=.*SVGAnimation.*/g, "#X Removed SVGAnimation"
     .pipe gulp_replace /SVGAnimation\s?(.*)/g, "$1 #X Removed SVGAnimation"
     
@@ -58,9 +58,9 @@ gulp.task "default", ()->
     # Clean up FlowArrows
     .pipe gulp_replace "@root.FlowArrows", "FlowArrows"
     .pipe gulp_replace "@FlowArrows", "FlowArrows"
-    .pipe gulp_replace "FlowArrows.hide()", "#X FlowArrows.hide()"
+    .pipe gulp_replace "FlowArrows.hide()", "# FlowArrows.hide() #X No longer necessary"
     .pipe gulp_replace "FlowArrows.scale", "FlowArrows.SCALE"
-    .pipe gulp_replace "FlowArrows.start()", "#X FlowArrows.start()"
+    .pipe gulp_replace "FlowArrows.start()", "# FlowArrows.start() #X No longer necessary"
     .pipe gulp_replace /FlowArrows\.setup\(.+?,\s*?/, "FlowArrows.setup("
     
     ###############################################################################################

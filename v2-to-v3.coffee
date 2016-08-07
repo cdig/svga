@@ -17,31 +17,51 @@ gulp.task "default", ()->
     .pipe gulp_replace /registerInstance/g, ""
     .pipe gulp_replace /,\s*?],/g, "],"
 
-    # General
-    .pipe gulp_replace "scope.", "@"
+    ###############################################################################################
+    
+    # This name causes conflicts
+    .pipe gulp_replace /stroke:(.*)/, "setDisplacement:$1 #X Renamed stroke->setDisplacement, because stroke is a reserved word"
+    
+    # These properties have been collapsed
+    .pipe gulp_replace ".style.", "."
+    .pipe gulp_replace ".transform.", "."
+    
+    # These properties have been renamed
+    .pipe gulp_replace ".angle", ".rotation"
+    
+    # These functions are now properties
+    .pipe gulp_replace /\.visible\((.+?)\)/g, "$1alpha = $2"
+    .pipe gulp_replace /\.setPressure\((.+?)\)/g, ".pressure = $1"
+    .pipe gulp_replace ".getPressure()", ".pressure"
+    .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
+    
+    # These have been removed
+    .pipe gulp_replace "SVGMask", "#X SVGMask"
+    .pipe gulp_replace "PointerInput", "#X PointerInput"
+    .pipe gulp_replace "scope.global.", "#X scope.global."
     .pipe gulp_replace /(.*enableHydraulicLines.*)/g, "#X $1"
-    .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X"
+    
+    # Normalize element references
+    .pipe gulp_replace /getElement:\s*?\(\)->[^]*?svgElement[^]*?(\S)/gm, "$1"
+    .pipe gulp_replace "getElement()", "element"
+    .pipe gulp_replace "svgElement", "element"
+    
+    .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
     .pipe gulp_replace /.*=.*SVGAnimation.*/g, "#X"
-    .pipe gulp_replace /SVGAnimation\s?/g, ""
-    .pipe gulp_replace "SVGMask", "#X Mask"
-    .pipe gulp_replace "@global.", "#X @global."
-    .pipe gulp_replace "PointerInput", "#X Input"
+    .pipe gulp_replace /SVGAnimation\s?(.*)/g, "$1 #X Removed SVGAnimation"
+    
+    # scope -> @ ##################################################################################
+    .pipe gulp_replace "scope.", "@"
+    
+    # Clean up FlowArrows
     .pipe gulp_replace "@root.FlowArrows", "FlowArrows"
     .pipe gulp_replace "@FlowArrows", "FlowArrows"
-    .pipe gulp_replace "getElement()", "element"
-    .pipe gulp_replace "style.", ""
-    .pipe gulp_replace "transform.", ""
-    .pipe gulp_replace ".angle", ".rotation"
     .pipe gulp_replace "FlowArrows.hide()", "#X FlowArrows.hide()"
     .pipe gulp_replace "FlowArrows.scale", "FlowArrows.SCALE"
     .pipe gulp_replace "FlowArrows.start()", "#X FlowArrows.start()"
     .pipe gulp_replace /FlowArrows\.setup\(.+?,\s*?/, "FlowArrows.setup("
-    .pipe gulp_replace /([@.])visible\((.+?)\)/g, "$1alpha = $2"
-    .pipe gulp_replace /\.setPressure\((.+?)\)/g, ".pressure = $1"
-    .pipe gulp_replace /\.getPressure\(\)/g, ".pressure"
-    .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
-    .pipe gulp_replace /getElement:\s*?\(\)->[^]*?svgElement[^]*?(\S)/gm, "$1"
-    .pipe gulp_replace "svgElement", "element"
+    
+    ###############################################################################################
     
     # Overwrite the original file
     .pipe gulp.dest "source"

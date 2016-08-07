@@ -24,7 +24,7 @@ gulp.task "default", ()->
     
     # These behviours have changed
     .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
-    .pipe gulp_replace /scope.animation\.(.*)/g, "#X scope.animate.$2 #X No longer necessary"
+    .pipe gulp_replace /scope.animation\.(.*)/g, "#X scope.animate.$1 #X No longer necessary"
     
     # These properties have been collapsed
     .pipe gulp_replace ".style.", "."

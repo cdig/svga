@@ -22,6 +22,10 @@ gulp.task "default", ()->
     # This name causes conflicts
     .pipe gulp_replace /stroke:(.*)/, "setDisplacement:$1 #X Renamed stroke->setDisplacement, because stroke is a reserved word"
     
+    # These behviours have changed
+    .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
+    .pipe gulp_replace /(.*)\.animation\.(.*)/g, "$1.animate.$2 #X No longer necessary"
+    
     # These properties have been collapsed
     .pipe gulp_replace ".style.", "."
     .pipe gulp_replace ".transform.", "."
@@ -40,16 +44,14 @@ gulp.task "default", ()->
     .pipe gulp_replace "PointerInput", "#X PointerInput"
     .pipe gulp_replace "scope.global.", "#X scope.global."
     .pipe gulp_replace /(.*enableHydraulicLines.*)/g, "#X $1"
+    .pipe gulp_replace /.*=.*SVGAnimation.*/g, "#X"
+    .pipe gulp_replace /SVGAnimation\s?(.*)/g, "$1 #X Removed SVGAnimation"
     
     # Normalize element references
     .pipe gulp_replace /getElement:\s*?\(\)->[^]*?svgElement[^]*?(\S)/gm, "$1"
     .pipe gulp_replace "getElement()", "element"
     .pipe gulp_replace "svgElement", "element"
-    
-    .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
-    .pipe gulp_replace /.*=.*SVGAnimation.*/g, "#X"
-    .pipe gulp_replace /SVGAnimation\s?(.*)/g, "$1 #X Removed SVGAnimation"
-    
+
     # scope -> @ ##################################################################################
     .pipe gulp_replace "scope.", "@"
     

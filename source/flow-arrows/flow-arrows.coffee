@@ -22,6 +22,8 @@ Take ["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick
   Reaction "FlowArrows:Hide", ()-> enableAll visible = false
   
   Make "FlowArrows", Config.wrap (parentScope, lineData...)->
+    if not parentScope? then console.log lineData; throw "FlowArrows was called with a null target. ^^^ was the baked line data."
+    
     elm = parentScope.element
     
     # This removes invisible lines (which have a child named markerBox)

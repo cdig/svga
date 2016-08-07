@@ -405,6 +405,10 @@
     return Make("FlowArrows", Config.wrap(function() {
       var elm, lineData, parentScope, set, setData;
       parentScope = arguments[0], lineData = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (parentScope == null) {
+        console.log(lineData);
+        throw "FlowArrows was called with a null target. ^^^ was the baked line data.";
+      }
       elm = parentScope.element;
       if (elm.querySelector("[id^=markerBox]")) {
         while (elm.hasChildNodes()) {
@@ -1870,10 +1874,13 @@
         if (!running) {
           return;
         }
-        return animate.call(scope, dt, time - startTime);
+        if (startTime == null) {
+          startTime = time;
+        }
+        return animate.call(scope, time - startTime, dt);
       });
       Reaction("Schematic:Hide", function() {
-        startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+        startTime = null;
         return running = true;
       });
       return Reaction("Schematic:Show", function() {
@@ -2039,6 +2046,46 @@
     });
   });
 
+  Take(["Registry", "Tick"], function(Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var running, startTime, tick;
+      if (scope.tick == null) {
+        return;
+      }
+      running = false;
+      startTime = null;
+      tick = scope.tick;
+      scope.tick = function() {
+        throw "@tick() is called by the system. Please don't call it yourself.";
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        if (startTime == null) {
+          startTime = time;
+        }
+        return tick.call(scope, time - startTime, dt);
+      });
+      scope.tick.start = function() {
+        return running = true;
+      };
+      scope.tick.stop = function() {
+        return running = false;
+      };
+      scope.tick.toggle = function() {
+        if (running) {
+          return scope.tick.stop();
+        } else {
+          return scope.tick.start();
+        }
+      };
+      return scope.tick.restart = function() {
+        return startTime = null;
+      };
+    });
+  });
+
   Take(["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], function(RAF, Registry, ScopeCheck) {
     return Registry.add("ScopeProcessor", function(scope) {
       var applyTransform, denom, element, matrix, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
@@ -2144,46 +2191,6 @@
           }
         }
       });
-    });
-  });
-
-  Take(["Registry", "Tick"], function(Registry, Tick) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var running, startTime, update;
-      if (scope.update == null) {
-        return;
-      }
-      running = false;
-      startTime = null;
-      update = scope.update;
-      scope.update = function() {
-        throw "@update() is called by the system. Please don't call it yourself.";
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        return update.call(scope, dt, time - startTime);
-      });
-      scope.update.start = function() {
-        if (startTime == null) {
-          startTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
-        }
-        return running = true;
-      };
-      scope.update.stop = function() {
-        return running = false;
-      };
-      scope.update.toggle = function() {
-        if (running) {
-          return scope.update.stop();
-        } else {
-          return scope.update.start();
-        }
-      };
-      return scope.update.restart = function() {
-        return startTime = null;
-      };
     });
   });
 

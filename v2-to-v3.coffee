@@ -50,7 +50,7 @@ gulp.task "default", ()->
     
     # These functions are now properties
     .pipe gulp_replace /\.visible\((.+?)\)/g, ".alpha = $1"
-    .pipe gulp_replace /\.setPressure\((.+?)\)/g, ".pressure = $1"
+    .pipe gulp_replace /\.setPressure\((.+?)(, 1)?\)/g, ".pressure = $1"
     .pipe gulp_replace ".getPressure()", ".pressure"
     .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
     

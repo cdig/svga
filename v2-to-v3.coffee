@@ -35,7 +35,7 @@ gulp.task "default", ()->
     .pipe gulp_replace ".angle", ".rotation"
     
     # These functions are now properties
-    .pipe gulp_replace /\.visible\((.+?)\)/g, "$1.alpha = $2"
+    .pipe gulp_replace /\.visible\((.+?)\)/g, ".alpha = $1"
     .pipe gulp_replace /\.setPressure\((.+?)\)/g, ".pressure = $1"
     .pipe gulp_replace ".getPressure()", ".pressure"
     .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"

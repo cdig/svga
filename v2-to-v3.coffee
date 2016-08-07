@@ -78,6 +78,7 @@ gulp.task "default", ()->
     .pipe gulp_replace "FlowArrows.start()", "# FlowArrows.start() #X No longer necessary"
     .pipe gulp_replace /FlowArrows\.setup\(.+?,\s*?/g, "FlowArrows.setup("
     .pipe gulp_replace /flowArrowsData.?=[^]+?edges:\[\[([^]+?)(@.*?)FlowArrows.setup.*?@(.*?)\..*/gm, "$2FlowArrows @$3, $1"
+    .pipe gulp_replace /\]\]}[^]*\[\[/gm, ","
     
     ###############################################################################################
     

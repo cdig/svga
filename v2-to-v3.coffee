@@ -21,12 +21,25 @@ gulp.task "default", ()->
     
     # This name causes conflicts
     .pipe gulp_replace /stroke:(.*)/g, "setDisplacement:$1 #X Renamed stroke->setDisplacement, because stroke is a reserved word"
+    .pipe gulp_replace /scope(.*)stroke(.*)/g, "scope$1stroke$2 #X Warning: stroke might need to be changed to setDisplacement"
     
     # These behviours have changed
     .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
     .pipe gulp_replace /scope(.*)animation(.*)/g, "null # scope$1animate$2 #X scope.animate has changed meaning - revise accordingly"
     .pipe gulp_replace /scope(.*)update(.*)/g, "null # scope$1update$2 #X scope.update has changed meaning - revise accordingly"
     .pipe gulp_replace /scope(.*)ctrlPanel(.*)/g, "null # scope$1ctrlPanel$2 #X ctrlPanel has been removed"
+    
+    # Pressure is now easier to use
+    .pipe gulp_replace "vacuumPressure: -2", ""
+    .pipe gulp_replace "drainPressure: 0", ""
+    .pipe gulp_replace "minPressure: 1", ""
+    .pipe gulp_replace "medPressure: 50", ""
+    .pipe gulp_replace "maxPressure: 100", ""
+    .pipe gulp_replace "scope.vacuumPressure", "Pressure.vacuum"
+    .pipe gulp_replace "scope.drainPressure", "Pressure.drain"
+    .pipe gulp_replace "scope.minPressure", "Pressure.min"
+    .pipe gulp_replace "scope.medPressure", "Pressure.med"
+    .pipe gulp_replace "scope.maxPressure", "Pressure.max"
     
     # These properties have been collapsed
     .pipe gulp_replace ".style.", "."

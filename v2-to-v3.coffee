@@ -78,9 +78,13 @@ gulp.task "default", ()->
     .pipe gulp_replace "FlowArrows.start()", "# FlowArrows.start() #X No longer necessary"
     .pipe gulp_replace /FlowArrows\.setup\(.+?,\s*?/g, "FlowArrows.setup("
     .pipe gulp_replace /flowArrowsData.?=[^]+?edges:\[\[([^]+?)(@.*?)FlowArrows.setup.*?@(.*?)\..*/gm, "$2FlowArrows @$3, $1"
+    
+    # Convert Flow Arrows from the old BakeLines form to the new BakeLines form
     .pipe gulp_replace /\]\]}[^]*\[\[/gm, ","
     .pipe gulp_replace /\]\]}\);/g, ""
-    .pipe gulp_replace /\], \[/, ","
+    .pipe gulp_replace /\], \[/g, ","
+    .pipe gulp_replace /({x: .+?, y: .+?}.?){3}/g, "$&xxx"
+    .pipe gulp_replace /({x: .+?, y: .+?},){x: .+?, y: .+?},({x: .+?, y: .+?},?)xxx/g, "$1$2"
     
     ###############################################################################################
     

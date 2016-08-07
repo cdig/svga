@@ -52,6 +52,7 @@ gulp.task "default", ()->
     .pipe gulp_replace /\.visible\((.+?)\)/g, ".alpha = $1"
     .pipe gulp_replace /\.setPressure\((.+?)(, 1)?\)/g, ".pressure = $1"
     .pipe gulp_replace ".getPressure()", ".pressure"
+    .pipe gulp_replace /scope(.*)getPressureColor()(.*)/, "# scope$1getPressureColor$2 #X getPressureColor() has been removed. Use .pressure instead."
     .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
     
     # These have been removed

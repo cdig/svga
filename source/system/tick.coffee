@@ -3,12 +3,14 @@
 
 Take "RAF", (RAF)->
   callbacks = []
-  time = (performance?.now() or 0)/1000
+  wallTime = (performance?.now() or 0)/1000
+  internalTime = 0
   
   RAF tick = (t)->
-    dt = Math.min t/1000 - time, 0.25
-    time += dt
-    cb time, dt for cb in callbacks
+    dt = Math.max t/1000 - wallTime, 0.25
+    wallTime = t
+    internalTime += dt
+    cb internalTime, dt for cb in callbacks
     RAF tick
   
   Make "Tick", (cb, ignoreDuplicates = false)->

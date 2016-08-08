@@ -692,6 +692,21 @@
     });
   });
 
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
+  });
+
   Take(["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(GUI, Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", GUI.elm));
@@ -1295,21 +1310,6 @@
         return document.rootElement.style.opacity = v;
       });
     }
-  });
-
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
   });
 
   Take(["Nav"], function(Nav) {
@@ -3155,16 +3155,18 @@
   });
 
   Take("RAF", function(RAF) {
-    var callbacks, tick, time;
+    var callbacks, internalTime, tick, wallTime;
     callbacks = [];
-    time = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+    wallTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+    internalTime = 0;
     RAF(tick = function(t) {
       var cb, dt, len, m;
-      dt = Math.min(t / 1000 - time, 0.25);
-      time += dt;
+      dt = Math.max(t / 1000 - wallTime, 0.25);
+      wallTime = t;
+      internalTime += dt;
       for (m = 0, len = callbacks.length; m < len; m++) {
         cb = callbacks[m];
-        cb(time, dt);
+        cb(internalTime, dt);
       }
       return RAF(tick);
     });
@@ -3961,6 +3963,7 @@
         }
       });
       return scope = {
+        set: update,
         attach: function(props) {
           if (props.change != null) {
             return handlers.push(props.change);

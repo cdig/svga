@@ -65,6 +65,9 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
     
     
     return scope =
+      set: update
+        
+      
       attach: (props)->
         handlers.push props.change if props.change?
       

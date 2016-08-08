@@ -7,7 +7,7 @@ Take "RAF", (RAF)->
   internalTime = 0
   
   RAF tick = (t)->
-    dt = Math.max t/1000 - wallTime, 0.1
+    dt = Math.min t/1000 - wallTime, 0.1
     wallTime = t
     internalTime += dt
     cb internalTime, dt for cb in callbacks

@@ -19,7 +19,8 @@ gulp.task "default", ()->
 
     ###############################################################################################
     
-    # This name causes conflicts
+    # These names cause conflicts
+    .pipe gulp_replace ".pressure", ".thePressure"
     .pipe gulp_replace /stroke:(.*)/g, "setDisplacement:$1 #X Renamed stroke->setDisplacement, because stroke is a reserved word"
     .pipe gulp_replace /scope(.*)stroke(.*)/g, "scope$1stroke$2 #X Warning: stroke might need to be changed to setDisplacement"
     

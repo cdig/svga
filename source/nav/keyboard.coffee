@@ -1,4 +1,6 @@
-Take ["KeyMe", "Nav", "Tick"], (KeyMe, Nav, Tick)->
+Take ["Config", "KeyMe", "Nav", "Tick"], (Config, KeyMe, Nav, Tick)->
+  return unless Config.nav
+  
   decel = 1.25
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian
   accel = xy: 0.7, z: 0.004 # xy polar, z cartesian

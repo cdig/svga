@@ -1,4 +1,5 @@
-Take ["Nav"], (Nav)->
+Take ["Config", "Nav"], (Config, Nav)->
+  return unless Config.nav
   
   # This only works in Safari and Mobile Safari
   # On Mobile Safari, it fights a bit with touchmove.

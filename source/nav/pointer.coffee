@@ -1,6 +1,7 @@
-Take ["Nav"], (Nav)->
-  
+Take ["Config", "Nav"], (Config, Nav)->
+  return unless Config.nav
   return unless navigator.msMaxTouchPoints and navigator.msMaxTouchPoints > 1
+  
   gesture = new MSGesture()
   gesture.target = document.rootElement
   

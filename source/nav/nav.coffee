@@ -1,4 +1,6 @@
 Take ["Config", "RAF", "SVG", "Tween", "ScopeReady"], (Config, RAF, SVG, Tween)->
+  return Make "Nav", false unless Config.nav
+  
   pos = x: 0, y: 0, z: 0
   center = x: 0, y: 0, z: 1
   xLimit = {}

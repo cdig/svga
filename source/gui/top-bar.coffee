@@ -1,5 +1,7 @@
-Take ["Registry","Gradient","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
-(      Registry , Gradient , GUI , Input , Reaction , Resize , SVG , TRS)->
+Take ["Config","Registry","Gradient","GUI","Input","Reaction","Resize","SVG","TRS","SVGReady"],
+(      Config , Registry , Gradient , GUI , Input , Reaction , Resize , SVG , TRS)->
+  return unless Config.topBar
+  
   requested = []
   instances = {}
   menu = null

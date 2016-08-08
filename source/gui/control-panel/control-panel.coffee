@@ -1,5 +1,6 @@
 Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope)->
   CP = GUI.ControlPanel
+  showing = false
   panelRadius = CP.borderRadius+CP.pad*2
   vertical = true
   panelWidth = 0
@@ -7,7 +8,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Contr
   
   Gradient.linear "CPGradient", false, "#5175bd", "#35488d"
   
-  g = Scope SVG.create "g", GUI.elm,
+  g = Scope SVG.create "g", null,
     xControls: ""
     fontSize: 16
     textAnchor: "middle"
@@ -48,6 +49,11 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Contr
     Resize resize, true
   
   Make "ControlPanel", ControlPanelView =
+    show: ()->
+      if not showing
+        showing = true
+        SVG.append GUI.elm, g.element
+    
     createElement: (parent = null)->
       elm = SVG.create "g", parent or panelElms.element
     

@@ -57,6 +57,7 @@ gulp.task "default", ()->
     .pipe gulp_replace ".getPressure()", ".pressure"
     .pipe gulp_replace /scope(.*)getPressureColor()(.*)/, "# scope$1getPressureColor$2 #X getPressureColor() has been removed. Use .pressure instead."
     .pipe gulp_replace /\.setColor\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
+    .pipe gulp_replace /\.setColor\((.*?)\)/g, ".fill = $1"
     .pipe gulp_replace /\.fill\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
     .pipe gulp_replace /\.stroke\(HydraulicPressure\((.*?)\)\)/g, ".pressure = $1"
     
@@ -85,7 +86,6 @@ gulp.task "default", ()->
     .pipe gulp_replace "FlowArrows.start()", "# FlowArrows.start() #X No longer necessary"
     .pipe gulp_replace /FlowArrows\.setup\(.+?,\s*?/g, "FlowArrows.setup("
     .pipe gulp_replace /flowArrowsData.?=[^]+?edges:\[\[([^]+?)(@.*?)FlowArrows.setup.*?@(.*?)\..*/gm, "$2FlowArrows @$3, $1"
-    .pipe gulp_replace /(Take \[)(.*)\(([^]*FlowArrows)/, "$1\"FlowArrows\", $2(FlowArrows, $3"
     
     # Convert Flow Arrows from the old BakeLines form to the new BakeLines form
     .pipe gulp_replace /\]\]}[^]*\[\[/gm, ","
@@ -94,6 +94,10 @@ gulp.task "default", ()->
     .pipe gulp_replace /({x: .+?, y: .+?}.?){3}/g, "$&xxx"
     .pipe gulp_replace /({x: .+?, y: .+?},){x: .+?, y: .+?},({x: .+?, y: .+?},?)xxx/g, "$1$2"
     
+    # Clean up Takes
+    .pipe gulp_replace /(Take \[)(.*)\(([^]*FlowArrows)/, "$1\"FlowArrows\", $2(FlowArrows, $3"
+    .pipe gulp_replace /(Take \[)(.*)\(([^]*Ease)/, "$1\"Ease\", $2(Ease, $3"
+
     ###############################################################################################
     
     # Overwrite the original file

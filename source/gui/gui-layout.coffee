@@ -1,4 +1,6 @@
-Take ["ControlPanel", "Nav", "RAF", "Resize", "TopBar"], (ControlPanel, Nav, RAF, Resize, TopBar)->
+Take ["Config", "ControlPanel", "Nav", "RAF", "Resize", "TopBar"], (Config, ControlPanel, Nav, RAF, Resize, TopBar)->
+  return unless Config.nav
+  
   Resize ()->
     # This rect holds the amount of space in the GUI
     rect =

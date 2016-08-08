@@ -12,6 +12,8 @@ Take ["ControlPanel", "ControlPanelLayout", "Scope"], (ControlPanel, ControlPane
     Control[type] = (props = {})->
       if typeof props isnt "object" then console.log props; throw "Control.#{type}(props) takes a optional props object. Got ^^^, which is not an object."
       
+      ControlPanel.show()
+      
       # Re-using an existing ID? Just attach to the existing control.
       if props?.id? and instances[props.id]?
         instances[props.id].attach? props

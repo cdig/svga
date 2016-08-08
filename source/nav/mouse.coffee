@@ -1,4 +1,5 @@
-Take ["Nav"], (Nav)->
+Take ["Config", "Nav"], (Config, Nav)->
+  return unless Config.nav
 
   lastX = 0
   lastY = 0

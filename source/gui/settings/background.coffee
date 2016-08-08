@@ -1,4 +1,5 @@
-Take ["Action", "Reaction", "SVG", "DOMContentLoaded"], (Action, Reaction, SVG)->
+Take ["Action", "Config", "Reaction", "SVG", "DOMContentLoaded"], (Action, Config, Reaction, SVG)->
+  
   
   # This bogus lets us workaround a bug in Chrome,
   # by changing the BG of the <object> that loads us
@@ -9,13 +10,21 @@ Take ["Action", "Reaction", "SVG", "DOMContentLoaded"], (Action, Reaction, SVG)-
       target = o
       break
   
+  # Set to a specific color
+  if typeof Config.background is "string"
+    SVG.style target, "background-color", Config.background
   
-  setBackground = (v)->
-    c = "hsl(227, 5%, #{v*100}%)"
-    SVG.style target, "background-color", c
-      
+  # Allow adjustment, default to grey
+  else if Config.background
+    setBackground = (v)->
+      c = "hsl(227, 5%, #{v*100}%)"
+      SVG.style target, "background-color", c
+    
+    Reaction "Background:Set", setBackground
+    
+    Take "ScopeReady", ()->
+      Action "Background:Set", .70
   
-  Reaction "Background:Set", setBackground
-  
-  Take "ScopeReady", ()->
-    Action "Background:Set", .70
+  # No background
+  else
+    SVG.style target, "background-color", "#FFF"

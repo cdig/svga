@@ -1,5 +1,6 @@
-Take ["Nav"], (Nav)->
-
+Take ["Config", "Nav"], (Config, Nav)->
+  return unless Config.nav
+  
   lastTouches = null
 
   window.addEventListener "touchstart", touchStart = (e)->

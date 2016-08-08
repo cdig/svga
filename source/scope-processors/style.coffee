@@ -14,8 +14,8 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
         if stroke isnt val
           SVG.attr element, "stroke", stroke = val
           if strokePath?
-            strokePath = null
             SVG.attr strokePath, "stroke", null
+            strokePath = null
     
     
     fill = null
@@ -25,8 +25,8 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
         if fill isnt val
           SVG.attr element, "fill", fill = val
           if fillPath?
-            fillPath = null
             SVG.attr fillPath, "fill", null
+            fillPath = null
     
     
     pressure = null
@@ -36,9 +36,9 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
         if pressure isnt val
           pressure = val
           if isLine and not scope.root.BROKEN_LINES
-            scope.stroke Pressure scope.pressure
+            scope.stroke = Pressure scope.pressure
           else
-            scope.fill Pressure scope.pressure
+            scope.fill = Pressure scope.pressure
     
     
     scope.linearGradient = (stops, x1=0, y1=0, x2=1, y2=0)->

@@ -1959,8 +1959,8 @@
           if (stroke !== val) {
             SVG.attr(element, "stroke", stroke = val);
             if (strokePath != null) {
-              strokePath = null;
-              return SVG.attr(strokePath, "stroke", null);
+              SVG.attr(strokePath, "stroke", null);
+              return strokePath = null;
             }
           }
         }
@@ -1974,8 +1974,8 @@
           if (fill !== val) {
             SVG.attr(element, "fill", fill = val);
             if (fillPath != null) {
-              fillPath = null;
-              return SVG.attr(fillPath, "fill", null);
+              SVG.attr(fillPath, "fill", null);
+              return fillPath = null;
             }
           }
         }
@@ -1989,9 +1989,9 @@
           if (pressure !== val) {
             pressure = val;
             if (isLine && !scope.root.BROKEN_LINES) {
-              return scope.stroke(Pressure(scope.pressure));
+              return scope.stroke = Pressure(scope.pressure);
             } else {
-              return scope.fill(Pressure(scope.pressure));
+              return scope.fill = Pressure(scope.pressure);
             }
           }
         }

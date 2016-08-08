@@ -692,21 +692,6 @@
     });
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
   Take(["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(GUI, Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", GUI.elm));
@@ -1310,6 +1295,21 @@
         return document.rootElement.style.opacity = v;
       });
     }
+  });
+
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
   });
 
   Take(["Nav"], function(Nav) {
@@ -3921,7 +3921,9 @@
       };
       bgFill(blueBG);
       update = function(V) {
-        v = V;
+        if (V != null) {
+          v = V;
+        }
         return TRS.abs(thumb, {
           x: v * range
         });
@@ -3963,10 +3965,12 @@
         }
       });
       return scope = {
-        set: update,
         attach: function(props) {
           if (props.change != null) {
-            return handlers.push(props.change);
+            handlers.push(props.change);
+          }
+          if (props.value != null) {
+            return update(props.value);
           }
         },
         getPreferredSize: function() {
@@ -3979,6 +3983,7 @@
           var h, w;
           w = arg1.w, h = arg1.h;
           range = w - GUI.pad * 2 - labelWidth;
+          update();
           SVG.attrs(track, {
             width: w - GUI.pad * 2,
             height: h - GUI.pad * 2,

@@ -47,7 +47,7 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
 
     
     update = (V)->
-      v = V
+      v = V if V?
       TRS.abs thumb, x: v * range
     
     
@@ -65,16 +65,15 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
     
     
     return scope =
-      set: update
-        
-      
       attach: (props)->
         handlers.push props.change if props.change?
+        update props.value if props.value?
       
       getPreferredSize: ()-> w:GUI.width, h:GUI.unit
       
       resize: ({w:w, h:h})->
         range = w - GUI.pad*2 - labelWidth
+        update()
         SVG.attrs track,
           width: w - GUI.pad*2
           height: h - GUI.pad*2

@@ -3166,7 +3166,7 @@
     RAF(tick = function(t) {
       var cb, dt, len, m;
       dt = Math.min(t / 1000 - wallTime, 0.1);
-      wallTime = t;
+      wallTime = t / 1000;
       internalTime += dt;
       for (m = 0, len = callbacks.length; m < len; m++) {
         cb = callbacks[m];

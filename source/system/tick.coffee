@@ -8,7 +8,7 @@ Take "RAF", (RAF)->
   
   RAF tick = (t)->
     dt = Math.min t/1000 - wallTime, 0.1
-    wallTime = t
+    wallTime = t/1000
     internalTime += dt
     cb internalTime, dt for cb in callbacks
     RAF tick

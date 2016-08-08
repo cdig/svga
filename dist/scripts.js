@@ -97,7 +97,9 @@
       crawl: function(elm) {
         var tree;
         tree = processElm(elm);
-        console.log("Please remove these mask elements from your SVG:", masks);
+        if (masks.length) {
+          console.log("Please remove these mask elements from your SVG:", masks);
+        }
         masks = null;
         defs = null;
         return tree;

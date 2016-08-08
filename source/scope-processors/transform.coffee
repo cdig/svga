@@ -1,6 +1,6 @@
 Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, ScopeCheck)->
   Registry.add "ScopeProcessor", (scope)->
-    ScopeCheck scope, "x", "y", "rotation", "scale", "scaleX", "scaleY", "skewX", "skewY"
+    ScopeCheck scope, "x", "y", "rotation", "scale", "scaleX", "scaleY"
     
     element = scope.element
     transformBaseVal = element.transform?.baseVal
@@ -12,8 +12,6 @@ Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, Scop
     rotation = 0
     scaleX = 1
     scaleY = 1
-    # skewX = 0
-    # skewY = 0
     
     # Extract the existing transform value from the element
     if transformBaseVal?.numberOfItems is 1
@@ -85,23 +83,3 @@ Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, Scop
         if scaleY isnt val
           scaleY = val
           RAF applyTransform, true, 1
-    
-    
-    # Not sure if we want to implement these
-    #
-    # Object.defineProperty scope, 'skewX',
-    #   get: ()-> skewX
-    #   set: (val)->
-    #     skewX = val
-    #     RAF applyTransform, true, 1
-    #
-    # Object.defineProperty scope, 'skewY',
-    #   get: ()-> skewY
-    #   set: (val)->
-    #     rotation = val
-    #     RAF applyTransform, true, 1
-    
-    
-    # LEGACY
-    # api.setBaseIdentity = ()-> baseTransform = "matrix(1,0,0,1,0,0)"
-    # api.setBaseTransform = ()-> baseTransform = element.getAttribute("transform")

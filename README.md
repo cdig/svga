@@ -6,7 +6,6 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-* Make pilot work on the line itself, not just children.
 * Cut down on mask warnings
 * Add a scope function that draws a marker point at the transform origin with axis markers
 * Fix scope style gradients

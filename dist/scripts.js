@@ -1889,6 +1889,31 @@
     });
   });
 
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var paths;
+      ScopeCheck(scope, "dash");
+      paths = scope.element.querySelectorAll("path");
+      scope.dash = function(v) {
+        var len, m, path, results;
+        results = [];
+        for (m = 0, len = paths.length; m < len; m++) {
+          path = paths[m];
+          results.push(SVG.attrs(path, {
+            "stroke-dasharray": v
+          }));
+        }
+        return results;
+      };
+      scope.dash.manifold = function() {
+        return scope.dash("6 3 12 3");
+      };
+      return scope.dash.pilot = function() {
+        return scope.dash("6 6");
+      };
+    });
+  });
+
   Take(["Registry"], function(Registry) {
     return Registry.add("ScopeProcessor", function(scope) {
       scope.getPressureColor = function() {
@@ -2077,7 +2102,7 @@
   Take(["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], function(RAF, Registry, ScopeCheck) {
     return Registry.add("ScopeProcessor", function(scope) {
       var applyTransform, denom, element, matrix, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
-      ScopeCheck(scope, "x", "y", "rotation", "scale", "scaleX", "scaleY", "skewX", "skewY");
+      ScopeCheck(scope, "x", "y", "rotation", "scale", "scaleX", "scaleY");
       element = scope.element;
       transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
       transform = document.rootElement.createSVGTransform();
@@ -2228,21 +2253,6 @@
       strip(svgElement);
       svgElement.setAttributeNS(null, "fill", "transparent");
       return scope = {
-        pilot: function(name) {
-          var len, m, path, ref, results;
-          if (scope[name] == null) {
-            throw scope.name + ".pilot(\"" + name + "\") failed: " + name + " is not a child of " + scope.name;
-          }
-          ref = scope[name].element.querySelectorAll("path");
-          results = [];
-          for (m = 0, len = ref.length; m < len; m++) {
-            path = ref[m];
-            results.push(SVG.attrs(path, {
-              "stroke-dasharray": "6 6"
-            }));
-          }
-          return results;
-        },
         setup: function() {
           return Reaction("Schematic:Show", function() {
             return scope.pressure = Pressure.black;

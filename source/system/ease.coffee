@@ -9,12 +9,12 @@
 # input between 0 and 1, which is often very helpful.
 
 
-Take "PureMath", (PureMath)->
+do ()->
   Make "Ease", Ease =
     
     sin: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       return outputMin if inputMin is inputMax # Avoids a divide by zero
-      input = PureMath.clip(input, inputMin, inputMax) if clip
+      input = Math.max inputMin, Math.min inputMax, input if clip
       p = (input - inputMin) / (inputMax - inputMin)
       cos = Math.cos(p * Math.PI)
       return (.5 - cos/2) * outputMax + outputMin
@@ -26,7 +26,7 @@ Take "PureMath", (PureMath)->
     
     linear: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       return outputMin if inputMin is inputMax # Avoids a divide by zero
-      input = PureMath.clip(input, inputMin, inputMax) if clip
+      input = Math.max inputMin, Math.min inputMax, input if clip
       input -= inputMin
       input /= inputMax - inputMin
       input *= outputMax - outputMin
@@ -36,7 +36,7 @@ Take "PureMath", (PureMath)->
     
     power: (input, power = 1, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       return outputMin if inputMin is inputMax # Avoids a divide by zero
-      input = PureMath.clip(input, inputMin, inputMax) if clip
+      input = Math.max inputMin, Math.min inputMax, input if clip
       outputDiff = outputMax - outputMin
       inputDiff = inputMax - inputMin
       p = (input-inputMin) / (inputDiff/2)

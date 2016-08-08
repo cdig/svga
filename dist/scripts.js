@@ -2401,7 +2401,7 @@
 
   Make("Dev", window.top.location.hostname === "localhost");
 
-  Take("PureMath", function(PureMath) {
+  (function() {
     var Ease;
     return Make("Ease", Ease = {
       sin: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
@@ -2425,7 +2425,7 @@
           return outputMin;
         }
         if (clip) {
-          input = PureMath.clip(input, inputMin, inputMax);
+          input = Math.max(inputMin, Math.min(inputMax, input));
         }
         p = (input - inputMin) / (inputMax - inputMin);
         cos = Math.cos(p * Math.PI);
@@ -2469,7 +2469,7 @@
           return outputMin;
         }
         if (clip) {
-          input = PureMath.clip(input, inputMin, inputMax);
+          input = Math.max(inputMin, Math.min(inputMax, input));
         }
         input -= inputMin;
         input /= inputMax - inputMin;
@@ -2501,7 +2501,7 @@
           return outputMin;
         }
         if (clip) {
-          input = PureMath.clip(input, inputMin, inputMax);
+          input = Math.max(inputMin, Math.min(inputMax, input));
         }
         outputDiff = outputMax - outputMin;
         inputDiff = inputMax - inputMin;
@@ -2549,7 +2549,7 @@
         return Ease.power(input, 4, inputMin, inputMax, outputMin, outputMax, clip);
       }
     });
-  });
+  })();
 
   Take("SVG", function(SVG) {
     var Gradient, createStops, existing;

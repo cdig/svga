@@ -6,20 +6,27 @@ Take "SVG", (SVG)->
   existing = {}
   
   Make "Gradient", Gradient =
-    createLinear: (name, vertical, stops...)->
+    linear: (name, props, stops...)->
       if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
       existing[name] = true
-      attrs = if vertical then { id: name, x2: 0, y2: 1 } else { id: name }
+      attrs = if typeof props is "object"
+        props.id = name
+        props
+      else if props is true # Vertical
+        id: name, x2: 0, y2: 1
+      else
+        id: name
       gradient = SVG.create "linearGradient", SVG.defs, attrs
       createStops gradient, stops
-      null # Not Composable
+      return gradient # Composable
     
-    createRadial: (name, stops...)->
+    radial: (name, props, stops...)->
       if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
       existing[name] = true
-      gradient = SVG.create "radialGradient", SVG.defs, id: name
+      props.id = name
+      gradient = SVG.create "radialGradient", SVG.defs, props
       createStops gradient, stops
-      null # Not Composable
+      return gradient # Composable
   
   
   createStops = (gradient, stops)->

@@ -692,21 +692,6 @@
     });
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
   Take(["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], function(GUI, Resize, SVG, TopBar, TRS) {
     var g, hide, show;
     g = TRS(SVG.create("g", GUI.elm));
@@ -1147,7 +1132,7 @@
       height: GUI.TopBar.height,
       fill: "url(#TopBarGradient)"
     });
-    Gradient.createLinear("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
+    Gradient.linear("TopBarGradient", false, "#35488d", "#5175bd", "#35488d");
     container = TRS(SVG.create("g", topBar, {
       "class": "Elements"
     }));
@@ -1310,6 +1295,21 @@
         return document.rootElement.style.opacity = v;
       });
     }
+  });
+
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
+    });
   });
 
   Take(["Nav"], function(Nav) {
@@ -2046,13 +2046,19 @@
     });
   });
 
-  Take(["Pressure", "Registry", "ScopeCheck", "SVG"], function(Pressure, Registry, ScopeCheck, SVG) {
+  Take(["Gradient", "Pressure", "Registry", "ScopeCheck", "SVG"], function(Gradient, Pressure, Registry, ScopeCheck, SVG) {
+    var gradientCount;
+    gradientCount = 0;
     return Registry.add("ScopeProcessor", function(scope) {
-      var element, fill, fillPath, isLine, pressure, ref, stroke, strokePath;
+      var childPathFill, childPathStroke, element, fill, isLine, linearGradient, linearGradientName, pressure, radialGradient, radialGradientName, ref, stroke;
       ScopeCheck(scope, "stroke", "fill", "pressure", "linearGradient", "radialGradient");
       element = scope.element;
-      strokePath = fillPath = element.querySelector("path");
+      childPathStroke = childPathFill = element.querySelector("path");
       isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
+      linearGradientName = "LGradient" + gradientCount;
+      linearGradient = null;
+      radialGradientName = "RGradient" + gradientCount++;
+      radialGradient = null;
       stroke = null;
       Object.defineProperty(scope, 'stroke', {
         get: function() {
@@ -2061,9 +2067,9 @@
         set: function(val) {
           if (stroke !== val) {
             SVG.attr(element, "stroke", stroke = val);
-            if (strokePath != null) {
-              SVG.attr(strokePath, "stroke", null);
-              return strokePath = null;
+            if (childPathStroke != null) {
+              SVG.attr(childPathStroke, "stroke", null);
+              return childPathStroke = null;
             }
           }
         }
@@ -2076,9 +2082,9 @@
         set: function(val) {
           if (fill !== val) {
             SVG.attr(element, "fill", fill = val);
-            if (fillPath != null) {
-              SVG.attr(fillPath, "fill", null);
-              return fillPath = null;
+            if (childPathFill != null) {
+              SVG.attr(childPathFill, "fill", null);
+              return childPathFill = null;
             }
           }
         }
@@ -2099,21 +2105,27 @@
           }
         }
       });
-      scope.linearGradient = function(stops, x1, y1, x2, y2) {
-        if (x1 == null) {
-          x1 = 0;
+      scope.linearGradient = function(stops, angle) {
+        if (linearGradient != null) {
+          SVG.defs.removeChild(linearGradient);
         }
-        if (y1 == null) {
-          y1 = 0;
-        }
-        if (x2 == null) {
-          x2 = 1;
-        }
-        if (y2 == null) {
-          y2 = 0;
-        }
+        linearGradient = Gradient.linear.apply(Gradient, [gradientName, {
+          x2: Math.cos(angle),
+          y2: Math.sin(angle)
+        }].concat(slice.call(stops)));
+        return scope.fill = "url(#" + name + ")";
       };
-      return scope.radialGradient = function(stops, cx, cy, radius) {};
+      return scope.radialGradient = function(stops, r, x, y) {
+        if (radialGradient != null) {
+          SVG.defs.removeChild(radialGradient);
+        }
+        radialGradient = Gradient.radial.apply(Gradient, [gradientName, {
+          r: r,
+          x: x,
+          y: y
+        }].concat(slice.call(stops)));
+        return scope.fill = "url(#" + name + ")";
+      };
     });
   });
 
@@ -2389,18 +2401,168 @@
 
   Make("Dev", window.top.location.hostname === "localhost");
 
+  Take("PureMath", function(PureMath) {
+    var Ease;
+    return Make("Ease", Ease = {
+      sin: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        var cos, p;
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        if (inputMin === inputMax) {
+          return outputMin;
+        }
+        if (clip) {
+          input = PureMath.clip(input, inputMin, inputMax);
+        }
+        p = (input - inputMin) / (inputMax - inputMin);
+        cos = Math.cos(p * Math.PI);
+        return (.5 - cos / 2) * outputMax + outputMin;
+      },
+      cubic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        return Ease.power(input, 3, inputMin, inputMax, outputMin, outputMax, clip);
+      },
+      linear: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        if (inputMin === inputMax) {
+          return outputMin;
+        }
+        if (clip) {
+          input = PureMath.clip(input, inputMin, inputMax);
+        }
+        input -= inputMin;
+        input /= inputMax - inputMin;
+        input *= outputMax - outputMin;
+        input += outputMin;
+        return input;
+      },
+      power: function(input, power, inputMin, inputMax, outputMin, outputMax, clip) {
+        var inputDiff, outputDiff, p;
+        if (power == null) {
+          power = 1;
+        }
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        if (inputMin === inputMax) {
+          return outputMin;
+        }
+        if (clip) {
+          input = PureMath.clip(input, inputMin, inputMax);
+        }
+        outputDiff = outputMax - outputMin;
+        inputDiff = inputMax - inputMin;
+        p = (input - inputMin) / (inputDiff / 2);
+        if (p < 1) {
+          return outputMin + outputDiff / 2 * Math.pow(p, power);
+        } else {
+          return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
+        }
+      },
+      quadratic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        return Ease.power(input, 2, inputMin, inputMax, outputMin, outputMax, clip);
+      },
+      quartic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        return Ease.power(input, 4, inputMin, inputMax, outputMin, outputMax, clip);
+      }
+    });
+  });
+
   Take("SVG", function(SVG) {
     var Gradient, createStops, existing;
     existing = {};
     Make("Gradient", Gradient = {
-      createLinear: function() {
-        var attrs, gradient, name, stops, vertical;
-        name = arguments[0], vertical = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
+      linear: function() {
+        var attrs, gradient, name, props, stops;
+        name = arguments[0], props = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
         if (existing[name] != null) {
           throw "Gradient named " + name + " already exists. Please don't create the same gradient more than once.";
         }
         existing[name] = true;
-        attrs = vertical ? {
+        attrs = typeof props === "object" ? (props.id = name, props) : props === true ? {
           id: name,
           x2: 0,
           y2: 1
@@ -2409,20 +2571,19 @@
         };
         gradient = SVG.create("linearGradient", SVG.defs, attrs);
         createStops(gradient, stops);
-        return null;
+        return gradient;
       },
-      createRadial: function() {
-        var gradient, name, stops;
-        name = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      radial: function() {
+        var gradient, name, props, stops;
+        name = arguments[0], props = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
         if (existing[name] != null) {
           throw "Gradient named " + name + " already exists. Please don't create the same gradient more than once.";
         }
         existing[name] = true;
-        gradient = SVG.create("radialGradient", SVG.defs, {
-          id: name
-        });
+        props.id = name;
+        gradient = SVG.create("radialGradient", SVG.defs, props);
         createStops(gradient, stops);
-        return null;
+        return gradient;
       }
     });
     return createStops = function(gradient, stops) {
@@ -3365,7 +3526,7 @@
     vertical = true;
     panelWidth = 0;
     panelHeight = 0;
-    Gradient.createLinear("CPGradient", false, "#5175bd", "#35488d");
+    Gradient.linear("CPGradient", false, "#5175bd", "#35488d");
     g = Scope(SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 16,

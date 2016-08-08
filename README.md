@@ -6,17 +6,15 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-* document the debug.point stuff
-* Don't trigger nav (or Input) when right-clicking
-* Fix scope style gradients
+* Gradients need work
 * SVGA in cd-module
-* Optional-ize Live Schematic features (background, nav, topbar, control panel)
-* New BakeLines
+* Scope gradients
 * Schematic button
-* Background Color
-* Floating Mimic
 * Pause
-* Dynamic Drawing
+* Background Color
+* New BakeLines
+* Don't trigger nav (or Input) when right-clicking
+* Don't trigger nav when dragging out of a control
 
 ## License
 Copyright (c) 2014-2016 CD Industrial Group Inc. http://www.cdiginc.com

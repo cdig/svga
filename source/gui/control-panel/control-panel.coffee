@@ -5,7 +5,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Contr
   panelWidth = 0
   panelHeight = 0
   
-  Gradient.createLinear "CPGradient", false, "#5175bd", "#35488d"
+  Gradient.linear "CPGradient", false, "#5175bd", "#35488d"
   
   g = Scope SVG.create "g", GUI.elm,
     xControls: ""

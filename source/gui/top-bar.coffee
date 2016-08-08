@@ -10,7 +10,7 @@ Take ["Registry","Gradient","GUI","Input","Reaction","Resize","SVG","TRS","SVGRe
   
   topBar = SVG.create "g", GUI.elm, class: "TopBar"
   bg = SVG.create "rect", topBar, height: GUI.TopBar.height, fill: "url(#TopBarGradient)"
-  Gradient.createLinear "TopBarGradient", false, "#35488d", "#5175bd", "#35488d"
+  Gradient.linear "TopBarGradient", false, "#35488d", "#5175bd", "#35488d"
   container = TRS SVG.create "g", topBar, class: "Elements"
     
   # Place us above the click-to-focus element

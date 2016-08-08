@@ -1,11 +1,18 @@
-Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCheck, SVG)->
+Take ["Gradient", "Pressure", "Registry", "ScopeCheck", "SVG"], (Gradient, Pressure, Registry, ScopeCheck, SVG)->
+  gradientCount = 0
+  
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "stroke", "fill", "pressure", "linearGradient", "radialGradient"
     
     element = scope.element
-    strokePath = fillPath = element.querySelector "path"
+    childPathStroke = childPathFill = element.querySelector "path"
     isLine = element.getAttribute("id")?.indexOf("Line") > -1
-        
+    
+    linearGradientName = "LGradient" + gradientCount
+    linearGradient = null
+    radialGradientName = "RGradient" + gradientCount++
+    radialGradient = null
+    
     
     stroke = null
     Object.defineProperty scope, 'stroke',
@@ -13,9 +20,9 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
       set: (val)->
         if stroke isnt val
           SVG.attr element, "stroke", stroke = val
-          if strokePath?
-            SVG.attr strokePath, "stroke", null
-            strokePath = null
+          if childPathStroke?
+            SVG.attr childPathStroke, "stroke", null
+            childPathStroke = null
     
     
     fill = null
@@ -24,9 +31,9 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
       set: (val)->
         if fill isnt val
           SVG.attr element, "fill", fill = val
-          if fillPath?
-            SVG.attr fillPath, "fill", null
-            fillPath = null
+          if childPathFill?
+            SVG.attr childPathFill, "fill", null
+            childPathFill = null
     
     
     pressure = null
@@ -41,46 +48,13 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
             scope.fill = Pressure scope.pressure
     
     
-    scope.linearGradient = (stops, x1=0, y1=0, x2=1, y2=0)->
-      # useParent = PureDom.querySelectorParent(element, "svg")
-      # gradientName = "Gradient_" + element.getAttributeNS(null, "id")
-      # gradient = useParent.querySelector("defs").querySelector("##{gradientName}")
-      # if not gradient?
-      #   gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient")
-      #   useParent.querySelector("defs").appendChild(gradient)
-      # gradient.setAttribute("id", gradientName)
-      # gradient.setAttributeNS(null,"x1", x1)
-      # gradient.setAttributeNS(null,"y1", y1)
-      # gradient.setAttributeNS(null,"x2", x2)
-      # gradient.setAttributeNS(null,"y2", y2)
-      # while gradient.hasChildNodes()
-      #   gradient.removeChild(gradient.firstChild)
-      # for stop in stops
-      #   gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop")
-      #   gradientStop.setAttribute("offset", stop.offset)
-      #   gradientStop.setAttribute("stop-color", stop.color)
-      #   gradient.appendChild(gradientStop)
-      # fillUrl = "url(##{gradientName})"
-      # scope.fill(fillUrl)
+    scope.linearGradient = (stops, angle)->
+      SVG.defs.removeChild linearGradient if linearGradient?
+      linearGradient = Gradient.linear gradientName, x2:Math.cos(angle), y2:Math.sin(angle), stops...
+      scope.fill = "url(##{name})"
     
     
-    scope.radialGradient = (stops, cx, cy, radius)->
-      # useParent = PureDom.querySelectorParent(element, "svg")
-      # gradientName = "Gradient_" + element.getAttributeNS(null, "id")
-      # gradient = useParent.querySelector("defs").querySelector("##{gradientName}")
-      # if not gradient?
-      #   gradient = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient")
-      #   useParent.querySelector("defs").appendChild(gradient)
-      # gradient.setAttribute("id", gradientName)
-      # gradient.setAttributeNS(null,"cx", cx) if cx?
-      # gradient.setAttributeNS(null,"cy", cy) if cy?
-      # gradient.setAttributeNS(null,"r", radius) if radius?
-      # while gradient.hasChildNodes()
-      #   gradient.removeChild(gradient.firstChild)
-      # for stop in stops
-      #   gradientStop = document.createElementNS("http://www.w3.org/2000/svg", "stop")
-      #   gradientStop.setAttribute("offset", stop.offset)
-      #   gradientStop.setAttribute("stop-color", stop.color)
-      #   gradient.appendChild(gradientStop)
-      # fillUrl = "url(##{gradientName})"
-      # scope.fill(fillUrl)
+    scope.radialGradient = (stops, r, x, y)->
+      SVG.defs.removeChild radialGradient if radialGradient?
+      radialGradient = Gradient.radial gradientName, r:r, x:x, y:y, stops...
+      scope.fill = "url(##{name})"

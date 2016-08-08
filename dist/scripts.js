@@ -3866,6 +3866,9 @@
       v = 0;
       range = 0;
       startDrag = 0;
+      SVG.attrs(elm, {
+        ui: true
+      });
       track = TRS(SVG.create("rect", elm, {
         x: GUI.pad,
         y: GUI.pad,

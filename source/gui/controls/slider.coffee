@@ -1,6 +1,6 @@
 Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel:GUI}, Input, SVG, TRS, Tween)->
   Control "slider", (elm, props)->
-
+    
     # An array to hold all the change functions that have been attached to this slider
     handlers = []
     
@@ -9,6 +9,9 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
     range = 0
     startDrag = 0
     
+    # Enable pointer cursor, other UI features
+    SVG.attrs elm, ui: true
+
     # Slider background element
     track = TRS SVG.create "rect", elm,
       x: GUI.pad

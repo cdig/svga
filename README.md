@@ -6,8 +6,8 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-* Cut down on mask warnings
-* Add a scope function that draws a marker point at the transform origin with axis markers
+* document the debug.point stuff
+* Don't trigger nav (or Input) when right-clicking
 * Fix scope style gradients
 * SVGA in cd-module
 * Optional-ize Live Schematic features (background, nav, topbar, control panel)

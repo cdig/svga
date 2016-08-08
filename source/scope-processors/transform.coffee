@@ -1,4 +1,4 @@
-Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, ScopeCheck)->
+Take ["RAF", "Registry", "ScopeCheck"], (RAF, Registry, ScopeCheck)->
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "x", "y", "rotation", "scale", "scaleX", "scaleY"
     
@@ -69,7 +69,7 @@ Take ["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], (RAF, Registry, Scop
         if scaleX isnt val or scaleY isnt val
           scaleX = scaleY = val
           RAF applyTransform, true, 1
-
+    
     Object.defineProperty scope, 'scaleX',
       get: ()-> scaleX
       set: (val)->

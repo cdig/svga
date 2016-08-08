@@ -89,13 +89,16 @@
   });
 
   Take(["Scope", "SVG", "Symbol"], function(Scope, SVG, Symbol) {
-    var SVGPreprocessor, buildScopes, defs, deprecations, processElm;
+    var SVGPreprocessor, buildScopes, defs, deprecations, masks, processElm;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
+    masks = [];
     defs = {};
     Make("SVGPreprocessor", SVGPreprocessor = {
       crawl: function(elm) {
         var tree;
         tree = processElm(elm);
+        console.log("Please remove these mask elements from your SVG:", masks);
+        masks = null;
         defs = null;
         return tree;
       },
@@ -119,9 +122,11 @@
       childNodes = Array.prototype.slice.call(elm.childNodes);
       for (m = 0, len = childNodes.length; m < len; m++) {
         childElm = childNodes[m];
-        if ((ref = childElm.id, indexOf.call(deprecations, ref) >= 0) || ((ref1 = childElm.id) != null ? ref1.indexOf("Mask") : void 0) > -1) {
+        if ((ref = childElm.id, indexOf.call(deprecations, ref) >= 0)) {
           console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
           elm.removeChild(childElm);
+        } else if (((ref1 = childElm.id) != null ? ref1.indexOf("Mask") : void 0) > -1) {
+          masks.push(childElm.id);
         } else if (childElm instanceof SVGGElement) {
           tree.sub.push(processElm(childElm));
         } else if (childElm instanceof SVGUseElement) {
@@ -684,6 +689,21 @@
         }
         return results;
       });
+    });
+  });
+
+  Take("SVG", function(SVG) {
+    var Highlighter;
+    return Make("Highlighter", Highlighter = {
+      setup: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
+      },
+      enable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
+      },
+      disable: function() {
+        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
+      }
     });
   });
 
@@ -1292,27 +1312,6 @@
     }
   });
 
-  Take("SVG", function(SVG) {
-    var Highlighter;
-    return Make("Highlighter", Highlighter = {
-      setup: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.setup() from your animation.";
-      },
-      enable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.enable() from your animation.";
-      },
-      disable: function() {
-        throw "Highligher has been removed from SVGA. Please remove the calls to Highligher.disable() from your animation.";
-      }
-    });
-  });
-
-  (function() {
-    return Make("Mask", function() {
-      throw "Mask() has been removed. Please find a different way to acheive your desired effect.";
-    });
-  })();
-
   Take(["Nav"], function(Nav) {
     window.addEventListener("gesturestart", function(e) {
       if (Nav.eventInside(e)) {
@@ -1914,6 +1913,85 @@
     });
   });
 
+  Take(["Dev", "Registry", "ScopeCheck", "Scope", "SVG"], function(Dev, Registry, ScopeCheck, Scope, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      ScopeCheck(scope, "debug");
+      return Object.defineProperty(scope, 'debug', {
+        get: function() {
+          return {
+            point: function(color) {
+              var point;
+              if (Dev) {
+                point = Scope(SVG.create("g", scope.element));
+                if (color != null) {
+                  SVG.create("rect", point.element, {
+                    fill: "#000",
+                    x: 0,
+                    y: 0,
+                    width: 10,
+                    height: 10
+                  });
+                }
+                if (color != null) {
+                  SVG.create("rect", point.element, {
+                    fill: color,
+                    x: 0,
+                    y: 0,
+                    width: 9,
+                    height: 9
+                  });
+                }
+                SVG.create("rect", point.element, {
+                  fill: "#000",
+                  x: -1,
+                  y: -1,
+                  width: 2,
+                  height: 2
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#FFF",
+                  x: -.5,
+                  y: -.5,
+                  width: 1,
+                  height: 1
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#FFF",
+                  x: 1,
+                  y: -1,
+                  width: 48,
+                  height: 2
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#F00",
+                  x: 1,
+                  y: -.5,
+                  width: 48,
+                  height: 1
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#000",
+                  x: -1,
+                  y: 1,
+                  width: 2,
+                  height: 48
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#0F0",
+                  x: -.5,
+                  y: 1,
+                  width: 1,
+                  height: 48
+                });
+                return point;
+              }
+            }
+          };
+        }
+      });
+    });
+  });
+
   Take(["Registry"], function(Registry) {
     return Registry.add("ScopeProcessor", function(scope) {
       scope.getPressureColor = function() {
@@ -2065,7 +2143,7 @@
       if (scope.tick == null) {
         return;
       }
-      running = false;
+      running = true;
       startTime = null;
       tick = scope.tick;
       scope.tick = function() {
@@ -2099,7 +2177,7 @@
     });
   });
 
-  Take(["RAF", "Registry", "ScopeCheck", "DOMContentLoaded"], function(RAF, Registry, ScopeCheck) {
+  Take(["RAF", "Registry", "ScopeCheck"], function(RAF, Registry, ScopeCheck) {
     return Registry.add("ScopeProcessor", function(scope) {
       var applyTransform, denom, element, matrix, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
       ScopeCheck(scope, "x", "y", "rotation", "scale", "scaleX", "scaleY");

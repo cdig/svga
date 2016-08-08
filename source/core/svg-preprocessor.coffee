@@ -1,11 +1,14 @@
 Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
   deprecations = ["controlPanel", "ctrlPanel", "navOverlay"]
+  masks = []
   defs = {}
   
   
   Make "SVGPreprocessor", SVGPreprocessor =
     crawl: (elm)->
       tree = processElm elm
+      console.log "Please remove these mask elements from your SVG:", masks
+      masks = null # Avoid dangling references
       defs = null # Avoid dangling references
       return tree
     
@@ -23,10 +26,13 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
     
     for childElm in childNodes
       
-      if (childElm.id in deprecations) or childElm.id?.indexOf("Mask") > -1
+      if (childElm.id in deprecations)
         console.log "##{childElm.id} is obsolete. Please remove it from your FLA and re-export this SVG."
         elm.removeChild childElm
-        
+      
+      else if childElm.id?.indexOf("Mask") > -1
+        masks.push childElm.id
+      
       else if childElm instanceof SVGGElement
         tree.sub.push processElm childElm
         

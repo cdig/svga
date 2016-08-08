@@ -5,7 +5,7 @@ Take ["Registry", "Tick"], (Registry, Tick)->
   Registry.add "ScopeProcessor", (scope)->
     return unless scope.tick?
     
-    running = false
+    running = true
     startTime = null
     
     # Replace the actual scope tick function with a warning

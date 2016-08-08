@@ -1,9 +1,3 @@
-
-do ()->
-  Make "Mask", ()->
-    throw "Mask() has been removed. Please find a different way to acheive your desired effect."
-
-
 #the root is the svg element at the root
 #the parent is the parent of the masked Element
 #mask insance is what you're using to mask

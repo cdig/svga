@@ -1,13 +1,32 @@
 Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCheck, SVG)->
   Registry.add "ScopeProcessor", (scope)->
-    ScopeCheck scope, "style", "pressure", "stroke", "fill", "linearGradient", "radialGradient"
-
-    element = scope.element
-    strokePath = fillPath = element.querySelector("path")
-    isLine = element.getAttribute("id")?.indexOf("Line") > -1
+    ScopeCheck scope, "stroke", "fill", "pressure", "linearGradient", "radialGradient"
     
-    # scope.style = (key, val)-> SVG.style element, key, val
-    scope.style = ()-> throw "@style is up for debate. Please show Ivan what you're using it to do."
+    element = scope.element
+    strokePath = fillPath = element.querySelector "path"
+    isLine = element.getAttribute("id")?.indexOf("Line") > -1
+        
+    
+    stroke = null
+    Object.defineProperty scope, 'stroke',
+      get: ()-> stroke
+      set: (val)->
+        if stroke isnt val
+          SVG.attr element, "stroke", stroke = val
+          if strokePath?
+            strokePath = null
+            SVG.attr strokePath, "stroke", null
+    
+    
+    fill = null
+    Object.defineProperty scope, 'fill',
+      get: ()-> fill
+      set: (val)->
+        if fill isnt val
+          SVG.attr element, "fill", fill = val
+          if fillPath?
+            fillPath = null
+            SVG.attr fillPath, "fill", null
     
     
     pressure = null
@@ -20,20 +39,6 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
             scope.stroke Pressure scope.pressure
           else
             scope.fill Pressure scope.pressure
-
-    
-    scope.stroke = (color)->
-      if strokePath?
-        SVG.attr strokePath, "stroke", null
-        strokePath = null
-      SVG.attr element, "stroke", color
-    
-    
-    scope.fill = (color)->
-      if fillPath?
-        SVG.attr fillPath, "fill", null
-        fillPath = null
-      SVG.attr element, "fill", color
     
     
     scope.linearGradient = (stops, x1=0, y1=0, x2=1, y2=0)->

@@ -1945,14 +1945,41 @@
 
   Take(["Pressure", "Registry", "ScopeCheck", "SVG"], function(Pressure, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var element, fillPath, isLine, pressure, ref, strokePath;
-      ScopeCheck(scope, "style", "pressure", "stroke", "fill", "linearGradient", "radialGradient");
+      var element, fill, fillPath, isLine, pressure, ref, stroke, strokePath;
+      ScopeCheck(scope, "stroke", "fill", "pressure", "linearGradient", "radialGradient");
       element = scope.element;
       strokePath = fillPath = element.querySelector("path");
       isLine = ((ref = element.getAttribute("id")) != null ? ref.indexOf("Line") : void 0) > -1;
-      scope.style = function() {
-        throw "@style is up for debate. Please show Ivan what you're using it to do.";
-      };
+      stroke = null;
+      Object.defineProperty(scope, 'stroke', {
+        get: function() {
+          return stroke;
+        },
+        set: function(val) {
+          if (stroke !== val) {
+            SVG.attr(element, "stroke", stroke = val);
+            if (strokePath != null) {
+              strokePath = null;
+              return SVG.attr(strokePath, "stroke", null);
+            }
+          }
+        }
+      });
+      fill = null;
+      Object.defineProperty(scope, 'fill', {
+        get: function() {
+          return fill;
+        },
+        set: function(val) {
+          if (fill !== val) {
+            SVG.attr(element, "fill", fill = val);
+            if (fillPath != null) {
+              fillPath = null;
+              return SVG.attr(fillPath, "fill", null);
+            }
+          }
+        }
+      });
       pressure = null;
       Object.defineProperty(scope, 'pressure', {
         get: function() {
@@ -1969,20 +1996,6 @@
           }
         }
       });
-      scope.stroke = function(color) {
-        if (strokePath != null) {
-          SVG.attr(strokePath, "stroke", null);
-          strokePath = null;
-        }
-        return SVG.attr(element, "stroke", color);
-      };
-      scope.fill = function(color) {
-        if (fillPath != null) {
-          SVG.attr(fillPath, "fill", null);
-          fillPath = null;
-        }
-        return SVG.attr(element, "fill", color);
-      };
       scope.linearGradient = function(stops, x1, y1, x2, y2) {
         if (x1 == null) {
           x1 = 0;

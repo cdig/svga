@@ -6,7 +6,6 @@ A framework for making interactive animations with SVG.
 ## Todos:
 
 Tuesday
-* Document arrows.volume, change the docs about scale, change the default SCALE to 0.5
 * Figure out the right way to deal with mouse VS touch
   * Defer firing Input mouse handlers until the end of the event loop, when we know whether a touch event also fired?
   * What are all possible states/transitions?

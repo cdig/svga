@@ -8,8 +8,7 @@ Take ["FlowArrows:Config", "SVG", "TRS"], (Config, SVG, TRS)->
     
     return arrow =
       update: (parentFlow, parentScale)->
-        if Config.SPACING < 60 * parentScale then throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay."
-        if parentScale < 0.1 then throw "Your arrows are so small that they might not be visible. If this is necessary, then you are doing something suspicious and need to convince Ivan that what you are doing is okay."
+        if Config.SPACING < 30 * parentScale then throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay."
         
         vectorPosition += parentFlow
         segmentPosition += parentFlow

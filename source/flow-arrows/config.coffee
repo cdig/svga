@@ -1,6 +1,6 @@
 do ()->
   Make "FlowArrows:Config", Config =
-    SCALE: 1 # Visible size of arrows is multiplied by this value — it's not factored in to any of the other size/distance/speed values
+    SCALE: 0.5 # Visible size of arrows is multiplied by this value — it's not factored in to any of the other size/distance/speed values
     SPACING: 600 # APPROXIMATELY how far apart should arrows be spaced? (+/-)50%
     FADE_LENGTH: 50 # Over how great a distance do Arrows fade in/out?
     MIN_SEGMENT_LENGTH: 200 # How long must a segment be before we put arrows on it?

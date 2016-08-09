@@ -23,8 +23,13 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
     if parentScope?
       scope.parent = parentScope
       scope.id ?= "child" + (parentScope.children.length or 0)
-      if parentScope[scope.id]? then console.log parentScope; throw "^ Has a child or property with the id \"#{scope.id}\". This is conflicting with a child scope that wants to use that instance name."
-      parentScope[scope.id] ?= scope
+      if parentScope[scope.id]?
+        tempID = scope.id
+        idCounter = 1
+        while parentScope[tempID + idCounter]?
+          idCounter++
+        scope.id = tempID + idCounter
+      parentScope[scope.id] = scope
       parentScope.children.push scope
     
     # Add some info to help devs locate scope elements in the DOM

@@ -19,7 +19,7 @@
   Take(["Dev", "Registry", "ScopeCheck", "Symbol"], function(Dev, Registry, ScopeCheck, Symbol) {
     var Scope, findParent;
     Make("Scope", Scope = function(element, symbol, props) {
-      var attr, attrs, len, len1, m, n, name1, parentScope, ref, scope, scopeProcessor;
+      var attr, attrs, idCounter, len, len1, m, n, parentScope, ref, scope, scopeProcessor, tempID;
       if (props == null) {
         props = {};
       }
@@ -50,12 +50,14 @@
           scope.id = "child" + (parentScope.children.length || 0);
         }
         if (parentScope[scope.id] != null) {
-          console.log(parentScope);
-          throw "^ Has a child or property with the id \"" + scope.id + "\". This is conflicting with a child scope that wants to use that instance name.";
+          tempID = scope.id;
+          idCounter = 1;
+          while (parentScope[tempID + idCounter] != null) {
+            idCounter++;
+          }
+          scope.id = tempID + idCounter;
         }
-        if (parentScope[name1 = scope.id] == null) {
-          parentScope[name1] = scope;
-        }
+        parentScope[scope.id] = scope;
         parentScope.children.push(scope);
       }
       if (Dev) {
@@ -1945,7 +1947,7 @@
         return results;
       };
       scope.dash.manifold = function() {
-        return scope.dash("6 3 12 3");
+        return scope.dash("50 5 10 5 10 5");
       };
       return scope.dash.pilot = function() {
         return scope.dash("6 6");

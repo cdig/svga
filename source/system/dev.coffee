@@ -1,8 +1,4 @@
 # Dev
-# True if we're in dev, false otherwise
-
-# Sometimes we want this — Eg: Because it un-breaks IE
-Make "Dev", window.top.location.hostname is "localhost"
-
-# Other times we want this — Eg: to check FPS on iOS
-# Make "Dev", window.top.location.port is "3000"
+# True if we're in dev, false otherwise.
+# We ignore IE because some of the stuff we want to do freaks it out.
+Make "Dev", window.top.location.port is "3000" and not navigator.userAgent.match /Trident/

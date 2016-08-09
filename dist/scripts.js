@@ -2428,7 +2428,7 @@
     });
   })();
 
-  Make("Dev", window.top.location.hostname === "localhost");
+  Make("Dev", window.top.location.port === "3000" && !navigator.userAgent.match(/Trident/));
 
   (function() {
     var Ease;

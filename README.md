@@ -15,6 +15,12 @@ A framework for making interactive animations with SVG.
 * New BakeLines
 * Don't trigger nav (or Input) when right-clicking
 * Don't trigger nav when dragging out of a control
+* Mouse wheel doesn't zoom?
+* Clean up SVGA Components
+* Enable Uglify
+* Manifold backgrounds?
+* Full-screen?
+* POIs should be defined as a rect
 
 ## License
 Copyright (c) 2014-2016 CD Industrial Group Inc. http://www.cdiginc.com

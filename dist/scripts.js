@@ -134,6 +134,7 @@
         } else if (((ref1 = childElm.id) != null ? ref1.indexOf("Mask") : void 0) > -1) {
           if (childElm.tagName !== "clipPath") {
             masks.push(childElm.id);
+            elm.removeChild(childElm);
           }
         } else if (childElm instanceof SVGGElement) {
           tree.sub.push(processElm(childElm));

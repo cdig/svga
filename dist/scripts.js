@@ -276,14 +276,14 @@
   Take(["Pressure", "SVG"], function(Pressure, SVG) {
     return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
       var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible, volume;
+      active = true;
       direction = 1;
+      enabled = true;
       flow = 1;
-      volume = 1;
       pressure = null;
       scale = 1;
-      active = true;
-      enabled = true;
       visible = true;
+      volume = 1;
       scope = {
         element: SVG.create("g", parentElm),
         reverse: function() {
@@ -360,6 +360,16 @@
         set: function(val) {
           if (visible !== val) {
             return updateActive(visible = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'volume', {
+        get: function() {
+          return volume;
+        },
+        set: function(val) {
+          if (volume !== val) {
+            return volume = val;
           }
         }
       });

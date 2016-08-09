@@ -1,14 +1,15 @@
 Take ["Pressure", "SVG"], (Pressure , SVG)->
   Make "FlowArrows:Containerize", (parentElm, setupFn)->
     
+    active = true
     direction = 1
+    enabled = true
     flow = 1
-    volume = 1
     pressure = null
     scale = 1
-    active = true
-    enabled = true
     visible = true
+    volume = 1
+
     scope =
       element: SVG.create "g", parentElm
       reverse: ()->
@@ -19,6 +20,7 @@ Take ["Pressure", "SVG"], (Pressure , SVG)->
           s = volume * scale * parentScale
           for child in children
             child.update f, s
+
     children = setupFn scope
     
     
@@ -54,5 +56,10 @@ Take ["Pressure", "SVG"], (Pressure , SVG)->
       get: ()-> visible
       set: (val)->
         updateActive visible = val if visible isnt val
+
+    Object.defineProperty scope, 'volume',
+      get: ()-> volume
+      set: (val)->
+        volume = val if volume isnt val
     
     return scope

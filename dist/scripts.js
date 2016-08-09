@@ -203,9 +203,6 @@
       return arrow = {
         update: function(parentFlow, parentScale) {
           var scale;
-          if (Config.SPACING < 30 * parentScale) {
-            throw "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay.";
-          }
           vectorPosition += parentFlow;
           segmentPosition += parentFlow;
           while (vectorPosition > vector.dist) {
@@ -276,9 +273,10 @@
 
   Take(["Pressure", "SVG"], function(Pressure, SVG) {
     return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
-      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible;
+      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible, volume;
       direction = 1;
       flow = 1;
+      volume = 1;
       pressure = null;
       scale = 1;
       active = true;
@@ -293,7 +291,7 @@
           var child, f, len, m, results, s;
           if (active) {
             f = flow * direction * parentFlow;
-            s = scale * parentScale;
+            s = volume * scale * parentScale;
             results = [];
             for (m = 0, len = children.length; m < len; m++) {
               child = children[m];

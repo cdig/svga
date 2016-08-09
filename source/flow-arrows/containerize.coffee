@@ -3,6 +3,7 @@ Take ["Pressure", "SVG"], (Pressure , SVG)->
     
     direction = 1
     flow = 1
+    volume = 1
     pressure = null
     scale = 1
     active = true
@@ -15,7 +16,7 @@ Take ["Pressure", "SVG"], (Pressure , SVG)->
       update: (parentFlow, parentScale)->
         if active
           f = flow * direction * parentFlow
-          s = scale * parentScale
+          s = volume * scale * parentScale
           for child in children
             child.update f, s
     children = setupFn scope

@@ -6,6 +6,7 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
+* No scrolling controls on height — just make the panel wider
 * Gradients need work
 * SVGA in cd-module
 * Scope gradients
@@ -13,7 +14,6 @@ A framework for making interactive animations with SVG.
 * Pause
 * Background Color
 * New BakeLines
-* Don't trigger nav (or Input) when right-clicking
 * Don't trigger nav when dragging out of a control
 * Mouse wheel doesn't zoom?
 * Clean up SVGA Components

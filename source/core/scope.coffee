@@ -31,10 +31,10 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
     if Dev
       # Add some helpful dev names to the element
       console.log symbol?.symbolName
-      element.setAttribute "x-scope", scope.id or ""
-      element.setAttribute "x-symbol", symbol.symbolName if symbol?.symbolName?
+      element.setAttribute "SCOPE", scope.id or ""
+      element.setAttribute "SYMBOL", symbol.symbolName if symbol?.symbolName?
       attrs = Array.prototype.slice.call element.attributes
-      for attr in attrs when attr.name isnt "x-scope" and attr.name isnt "x-symbol" # Sort attrs so that dev names come first
+      for attr in attrs when attr.name isnt "SCOPE" and attr.name isnt "SYMBOL" # Sort attrs so that dev names come first
         element.removeAttributeNS attr.namespaceURI, attr.name
         element.setAttributeNS attr.namespaceURI, attr.name, attr.value
     

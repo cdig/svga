@@ -30,7 +30,6 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
     # Add some info to help devs locate scope elements in the DOM
     if Dev
       # Add some helpful dev names to the element
-      console.log symbol?.symbolName
       element.setAttribute "SCOPE", scope.id or ""
       element.setAttribute "SYMBOL", symbol.symbolName if symbol?.symbolName?
       attrs = Array.prototype.slice.call element.attributes

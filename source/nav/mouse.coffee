@@ -6,6 +6,7 @@ Take ["Config", "Nav"], (Config, Nav)->
   down = false
 
   window.addEventListener "mousedown", (e)->
+    # console.log e
     e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?
     down = true
     lastX = e.clientX

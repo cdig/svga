@@ -59,7 +59,6 @@
         parentScope.children.push(scope);
       }
       if (Dev) {
-        console.log(symbol != null ? symbol.symbolName : void 0);
         element.setAttribute("SCOPE", scope.id || "");
         if ((symbol != null ? symbol.symbolName : void 0) != null) {
           element.setAttribute("SYMBOL", symbol.symbolName);

@@ -1415,12 +1415,18 @@
     lastY = 0;
     down = false;
     window.addEventListener("mousedown", function(e) {
+      if (e.button !== 0) {
+        return;
+      }
       e.preventDefault();
       down = true;
       lastX = e.clientX;
       return lastY = e.clientY;
     });
     window.addEventListener("mousemove", function(e) {
+      if (e.button !== 0) {
+        return;
+      }
       if (down && (e.clientX !== lastX || e.clientY !== lastY) && Nav.eventInside(e)) {
         Nav.by({
           x: e.clientX - lastX,
@@ -1434,6 +1440,9 @@
       return down = false;
     });
     window.addEventListener("dblclick", function(e) {
+      if (e.button !== 0) {
+        return;
+      }
       if (Nav.eventInside(e)) {
         e.preventDefault();
         return Nav.to({
@@ -1444,6 +1453,9 @@
       }
     });
     return window.addEventListener("wheel", function(e) {
+      if (e.button !== 0) {
+        return;
+      }
       if (Nav.eventInside(e)) {
         e.preventDefault();
         if (e.deltaMode === WheelEvent.DOM_DELTA_PIXEL) {

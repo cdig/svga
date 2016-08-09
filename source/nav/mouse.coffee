@@ -6,13 +6,14 @@ Take ["Config", "Nav"], (Config, Nav)->
   down = false
 
   window.addEventListener "mousedown", (e)->
-    # console.log e
+    return unless e.button is 0
     e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?
     down = true
     lastX = e.clientX
     lastY = e.clientY
 
   window.addEventListener "mousemove", (e)->
+    return unless e.button is 0
     # Windows fires this event every tick when touch-dragging, even when the input doesn't move
     if down and (e.clientX isnt lastX or e.clientY isnt lastY) and Nav.eventInside(e)
       Nav.by
@@ -25,11 +26,13 @@ Take ["Config", "Nav"], (Config, Nav)->
     down = false
 
   window.addEventListener "dblclick", (e)->
+    return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()
       Nav.to x:0, y:0, z:0
 
   window.addEventListener "wheel", (e)->
+    return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()
 

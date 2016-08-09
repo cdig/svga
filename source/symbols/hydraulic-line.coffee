@@ -12,4 +12,5 @@ Take ["Pressure", "Reaction", "SVG", "Symbol"], (Pressure, Reaction, SVG, Symbol
     
     return scope =
       setup: ()->
-        Reaction "Schematic:Show", ()-> scope.pressure = Pressure.black
+        @pressure = 0
+        Reaction "Schematic:Show", ()-> @pressure = Pressure.black

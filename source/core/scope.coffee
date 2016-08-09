@@ -29,9 +29,12 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
     
     # Add some info to help devs locate scope elements in the DOM
     if Dev
-      element.setAttribute "x-scope", scope.id or "" # Add the "x-scope" attribute to the element
+      # Add some helpful dev names to the element
+      console.log symbol?.symbolName
+      element.setAttribute "x-scope", scope.id or ""
+      element.setAttribute "x-symbol", symbol.symbolName if symbol?.symbolName?
       attrs = Array.prototype.slice.call element.attributes
-      for attr in attrs when attr.name isnt "x-scope" # Sort attrs so that x-scope comes first
+      for attr in attrs when attr.name isnt "x-scope" and attr.name isnt "x-symbol" # Sort attrs so that dev names come first
         element.removeAttributeNS attr.namespaceURI, attr.name
         element.setAttributeNS attr.namespaceURI, attr.name, attr.value
     

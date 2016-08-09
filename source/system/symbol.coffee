@@ -1,5 +1,6 @@
 Take "Registry", (Registry)->
   Symbol = (symbolName, instanceNames, symbol)->
+    symbol.symbolName = symbolName
     Registry.set "Symbols", symbolName, symbol
     Registry.set "SymbolNames", instanceName, symbol for instanceName in instanceNames
   

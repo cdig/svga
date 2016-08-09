@@ -7,7 +7,7 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
   Make "SVGPreprocessor", SVGPreprocessor =
     crawl: (elm)->
       tree = processElm elm
-      if masks.length then console.log "Please remove these mask elements from your SVG:", masks
+      if masks.length then console.log "Please remove these mask elements from your SVG:", masks...
       masks = null # Avoid dangling references
       defs = null # Avoid dangling references
       return tree

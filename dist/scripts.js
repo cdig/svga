@@ -1,7 +1,7 @@
 (function() {
   var base,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    slice = [].slice;
+    slice = [].slice,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Take(["Registry", "SVGPreprocessor", "DOMContentLoaded"], function(Registry, SVGPreprocessor) {
     var svgData;
@@ -101,7 +101,7 @@
         var tree;
         tree = processElm(elm);
         if (masks.length) {
-          console.log("Please remove these mask elements from your SVG:", masks);
+          console.log.apply(console, ["Please remove these mask elements from your SVG:"].concat(slice.call(masks)));
         }
         masks = null;
         defs = null;

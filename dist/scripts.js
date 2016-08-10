@@ -162,8 +162,8 @@
       props = {
         parent: parentScope
       };
-      if (tree.elm.id.replace("_FL", "").length > 0) {
-        props.id = tree.elm.id.replace("_FL", "");
+      if (tree.elm.id.replace(/_FL/g, "").length > 0) {
+        props.id = tree.elm.id.replace(/_FL/g, "");
       }
       baseName = (ref = tree.elm.id) != null ? ref.split("_")[0] : void 0;
       symbol = baseName.indexOf("Line") > -1 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 ? Symbol.forSymbolName("HydraulicField") : Symbol.forInstanceName(tree.elm.id);

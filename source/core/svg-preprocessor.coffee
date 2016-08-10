@@ -59,8 +59,8 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
   buildScopes = (tree, setups, parentScope = null)->
     props = parent: parentScope
     
-    if tree.elm.id.replace("_FL", "").length > 0
-      props.id = tree.elm.id.replace("_FL", "")
+    if tree.elm.id.replace(/_FL/g, "").length > 0
+      props.id = tree.elm.id.replace /_FL/g, ""
     
     # This is a bit of a legacy hack, where symbols are given names in Flash so that our code can hook up with them.
     baseName = tree.elm.id?.split("_")[0]

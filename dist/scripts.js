@@ -657,10 +657,15 @@
     };
   });
 
-  Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize"], function(Arrow, Config, Containerize) {
-    return Make("FlowArrows:Segment", function(parentElm, segmentData) {
+  Take(["Dev", "FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize"], function(Dev, Arrow, Config, Containerize) {
+    return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName) {
       return Containerize(parentElm, function(scope) {
         var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
+        if (Dev) {
+          scope.element.addEventListener("mouseover", function() {
+            return console.log(segmentName);
+          });
+        }
         arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
         segmentSpacing = segmentData.dist / arrowCount;
         segmentPosition = 0;
@@ -683,7 +688,7 @@
     });
   });
 
-  Take(["Dev", "FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Dev, Config, Containerize, Segment) {
+  Take(["FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Config, Containerize, Segment) {
     return Make("FlowArrows:Set", function(parentElm, setData) {
       return Containerize(parentElm, function(scope) {
         var child, childName, i, len, m, results, segmentData;
@@ -694,12 +699,7 @@
             throw "You have a FlowArrows segment that is only " + (Math.round(segmentData.dist)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.";
           }
           childName = "segment" + i;
-          child = Segment(scope.element, segmentData);
-          if (Dev) {
-            child.element.addEventListener("click", function() {
-              return console.log(parentElm._scope.instanceName + "." + childName);
-            });
-          }
+          child = Segment(scope.element, segmentData, childName);
           results.push(scope[childName] = child);
         }
         return results;

@@ -5,14 +5,22 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
+* Ability to set position of ControlPanel for simple animations used in modules
+
+Wednesday evening
 * Schematic & Pause
 * Arrows, Labels, Background Color
 * Deal with SVGA Components
-* Ability to set position of ControlPanel for simple animations used in modules
+
+Thurs
 * Check Input on Windows
 * Mouse wheel doesn't zoom?
-* Highlighter
 * New BakeLines
+
+Thurs Evening
+* Highlighter
+
+Friday
 * Enable Uglify
 
 ## License

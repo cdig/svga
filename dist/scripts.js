@@ -3706,7 +3706,7 @@
     return Make("Tween", Tween);
   });
 
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
+  Take(["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(Config, ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
     var CP, ControlPanelView, bg, g, panelElms, panelHeight, panelRadius, panelWidth, resize, showing, vertical;
     CP = GUI.ControlPanel;
     showing = false;
@@ -3727,25 +3727,27 @@
     panelElms = Scope(SVG.create("g", g.element));
     panelElms.x = panelElms.y = CP.pad * 2;
     resize = function() {
-      var size, view;
+      var ref, ref1, ref2, size, view, x, y;
       view = {
         w: window.innerWidth,
         h: window.innerHeight
       };
-      vertical = view.w >= view.h * 1.3;
+      vertical = ((ref = Config.controlPanel) != null ? ref.vertical : void 0) || view.w >= view.h * 1.3;
       size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
       panelWidth = size.w + CP.pad * 4;
       panelHeight = size.h + CP.pad * 4;
+      x = (ref1 = Config.controlPanel) != null ? ref1.x : void 0;
+      y = (ref2 = Config.controlPanel) != null ? ref2.y : void 0;
       if (vertical) {
-        g.x = view.w - panelWidth | 0;
-        g.y = view.h / 2 - panelHeight / 2 | 0;
+        g.x = x != null ? x : view.w - panelWidth | 0;
+        g.y = y != null ? y : view.h / 2 - panelHeight / 2 | 0;
         return SVG.attrs(bg, {
           width: panelWidth + panelRadius,
           height: panelHeight
         });
       } else {
-        g.x = view.w / 2 - panelWidth / 2 | 0;
-        g.y = view.h - panelHeight | 0;
+        g.x = x != null ? x : view.w / 2 - panelWidth / 2 | 0;
+        g.y = y != null ? y : view.h - panelHeight | 0;
         return SVG.attrs(bg, {
           width: panelWidth,
           height: panelHeight + panelRadius

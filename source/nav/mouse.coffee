@@ -1,36 +1,29 @@
-Take ["Config", "Nav"], (Config, Nav)->
+Take ["Config", "Input", "Nav"], (Config, Input, Nav)->
   return unless Config.nav
-
-  lastX = 0
-  lastY = 0
-  down = false
-
-  window.addEventListener "mousedown", (e)->
-    return unless e.button is 0
-    e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?
-    down = true
-    lastX = e.clientX
-    lastY = e.clientY
-
-  window.addEventListener "mousemove", (e)->
-    return unless e.button is 0
-    # Windows fires this event every tick when touch-dragging, even when the input doesn't move
-    if down and (e.clientX isnt lastX or e.clientY isnt lastY) and Nav.eventInside(e)
-      Nav.by
-        x: e.clientX - lastX
-        y: e.clientY - lastY
-      lastX = e.clientX
-      lastY = e.clientY
-
-  window.addEventListener "mouseup", (e)->
-    down = false
-
+  
+  dragging = false
+  
+  calls =
+    downOther: (e)->
+      e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?
+      if Nav.eventInside e
+        dragging = true
+    
+    dragOther: (e, state)->
+      if dragging and state.down
+        Nav.by
+          x: state.deltaX
+          y: state.deltaY
+    
+    upOther: ()->
+      dragging = false
+  
   window.addEventListener "dblclick", (e)->
     return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()
       Nav.to x:0, y:0, z:0
-
+  
   window.addEventListener "wheel", (e)->
     return unless e.button is 0
     if Nav.eventInside e
@@ -47,7 +40,9 @@ Take ["Config", "Nav"], (Config, Nav)->
             x: -e.deltaX
             y: -e.deltaY
             z: -e.deltaZ
-
+      
       # This is probably a scroll wheel
       else
         Nav.by z: -e.deltaY / 200
+  
+  Input document, calls, true, false

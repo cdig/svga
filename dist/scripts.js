@@ -985,143 +985,201 @@
     });
   });
 
-  Make("Input", function(elm, calls) {
+  Make("Input", function(elm, calls, mouse, touch) {
     var down, move, out, over, prepTouchEvent, state, up;
+    if (mouse == null) {
+      mouse = true;
+    }
+    if (touch == null) {
+      touch = true;
+    }
     state = {
       down: false,
       over: false,
       touch: false,
-      clicking: false
+      clicking: false,
+      deltaX: 0,
+      deltaY: 0,
+      lastX: 0,
+      lastY: 0
     };
     down = function(e) {
-      state.down = true;
-      if (state.over) {
-        state.clicking = true;
-        return typeof calls.down === "function" ? calls.down(e, state) : void 0;
-      } else {
-        return typeof calls.downOther === "function" ? calls.downOther(e, state) : void 0;
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+      state.deltaX = 0;
+      state.deltaY = 0;
+      if (!state.down) {
+        state.down = true;
+        if (state.over) {
+          state.clicking = true;
+          return typeof calls.down === "function" ? calls.down(e, state) : void 0;
+        } else {
+          return typeof calls.downOther === "function" ? calls.downOther(e, state) : void 0;
+        }
       }
     };
     up = function(e) {
-      state.down = false;
-      if (state.over) {
-        if (typeof calls.up === "function") {
-          calls.up(e, state);
-        }
-        if (state.clicking) {
-          state.clicking = false;
-          return typeof calls.click === "function" ? calls.click(e, state) : void 0;
-        }
-      } else {
-        if (typeof calls.upOther === "function") {
-          calls.upOther(e, state);
-        }
-        if (state.clicking) {
-          state.clicking = false;
-          return typeof calls.miss === "function" ? calls.miss(e, state) : void 0;
-        }
-      }
-    };
-    move = function(e) {
-      if (state.over) {
-        if (state.down) {
-          return typeof calls.drag === "function" ? calls.drag(e, state) : void 0;
-        } else {
-          return typeof calls.move === "function" ? calls.move(e, state) : void 0;
-        }
-      } else {
-        if (state.down) {
-          return typeof calls.dragOther === "function" ? calls.dragOther(e, state) : void 0;
-        } else {
-          return typeof calls.moveOther === "function" ? calls.moveOther(e, state) : void 0;
-        }
-      }
-    };
-    out = function(e) {
-      state.over = false;
       if (state.down) {
-        return typeof calls.dragOut === "function" ? calls.dragOut(e, state) : void 0;
-      } else {
-        return typeof calls.moveOut === "function" ? calls.moveOut(e, state) : void 0;
-      }
-    };
-    over = function(e) {
-      state.over = true;
-      if (state.down) {
-        return typeof calls.dragIn === "function" ? calls.dragIn(e, state) : void 0;
-      } else {
-        return typeof calls.moveIn === "function" ? calls.moveIn(e, state) : void 0;
-      }
-    };
-    window.addEventListener("mousedown", function(e) {
-      if (state.touch) {
-        return;
-      }
-      return down(e);
-    });
-    if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
-      window.addEventListener("mousemove", function(e) {
-        if (state.touch) {
-          return;
-        }
-        return move(e);
-      });
-    }
-    window.addEventListener("mouseup", function(e) {
-      if (state.touch) {
-        return;
-      }
-      return up(e);
-    });
-    elm.addEventListener("mouseleave", function(e) {
-      if (state.touch) {
-        return;
-      }
-      return out(e);
-    });
-    elm.addEventListener("mouseenter", function(e) {
-      if (state.touch) {
-        return;
-      }
-      return over(e);
-    });
-    prepTouchEvent = function(e) {
-      var newState, overChanged, pElm, ref, ref1;
-      state.touch = true;
-      e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
-      e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
-      if ((e.clientX != null) && (e.clientY != null)) {
-        pElm = document.elementFromPoint(e.clientX, e.clientY);
-        newState = elm === pElm || elm.contains(pElm);
-        overChanged = newState !== state.over;
-        state.over = newState;
-        if (overChanged) {
-          if (state.over) {
-            return over(e);
-          } else {
-            return out(e);
+        state.down = false;
+        if (state.over) {
+          if (typeof calls.up === "function") {
+            calls.up(e, state);
+          }
+          if (state.clicking) {
+            state.clicking = false;
+            return typeof calls.click === "function" ? calls.click(e, state) : void 0;
+          }
+        } else {
+          if (typeof calls.upOther === "function") {
+            calls.upOther(e, state);
+          }
+          if (state.clicking) {
+            state.clicking = false;
+            return typeof calls.miss === "function" ? calls.miss(e, state) : void 0;
           }
         }
       }
     };
-    window.addEventListener("touchstart", function(e) {
-      prepTouchEvent(e);
-      return down(e);
-    });
-    if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
-      window.addEventListener("touchmove", function(e) {
-        prepTouchEvent(e);
-        return move(e);
+    move = function(e) {
+      if (e.clientX === state.lastX && e.clientY === state.lastY) {
+        return;
+      }
+      state.deltaX = e.clientX - state.lastX;
+      state.deltaY = e.clientY - state.lastY;
+      if (state.over) {
+        if (state.down) {
+          if (typeof calls.drag === "function") {
+            calls.drag(e, state);
+          }
+        } else {
+          if (typeof calls.move === "function") {
+            calls.move(e, state);
+          }
+        }
+      } else {
+        if (state.down) {
+          if (typeof calls.dragOther === "function") {
+            calls.dragOther(e, state);
+          }
+        } else {
+          if (typeof calls.moveOther === "function") {
+            calls.moveOther(e, state);
+          }
+        }
+      }
+      state.lastX = e.clientX;
+      return state.lastY = e.clientY;
+    };
+    out = function(e) {
+      if (state.over) {
+        state.over = false;
+        if (state.down) {
+          return typeof calls.dragOut === "function" ? calls.dragOut(e, state) : void 0;
+        } else {
+          return typeof calls.moveOut === "function" ? calls.moveOut(e, state) : void 0;
+        }
+      }
+    };
+    over = function(e) {
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+      if (!state.over) {
+        state.over = true;
+        if (state.down) {
+          return typeof calls.dragIn === "function" ? calls.dragIn(e, state) : void 0;
+        } else {
+          return typeof calls.moveIn === "function" ? calls.moveIn(e, state) : void 0;
+        }
+      }
+    };
+    if (mouse) {
+      window.addEventListener("mousedown", function(e) {
+        if (e.button !== 0) {
+          return;
+        }
+        if (state.touch) {
+          return;
+        }
+        return down(e);
+      });
+      if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
+        window.addEventListener("mousemove", function(e) {
+          if (state.touch) {
+            return;
+          }
+          return move(e);
+        });
+      }
+      window.addEventListener("mouseup", function(e) {
+        if (e.button !== 0) {
+          return;
+        }
+        if (state.touch) {
+          return;
+        }
+        return up(e);
+      });
+      if (elm != null) {
+        elm.addEventListener("mouseleave", function(e) {
+          if (state.touch) {
+            return;
+          }
+          return out(e);
+        });
+      }
+      if (elm != null) {
+        elm.addEventListener("mouseenter", function(e) {
+          if (state.touch) {
+            return;
+          }
+          return over(e);
+        });
+      }
+      window.top.addEventListener("mouseout", function(e) {
+        return up(e);
       });
     }
-    window.addEventListener("touchend", function(e) {
-      prepTouchEvent(e);
-      return up(e);
-    });
-    return window.addEventListener("touchcancel", function(e) {
-      prepTouchEvent(e);
-      return up(e);
-    });
+    if (touch) {
+      prepTouchEvent = function(e) {
+        var newState, overChanged, pElm, ref, ref1;
+        e.preventDefault();
+        state.touch = true;
+        e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
+        e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
+        if ((elm != null) && (e.clientX != null) && (e.clientY != null)) {
+          pElm = document.elementFromPoint(e.clientX, e.clientY);
+          newState = elm === pElm || elm.contains(pElm);
+          overChanged = newState !== state.over;
+          if (overChanged) {
+            if (newState) {
+              return over(e);
+            } else {
+              return out(e);
+            }
+          }
+        }
+      };
+      window.addEventListener("touchstart", function(e) {
+        prepTouchEvent(e);
+        return down(e);
+      });
+      if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
+        window.addEventListener("touchmove", function(e) {
+          prepTouchEvent(e);
+          return move(e);
+        });
+      }
+      window.addEventListener("touchend", function(e) {
+        prepTouchEvent(e);
+        up(e);
+        return state.touch = false;
+      });
+      return window.addEventListener("touchcancel", function(e) {
+        prepTouchEvent(e);
+        up(e);
+        return state.touch = false;
+      });
+    }
   });
 
   Take(["Reaction", "ScopeReady"], function(Reaction) {
@@ -1432,39 +1490,31 @@
     };
   });
 
-  Take(["Config", "Nav"], function(Config, Nav) {
-    var down, lastX, lastY;
+  Take(["Config", "Input", "Nav"], function(Config, Input, Nav) {
+    var calls, dragging;
     if (!Config.nav) {
       return;
     }
-    lastX = 0;
-    lastY = 0;
-    down = false;
-    window.addEventListener("mousedown", function(e) {
-      if (e.button !== 0) {
-        return;
+    dragging = false;
+    calls = {
+      downOther: function(e) {
+        e.preventDefault();
+        if (Nav.eventInside(e)) {
+          return dragging = true;
+        }
+      },
+      dragOther: function(e, state) {
+        if (dragging && state.down) {
+          return Nav.by({
+            x: state.deltaX,
+            y: state.deltaY
+          });
+        }
+      },
+      upOther: function() {
+        return dragging = false;
       }
-      e.preventDefault();
-      down = true;
-      lastX = e.clientX;
-      return lastY = e.clientY;
-    });
-    window.addEventListener("mousemove", function(e) {
-      if (e.button !== 0) {
-        return;
-      }
-      if (down && (e.clientX !== lastX || e.clientY !== lastY) && Nav.eventInside(e)) {
-        Nav.by({
-          x: e.clientX - lastX,
-          y: e.clientY - lastY
-        });
-        lastX = e.clientX;
-        return lastY = e.clientY;
-      }
-    });
-    window.addEventListener("mouseup", function(e) {
-      return down = false;
-    });
+    };
     window.addEventListener("dblclick", function(e) {
       if (e.button !== 0) {
         return;
@@ -1478,7 +1528,7 @@
         });
       }
     });
-    return window.addEventListener("wheel", function(e) {
+    window.addEventListener("wheel", function(e) {
       if (e.button !== 0) {
         return;
       }
@@ -1507,6 +1557,7 @@
         }
       }
     });
+    return Input(document, calls, true, false);
   });
 
   Take(["Config", "RAF", "SVG", "Tween", "ScopeReady"], function(Config, RAF, SVG, Tween) {
@@ -3851,22 +3902,24 @@
         });
       };
       bgFill(blueBG);
-      toNormal = function() {
+      toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: bgFill
         });
       };
-      toHover = function() {
-        return Tween(bgc, lightBG, 0, {
-          tick: bgFill
-        });
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: bgFill
+          });
+        }
       };
-      toClicking = function() {
+      toClicking = function(e, state) {
         return Tween(bgc, orangeBG, 0, {
           tick: bgFill
         });
       };
-      toClicked = function() {
+      toClicked = function(e, state) {
         return Tween(bgc, lightBG, .2, {
           tick: bgFill
         });
@@ -4026,40 +4079,44 @@
           x: v * range
         });
       };
-      toNormal = function() {
+      toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: bgFill
         });
       };
-      toHover = function() {
-        return Tween(bgc, lightBG, 0, {
-          tick: bgFill
-        });
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: bgFill
+          });
+        }
       };
-      toClicking = function() {
+      toClicking = function(e, state) {
         return Tween(bgc, orangeBG, 0, {
           tick: bgFill
         });
       };
-      toClicked = function() {
+      toClicked = function(e, state) {
         return Tween(bgc, lightBG, .2, {
           tick: bgFill
         });
       };
-      toMissed = function() {
+      toMissed = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: bgFill
         });
       };
-      handleDrag = function(e) {
+      handleDrag = function(e, state) {
         var handler, len, m, results;
-        update(e.clientX / range - startDrag);
-        results = [];
-        for (m = 0, len = handlers.length; m < len; m++) {
-          handler = handlers[m];
-          results.push(handler(v));
+        if (state.clicking) {
+          update(e.clientX / range - startDrag);
+          results = [];
+          for (m = 0, len = handlers.length; m < len; m++) {
+            handler = handlers[m];
+            results.push(handler(v));
+          }
+          return results;
         }
-        return results;
       };
       Input(elm, {
         moveIn: toHover,
@@ -4075,11 +4132,7 @@
         moveOut: toNormal,
         miss: toMissed,
         drag: handleDrag,
-        dragOther: function(e, state) {
-          if (state.clicking) {
-            return handleDrag(e);
-          }
-        },
+        dragOther: handleDrag,
         click: toClicked
       });
       return scope = {

@@ -5,6 +5,8 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
+* Ask the team: Should drag be cancelled when the mouse leaves the window?
+
 * Why _FL issues?
 * Schematic button
 * Other GUI stuff
@@ -12,6 +14,7 @@ A framework for making interactive animations with SVG.
 * Clean up SVGA Components, Background, Help
 * Gradients
 
+* Check that windows isn't being lame when firing touchmove/mousemove for Input
 * Detect if a Line contains fill or stroke, and change that (so nodes work)
 * SVGA in cd-module
 * New BakeLines

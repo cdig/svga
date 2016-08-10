@@ -39,10 +39,10 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
     
     
     # Input event handling
-    toNormal   = ()-> Tween bgc, blueBG,  .2, tick:bgFill
-    toHover    = ()-> Tween bgc, lightBG,  0, tick:bgFill
-    toClicking = ()-> Tween bgc, orangeBG, 0, tick:bgFill
-    toClicked  = ()-> Tween bgc, lightBG, .2, tick:bgFill
+    toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:bgFill
+    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:bgFill if not state.touch
+    toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:bgFill
+    toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:bgFill
     Input elm,
       moveIn: toHover
       dragIn: (e, state)-> toClicking() if state.clicking

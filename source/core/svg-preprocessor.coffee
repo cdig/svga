@@ -69,7 +69,7 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
     else if baseName.indexOf("Field") > -1
       Symbol.forSymbolName "HydraulicField"
     else
-      Symbol.forInstanceName tree.elm.id
+      Symbol.forInstanceName props.id
     
     symbol ?= ()-> {}
     

@@ -797,7 +797,7 @@
     });
   })();
 
-  Take(["Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], function(Dev, GUI, Resize, SVG, Tick) {
+  Take(["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], function(Config, Dev, GUI, Resize, SVG, Tick) {
     var avgLength, avgList, count, freq, text, total;
     if (!Dev) {
       return;
@@ -811,10 +811,17 @@
       fill: "#666"
     });
     Resize(function() {
-      return SVG.attrs(text, {
-        x: 10,
-        y: 70
-      });
+      if (Config.nav) {
+        return SVG.attrs(text, {
+          x: 10,
+          y: 70
+        });
+      } else {
+        return SVG.attrs(text, {
+          x: 10,
+          y: 25
+        });
+      }
     });
     return Tick(function(time, dt) {
       var fps;
@@ -1560,129 +1567,146 @@
     return Input(document, calls, true, false);
   });
 
-  Take(["Config", "RAF", "SVG", "Tween", "ScopeReady"], function(Config, RAF, SVG, Tween) {
-    var Nav, center, dist, distTo, initialSize, limit, ox, oy, pos, render, requestRender, root, scaleStartPosZ, tween, xLimit, yLimit, zLimit;
+  Take(["Config", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], function(Config, RAF, Resize, SVG, Tween) {
+    var Nav, center, dist, distTo, height, initialSize, limit, ox, oy, pos, render, requestRender, root, scaleStartPosZ, tween, width, xLimit, yLimit, zLimit;
     if (!Config.nav) {
-      return Make("Nav", false);
-    }
-    pos = {
-      x: 0,
-      y: 0,
-      z: 0
-    };
-    center = {
-      x: 0,
-      y: 0,
-      z: 1
-    };
-    xLimit = {};
-    yLimit = {};
-    zLimit = {
-      min: 0,
-      max: 3
-    };
-    scaleStartPosZ = 0;
-    tween = null;
-    root = document.getElementById("root");
-    initialSize = root.getBoundingClientRect();
-    if (!(initialSize.width > 0 && initialSize.height > 0)) {
-      return;
-    }
-    ox = root._scope.x - initialSize.left - initialSize.width / 2;
-    oy = root._scope.y - initialSize.top - initialSize.height / 2;
-    xLimit.max = initialSize.width / 2;
-    yLimit.max = initialSize.height / 2;
-    xLimit.min = -xLimit.max;
-    yLimit.min = -yLimit.max;
-    requestRender = function() {
-      return RAF(render, true);
-    };
-    render = function() {
-      var z;
-      z = center.z * Math.pow(2, pos.z);
-      return SVG.attr(root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
-    };
-    limit = function(l, v) {
-      return Math.min(l.max, Math.max(l.min, v));
-    };
-    Make("Nav", Nav = {
-      to: function(p) {
-        var time, timeX, timeY, timeZ;
-        timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
-        timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
-        timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
-        time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
-        return tween = Tween(pos, p, time, {
-          mutate: true,
-          tick: render
-        });
-      },
-      by: function(p) {
-        var scale;
-        if (tween != null) {
-          Tween.cancel(tween);
-        }
-        if (p.z != null) {
-          pos.z = limit(zLimit, pos.z + p.z);
-        }
-        scale = center.z * Math.pow(2, pos.z);
-        if (p.x != null) {
-          pos.x = limit(xLimit, pos.x + p.x / scale);
-        }
-        if (p.y != null) {
-          pos.y = limit(yLimit, pos.y + p.y / scale);
-        }
-        return requestRender();
-      },
-      startScale: function() {
-        return scaleStartPosZ = pos.z;
-      },
-      scale: function(s) {
-        if (tween != null) {
-          Tween.cancel(tween);
-        }
-        pos.z = limit(zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s));
-        return requestRender();
-      },
-      eventInside: function(e) {
-        var ref;
-        if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
-          e = e.touches[0];
-        }
-        return e.target === document.rootElement || root.contains(e.target);
-      },
-      assignSpace: function(rect) {
-        var c, hFrac, wFrac;
-        wFrac = rect.w / initialSize.width;
-        hFrac = rect.h / initialSize.height;
-        c = {
-          x: rect.x + rect.w / 2,
-          y: rect.y + rect.h / 2,
-          z: .9 * Math.min(wFrac, hFrac)
-        };
-        if (center.x === 0) {
-          center = c;
-          return render();
-        } else {
-          return Tween(center, c, 0.5, {
+      Make("Nav", false);
+      width = SVG.attr(SVG.root, "width");
+      height = SVG.attr(SVG.root, "height");
+      root = document.getElementById("root");
+      return Resize(function() {
+        var excessHeight, excessWidth, hFrac, scale, wFrac;
+        wFrac = window.innerWidth / width;
+        hFrac = window.innerHeight / height;
+        scale = Math.min(wFrac, hFrac);
+        excessWidth = (window.innerWidth - width * scale) / 2;
+        excessHeight = (window.innerHeight - height * scale) / 2;
+        return SVG.attr(root, "transform", "scale(" + scale + ") translate(" + (excessWidth / scale) + ", " + (excessHeight / scale) + ")");
+      });
+    } else {
+      SVG.attrs(SVG.root, {
+        width: null,
+        height: null
+      });
+      pos = {
+        x: 0,
+        y: 0,
+        z: 0
+      };
+      center = {
+        x: 0,
+        y: 0,
+        z: 1
+      };
+      xLimit = {};
+      yLimit = {};
+      zLimit = {
+        min: 0,
+        max: 3
+      };
+      scaleStartPosZ = 0;
+      tween = null;
+      root = document.getElementById("root");
+      initialSize = root.getBoundingClientRect();
+      if (!(initialSize.width > 0 && initialSize.height > 0)) {
+        return;
+      }
+      ox = root._scope.x - initialSize.left - initialSize.width / 2;
+      oy = root._scope.y - initialSize.top - initialSize.height / 2;
+      xLimit.max = initialSize.width / 2;
+      yLimit.max = initialSize.height / 2;
+      xLimit.min = -xLimit.max;
+      yLimit.min = -yLimit.max;
+      requestRender = function() {
+        return RAF(render, true);
+      };
+      render = function() {
+        var z;
+        z = center.z * Math.pow(2, pos.z);
+        return SVG.attr(root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
+      };
+      limit = function(l, v) {
+        return Math.min(l.max, Math.max(l.min, v));
+      };
+      Make("Nav", Nav = {
+        to: function(p) {
+          var time, timeX, timeY, timeZ;
+          timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
+          timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
+          timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
+          time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
+          return tween = Tween(pos, p, time, {
             mutate: true,
             tick: render
           });
+        },
+        by: function(p) {
+          var scale;
+          if (tween != null) {
+            Tween.cancel(tween);
+          }
+          if (p.z != null) {
+            pos.z = limit(zLimit, pos.z + p.z);
+          }
+          scale = center.z * Math.pow(2, pos.z);
+          if (p.x != null) {
+            pos.x = limit(xLimit, pos.x + p.x / scale);
+          }
+          if (p.y != null) {
+            pos.y = limit(yLimit, pos.y + p.y / scale);
+          }
+          return requestRender();
+        },
+        startScale: function() {
+          return scaleStartPosZ = pos.z;
+        },
+        scale: function(s) {
+          if (tween != null) {
+            Tween.cancel(tween);
+          }
+          pos.z = limit(zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s));
+          return requestRender();
+        },
+        eventInside: function(e) {
+          var ref;
+          if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+            e = e.touches[0];
+          }
+          return e.target === document.rootElement || root.contains(e.target);
+        },
+        assignSpace: function(rect) {
+          var c, hFrac, wFrac;
+          wFrac = rect.w / initialSize.width;
+          hFrac = rect.h / initialSize.height;
+          c = {
+            x: rect.x + rect.w / 2,
+            y: rect.y + rect.h / 2,
+            z: .9 * Math.min(wFrac, hFrac)
+          };
+          if (center.x === 0) {
+            center = c;
+            return render();
+          } else {
+            return Tween(center, c, 0.5, {
+              mutate: true,
+              tick: render
+            });
+          }
         }
-      }
-    });
-    distTo = function(a, b) {
-      var dx, dy, dz;
-      dx = a.x - b.x;
-      dy = a.y - b.y;
-      return dz = 200 * a.z - b.z;
-    };
-    return dist = function(x, y, z) {
-      if (z == null) {
-        z = 0;
-      }
-      return Math.sqrt(x * x + y * y + z * z);
-    };
+      });
+      distTo = function(a, b) {
+        var dx, dy, dz;
+        dx = a.x - b.x;
+        dy = a.y - b.y;
+        return dz = 200 * a.z - b.z;
+      };
+      return dist = function(x, y, z) {
+        if (z == null) {
+          z = 0;
+        }
+        return Math.sqrt(x * x + y * y + z * z);
+      };
+    }
   });
 
   Take(["Config", "Nav"], function(Config, Nav) {

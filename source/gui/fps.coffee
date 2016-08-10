@@ -1,4 +1,4 @@
-Take ["Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Dev, GUI, Resize, SVG, Tick)->
+Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev, GUI, Resize, SVG, Tick)->
   return unless Dev
   
   count = 60 # Update immediately
@@ -9,7 +9,10 @@ Take ["Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Dev, GUI, Resize, SVG
   text = SVG.create "text", GUI.elm, fill: "#666"
   
   Resize ()->
-    SVG.attrs text, x: 10, y: 70
+    if Config.nav
+      SVG.attrs text, x: 10, y: 70
+    else
+      SVG.attrs text, x: 10, y: 25
   
   Tick (time, dt)->
     avgList.push 1/dt

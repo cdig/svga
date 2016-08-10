@@ -6,9 +6,13 @@ Take "SVG", (SVG)->
   existing = {}
   
   Make "Gradient", Gradient =
+    remove: (name)->
+      if existing[name]?
+        SVG.defs.removeChild existing[name]
+        delete existing[name]
+    
     linear: (name, props, stops...)->
       if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
-      existing[name] = true
       attrs = if typeof props is "object"
         props.id = name
         props
@@ -16,7 +20,7 @@ Take "SVG", (SVG)->
         id: name, x2: 0, y2: 1
       else
         id: name
-      gradient = SVG.create "linearGradient", SVG.defs, attrs
+      gradient = existing[name] = SVG.create "linearGradient", SVG.defs, attrs
       createStops gradient, stops
       return gradient # Composable
     
@@ -24,7 +28,7 @@ Take "SVG", (SVG)->
       if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
       existing[name] = true
       props.id = name
-      gradient = SVG.create "radialGradient", SVG.defs, props
+      gradient = existing[name] = SVG.create "radialGradient", SVG.defs, props
       createStops gradient, stops
       return gradient # Composable
   

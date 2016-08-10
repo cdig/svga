@@ -5,9 +5,8 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-* Gradients
 * Schematic & Pause
-* Arrows, Labels, Background Color, Manifold Backgrounds
+* Arrows, Labels, Background Color
 * Deal with SVGA Components
 * Ability to set position of ControlPanel for simple animations used in modules
 * Check Input on Windows

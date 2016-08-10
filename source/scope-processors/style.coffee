@@ -48,13 +48,15 @@ Take ["Gradient", "Pressure", "Registry", "ScopeCheck", "SVG"], (Gradient, Press
             scope.fill = Pressure scope.pressure
     
     
-    scope.linearGradient = (stops, angle)->
-      SVG.defs.removeChild linearGradient if linearGradient?
-      linearGradient = Gradient.linear gradientName, x2:Math.cos(angle), y2:Math.sin(angle), stops...
-      scope.fill = "url(##{name})"
+    scope.linearGradient = (stops..., angle = 0)->
+      Gradient.remove linearGradientName
+      linearGradient = Gradient.linear linearGradientName, x2:Math.cos(angle * Math.PI/180), y2:Math.sin(angle * Math.PI/180), stops...
+      scope.fill = "url(##{linearGradientName})"
     
     
-    scope.radialGradient = (stops, r, x, y)->
-      SVG.defs.removeChild radialGradient if radialGradient?
-      radialGradient = Gradient.radial gradientName, r:r, x:x, y:y, stops...
-      scope.fill = "url(##{name})"
+    scope.radialGradient = (stops..., props = {r:0.5})->
+      Gradient.remove radialGradientName
+      if typeof props is "number"
+        props = r:0.5
+      radialGradient = Gradient.radial radialGradientName, props, stops...
+      scope.fill = "url(##{radialGradientName})"

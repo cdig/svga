@@ -2251,26 +2251,35 @@
           }
         }
       });
-      scope.linearGradient = function(stops, angle) {
-        if (linearGradient != null) {
-          SVG.defs.removeChild(linearGradient);
+      scope.linearGradient = function() {
+        var angle, m, stops;
+        stops = 2 <= arguments.length ? slice.call(arguments, 0, m = arguments.length - 1) : (m = 0, []), angle = arguments[m++];
+        if (angle == null) {
+          angle = 0;
         }
-        linearGradient = Gradient.linear.apply(Gradient, [gradientName, {
-          x2: Math.cos(angle),
-          y2: Math.sin(angle)
+        Gradient.remove(linearGradientName);
+        linearGradient = Gradient.linear.apply(Gradient, [linearGradientName, {
+          x2: Math.cos(angle * Math.PI / 180),
+          y2: Math.sin(angle * Math.PI / 180)
         }].concat(slice.call(stops)));
-        return scope.fill = "url(#" + name + ")";
+        return scope.fill = "url(#" + linearGradientName + ")";
       };
-      return scope.radialGradient = function(stops, r, x, y) {
-        if (radialGradient != null) {
-          SVG.defs.removeChild(radialGradient);
+      return scope.radialGradient = function() {
+        var m, props, stops;
+        stops = 2 <= arguments.length ? slice.call(arguments, 0, m = arguments.length - 1) : (m = 0, []), props = arguments[m++];
+        if (props == null) {
+          props = {
+            r: 0.5
+          };
         }
-        radialGradient = Gradient.radial.apply(Gradient, [gradientName, {
-          r: r,
-          x: x,
-          y: y
-        }].concat(slice.call(stops)));
-        return scope.fill = "url(#" + name + ")";
+        Gradient.remove(radialGradientName);
+        if (typeof props === "number") {
+          props = {
+            r: 0.5
+          };
+        }
+        radialGradient = Gradient.radial.apply(Gradient, [radialGradientName, props].concat(slice.call(stops)));
+        return scope.fill = "url(#" + radialGradientName + ")";
       };
     });
   });
@@ -2725,13 +2734,18 @@
     var Gradient, createStops, existing;
     existing = {};
     Make("Gradient", Gradient = {
+      remove: function(name) {
+        if (existing[name] != null) {
+          SVG.defs.removeChild(existing[name]);
+          return delete existing[name];
+        }
+      },
       linear: function() {
         var attrs, gradient, name, props, stops;
         name = arguments[0], props = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
         if (existing[name] != null) {
           throw "Gradient named " + name + " already exists. Please don't create the same gradient more than once.";
         }
-        existing[name] = true;
         attrs = typeof props === "object" ? (props.id = name, props) : props === true ? {
           id: name,
           x2: 0,
@@ -2739,7 +2753,7 @@
         } : {
           id: name
         };
-        gradient = SVG.create("linearGradient", SVG.defs, attrs);
+        gradient = existing[name] = SVG.create("linearGradient", SVG.defs, attrs);
         createStops(gradient, stops);
         return gradient;
       },
@@ -2751,7 +2765,7 @@
         }
         existing[name] = true;
         props.id = name;
-        gradient = SVG.create("radialGradient", SVG.defs, props);
+        gradient = existing[name] = SVG.create("radialGradient", SVG.defs, props);
         createStops(gradient, stops);
         return gradient;
       }

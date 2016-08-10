@@ -11,13 +11,12 @@ A framework for making interactive animations with SVG.
 * Schematic & Pause
 * Arrows, Labels, Background Color, Manifold Backgrounds
 * Deal with SVGA Components
+* Ability to set position of Controls for simple animations
 * Check Input on Windows
 * Mouse wheel doesn't zoom?
 * Highlighter
 * New BakeLines
 * Enable Uglify
-
-* SVGA in cd-module
 
 ## License
 Copyright (c) 2014-2016 CD Industrial Group Inc. http://www.cdiginc.com

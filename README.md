@@ -5,13 +5,11 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-* Ask the team: Should drag be cancelled when the mouse leaves the window?
-
 * Gradients
 * Schematic & Pause
 * Arrows, Labels, Background Color, Manifold Backgrounds
 * Deal with SVGA Components
-* Ability to set position of Controls for simple animations
+* Ability to set position of ControlPanel for simple animations used in modules
 * Check Input on Windows
 * Mouse wheel doesn't zoom?
 * Highlighter

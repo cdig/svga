@@ -7,7 +7,6 @@ A framework for making interactive animations with SVG.
 
 * Ask the team: Should drag be cancelled when the mouse leaves the window?
 
-* Detect if a Line contains fill or stroke, and change that (so nodes work)
 * Gradients
 * Schematic & Pause
 * Arrows, Labels, Background Color, Manifold Backgrounds

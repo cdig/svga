@@ -42,8 +42,8 @@ Take ["Gradient", "Pressure", "Registry", "ScopeCheck", "SVG"], (Gradient, Press
       set: (val)->
         if pressure isnt val
           pressure = val
-          if isLine and not scope.root.BROKEN_LINES
-            scope.stroke = Pressure scope.pressure
+          if isLine
+            scope.setHydraulicLinePressure pressure
           else
             scope.fill = Pressure scope.pressure
     

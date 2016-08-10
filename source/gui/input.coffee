@@ -1,102 +1,114 @@
-do ()->
-  Make "Input", (elm, calls)->
-    state =
-      down: false
-      over: false
-      touch: false
-    
-    over = (e)->
-      state.over = true
-      calls.over? e, state
-      if state.down
-        calls.down? e, state
-    
-    down = (e)->
-      state.down = true
+Make "Input", (elm, calls)->
+  state =
+    down: false
+    over: false
+    touch: false
+    clicking: false
+  
+  
+  down = (e)->
+    state.down = true
+    if state.over
+      state.clicking = true
       calls.down? e, state
-    
-    move = (e)->
-      if not state.over
-        over e
-      if state.down and calls.drag?
-        calls.drag e, state
+    else
+      calls.downOther? e, state
+  
+  up = (e)->
+    state.down = false
+    if state.over
+      calls.up? e, state
+      if state.clicking
+        state.clicking = false
+        calls.click? e, state
+    else
+      calls.upOther? e, state
+      if state.clicking
+        state.clicking = false
+        calls.miss? e, state
+  
+  move = (e)->
+    if state.over
+      if state.down
+        calls.drag? e, state
       else
         calls.move? e, state
-    
-    up = (e)->
-      state.down = false
-      if state.over
-        calls.click? e, state
+    else
+      if state.down
+        calls.dragOther? e, state
       else
-        calls.miss? e, state
-      calls.up? e, state
-    
-    out = (e)->
-      state.over = false
-      calls.out? e, state
-    
-    
-    # MOUSE #####################################################################################
-    
-    elm.addEventListener "mouseenter", (e)->
+        calls.moveOther? e, state
+  
+  out = (e)->
+    state.over = false
+    if state.down
+      calls.dragOut? e, state
+    else
+      calls.moveOut? e, state
+  
+  over = (e)->
+    state.over = true
+    if state.down
+      calls.dragIn? e, state
+    else
+      calls.moveIn? e, state
+  
+  
+  # MOUSE #####################################################################################
+  
+  window.addEventListener "mousedown", (e)->
+    return if state.touch
+    down e
+  
+  # Only add the move listener if we need it, to avoid the perf cost
+  if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther?
+    window.addEventListener "mousemove", (e)->
       return if state.touch
-      # console.log "mouseenter"
-      over e
-      elm.addEventListener "mouseleave", mouseleave
-    
-    elm.addEventListener "mousedown", (e)->
-      return if state.touch
-      # console.log "mousedown"
-      down e
-      window.addEventListener "mouseup", mouseup
-    
-    elm.addEventListener "mousemove", (e)->
-      return if state.touch
-      # console.log "mousemove"
       move e
-    
-    mouseup = (e)->
-      return if state.touch
-      # console.log "mouseup"
-      up e
-      window.removeEventListener "mouseup", mouseup
-    
-    mouseleave = (e)->
-      return if state.touch
-      # console.log "mouseleave"
-      out e
-      elm.removeEventListener "mouseleave", mouseleave
-    
-    # TOUCH #####################################################################################
-    
-    prepTouchEvent = (e)->
-      state.touch = true
-      e.clientX = e.touches[0]?.clientX
-      e.clientY = e.touches[0]?.clientY
-    
-    elm.addEventListener "touchstart", (e)->
-      # console.log "touchstart"
+  
+  window.addEventListener "mouseup", (e)->
+    return if state.touch
+    up e
+  
+  elm.addEventListener "mouseleave", (e)->
+    return if state.touch
+    out e
+  
+  elm.addEventListener "mouseenter", (e)->
+    return if state.touch
+    over e
+  
+  # TOUCH #####################################################################################
+  
+  prepTouchEvent = (e)->
+    state.touch = true
+    e.clientX = e.touches[0]?.clientX
+    e.clientY = e.touches[0]?.clientY
+    if e.clientX? and e.clientY?
+      pElm = document.elementFromPoint e.clientX, e.clientY
+      newState = elm is pElm or elm.contains pElm
+      overChanged = newState isnt state.over
+      state.over = newState
+      if overChanged
+        if state.over
+          over e
+        else
+          out e
+
+  window.addEventListener "touchstart", (e)->
+    prepTouchEvent e
+    down e
+  
+  # Only add the move listener if we need it, to avoid the perf cost
+  if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther? or calls.moveIn? or calls.dragIn? or calls.moveOut? or calls.dragOut?
+    window.addEventListener "touchmove", (e)->
       prepTouchEvent e
-      over e
-      down e
-      elm.addEventListener "touchmove", touchmove
-      elm.addEventListener "touchend", touchend
-      elm.addEventListener "touchcancel", touchend
-    
-    touchmove = (e)->
-      # console.log "touchmove"
-      prepTouchEvent e
-      # Not sure how to do this properly. Not trivial.
-      # isOver = elm is e.currentTarget or elm.contains e.currentTarget
-      isOver = true
-      over e if isOver and not state.over
-      move e if isOver
-      out e if not isOver and state.over
-    
-    touchend = (e)->
-      # console.log "touchend"
-      prepTouchEvent e
-      up e
-      elm.removeEventListener "touchmove", touchmove
-      elm.removeEventListener "touchend", touchend
-      elm.removeEventListener "touchcancel", touchend
+      move e
+  
+  window.addEventListener "touchend", (e)->
+    prepTouchEvent e
+    up e
+
+  window.addEventListener "touchcancel", (e)->
+    prepTouchEvent e
+    up e

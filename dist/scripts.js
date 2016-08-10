@@ -985,125 +985,144 @@
     });
   });
 
-  (function() {
-    return Make("Input", function(elm, calls) {
-      var down, mouseleave, mouseup, move, out, over, prepTouchEvent, state, touchend, touchmove, up;
-      state = {
-        down: false,
-        over: false,
-        touch: false
-      };
-      over = function(e) {
-        state.over = true;
-        if (typeof calls.over === "function") {
-          calls.over(e, state);
-        }
-        if (state.down) {
-          return typeof calls.down === "function" ? calls.down(e, state) : void 0;
-        }
-      };
-      down = function(e) {
-        state.down = true;
+  Make("Input", function(elm, calls) {
+    var down, move, out, over, prepTouchEvent, state, up;
+    state = {
+      down: false,
+      over: false,
+      touch: false,
+      clicking: false
+    };
+    down = function(e) {
+      state.down = true;
+      if (state.over) {
+        state.clicking = true;
         return typeof calls.down === "function" ? calls.down(e, state) : void 0;
-      };
-      move = function(e) {
-        if (!state.over) {
-          over(e);
+      } else {
+        return typeof calls.downOther === "function" ? calls.downOther(e, state) : void 0;
+      }
+    };
+    up = function(e) {
+      state.down = false;
+      if (state.over) {
+        if (typeof calls.up === "function") {
+          calls.up(e, state);
         }
-        if (state.down && (calls.drag != null)) {
-          return calls.drag(e, state);
+        if (state.clicking) {
+          state.clicking = false;
+          return typeof calls.click === "function" ? calls.click(e, state) : void 0;
+        }
+      } else {
+        if (typeof calls.upOther === "function") {
+          calls.upOther(e, state);
+        }
+        if (state.clicking) {
+          state.clicking = false;
+          return typeof calls.miss === "function" ? calls.miss(e, state) : void 0;
+        }
+      }
+    };
+    move = function(e) {
+      if (state.over) {
+        if (state.down) {
+          return typeof calls.drag === "function" ? calls.drag(e, state) : void 0;
         } else {
           return typeof calls.move === "function" ? calls.move(e, state) : void 0;
         }
-      };
-      up = function(e) {
-        state.down = false;
-        if (state.over) {
-          if (typeof calls.click === "function") {
-            calls.click(e, state);
-          }
+      } else {
+        if (state.down) {
+          return typeof calls.dragOther === "function" ? calls.dragOther(e, state) : void 0;
         } else {
-          if (typeof calls.miss === "function") {
-            calls.miss(e, state);
-          }
+          return typeof calls.moveOther === "function" ? calls.moveOther(e, state) : void 0;
         }
-        return typeof calls.up === "function" ? calls.up(e, state) : void 0;
-      };
-      out = function(e) {
-        state.over = false;
-        return typeof calls.out === "function" ? calls.out(e, state) : void 0;
-      };
-      elm.addEventListener("mouseenter", function(e) {
-        if (state.touch) {
-          return;
-        }
-        over(e);
-        return elm.addEventListener("mouseleave", mouseleave);
-      });
-      elm.addEventListener("mousedown", function(e) {
-        if (state.touch) {
-          return;
-        }
-        down(e);
-        return window.addEventListener("mouseup", mouseup);
-      });
-      elm.addEventListener("mousemove", function(e) {
+      }
+    };
+    out = function(e) {
+      state.over = false;
+      if (state.down) {
+        return typeof calls.dragOut === "function" ? calls.dragOut(e, state) : void 0;
+      } else {
+        return typeof calls.moveOut === "function" ? calls.moveOut(e, state) : void 0;
+      }
+    };
+    over = function(e) {
+      state.over = true;
+      if (state.down) {
+        return typeof calls.dragIn === "function" ? calls.dragIn(e, state) : void 0;
+      } else {
+        return typeof calls.moveIn === "function" ? calls.moveIn(e, state) : void 0;
+      }
+    };
+    window.addEventListener("mousedown", function(e) {
+      if (state.touch) {
+        return;
+      }
+      return down(e);
+    });
+    if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
+      window.addEventListener("mousemove", function(e) {
         if (state.touch) {
           return;
         }
         return move(e);
       });
-      mouseup = function(e) {
-        if (state.touch) {
-          return;
-        }
-        up(e);
-        return window.removeEventListener("mouseup", mouseup);
-      };
-      mouseleave = function(e) {
-        if (state.touch) {
-          return;
-        }
-        out(e);
-        return elm.removeEventListener("mouseleave", mouseleave);
-      };
-      prepTouchEvent = function(e) {
-        var ref, ref1;
-        state.touch = true;
-        e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
-        return e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
-      };
-      elm.addEventListener("touchstart", function(e) {
-        prepTouchEvent(e);
-        over(e);
-        down(e);
-        elm.addEventListener("touchmove", touchmove);
-        elm.addEventListener("touchend", touchend);
-        return elm.addEventListener("touchcancel", touchend);
-      });
-      touchmove = function(e) {
-        var isOver;
-        prepTouchEvent(e);
-        isOver = true;
-        if (isOver && !state.over) {
-          over(e);
-        }
-        if (isOver) {
-          move(e);
-        }
-        if (!isOver && state.over) {
-          return out(e);
-        }
-      };
-      return touchend = function(e) {
-        prepTouchEvent(e);
-        up(e);
-        elm.removeEventListener("touchmove", touchmove);
-        elm.removeEventListener("touchend", touchend);
-        return elm.removeEventListener("touchcancel", touchend);
-      };
+    }
+    window.addEventListener("mouseup", function(e) {
+      if (state.touch) {
+        return;
+      }
+      return up(e);
     });
-  })();
+    elm.addEventListener("mouseleave", function(e) {
+      if (state.touch) {
+        return;
+      }
+      return out(e);
+    });
+    elm.addEventListener("mouseenter", function(e) {
+      if (state.touch) {
+        return;
+      }
+      return over(e);
+    });
+    prepTouchEvent = function(e) {
+      var newState, overChanged, pElm, ref, ref1;
+      state.touch = true;
+      e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
+      e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
+      if ((e.clientX != null) && (e.clientY != null)) {
+        pElm = document.elementFromPoint(e.clientX, e.clientY);
+        newState = elm === pElm || elm.contains(pElm);
+        overChanged = newState !== state.over;
+        state.over = newState;
+        if (overChanged) {
+          if (state.over) {
+            return over(e);
+          } else {
+            return out(e);
+          }
+        }
+      }
+    };
+    window.addEventListener("touchstart", function(e) {
+      prepTouchEvent(e);
+      return down(e);
+    });
+    if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
+      window.addEventListener("touchmove", function(e) {
+        prepTouchEvent(e);
+        return move(e);
+      });
+    }
+    window.addEventListener("touchend", function(e) {
+      prepTouchEvent(e);
+      return up(e);
+    });
+    return window.addEventListener("touchcancel", function(e) {
+      prepTouchEvent(e);
+      return up(e);
+    });
+  });
 
   Take(["Reaction", "ScopeReady"], function(Reaction) {
     var root;
@@ -2356,14 +2375,15 @@
         setup: function() {
           var isInsideOtherField, p;
           isInsideOtherField = false;
-          p = scope.parent;
+          p = this.parent;
           while ((p != null) && !isInsideOtherField) {
-            isInsideOtherField = p._symbol === scope._symbol;
+            isInsideOtherField = p._symbol === this._symbol;
             p = p.parent;
           }
           if (!isInsideOtherField) {
+            this.pressure = 0;
             return Reaction("Schematic:Show", function() {
-              return scope.pressure = Pressure.white;
+              return this.pressure = Pressure.white;
             });
           }
         }
@@ -2396,8 +2416,9 @@
       svgElement.setAttributeNS(null, "fill", "transparent");
       return scope = {
         setup: function() {
+          this.pressure = 0;
           return Reaction("Schematic:Show", function() {
-            return scope.pressure = Pressure.black;
+            return this.pressure = Pressure.black;
           });
         }
       };
@@ -3786,29 +3807,29 @@
     };
   });
 
-  Take(["Control", "GUI", "Input", "Scope", "SVG", "Tween"], function(Control, arg, Input, Scope, SVG, Tween) {
+  Take(["Control", "GUI", "Input", "SVG", "Tween"], function(Control, arg, Input, SVG, Tween) {
     var GUI;
     GUI = arg.ControlPanel;
     return Control("button", function(elm, props) {
-      var bg, bgFill, blueBG, h, handlers, label, lightBG, orangeBG, scope, w;
+      var bg, bgFill, bgc, blueBG, h, handlers, label, lightBG, orangeBG, scope, toClicked, toClicking, toHover, toNormal, w;
       handlers = [];
       SVG.attrs(elm, {
         ui: true
       });
-      bg = Scope(SVG.create("rect", elm, {
+      bg = SVG.create("rect", elm, {
         x: GUI.pad,
         y: GUI.pad,
         rx: GUI.borderRadius,
         strokeWidth: 2,
         fill: "hsl(220, 10%, 92%)"
-      }));
+      });
       label = SVG.create("text", elm, {
         textContent: props.name,
         fill: "hsl(227, 16%, 24%)"
       });
       w = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
       h = GUI.unit;
-      blueBG = {
+      bgc = blueBG = {
         r: 34,
         g: 46,
         b: 89
@@ -3823,35 +3844,53 @@
         g: 196,
         b: 46
       };
-      bgFill = function(arg1) {
-        var b, g, r;
-        r = arg1.r, g = arg1.g, b = arg1.b;
-        return SVG.attrs(bg.element, {
-          stroke: "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")"
+      bgFill = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(bg, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
         });
       };
       bgFill(blueBG);
+      toNormal = function() {
+        return Tween(bgc, blueBG, .2, {
+          tick: bgFill
+        });
+      };
+      toHover = function() {
+        return Tween(bgc, lightBG, 0, {
+          tick: bgFill
+        });
+      };
+      toClicking = function() {
+        return Tween(bgc, orangeBG, 0, {
+          tick: bgFill
+        });
+      };
+      toClicked = function() {
+        return Tween(bgc, lightBG, .2, {
+          tick: bgFill
+        });
+      };
       Input(elm, {
-        over: function() {
-          return bgFill(lightBG);
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
         },
-        down: function() {
-          return bgFill(orangeBG);
-        },
-        out: function() {
-          return Tween(lightBG, blueBG, .2, {
-            tick: bgFill
-          });
-        },
+        down: toClicking,
+        up: toHover,
+        moveOut: toNormal,
+        dragOut: toNormal,
         click: function() {
-          var handler, len, m;
+          var handler, len, m, results;
+          toClicked();
+          results = [];
           for (m = 0, len = handlers.length; m < len; m++) {
             handler = handlers[m];
-            handler();
+            results.push(handler());
           }
-          return Tween(orangeBG, lightBG, .2, {
-            tick: bgFill
-          });
+          return results;
         }
       });
       return scope = {
@@ -3869,7 +3908,7 @@
         resize: function(arg1) {
           var h, w;
           w = arg1.w, h = arg1.h;
-          SVG.attrs(bg.element, {
+          SVG.attrs(bg, {
             width: w - GUI.pad * 2,
             height: h - GUI.pad * 2
           });
@@ -3923,7 +3962,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Control("slider", function(elm, props) {
-      var bgFill, blueBG, handlers, label, labelWidth, lightBG, orangeBG, range, scope, startDrag, thumb, thumbBG, track, update, v;
+      var bgFill, bgc, blueBG, handleDrag, handlers, label, labelWidth, lightBG, orangeBG, range, scope, startDrag, thumb, thumbBG, toClicked, toClicking, toHover, toMissed, toNormal, track, update, v;
       handlers = [];
       v = 0;
       range = 0;
@@ -3957,7 +3996,7 @@
       SVG.attrs(label, {
         x: GUI.pad + labelWidth / 2
       });
-      blueBG = {
+      bgc = blueBG = {
         r: 34,
         g: 46,
         b: 89
@@ -3972,57 +4011,76 @@
         g: 196,
         b: 46
       };
-      bgFill = function(arg1) {
-        var b, g, r;
-        r = arg1.r, g = arg1.g, b = arg1.b;
+      bgFill = function(_bgc) {
+        bgc = _bgc;
         return SVG.attrs(thumbBG, {
-          stroke: "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")"
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
         });
       };
       bgFill(blueBG);
       update = function(V) {
         if (V != null) {
-          v = V;
+          v = Math.max(0, Math.min(1, V));
         }
         return TRS.abs(thumb, {
           x: v * range
         });
       };
+      toNormal = function() {
+        return Tween(bgc, blueBG, .2, {
+          tick: bgFill
+        });
+      };
+      toHover = function() {
+        return Tween(bgc, lightBG, 0, {
+          tick: bgFill
+        });
+      };
+      toClicking = function() {
+        return Tween(bgc, orangeBG, 0, {
+          tick: bgFill
+        });
+      };
+      toClicked = function() {
+        return Tween(bgc, lightBG, .2, {
+          tick: bgFill
+        });
+      };
+      toMissed = function() {
+        return Tween(bgc, blueBG, .2, {
+          tick: bgFill
+        });
+      };
+      handleDrag = function(e) {
+        var handler, len, m, results;
+        update(e.clientX / range - startDrag);
+        results = [];
+        for (m = 0, len = handlers.length; m < len; m++) {
+          handler = handlers[m];
+          results.push(handler(v));
+        }
+        return results;
+      };
       Input(elm, {
-        over: function() {
-          return bgFill(lightBG);
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
         },
         down: function(e) {
-          startDrag = e.clientX / range - v;
-          return bgFill(orangeBG);
+          toClicking();
+          return startDrag = e.clientX / range - v;
         },
-        out: function(e, state) {
-          if (!state.down) {
-            return Tween(lightBG, blueBG, .1, {
-              tick: bgFill
-            });
+        moveOut: toNormal,
+        miss: toMissed,
+        drag: handleDrag,
+        dragOther: function(e, state) {
+          if (state.clicking) {
+            return handleDrag(e);
           }
         },
-        miss: function() {
-          return Tween(orangeBG, blueBG, .1, {
-            tick: bgFill
-          });
-        },
-        drag: function(e) {
-          var handler, len, m, results;
-          update(Math.max(0, Math.min(1, e.clientX / range - startDrag)));
-          results = [];
-          for (m = 0, len = handlers.length; m < len; m++) {
-            handler = handlers[m];
-            results.push(handler(v));
-          }
-          return results;
-        },
-        click: function() {
-          return Tween(orangeBG, lightBG, .2, {
-            tick: bgFill
-          });
-        }
+        click: toClicked
       });
       return scope = {
         attach: function(props) {

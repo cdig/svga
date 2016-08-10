@@ -27,4 +27,4 @@ Take ["Action", "Config", "Reaction", "SVG", "DOMContentLoaded"], (Action, Confi
   
   # No background
   else
-    SVG.style target, "background-color", "#FFF"
+    SVG.style target, "background-color", "transparent"

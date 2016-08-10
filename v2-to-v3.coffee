@@ -26,6 +26,7 @@ gulp.task "default", ()->
     .pipe gulp_replace /scope(.*)stroke(.*)/g, "scope$1stroke$2 #X Warning: stroke might need to be changed to setDisplacement"
     
     # These behviours have changed
+    .pipe gulp_replace /scope(.*)animate(.*)/g, "null # scope$1animate$2 #X scope.animate has changed meaning - revise accordingly"
     .pipe gulp_replace /animation:(.*)/g, "animate:$1 #X Renamed animation->animate"
     .pipe gulp_replace /scope(.*)animation(.*)/g, "null # scope$1animate$2 #X scope.animate has changed meaning - revise accordingly"
     .pipe gulp_replace /scope(.*)update(.*)/g, "null # scope$1update$2 #X scope.update has changed meaning - revise accordingly"

@@ -8,9 +8,9 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (Config, RAF, Re
       wFrac = window.innerWidth / width
       hFrac = window.innerHeight / height
       scale = Math.min wFrac, hFrac
-      excessWidth = (window.innerWidth - width * scale)/2
-      excessHeight = (window.innerHeight - height * scale)/2
-      SVG.attr root, "transform", "scale(#{scale}) translate(#{excessWidth/scale}, #{excessHeight/scale})"
+      x = (window.innerWidth - width * scale) / (2 * scale)
+      y = (window.innerHeight - height * scale) / (2 * scale)
+      SVG.attr root, "transform", "scale(#{scale}) translate(#{x}, #{y})"
   
   else
     SVG.attrs SVG.root, width: null, height: null

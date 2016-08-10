@@ -5,8 +5,6 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-* Ability to set position of ControlPanel for simple animations used in modules
-
 Wednesday evening
 * Schematic & Pause
 * Arrows, Labels, Background Color

@@ -1575,13 +1575,13 @@
       height = SVG.attr(SVG.root, "height");
       root = document.getElementById("root");
       return Resize(function() {
-        var excessHeight, excessWidth, hFrac, scale, wFrac;
+        var hFrac, scale, wFrac, x, y;
         wFrac = window.innerWidth / width;
         hFrac = window.innerHeight / height;
         scale = Math.min(wFrac, hFrac);
-        excessWidth = (window.innerWidth - width * scale) / 2;
-        excessHeight = (window.innerHeight - height * scale) / 2;
-        return SVG.attr(root, "transform", "scale(" + scale + ") translate(" + (excessWidth / scale) + ", " + (excessHeight / scale) + ")");
+        x = (window.innerWidth - width * scale) / (2 * scale);
+        y = (window.innerHeight - height * scale) / (2 * scale);
+        return SVG.attr(root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
       });
     } else {
       SVG.attrs(SVG.root, {
@@ -3707,8 +3707,9 @@
   });
 
   Take(["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], function(Config, ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope) {
-    var CP, ControlPanelView, bg, g, panelElms, panelHeight, panelRadius, panelWidth, resize, showing, vertical;
+    var CP, Cfg, ControlPanelView, bg, g, panelElms, panelHeight, panelRadius, panelWidth, resize, showing, vertical;
     CP = GUI.ControlPanel;
+    Cfg = Config.controlPanel != null ? Config.controlPanel : Config.controlPanel = {};
     showing = false;
     panelRadius = CP.borderRadius + CP.pad * 2;
     vertical = true;
@@ -3727,31 +3728,36 @@
     panelElms = Scope(SVG.create("g", g.element));
     panelElms.x = panelElms.y = CP.pad * 2;
     resize = function() {
-      var ref, ref1, ref2, size, view, x, y;
+      var heightPad, panelBgX, panelBgY, size, view, widthPad, x, y;
       view = {
         w: window.innerWidth,
         h: window.innerHeight
       };
-      vertical = ((ref = Config.controlPanel) != null ? ref.vertical : void 0) || view.w >= view.h * 1.3;
+      vertical = Cfg.vertical || view.w >= view.h * 1.3;
       size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
       panelWidth = size.w + CP.pad * 4;
       panelHeight = size.h + CP.pad * 4;
-      x = (ref1 = Config.controlPanel) != null ? ref1.x : void 0;
-      y = (ref2 = Config.controlPanel) != null ? ref2.y : void 0;
-      if (vertical) {
-        g.x = x != null ? x : view.w - panelWidth | 0;
-        g.y = y != null ? y : view.h / 2 - panelHeight / 2 | 0;
-        return SVG.attrs(bg, {
-          width: panelWidth + panelRadius,
-          height: panelHeight
-        });
+      widthPad = Cfg.x === 1 ? panelRadius : Cfg.x === -1 ? -panelRadius : 0;
+      heightPad = Cfg.y === 1 ? panelRadius : Cfg.y === -1 ? -panelRadius : 0;
+      panelBgX = Cfg.x === -1 ? -panelRadius : 0;
+      panelBgY = Cfg.y === -1 ? -panelRadius : 0;
+      SVG.attrs(bg, {
+        x: panelBgX,
+        y: panelBgY,
+        width: panelWidth + widthPad,
+        height: panelHeight + heightPad
+      });
+      if ((Cfg.x != null) || (Cfg.y != null)) {
+        x = (Cfg.x || 0) / 2 + 0.5;
+        y = (Cfg.y || 0) / 2 + 0.5;
+        g.x = x * view.w - x * panelWidth | 0;
+        return g.y = y * view.h - y * panelHeight | 0;
+      } else if (vertical) {
+        g.x = view.w - panelWidth | 0;
+        return g.y = view.h / 2 - panelHeight / 2 | 0;
       } else {
-        g.x = x != null ? x : view.w / 2 - panelWidth / 2 | 0;
-        g.y = y != null ? y : view.h - panelHeight | 0;
-        return SVG.attrs(bg, {
-          width: panelWidth,
-          height: panelHeight + panelRadius
-        });
+        g.x = view.w / 2 - panelWidth / 2 | 0;
+        return g.y = view.h - panelHeight | 0;
       }
     };
     Take("ScopeReady", function() {

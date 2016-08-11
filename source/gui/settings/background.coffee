@@ -6,7 +6,7 @@ Take ["Action", "Config", "Reaction", "SVG", "DOMContentLoaded"], (Action, Confi
   # rather than our own <svg> element.
   target = null
   for o in window.parent.document.querySelectorAll "object"
-    if o.contentDocument = document
+    if o.contentDocument is document
       target = o
       break
   

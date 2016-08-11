@@ -5,21 +5,18 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 
-Wednesday evening
-* Schematic & Pause
-* Arrows, Labels, Background Color
-* Deal with SVGA Components
-
 Thurs
+* Does Background breaking out of the nested document break on LBS because of cross-domain?
 * Check Input on Windows
 * Mouse wheel doesn't zoom?
-* New BakeLines
+* Schematic & Pause
+* Arrows, Labels, Background Color
 
 Thurs Evening
-* Highlighter
+* New BakeLines
+* Legacy Highlighter (we'll do something better later)
 
 Friday
-* Enable Uglify
 * cd-module v3, disable SVGA when not on current page
 
 ## License

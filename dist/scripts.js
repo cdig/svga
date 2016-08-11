@@ -3737,8 +3737,8 @@
       size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
       panelWidth = size.w + CP.pad * 4;
       panelHeight = size.h + CP.pad * 4;
-      widthPad = Cfg.x === 1 ? panelRadius : Cfg.x === -1 ? -panelRadius : 0;
-      heightPad = Cfg.y === 1 ? panelRadius : Cfg.y === -1 ? -panelRadius : 0;
+      widthPad = Cfg.x === 1 ? panelRadius : Cfg.x === -1 ? -panelRadius : vertical ? panelRadius : 0;
+      heightPad = Cfg.y === 1 ? panelRadius : Cfg.y === -1 ? -panelRadius : !vertical ? panelRadius : 0;
       panelBgX = Cfg.x === -1 ? -panelRadius : 0;
       panelBgY = Cfg.y === -1 ? -panelRadius : 0;
       SVG.attrs(bg, {

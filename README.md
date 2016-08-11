@@ -20,6 +20,7 @@ Thurs Evening
 
 Friday
 * Enable Uglify
+* cd-module v3, disable SVGA when not on current page
 
 ## License
 Copyright (c) 2014-2016 CD Industrial Group Inc. http://www.cdiginc.com

@@ -34,8 +34,9 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
       ControlPanelLayout.horizontal view
     panelWidth = size.w + CP.pad*4
     panelHeight = size.h + CP.pad*4
-    widthPad = if Cfg.x is 1 then panelRadius else if Cfg.x is -1 then -panelRadius else 0
-    heightPad = if Cfg.y is 1 then panelRadius else if Cfg.y is -1 then -panelRadius else 0
+    
+    widthPad = if Cfg.x is 1 then panelRadius else if Cfg.x is -1 then -panelRadius else if vertical then panelRadius else 0
+    heightPad = if Cfg.y is 1 then panelRadius else if Cfg.y is -1 then -panelRadius else if !vertical then panelRadius else 0
     panelBgX = if Cfg.x is -1 then -panelRadius else 0
     panelBgY = if Cfg.y is -1 then -panelRadius else 0
     

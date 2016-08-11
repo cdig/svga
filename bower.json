@@ -5,10 +5,7 @@
     "pressure": "cdig/pressure#v3",
     "take-and-make": "cdig/take-and-make#v3"
   },
-  "main": [
-    "dist/scripts.js",
-    "dist/styles.css"
-  ],
+  "main": [],
   "ignore": [
     "**/*",
     "!dist/**/*",

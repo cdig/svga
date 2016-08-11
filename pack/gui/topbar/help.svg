@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <circle fill="#fff" r="12" cx="14" cy="24"/>
+  <text font-family="Lato" font-size="20" fill="hsl(226, 45%, 40%)" x="10" y="31">?</text>
+</svg>

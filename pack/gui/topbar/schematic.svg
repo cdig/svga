@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g fill="transparent" stroke="#fff">
+    <circle r="16" cx="16" cy="24" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    <polygon fill="#fff" points="16,9 12,18 20,18"/>
+    <path class="a" stroke-dasharray="41 41" stroke-dashoffset="41" stroke-width="1" d="M16,11 A13,13 0 0,0 16,37"/>
+    <path class="b" stroke-dasharray="35 35" stroke-dashoffset="35" stroke-width="1" d="M16,13 A11,11 0 0,0 16,35"/>
+  </g>
+</svg>

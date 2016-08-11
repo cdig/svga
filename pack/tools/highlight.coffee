@@ -1,24 +1,18 @@
-Take ["Ease", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, Gradient, Input, SVG, Tick)->
+Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS, Gradient, Input, SVG, Tick)->
   
   highlightedCount = 0
-  
-  createGradient = (time)->
-    props =
-      x1:Math.cos(time * Math.PI) * -60 - 50
-      y1:Math.sin(time * Math.PI) * -60 - 50
-      x2:Math.cos(time * Math.PI) *  60 - 50
-      y2:Math.sin(time * Math.PI) *  60 - 50
-      gradientUnits: "userSpaceOnUse"
-    Gradient.linear "HighlightGradient", props, "#0F5", "#FF0", "#F70"
+  gradient = Gradient.linear "HighlightGradient", gradientUnits: "userSpaceOnUse", "#1E5", "#FF0", "#F70"
   
   counter = 0
   
   Tick (time)->
-    if highlightedCount > 0 and ++counter%5 is 0
-      Gradient.remove "HighlightGradient"
-      createGradient time
-  
-  createGradient 0
+    if highlightedCount > 0 and FPS() > 30 and ++counter%2 is 0
+      Gradient.updateProps gradient,
+        x1:Math.cos(time * Math.PI) * -60 - 50
+        y1:Math.sin(time * Math.PI) * -60 - 50
+        x2:Math.cos(time * Math.PI) *  60 - 50
+        y2:Math.sin(time * Math.PI) *  60 - 50
+
   
   Make "Highlight", (targets...)->
     elements = []
@@ -40,7 +34,7 @@ Take ["Ease", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, Gradient, 
         highlightedCount++
         for e in elements
           SVG.attrs e.elm, stroke: "url(#HighlightGradient)", strokeWidth: 3
-        timeout = setTimeout deactivate, 3000
+        timeout = setTimeout deactivate, 4000
     
     deactivate = ()->
       if active

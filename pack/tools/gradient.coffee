@@ -1,7 +1,3 @@
-# Gradient
-# Even if we aren't using this anywhere, we'll probably want to
-# keep it around for possible future use because SVG gradients are non-trivial.
-
 Take "SVG", (SVG)->
   existing = {}
   
@@ -11,7 +7,15 @@ Take "SVG", (SVG)->
         SVG.defs.removeChild existing[name]
         delete existing[name]
     
-    linear: (name, props, stops...)->
+    updateStops: (gradient, stops...)->
+      for child in gradient.childNodes
+        gradient.removeChild child
+      createStops stops
+    
+    updateProps: (gradient, props)->
+      SVG.attrs gradient, props
+    
+    linear: (name, props = {}, stops...)->
       if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
       attrs = if typeof props is "object"
         props.id = name
@@ -24,7 +28,7 @@ Take "SVG", (SVG)->
       createStops gradient, stops
       return gradient # Composable
     
-    radial: (name, props, stops...)->
+    radial: (name, props = {}, stops...)->
       if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
       existing[name] = true
       props.id = name

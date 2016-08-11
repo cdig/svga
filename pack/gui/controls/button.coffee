@@ -34,7 +34,8 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
     orangeBG = r:255, g:196, b:46
     bgFill = (_bgc)->
       bgc = _bgc
-      SVG.attrs bg, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
+      unless scope?.highlightActive
+        SVG.attrs bg, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
     bgFill blueBG
     
     

@@ -17,7 +17,8 @@ Take ["ControlPanel", "ControlPanelLayout", "Scope"], (ControlPanel, ControlPane
       # Re-using an existing ID? Just attach to the existing control.
       if props?.id? and instances[props.id]?
         instances[props.id].attach? props
-      
+        return instances[props.id]
+        
       # Create a new control
       else
         elm = ControlPanel.createElement props?.parent
@@ -29,3 +30,5 @@ Take ["ControlPanel", "ControlPanelLayout", "Scope"], (ControlPanel, ControlPane
         
         ControlPanelLayout.addScope scope
         instances[props.id] = scope if props?.id?
+        return scope
+      

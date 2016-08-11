@@ -17,7 +17,10 @@ do ()->
   
   # This is used to cache normalized keys, and to provide defaults for keys that shouldn't be normalized
   attrNames =
+    gradientUnits: "gradientUnits"
     viewBox: "viewBox"
+    SCOPE: "SCOPE"
+    SYMBOL: "SYMBOL"
     # additional attr names will be listed here as needed
   
   # We want to wait until SVGReady fires before we change the structure of the DOM.

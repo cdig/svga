@@ -1,14 +1,9 @@
 Take ["Registry", "SVGPreprocessor", "DOMContentLoaded"], (Registry, SVGPreprocessor)->
   
-  # This is the #root symbol, not the rootElement aka <svg>
-  # We need to save this reference, because IE breaks if we getElementById again later
-  root = document.getElementById "root"
-  Make "root", root
-  
   # This is the very first code that touches the DOM. It crawls the entire DOM and:
   # 1. Applies transformations to bring things to a more ideal arrangement for animating.
   # 2. Returns a tree of DOM references that we'll link Symbols to.
-  svgData = SVGPreprocessor.crawl root
+  svgData = SVGPreprocessor.crawl document.getElementById "root"
   
   # We're done preprocessing the SVG. Tell other systems that mutate the DOM to do their thing.
   Make "SVGReady"

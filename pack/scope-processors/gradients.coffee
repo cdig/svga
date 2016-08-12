@@ -35,7 +35,7 @@ Take ["Gradient", "Registry", "ScopeCheck"], (Gradient, Registry, ScopeCheck)->
     
     scope.radialGradient = (props, stops...)->
       radialGradient ?= Gradient.radial rGradName
-      if typeof props is "string"
+      if typeof props is "string" or typeof props is "number"
         stops.push props
         props = r:0.5
       if rGradProps isnt props

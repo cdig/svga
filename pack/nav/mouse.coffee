@@ -40,7 +40,11 @@ Take ["Config", "Input", "Nav"], (Config, Input, Nav)->
     return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()
-      Nav.by z: -e.deltaY / 500
+      
+      if e.deltaMode is WheelEvent.DOM_DELTA_PIXEL
+        Nav.by z: -e.deltaY / 500
+      else
+        Nav.by z: -e.deltaY / 20
       
       # Old code which was nice but sucked with mice
       # # Is this a pixel-precise input device (eg: magic trackpad)?

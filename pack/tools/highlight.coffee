@@ -23,7 +23,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
       
       # We special-case HydraulicLines so that connection nodes get a highlighted fill
       sn = elm._scope?._symbol.symbolName
-      lineOrField ||= sn is "HydraulicLine"
+      lineOrField ||= sn is "HydraulicLine" or sn is "HydraulicField"
       
       # We also special-case text nodes
       text = elm.tagName is "tspan" or elm.tagName is "text"
@@ -31,7 +31,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
       if elm.tagName is "path" or elm.tagName is "rect" or text
         elements.push e = elm: elm, attrs: {}
         e.attrs.fill = fill if (text or lineOrField) and (fill = SVG.attr elm, "fill")? and fill isnt "transparent" and fill isnt "none"
-        e.attrs.stroke = stroke if (stroke = SVG.attr elm, "stroke")? and stroke isnt "transparent" and stroke isnt "none"
+        e.attrs.stroke = stroke if (stroke = SVG.attr elm, "stroke")?
         e.attrs.strokeWidth = width if width = SVG.attr elm, "stroke-width"
       
       for elm in elm.childNodes

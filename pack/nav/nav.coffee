@@ -18,7 +18,7 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (Config, RAF, Re
     center = x: 0, y: 0, z: 1
     xLimit = {}
     yLimit = {}
-    zLimit = min: 0, max: 3
+    zLimit = min: -0.5, max: 3
     scaleStartPosZ = 0
     tween = null
     

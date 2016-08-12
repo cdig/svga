@@ -6,15 +6,13 @@ A framework for making interactive animations with SVG.
 ## Todos:
 
 Thurs
-* Does Background breaking out of the nested document break on LBS because of cross-domain?
-* Check Input on Windows
-* Mouse wheel doesn't zoom?
-* New BakeLines
 * cd-module v3, disable SVGA when not on current page
+* New BakeLines
 * Radio Button?
 * Toggle Button?
 
 Friday
+* Windows
 * Schematic & Pause
 * Arrows, Labels, Background Color
 

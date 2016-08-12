@@ -1,4 +1,4 @@
-Take "SVG", (SVG)->
+Take ["Pressure", "SVG"], (Pressure, SVG)->
   existing = {}
   
   Make "Gradient", Gradient =
@@ -14,6 +14,8 @@ Take "SVG", (SVG)->
       for stop, i in stops
         if typeof stop is "string"
           SVG.create "stop", gradient, stopColor: stop, offset: (100 * i/(stops.length-1)) + "%"
+        else if typeof stop is "number"
+          SVG.create "stop", gradient, stopColor: Pressure(stop), offset: (100 * i/(stops.length-1)) + "%"
         else
           attrs =
             stopColor: stop.color

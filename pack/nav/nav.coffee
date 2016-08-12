@@ -1,9 +1,9 @@
-Take ["Config", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (Config, RAF, Resize, SVG, Tween)->
+Take ["Config", "RAF", "Resize", "root", "SVG", "Tween", "ScopeReady"], (Config, RAF, Resize, root, SVG, Tween)->
   if not Config.nav
     Make "Nav", false
     width = SVG.attr SVG.root, "width"
     height = SVG.attr SVG.root, "height"
-    root = document.getElementById "root"
+    # root = document.getElementById "root"
     Resize ()->
       wFrac = window.innerWidth / width
       hFrac = window.innerHeight / height
@@ -21,9 +21,6 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (Config, RAF, Re
     zLimit = min: -0.5, max: 3
     scaleStartPosZ = 0
     tween = null
-    
-    # This is the #root symbol, not the rootElement aka <svg>
-    root = document.getElementById "root"
     
     initialSize = root.getBoundingClientRect()
     return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty

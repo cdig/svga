@@ -33,7 +33,7 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
       parentScope.children.push scope
     
     # Add some info to help devs locate scope elements in the DOM
-    if Dev
+    if Dev and not (navigator.userAgent.indexOf("Trident") >= 0 or navigator.userAgent.indexOf("Edge") >= 0)
       # Add some helpful dev names to the element
       element.setAttribute "SCOPE", scope.id or ""
       element.setAttribute "SYMBOL", symbol.symbolName if symbol?.symbolName?
@@ -42,6 +42,9 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
         element.removeAttributeNS attr.namespaceURI, attr.name
         element.setAttributeNS attr.namespaceURI, attr.name, attr.value
     
+    # Forcing a reflow fixes an IE bug
+    window.getComputedStyle element
+      
     # Run this scope through all the processors, which add special properties, callbacks, and other fanciness
     scopeProcessor scope for scopeProcessor in Registry.all "ScopeProcessor"
     

@@ -5,7 +5,6 @@ A framework for making interactive animations with SVG.
 
 ## Todos:
 * New BakeLines
-* Windows Testing
 * Schematic & Pause
 * Arrows, Labels, Background Color
 * Radio Button?

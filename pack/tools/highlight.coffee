@@ -6,7 +6,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
   counter = 0
   
   Tick (time)->
-    if highlightedCount > 0 and FPS() > 30 and ++counter%2 is 0
+    if highlightedCount > 0 and FPS() > 20 and ++counter%2 is 0
       Gradient.updateProps gradient,
         x1:Math.cos(time * Math.PI) * -60 - 50
         y1:Math.sin(time * Math.PI) * -60 - 50
@@ -19,28 +19,32 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
     active = false
     timeout = null
     
-    setup = (elm)->
-      if elm.tagName is "path" or elm.tagName is "rect"
-        elements.push
-          elm: elm
-          stroke: SVG.attr elm, "stroke"
-          width: SVG.attr elm, "strokeWidth"
-      else if elm.tagName is "tspan" or elm.tagName is "text"
-        elements.push
-          elm: elm
-          fill: SVG.attr elm, "fill"
-        
+    setup = (elm, lineOrField = false)->
+      
+      # We special-case HydraulicLines so that connection nodes get a highlighted fill
+      sn = elm._scope?._symbol.symbolName
+      lineOrField ||= sn is "HydraulicLine"
+      
+      # We also special-case text nodes
+      text = elm.tagName is "tspan" or elm.tagName is "text"
+      
+      if elm.tagName is "path" or elm.tagName is "rect" or text
+        elements.push e = elm: elm, attrs: {}
+        e.attrs.fill = fill if (text or lineOrField) and (fill = SVG.attr elm, "fill")? and fill isnt "transparent" and fill isnt "none"
+        e.attrs.stroke = stroke if (stroke = SVG.attr elm, "stroke")? and stroke isnt "transparent" and stroke isnt "none"
+        e.attrs.strokeWidth = width if width = SVG.attr elm, "stroke-width"
+      
       for elm in elm.childNodes
-        setup elm
+        setup elm, lineOrField
     
     activate = ()->
       if not active
         active = true
         highlightedCount++
         for e in elements
-          if e.stroke?
+          if e.attrs.stroke?
             SVG.attrs e.elm, stroke: "url(#HighlightGradient)", strokeWidth: 3
-          else
+          if e.attrs.fill?
             SVG.attrs e.elm, fill: "url(#HighlightGradient)"
         timeout = setTimeout deactivate, 4000
     
@@ -49,10 +53,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
         active = false
         highlightedCount--
         for e in elements
-          if e.stroke?
-            SVG.attrs e.elm, stroke: e.stroke, strokeWidth: e.width
-          else
-            SVG.attrs e.elm, fill: e.fill
+          SVG.attrs e.elm, e.attrs
         clearTimeout timeout
     
     for target in targets

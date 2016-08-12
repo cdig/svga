@@ -4,7 +4,7 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "pressure"
     
-    isLine = scope.element.getAttribute("id")?.indexOf("Line") > -1
+    isLine = scope._symbol?.symbolName is "HydraulicLine"
     pressure = null
     
     Object.defineProperty scope, 'pressure',

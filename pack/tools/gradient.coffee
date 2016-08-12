@@ -8,9 +8,20 @@ Take "SVG", (SVG)->
         delete existing[name]
     
     updateStops: (gradient, stops...)->
-      for child in gradient.childNodes
-        gradient.removeChild child
-      createStops stops
+      while gradient.hasChildNodes()
+        gradient.removeChild gradient.lastChild
+      stops = if stops[0] instanceof Array then stops[0] else stops
+      for stop, i in stops
+        if typeof stop is "string"
+          SVG.create "stop", gradient, stopColor: stop, offset: (100 * i/(stops.length-1)) + "%"
+        else
+          attrs =
+            stopColor: stop.color
+            offset: 100 * (if stop.offset? then stop.offset else i/(stops.length-1)) + "%"
+          attrs.stopOpacity = stop.opacity if stop.opacity?
+          SVG.create "stop", gradient, attrs
+      gradient # Composable
+
     
     updateProps: (gradient, props)->
       SVG.attrs gradient, props
@@ -25,7 +36,7 @@ Take "SVG", (SVG)->
       else
         id: name
       gradient = existing[name] = SVG.create "linearGradient", SVG.defs, attrs
-      createStops gradient, stops
+      Gradient.updateStops gradient, stops
       return gradient # Composable
     
     radial: (name, props = {}, stops...)->
@@ -33,19 +44,5 @@ Take "SVG", (SVG)->
       existing[name] = true
       props.id = name
       gradient = existing[name] = SVG.create "radialGradient", SVG.defs, props
-      createStops gradient, stops
+      Gradient.updateStops gradient, stops
       return gradient # Composable
-  
-  
-  createStops = (gradient, stops)->
-    stops = if stops[0] instanceof Array then stops[0] else stops
-    for stop, i in stops
-      if typeof stop is "string"
-        SVG.create "stop", gradient, stopColor: stop, offset: (100 * i/(stops.length-1)) + "%"
-      else
-        attrs =
-          stopColor: stop.color
-          offset: 100 * (if stop.offset? then stop.offset else i/(stops.length-1)) + "%"
-        attrs.stopOpacity = stop.opacity if stop.opacity?
-        SVG.create "stop", gradient, attrs
-    null # Not Composable

@@ -25,6 +25,11 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
           elm: elm
           stroke: SVG.attr elm, "stroke"
           width: SVG.attr elm, "strokeWidth"
+      else if elm.tagName is "tspan" or elm.tagName is "text"
+        elements.push
+          elm: elm
+          fill: SVG.attr elm, "fill"
+        
       for elm in elm.childNodes
         setup elm
     
@@ -33,7 +38,10 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
         active = true
         highlightedCount++
         for e in elements
-          SVG.attrs e.elm, stroke: "url(#HighlightGradient)", strokeWidth: 3
+          if e.stroke?
+            SVG.attrs e.elm, stroke: "url(#HighlightGradient)", strokeWidth: 3
+          else
+            SVG.attrs e.elm, fill: "url(#HighlightGradient)"
         timeout = setTimeout deactivate, 4000
     
     deactivate = ()->
@@ -41,10 +49,15 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
         active = false
         highlightedCount--
         for e in elements
-          SVG.attrs e.elm, stroke: e.stroke, strokeWidth: e.width
+          if e.stroke?
+            SVG.attrs e.elm, stroke: e.stroke, strokeWidth: e.width
+          else
+            SVG.attrs e.elm, fill: e.fill
         clearTimeout timeout
     
     for target in targets
+      if not target? then console.log targets; throw "Highlight called with a null element ^^^"
+      
       t = target.element or target # Support both scopes and elements
       setup t
       unless t._Highlighter

@@ -1,7 +1,7 @@
 # SVGA v3
 A framework for making interactive animations with SVG.
 
-### [Starter Project](https://github.com/cdig/svg-activity-starter) • [Issues](https://github.com/cdig/svga/issues) • [Wiki](https://github.com/cdig/svga/wiki)
+### [Starter Project](https://github.com/cdig/svga-starter) • [Issues](https://github.com/cdig/svga/issues) • [Wiki](https://github.com/cdig/svga/wiki)
 
 ## Todos:
 

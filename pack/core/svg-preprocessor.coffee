@@ -69,9 +69,9 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
     
     # This is a bit of a legacy hack, where symbols are given names in Flash so that our code can hook up with them.
     baseName = tree.elm.id?.split("_")[0]
-    symbol = if baseName.indexOf("Line") > -1
+    symbol = if baseName.indexOf("Line") > -1 or baseName.indexOf("line") is 0
       Symbol.forSymbolName "HydraulicLine"
-    else if baseName.indexOf("Field") > -1
+    else if baseName.indexOf("Field") > -1 or baseName.indexOf("field") is 0
       Symbol.forSymbolName "HydraulicField"
     else
       Symbol.forInstanceName props.id

@@ -1,7 +1,7 @@
 # Tick is used for every-frame requestAnimationFrame callbacks.
 # For 1-time requestAnimationFrame callbacks, use system/raf.coffee
 
-Take "RAF", (RAF)->
+Take ["ParentObject", "RAF"], (ParentObject, RAF)->
   callbacks = []
   wallTime = (performance?.now() or 0)/1000
   internalTime = 0
@@ -9,8 +9,9 @@ Take "RAF", (RAF)->
   RAF tick = (t)->
     dt = Math.min t/1000 - wallTime, 0.1
     wallTime = t/1000
-    internalTime += dt
-    cb internalTime, dt for cb in callbacks
+    if not ParentObject.disableSVGA
+      internalTime += dt
+      cb internalTime, dt for cb in callbacks
     RAF tick
   
   Make "Tick", (cb, ignoreDuplicates = false)->

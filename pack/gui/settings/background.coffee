@@ -1,24 +1,14 @@
-Take ["Action", "Config", "Reaction", "SVG", "DOMContentLoaded"], (Action, Config, Reaction, SVG)->
-  
-  
-  # This bogus lets us workaround a bug in Chrome,
-  # by changing the BG of the <object> that loads us
-  # rather than our own <svg> element.
-  target = null
-  for o in window.parent.document.querySelectorAll "object"
-    if o.contentDocument is document
-      target = o
-      break
+Take ["Action", "Config", "ParentObject", "Reaction", "SVG"], (Action, Config, ParentObject, Reaction, SVG)->
   
   # Set to a specific color
   if typeof Config.background is "string"
-    SVG.style target, "background-color", Config.background
+    SVG.style ParentObject, "background-color", Config.background
   
   # Allow adjustment, default to grey
   else if Config.background
     setBackground = (v)->
       c = "hsl(227, 5%, #{v*100}%)"
-      SVG.style target, "background-color", c
+      SVG.style ParentObject, "background-color", c
     
     Reaction "Background:Set", setBackground
     
@@ -27,4 +17,4 @@ Take ["Action", "Config", "Reaction", "SVG", "DOMContentLoaded"], (Action, Confi
   
   # No background
   else
-    SVG.style target, "background-color", "transparent"
+    SVG.style ParentObject, "background-color", "transparent"

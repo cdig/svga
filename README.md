@@ -12,7 +12,7 @@ Thurs
 * Toggle Button?
 
 Friday
-* Windows
+* Windows Testing
 * Schematic & Pause
 * Arrows, Labels, Background Color
 

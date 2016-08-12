@@ -19,7 +19,7 @@ Take ["Gradient", "Registry", "ScopeCheck"], (Gradient, Registry, ScopeCheck)->
     rGradStops = null
     
     
-    scope.linearGradient = (stops..., angle)->
+    scope.linearGradient = (angle, stops...)->
       linearGradient ?= Gradient.linear lGradName
       if typeof angle is "string"
         stops.push angle
@@ -33,11 +33,9 @@ Take ["Gradient", "Registry", "ScopeCheck"], (Gradient, Registry, ScopeCheck)->
       scope.fill = "url(##{lGradName})"
     
     
-    scope.radialGradient = (stops..., props)->
+    scope.radialGradient = (props, stops...)->
       radialGradient ?= Gradient.radial rGradName
-      if typeof props is "number"
-        props = r:props
-      else if typeof props is "string"
+      if typeof props is "string"
         stops.push props
         props = r:0.5
       if rGradProps isnt props

@@ -1,80 +1,73 @@
-# Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, Input, SVG, Tween)->
-#   Control "selector", (elm, props)->
-#
-#     # An array to hold all the click functions that have been attached to this button
-#     handlers = {}
-#
-#
-#     # Enable pointer cursor, other UI features
-#     SVG.attrs elm, ui: true
-#
-#
-#     # Button background element
-#     bg = SVG.create "rect", elm,
-#       x: GUI.pad
-#       y: GUI.pad
-#       rx: GUI.borderRadius
-#       strokeWidth: 2
-#       fill: "hsl(220, 10%, 92%)"
-#
-#
-#     xOffset = 0
-#     for state in props.states
-#
-#       container = SVG.create "g", elm
-#
-#       bg = SVG.create "rect", container,
-#         x: GUI.pad + xOffset
-#         y: GUI.pad
-#         rx: GUI.borderRadius
-#         strokeWidth: 2
-#         fill: "hsl(220, 10%, 92%)"
-#
-#       # State text label
-#       label = SVG.create "text", container,
-#         textContent: props.name
-#         fill: "hsl(227, 16%, 24%)"
-#
-#       xOffset += Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-#
-#     # Pre-compute some size info that will be used later for layout
-#     w = xOffset
-#     h = GUI.unit
-#
-#
-#     # Setup the bg stroke color for tweening
-#     bgc = blueBG = r:34, g:46, b:89
-#     lightBG = r:133, g:163, b:224
-#     orangeBG = r:255, g:196, b:46
-#     bgFill = (_bgc)->
-#       bgc = _bgc
-#       unless scope?.highlightActive
-#         SVG.attrs bg, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
-#     bgFill blueBG
-#
-#
-#     # Input event handling
-#     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:bgFill
-#     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:bgFill if not state.touch
-#     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:bgFill
-#     toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:bgFill
-#     Input elm,
-#       moveIn: toHover
-#       dragIn: (e, state)-> toClicking() if state.clicking
-#       down: toClicking
-#       up: toHover
-#       moveOut: toNormal
-#       dragOut: toNormal
-#       click: ()->
-#         toClicked()
-#         handler() for handler in handlers
-#
-#
-#     # Our scope just has the 3 mandatory control functions, nothing special.
-#     return scope =
-#       attach: (props)-> handlers.push props.click if props.click?
-#       getPreferredSize: ()-> w:w, h:h
-#       resize: ({w:w, h:h})->
-#         SVG.attrs bg, width: w - GUI.pad*2, height: h - GUI.pad*2
-#         SVG.attrs label, x: w/2, y: h/2 + 6
-#         return w:w, h:h
+Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPanel:GUI}, SelectorButton, Scope, SVG)->
+  idCounter = 0
+
+  Control "selector", (elm, props)->
+    id = "Selector#{idCounter++}"
+    labelHeight = 0
+    preferredSize =
+      w:GUI.pad*2
+      h:GUI.unit
+    buttons = []
+        
+    
+    # Clip path
+    clip = SVG.create "clipPath", SVG.defs, id: id
+    rect = SVG.create "rect", clip,
+      rx: GUI.borderRadius
+      fill: "#FFF"
+    
+    # The name label above the control
+    if props.name?
+      label = SVG.create "text", elm,
+        textContent: props.name
+        fontSize: 18
+        fill: "hsl(220, 10%, 92%)"
+      preferredSize.h += labelHeight = 22
+    
+    
+    buttonsContainer = Scope SVG.create "g", elm#, clipPath: "url(##{id})"
+    buttonsContainer.x = 1
+    buttonsContainer.y = labelHeight + 1
+    
+    rect2 = SVG.create "rect", buttonsContainer.element,
+      rx: GUI.borderRadius
+      fill: "#F0F"
+      fillOpacity: 0.5
+
+    
+    return scope =
+      button: (props)->
+        buttonElm = SVG.create "g", buttonsContainer.element
+        buttonScope = Scope buttonElm, SelectorButton, props
+        preferredSize.w += buttonScope.getPreferredSize().w
+        buttons.push buttonScope
+        return buttonScope
+      
+      getPreferredSize: ()->
+        w:GUI.width
+        h:preferredSize.h
+      
+      resize: ({w:w, h:h})->
+        innerWidth = 200# - GUI.pad*2 # HACK
+        innerHeight = h - GUI.pad*2
+        upscale = innerWidth/preferredSize.w
+        
+        xOffset = GUI.pad
+        for button in buttons
+          button.x = xOffset
+          xOffset += button.resize upscale, xOffset
+        
+        p =
+          x: GUI.pad + 1
+          y: GUI.pad + 1
+          width: innerWidth - 2
+          height: innerHeight - 2
+        
+        SVG.attrs rect, p
+        SVG.attrs rect2, p
+        
+        SVG.attrs label,
+          x: 200/2 # HACK
+          y: 20
+        
+        return w:w, h:h

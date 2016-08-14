@@ -18,10 +18,16 @@ Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev
         SVG.attrs text, x: 10, y: 25
   
   Tick (time, dt)->
-    avgList.push 1/dt
-    total += 1/dt
-    total -= avgList.shift() if avgList.length > avgLength
-    fps = Math.min 60, Math.ceil total/avgList.length
+    current = 1/dt
+    
+    # This needs to happen regardless of Dev, becasue other systems use FPS to turn on/off features for perf (eg: Highlight)
+    if current > 20
+      avgList.push 1/dt
+      total += 1/dt
+      total -= avgList.shift() if avgList.length > avgLength
+      fps = Math.min 60, Math.ceil total/avgList.length
+    else
+      fps = Math.ceil current
     
     if Dev and ++count / fps >= freq
       count = 0

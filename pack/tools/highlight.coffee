@@ -5,6 +5,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
   lgradient = Gradient.linear "LightHighlightGradient", gradientUnits: "userSpaceOnUse", "#9FC", "#FF8", "#FD8"
   mgradient = Gradient.linear "MidHighlightGradient",   gradientUnits: "userSpaceOnUse", "#2F6", "#FF2", "#F72"
   dgradient = Gradient.linear "DarkHighlightGradient",  gradientUnits: "userSpaceOnUse", "#0B3", "#DD0", "#D50"
+  tgradient = Gradient.linear "TextHighlightGradient",  gradientUnits: "userSpaceOnUse", "#091", "#BB0", "#B30"
   
   Tick (time)->
     if activeHighlight? and FPS() > 20
@@ -17,6 +18,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
         Gradient.updateProps lgradient, props
         Gradient.updateProps mgradient, props
         Gradient.updateProps dgradient, props
+        Gradient.updateProps tgradient, props
   
   
   Make "Highlight", (targets...)->
@@ -55,14 +57,18 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
         activeHighlight = deactivate # Set this to be the new active highlight
         for e in elements
           if e.attrs.stroke?
-            if e.attrs.stroke is "#FFF" or e.attrs.stroke is "white"
+            if e.elm.tagName is "text" or e.elm.tagName is "tspan"
+              SVG.attrs e.elm, stroke: "url(#TextHighlightGradient)", strokeWidth: 3
+            else if e.attrs.stroke is "#FFF" or e.attrs.stroke is "white"
               SVG.attrs e.elm, stroke: "url(#LightHighlightGradient)", strokeWidth: 3
             else if e.attrs.stroke is "#000" or e.attrs.stroke is "black"
               SVG.attrs e.elm, stroke: "url(#DarkHighlightGradient)", strokeWidth: 3
             else
               SVG.attrs e.elm, stroke: "url(#MidHighlightGradient)", strokeWidth: 3
           if e.attrs.fill?
-            if e.attrs.fill is "#FFF" or e.attrs.fill is "white"
+            if e.elm.tagName is "text" or e.elm.tagName is "tspan"
+              SVG.attrs e.elm, fill: "url(#TextHighlightGradient)"
+            else if e.attrs.fill is "#FFF" or e.attrs.fill is "white"
               SVG.attrs e.elm, fill: "url(#LightHighlightGradient)"
             else if e.attrs.fill is "#000" or e.attrs.fill is "black"
               SVG.attrs e.elm, fill: "url(#DarkHighlightGradient)"

@@ -8,39 +8,38 @@ Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPan
       w:GUI.pad*2
       h:GUI.unit
     buttons = []
-        
+    buttonPreferredSizes = []
     
-    # Clip path
+    
     clip = SVG.create "clipPath", SVG.defs, id: id
-    rect = SVG.create "rect", clip,
+    clipRect = SVG.create "rect", clip,
       rx: GUI.borderRadius
       fill: "#FFF"
     
-    # The name label above the control
     if props.name?
       label = SVG.create "text", elm,
         textContent: props.name
-        fontSize: 18
+        fontSize: 16
         fill: "hsl(220, 10%, 92%)"
       preferredSize.h += labelHeight = 22
     
+    borderRect = SVG.create "rect", elm,
+      rx: GUI.borderRadius + 2
+      fill: "rgb(34, 46, 89)"
     
-    buttonsContainer = Scope SVG.create "g", elm#, clipPath: "url(##{id})"
-    buttonsContainer.x = 1
-    buttonsContainer.y = labelHeight + 1
+    buttonsContainer = Scope SVG.create "g", elm, clipPath: "url(##{id})"
+    buttonsContainer.x = GUI.pad
+    buttonsContainer.y = labelHeight
     
-    rect2 = SVG.create "rect", buttonsContainer.element,
-      rx: GUI.borderRadius
-      fill: "#F0F"
-      fillOpacity: 0.5
-
     
     return scope =
       button: (props)->
         buttonElm = SVG.create "g", buttonsContainer.element
         buttonScope = Scope buttonElm, SelectorButton, props
-        preferredSize.w += buttonScope.getPreferredSize().w
         buttons.push buttonScope
+        bps = buttonScope.getPreferredSize()
+        buttonPreferredSizes.push bps
+        preferredSize.w += bps.w
         return buttonScope
       
       getPreferredSize: ()->
@@ -49,24 +48,28 @@ Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPan
           h:GUI.unit + labelHeight
       
       resize: ({w:w, h:h})->
-        innerWidth = 200# - GUI.pad*2 # HACK
+        innerWidth = w - GUI.pad*2
         innerHeight = h - GUI.pad*2
-        upscale = innerWidth/preferredSize.w
+        upscale = w/preferredSize.w
         
-        xOffset = GUI.pad
+        xOffset = 0
         for button in buttons
           button.x = xOffset
           xOffset += button.resize upscale, xOffset
         
-        p =
-          x: GUI.pad + 1
+        SVG.attrs clipRect,
+          x: 1
           y: GUI.pad + 1
           width: innerWidth - 2
-          height: innerHeight - 2
+          height: GUI.unit - GUI.pad*2 - 2
         
-        SVG.attrs rect, p
-        SVG.attrs rect2, p
+        SVG.attrs borderRect,
+          x: GUI.pad - 1
+          y: GUI.pad + labelHeight - 1
+          width: innerWidth + 2
+          height: GUI.unit - GUI.pad*2 + 2
         
-        SVG.attrs label,
-          x: 200/2 # HACK
-          y: 20
+        if label?
+          SVG.attrs label,
+            x: w/2
+            y: 18

@@ -58,7 +58,8 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
     
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
-      attach: (props)-> handlers.push props.click if props.click?
+      attach: (props)->
+        handlers.push props.click if props.click?
       
       getPreferredSize: ()->
         size =

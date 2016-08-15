@@ -8,7 +8,9 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       h:GUI.unit
     handlers = []
     isActive = false
-    
+    highlighting = false
+    labelFill = "hsl(227, 16%, 24%)"
+
     
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
@@ -18,29 +20,34 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     
     label = SVG.create "text", elm,
       textContent: props.name
-      fill: "hsl(227, 16%, 24%)"
+      fill: labelFill
     
     
     preferredSize.w = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
     
     
     # Setup the bg stroke color for tweening
-    bgc = whiteBG = r:233, g:234, b:237
+    curBG = whiteBG = r:233, g:234, b:237
     lightBG = r:142, g:196, b:96
     orangeBG = r:255, g:196, b:46
     blueBG = r:183, g:213, b:255
-    bgFill = (_bgc)->
-      bgc = _bgc
-      unless scope?.highlightActive
-        SVG.attrs bg, fill: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
-    bgFill whiteBG
+    tickBG = (_curBG)->
+      curBG = _curBG
+      if highlighting
+        if isActive
+          SVG.attrs bg, fill: "url(#MidHighlightGradient)"
+        else
+          SVG.attrs bg, fill: "url(#LightHighlightGradient)"
+      else
+        SVG.attrs bg, fill: "rgb(#{curBG.r|0},#{curBG.g|0},#{curBG.b|0})"
+    tickBG whiteBG
     
     
     # Input event handling
-    toNormal   = (e, state)-> Tween bgc, whiteBG, .2, tick:bgFill
-    toHover    = (e, state)-> Tween bgc, blueBG,   0, tick:bgFill if not state.touch and not isActive
-    toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:bgFill
-    toActive   = (e, state)-> Tween bgc, lightBG,  .2, tick:bgFill
+    toNormal   = (e, state)-> Tween curBG, whiteBG, .2, tick:tickBG
+    toHover    = (e, state)-> Tween curBG, blueBG,   0, tick:tickBG if not state.touch and not isActive
+    toClicking = (e, state)-> Tween curBG, orangeBG, 0, tick:tickBG
+    toActive   = (e, state)-> Tween curBG, lightBG,  .2, tick:tickBG
     unclick = ()->
       toNormal()
       isActive = false
@@ -88,3 +95,10 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
           y: innerHeight/2 + 6 + GUI.pad
         
         return innerWidth
+      
+      _highlight: (enable)->
+        if highlighting = enable
+          SVG.attrs label, fill: "black"
+        else
+          SVG.attrs label, fill: labelFill
+        tickBG curBG

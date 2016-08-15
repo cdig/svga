@@ -8,7 +8,11 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
     v = 0
     range = 0
     startDrag = 0
-    
+
+    trackFill = "hsl(227, 45%, 24%)"
+    thumbBGFill = "hsl(220, 10%, 92%)"
+    labelFill = "hsl(227, 16%, 24%)"
+
     
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
@@ -19,7 +23,7 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
       x: GUI.pad
       y: GUI.pad
       strokeWidth: 2
-      fill: "hsl(227, 45%, 24%)"
+      fill: trackFill
       stroke: "hsl(227, 45%, 24%)"
     
     # A container element for the draggable slider thumb
@@ -30,12 +34,12 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
       x: GUI.pad
       y: GUI.pad
       strokeWidth: 2
-      fill: "hsl(220, 10%, 92%)"
+      fill: thumbBGFill
     
     # The text label in the thumb
     label = SVG.create "text", thumb,
       textContent: props.name
-      fill: "hsl(227, 16%, 24%)"
+      fill: labelFill
       y: GUI.unit/2 + 6
     
     
@@ -52,10 +56,10 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
     bgc = blueBG = r:34, g:46, b:89
     lightBG = r:133, g:163, b:224
     orangeBG = r:255, g:196, b:46
-    bgFill = (_bgc)->
+    tickBG = (_bgc)->
       bgc = _bgc
       SVG.attrs thumbBG, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
-    bgFill blueBG
+    tickBG blueBG
     
     
     # Update and save the thumb position
@@ -65,11 +69,11 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
     
     
     # Input event handling
-    toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:bgFill
-    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:bgFill if not state.touch
-    toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:bgFill
-    toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:bgFill
-    toMissed   = (e, state)-> Tween bgc, blueBG, .2, tick:bgFill
+    toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
+    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
+    toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
+    toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:tickBG
+    toMissed   = (e, state)-> Tween bgc, blueBG, .2, tick:tickBG
     handleDrag = (e, state)->
       if state.clicking
         update e.clientX/range - startDrag
@@ -109,3 +113,13 @@ Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel
         SVG.attrs thumbBG,
           height: h - GUI.pad*2
           rx: (h - GUI.pad*2)/2
+
+      _highlight: (enable)->
+        if enable
+          SVG.attrs track, fill: "url(#DarkHighlightGradient)"
+          SVG.attrs thumbBG, fill: "url(#LightHighlightGradient)"
+          SVG.attrs label, fill: "black"
+        else
+          SVG.attrs track, fill: trackFill
+          SVG.attrs thumbBG, fill: thumbBGFill
+          SVG.attrs label, fill: labelFill

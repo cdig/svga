@@ -4,6 +4,8 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
     # An array to hold all the click functions that have been attached to this button
     handlers = []
     
+    bgFill = "hsl(220, 10%, 92%)"
+    labelFill = "hsl(227, 16%, 24%)"
     
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
@@ -15,12 +17,12 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
       y: GUI.pad
       rx: GUI.borderRadius
       strokeWidth: 2
-      fill: "hsl(220, 10%, 92%)"
+      fill: bgFill
     
     # Button text label
     label = SVG.create "text", elm,
       textContent: props.name
-      fill: "hsl(227, 16%, 24%)"
+      fill: labelFill
     
     
     # Pre-compute some size info that will be used later for layout
@@ -32,18 +34,17 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
     bgc = blueBG = r:34, g:46, b:89
     lightBG = r:133, g:163, b:224
     orangeBG = r:255, g:196, b:46
-    bgFill = (_bgc)->
+    tickBG = (_bgc)->
       bgc = _bgc
-      unless scope?.highlightActive
-        SVG.attrs bg, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
-    bgFill blueBG
+      SVG.attrs bg, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
+    tickBG blueBG
     
     
     # Input event handling
-    toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:bgFill
-    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:bgFill if not state.touch
-    toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:bgFill
-    toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:bgFill
+    toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
+    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
+    toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
+    toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:tickBG
     Input elm,
       moveIn: toHover
       dragIn: (e, state)-> toClicking() if state.clicking
@@ -71,3 +72,11 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
           width: w - GUI.pad*2
           height: h - GUI.pad*2
         SVG.attrs label, x: w/2, y: h/2 + 6
+      
+      _highlight: (enable)->
+        if enable
+          SVG.attrs bg, fill: "url(#LightHighlightGradient)"
+          SVG.attrs label, fill: "black"
+        else
+          SVG.attrs bg, fill: bgFill
+          SVG.attrs label, fill: labelFill

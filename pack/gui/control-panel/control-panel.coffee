@@ -27,7 +27,7 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
   
   resize = ()->
     view = w:window.innerWidth, h:window.innerHeight
-    vertical = Cfg.vertical or view.w >= view.h * 1.3
+    vertical = if Cfg.vertical? then Cfg.vertical else view.w >= view.h * 1.3
     size = if vertical
       ControlPanelLayout.vertical view
     else

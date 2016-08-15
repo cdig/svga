@@ -44,8 +44,9 @@ Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPan
         return buttonScope
       
       getPreferredSize: ()->
-        w:GUI.width
-        h:preferredSize.h
+        size =
+          w:GUI.width
+          h:GUI.unit + labelHeight
       
       resize: ({w:w, h:h})->
         innerWidth = 200# - GUI.pad*2 # HACK
@@ -69,5 +70,3 @@ Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPan
         SVG.attrs label,
           x: 200/2 # HACK
           y: 20
-        
-        return w:w, h:h

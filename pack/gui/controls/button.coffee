@@ -24,8 +24,8 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
     
     
     # Pre-compute some size info that will be used later for layout
-    w = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-    h = GUI.unit
+    buttonWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
+    buttonHeight = GUI.unit
     
     
     # Setup the bg stroke color for tweening
@@ -59,8 +59,14 @@ Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, 
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
       attach: (props)-> handlers.push props.click if props.click?
-      getPreferredSize: ()-> w:w, h:h
+      
+      getPreferredSize: ()->
+        size =
+          w:buttonWidth
+          h:buttonHeight
+      
       resize: ({w:w, h:h})->
-        SVG.attrs bg, width: w - GUI.pad*2, height: h - GUI.pad*2
+        SVG.attrs bg,
+          width: w - GUI.pad*2
+          height: h - GUI.pad*2
         SVG.attrs label, x: w/2, y: h/2 + 6
-        return w:w, h:h

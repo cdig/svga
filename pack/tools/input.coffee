@@ -76,34 +76,34 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
   # MOUSE #####################################################################################
   
   if mouse
-    
+  
     window.addEventListener "mousedown", (e)->
       return unless e.button is 0
       return if state.touch
       down e
-    
+  
     # Windows fires this event every tick when touch-dragging, even when the input doesn't move?
     # Only add the move listener if we need it, to avoid the perf cost
     if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther?
       window.addEventListener "mousemove", (e)->
         return if state.touch
         move e
-    
+  
     window.addEventListener "mouseup", (e)->
       return unless e.button is 0
       return if state.touch
       up e
-    
+  
     if elm?
       elm.addEventListener "mouseleave", (e)->
         return if state.touch
         out e
-    
+  
     if elm?
       elm.addEventListener "mouseenter", (e)->
         return if state.touch
         over e
-    
+  
     # This fires when the mouse leaves the window
     window.top.addEventListener "mouseout", (e)->
       up e
@@ -111,9 +111,9 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
   # TOUCH #####################################################################################
   
   if touch
-    
+  
     prepTouchEvent = (e)->
-      e.preventDefault()
+      # Don't prevent default, or it'll break pinch-zoom on non-Nav animations
       state.touch = true
       e.clientX = e.touches[0]?.clientX
       e.clientY = e.touches[0]?.clientY
@@ -126,23 +126,23 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
             over e
           else
             out e
-
+  
     window.addEventListener "touchstart", (e)->
       prepTouchEvent e
       down e
-    
+  
     # Windows fires this event every tick when touch-dragging, even when the input doesn't move?
     # Only add the move listener if we need it, to avoid the perf cost
     if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther? or calls.moveIn? or calls.dragIn? or calls.moveOut? or calls.dragOut?
       window.addEventListener "touchmove", (e)->
         prepTouchEvent e
         move e
-    
+  
     window.addEventListener "touchend", (e)->
       prepTouchEvent e
       up e
       state.touch = false
-
+  
     window.addEventListener "touchcancel", (e)->
       prepTouchEvent e
       up e

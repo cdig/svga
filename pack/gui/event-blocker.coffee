@@ -1,7 +1,8 @@
-do ()->
+Take "Nav", (Nav)->
   
   # Block scrolling on iOS
-  window.addEventListener "touchmove", (e)-> e.preventDefault()
+  if Nav
+    window.addEventListener "touchmove", (e)-> e.preventDefault()
   
   # Block scrolling on desktops
   window.addEventListener "scroll", (e)-> e.preventDefault()

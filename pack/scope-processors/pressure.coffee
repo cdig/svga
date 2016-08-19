@@ -4,7 +4,6 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "pressure"
     
-    isLine = scope._symbol?.symbolName is "HydraulicLine"
     pressure = null
     
     Object.defineProperty scope, 'pressure',
@@ -12,7 +11,7 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
       set: (val)->
         if pressure isnt val
           pressure = val
-          if isLine
-            scope.setHydraulicLinePressure pressure
+          if scope._setPressure?
+            scope._setPressure pressure
           else
             scope.fill = Pressure scope.pressure

@@ -8,6 +8,7 @@ Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPan
       w:GUI.pad*2
       h:GUI.unit
     buttons = []
+    activeButton = null
     buttonPreferredSizes = []
     
     
@@ -32,8 +33,14 @@ Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPan
     buttonsContainer.y = labelHeight
     
     
+    setActive = (unclick)->
+      activeButton?()
+      activeButton = unclick
+    
+    
     return scope =
       button: (props)->
+        props.setActive = setActive
         buttonElm = SVG.create "g", buttonsContainer.element
         buttonScope = Scope buttonElm, SelectorButton, props
         buttons.push buttonScope

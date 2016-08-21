@@ -1,4 +1,4 @@
-Take ["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], (GUI, Resize, SVG, TopBar, TRS)->
+Take ["GUI", "Resize", "SVG", "TRS", "SVGReady"], (GUI, Resize, SVG, TRS)->
   
   g = TRS SVG.create "g", GUI.elm
   SVG.create "rect", g, x: -200, y:-30, width: 400, height: 60, rx: 30, fill: "#222", "fill-opacity": 0.9
@@ -6,7 +6,7 @@ Take ["GUI", "Resize", "SVG", "TopBar", "TRS", "SVGReady"], (GUI, Resize, SVG, T
   
   show = ()-> SVG.attrs g, style: "display: block"
   hide = ()-> SVG.attrs g, style: "display: none"
-  Resize ()-> TRS.abs g, x: window.innerWidth/2, y: GUI.TopBar.height
+  Resize ()-> TRS.abs g, x: window.innerWidth/2
   
   window.addEventListener "focus", hide
   window.addEventListener "touchstart", hide

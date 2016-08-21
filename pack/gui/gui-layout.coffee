@@ -1,4 +1,4 @@
-Take ["Config", "ControlPanel", "Nav", "RAF", "Resize", "TopBar"], (Config, ControlPanel, Nav, RAF, Resize, TopBar)->
+Take ["Config", "ControlPanel", "Nav", "RAF", "Resize"], (Config, ControlPanel, Nav, RAF, Resize)->
   return unless Config.nav
   
   Resize ()->
@@ -10,7 +10,6 @@ Take ["Config", "ControlPanel", "Nav", "RAF", "Resize", "TopBar"], (Config, Cont
       h: window.innerHeight
     
     # These mutate rect, shrinking it based on the space they need
-    TopBar.claimSpace rect
     ControlPanel.claimSpace rect
     
     # Whatever space is left, we give to Nav

@@ -9,13 +9,10 @@ Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev
   Make "FPS", ()-> fps
   
   if Dev
-    text = SVG.create "text", GUI.elm, fill: "#666"
+    text = SVG.create "text", GUI.elm
 
     Resize ()->
-      if Config.nav
-        SVG.attrs text, x: 10, y: 70
-      else
-        SVG.attrs text, x: 10, y: 25
+      SVG.attrs text, x: 5, y: 20
   
   Tick (time, dt)->
     current = 1/dt
@@ -31,4 +28,4 @@ Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev
     
     if Dev and ++count / fps >= freq
       count = 0
-      SVG.attrs text, textContent: "FPS: " + fps
+      SVG.attrs text, textContent: "FPS: " + fps, fill: if fps < 10 then "#F90" else if fps < 5 then "#F00" else "#777"

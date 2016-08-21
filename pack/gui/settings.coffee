@@ -8,7 +8,6 @@ Take ["GUI", "Reaction", "Resize", "Scope", "SVG", "ScopeReady"], (GUI, Reaction
 
   Resize ()->
     g.x = window.innerWidth/2
-    g.y = GUI.TopBar.height * 2
   
   Reaction "Settings:Show", ()-> g.show()
   Reaction "Settings:Hide", ()-> g.hide()

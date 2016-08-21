@@ -28,4 +28,4 @@ Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev
     
     if Dev and ++count / fps >= freq
       count = 0
-      SVG.attrs text, textContent: "FPS: " + fps, fill: if fps < 5 then "#C00" else if fps < 10 then "#C40" else "#777"
+      SVG.attrs text, textContent: "FPS: " + fps, fill: if fps <= 5 then "#C00" else if fps <= 10 then "#E60" else "#777"

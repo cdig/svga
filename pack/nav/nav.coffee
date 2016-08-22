@@ -47,6 +47,7 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Re
     
     Make "Nav", Nav =
       to: (p)->
+        Tween.cancel tween if tween?
         timeX = .03 * Math.sqrt(Math.abs(p.x-pos.x)) or 0
         timeY = .03 * Math.sqrt(Math.abs(p.y-pos.y)) or 0
         timeZ = .7 * Math.sqrt(Math.abs(p.z-pos.z)) or 0
@@ -59,6 +60,14 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Re
         scale = center.z * Math.pow 2, pos.z
         pos.x = limit xLimit, pos.x + p.x / scale if p.x?
         pos.y = limit yLimit, pos.y + p.y / scale if p.y?
+        requestRender()
+      
+      at: (p)->
+        Tween.cancel tween if tween?
+        pos.z = limit zLimit, p.z if p.z?
+        scale = center.z * Math.pow 2, pos.z
+        pos.x = limit xLimit, p.x / scale if p.x?
+        pos.y = limit yLimit, p.y / scale if p.y?
         requestRender()
       
       startScale: ()->
@@ -93,3 +102,9 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Re
     
     dist = (x, y, z = 0)->
       Math.sqrt x*x + y*y + z*z
+    
+    
+    if Config.debugNavPaint
+      Take "Tick", (Tick)->
+        Tick (t)->
+          Nav.at z: Math.sin(t)/10 - .1

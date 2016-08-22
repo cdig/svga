@@ -1,9 +1,10 @@
 Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Resize, SVG, Tween)->
+  root = document.getElementById "root"
+
   if not Config.nav
     Make "Nav", false
     width = SVG.attr SVG.root, "width"
     height = SVG.attr SVG.root, "height"
-    root = document.getElementById "root"
     Resize ()->
       wFrac = window.innerWidth / width
       hFrac = window.innerHeight / height
@@ -22,7 +23,6 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Re
     scaleStartPosZ = 0
     tween = null
     
-    root = document.getElementById "root"
     initialSize = root.getBoundingClientRect()
     return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty
     ox = root._scope.x - initialSize.left - initialSize.width/2
@@ -80,7 +80,7 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Re
       
       eventInside: (e)->
         e = e.touches[0] if e.touches?.length > 0
-        return e.target is document.rootElement or root.contains e.target
+        e.target is document.body or document.body.contains e.target
       
       assignSpace: (rect)->
         wFrac = rect.w / initialSize.width

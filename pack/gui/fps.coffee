@@ -1,6 +1,6 @@
 Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev, GUI, Resize, SVG, Tick)->
   count = 60 # Update immediately
-  freq = 1 # Update every n seconds
+  freq = 0.5 # Update every n seconds
   avgLength = 10 # Average of the last 10 frames
   avgList = []
   total = 0

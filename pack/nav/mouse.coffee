@@ -30,13 +30,13 @@ Take ["Config", "Input", "Nav"], (Config, Input, Nav)->
   Input document, calls, true, false
   
   
-  window.addEventListener "dblclick", (e)->
+  document.addEventListener "dblclick", (e)->
     return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()
       Nav.to x:0, y:0, z:0
   
-  window.addEventListener "wheel", (e)->
+  document.addEventListener "wheel", (e)->
     return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()

@@ -5,5 +5,5 @@ do ()->
       target = o
       break
   
-  if not target? then throw "ParentObject could not determine which <object> embedded this SVGA."
+  target ?= document.body
   Make "ParentObject", target

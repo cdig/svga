@@ -4,7 +4,7 @@
 
 do ()->
   
-  root = document.rootElement
+  root = document.querySelector("svg")
   defs = root.querySelector "defs"
   
   svgNS = "http://www.w3.org/2000/svg"

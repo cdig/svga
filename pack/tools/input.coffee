@@ -78,7 +78,7 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
   
   if mouse
   
-    window.addEventListener "mousedown", (e)->
+    document.addEventListener "mousedown", (e)->
       return unless e.button is 0
       return if state.touch
       down e
@@ -86,11 +86,11 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
     # Windows fires this event every tick when touch-dragging, even when the input doesn't move?
     # Only add the move listener if we need it, to avoid the perf cost
     if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther?
-      window.addEventListener "mousemove", (e)->
+      document.addEventListener "mousemove", (e)->
         return if state.touch
         move e
   
-    window.addEventListener "mouseup", (e)->
+    document.addEventListener "mouseup", (e)->
       return unless e.button is 0
       return if state.touch
       up e
@@ -105,9 +105,6 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
         return if state.touch
         over e
   
-    # This fires when the mouse leaves the window
-    window.top.addEventListener "mouseout", (e)->
-      up e
   
   # TOUCH #####################################################################################
   
@@ -130,7 +127,7 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
             out e
       state.captured ?= false
   
-    window.addEventListener "touchstart", (e)->
+    document.addEventListener "touchstart", (e)->
       state.captured = null
       prepTouchEvent e
       down e
@@ -138,16 +135,16 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
     # Windows fires this event every tick when touch-dragging, even when the input doesn't move?
     # Only add the move listener if we need it, to avoid the perf cost
     if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther? or calls.moveIn? or calls.dragIn? or calls.moveOut? or calls.dragOut?
-      window.addEventListener "touchmove", (e)->
+      document.addEventListener "touchmove", (e)->
         prepTouchEvent e
         move e
   
-    window.addEventListener "touchend", (e)->
+    document.addEventListener "touchend", (e)->
       prepTouchEvent e
       up e
       state.touch = false
   
-    window.addEventListener "touchcancel", (e)->
+    document.addEventListener "touchcancel", (e)->
       prepTouchEvent e
       up e
       state.touch = false

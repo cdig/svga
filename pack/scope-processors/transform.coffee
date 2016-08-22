@@ -5,8 +5,8 @@ Take ["RAF", "Registry", "ScopeCheck"], (RAF, Registry, ScopeCheck)->
     element = scope.element
     transformBaseVal = element.transform?.baseVal
     
-    transform = document.rootElement.createSVGTransform()
-    matrix = document.rootElement.createSVGMatrix()
+    transform = document.querySelector("svg").createSVGTransform()
+    matrix = document.querySelector("svg").createSVGMatrix()
     x = 0
     y = 0
     rotation = 0

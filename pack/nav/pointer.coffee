@@ -3,7 +3,7 @@ Take ["Config", "Nav"], (Config, Nav)->
   return unless navigator.msMaxTouchPoints and navigator.msMaxTouchPoints > 1
   
   gesture = new MSGesture()
-  gesture.target = document.rootElement
+  gesture.target = document.querySelector("svg")
   
   gesture.target.addEventListener "pointerdown", (e)->
     if Nav.eventInside e

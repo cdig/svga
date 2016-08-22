@@ -1,4 +1,4 @@
-Take ["Config", "RAF", "Resize", "SVG", "Tween", "ScopeReady"], (Config, RAF, Resize, SVG, Tween)->
+Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Resize, SVG, Tween)->
   if not Config.nav
     Make "Nav", false
     width = SVG.attr SVG.root, "width"

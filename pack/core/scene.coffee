@@ -4,7 +4,7 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
   defs = {}
   
   
-  Make "SVGPreprocessor", SVGPreprocessor =
+  Make "Scene", Scene =
     crawl: (elm)->
       tree = processElm elm
       if masks.length then console.log "Please remove these mask elements from your SVG:", masks...

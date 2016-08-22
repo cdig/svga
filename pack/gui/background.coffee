@@ -5,15 +5,9 @@ Take ["Action", "Config", "ParentObject", "Reaction", "SVG"], (Action, Config, P
     SVG.style ParentObject, "background-color", Config.background
   
   # Allow adjustment, default to grey
-  else if Config.background
-    setBackground = (v)->
-      c = "hsl(227, 5%, #{v*100}%)"
-      SVG.style ParentObject, "background-color", c
-    
-    Reaction "Background:Set", setBackground
-    
-    Take "ScopeReady", ()->
-      Action "Background:Set", .70
+  else if Config.background is true
+    Reaction "Background:Set", (v)-> SVG.style ParentObject, "background-color", "hsl(227, 5%, #{v*100}%)"
+    Take "SceneReady", ()-> Action "Background:Set", .70
   
   # No background
   else

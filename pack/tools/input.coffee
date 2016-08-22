@@ -4,6 +4,7 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
     over: false
     touch: false
     clicking: false
+    captured: false
     deltaX: 0
     deltaY: 0
     lastX: 0 # These are used to compute deltas..
@@ -117,17 +118,20 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
       state.touch = true
       e.clientX = e.touches[0]?.clientX
       e.clientY = e.touches[0]?.clientY
-      if elm? and e.clientX? and e.clientY?
+      if elm? and e.clientX? and e.clientY? and (state.captured is null or state.captured is true)
         pElm = document.elementFromPoint e.clientX, e.clientY
         newState = elm is pElm or elm.contains pElm
         overChanged = newState isnt state.over
         if overChanged
           if newState
+            state.captured ?= true
             over e
           else
             out e
+      state.captured ?= false
   
     window.addEventListener "touchstart", (e)->
+      state.captured = null
       prepTouchEvent e
       down e
   

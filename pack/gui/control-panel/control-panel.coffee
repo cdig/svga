@@ -1,72 +1,37 @@
 Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Config, ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope)->
-  CP = GUI.ControlPanel
-  Cfg = Config.controlPanel ?= {}
   
+  # Aliases
+  CP = GUI.ControlPanel
+  Conf = Config.controlPanel ?= {}
+
+  # State
   showing = false
   panelRadius = CP.borderRadius+CP.pad*2
   vertical = true
   panelWidth = 0
   panelHeight = 0
+
   
-  
+  # Elements
+
   Gradient.linear "CPGradient", false, "#5175bd", "#35488d"
   
-  
-  g = Scope SVG.create "g", null,
+  g = SVG.create "g", GUI.elm,
     xControls: ""
     fontSize: 16
     textAnchor: "middle"
   
-  bg = SVG.create "rect", g.element,
+  bg = SVG.create "rect", g,
     rx: panelRadius
     fill: "url(#CPGradient)"
   
-  panelElms = Scope SVG.create "g", g.element
+  panelElms = Scope SVG.create "g", g
   panelElms.x = panelElms.y = CP.pad*2
   
   
-  resize = ()->
-    view = w:window.innerWidth, h:window.innerHeight
-    vertical = if Cfg.vertical? then Cfg.vertical else view.w >= view.h * 1.3
-    size = if vertical
-      ControlPanelLayout.vertical view
-    else
-      ControlPanelLayout.horizontal view
-    panelWidth = size.w + CP.pad*4
-    panelHeight = size.h + CP.pad*4
-    
-    widthPad = if Cfg.x is 1 then panelRadius else if Cfg.x is -1 then -panelRadius else if vertical then panelRadius else 0
-    heightPad = if Cfg.y is 1 then panelRadius else if Cfg.y is -1 then -panelRadius else if !vertical then panelRadius else 0
-    panelBgX = if Cfg.x is -1 then -panelRadius else 0
-    panelBgY = if Cfg.y is -1 then -panelRadius else 0
-    
-    SVG.attrs bg,
-      x: panelBgX
-      y: panelBgY
-      width: panelWidth + widthPad
-      height: panelHeight + heightPad
-    
-    if Cfg.x? or Cfg.y?
-      x = (Cfg.x or 0)/2 + 0.5
-      y = (Cfg.y or 0)/2 + 0.5
-      g.x = x * view.w - x * panelWidth |0
-      g.y = y * view.h - y * panelHeight |0
-    else if vertical
-      g.x = view.w - panelWidth |0
-      g.y = view.h/2 - panelHeight/2 |0
-    else
-      g.x = view.w/2 - panelWidth/2 |0
-      g.y = view.h - panelHeight |0
-  
-  Take "ScopeReady", ()->
-    Resize resize, true
-  
-  Make "ControlPanel", ControlPanelView =
-    show: ()->
-      if not showing
-        showing = true
-        SVG.append GUI.elm, g.element
-    
+  # Scope
+
+  ControlPanel = Scope g, ()->
     createElement: (parent = null)->
       elm = SVG.create "g", parent or panelElms.element
     
@@ -75,3 +40,45 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
         rect.w -= panelWidth
       else
         rect.h -= panelHeight
+  
+
+  # Helpers
+  
+  resize = ()->
+    view = w:window.innerWidth, h:window.innerHeight
+    vertical = if Conf.vertical? then Conf.vertical else view.w >= view.h * 1.3
+    size = if vertical
+      ControlPanelLayout.vertical view
+    else
+      ControlPanelLayout.horizontal view
+    panelWidth = size.w + CP.pad*4
+    panelHeight = size.h + CP.pad*4
+    
+    widthPad = if Conf.x is 1 then panelRadius else if Conf.x is -1 then -panelRadius else if vertical then panelRadius else 0
+    heightPad = if Conf.y is 1 then panelRadius else if Conf.y is -1 then -panelRadius else if !vertical then panelRadius else 0
+    panelBgX = if Conf.x is -1 then -panelRadius else 0
+    panelBgY = if Conf.y is -1 then -panelRadius else 0
+    
+    SVG.attrs bg,
+      x: panelBgX
+      y: panelBgY
+      width: panelWidth + widthPad
+      height: panelHeight + heightPad
+    
+    if Conf.x? or Conf.y?
+      x = (Conf.x or 0)/2 + 0.5
+      y = (Conf.y or 0)/2 + 0.5
+      ControlPanel.x = x * view.w - x * panelWidth |0
+      ControlPanel.y = y * view.h - y * panelHeight |0
+    else if vertical
+      ControlPanel.x = view.w - panelWidth |0
+      ControlPanel.y = view.h/2 - panelHeight/2 |0
+    else
+      ControlPanel.x = view.w/2 - panelWidth/2 |0
+      ControlPanel.y = view.h - panelHeight |0
+  
+  
+  # Init
+  
+  Make "ControlPanel", ControlPanel
+  Take "SceneReady", ()-> Resize resize, true

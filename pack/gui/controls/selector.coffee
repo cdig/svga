@@ -1,7 +1,7 @@
-Take ["Control", "GUI", "SelectorButton", "Scope", "SVG"], (Control, {ControlPanel:GUI}, SelectorButton, Scope, SVG)->
+Take ["Registry", "GUI", "SelectorButton", "Scope", "SVG"], (Registry, {ControlPanel:GUI}, SelectorButton, Scope, SVG)->
   idCounter = 0
-
-  Control "selector", (elm, props)->
+  
+  Registry.set "Control", "selector", (elm, props)->
     id = "Selector#{idCounter++}"
     labelHeight = 0
     preferredSize =

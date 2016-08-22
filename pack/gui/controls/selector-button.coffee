@@ -70,7 +70,7 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     attachClick = (cb)-> handlers.push cb
     attachClick props.click if props.click?
     
-    Take "ScopeReady", ()->
+    Take "SceneReady", ()->
       click() if props.active
     
     return scope =

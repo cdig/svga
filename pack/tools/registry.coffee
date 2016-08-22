@@ -1,23 +1,26 @@
 do ()->
   named = {}
   unnamed = {}
-  tooLate = false
+  closed = {}
   
   Make "Registry", Registry =
     add: (type, item)->
-      if tooLate then console.log item; throw "^ Registry.add was called after registration closed. Please make this #{type} init faster."
+      if closed[type] then console.log item; throw "^^^ This #{type} was registered too late."
       (unnamed[type] ?= []).push item
     
-    all: (type)->
-      unnamed[type]
+    all: (type, byName = false)->
+      if byName
+        named[type]
+      else
+        unnamed[type]
     
     set: (type, name, item)->
-      if tooLate then console.log item; throw "^ Registry.set was called after registration closed. Please make #{type}: #{name} init faster."
-      if named[type]?[name]? then console.log item; throw "^ Registry.add(#{type}, ^^^, #{name}) is a duplicate. Please pick a different name."
+      if closed[type] then console.log item; throw "^^^ This #{type} named \"#{name}\" was registered too late."
+      if named[type]?[name]? then console.log item; throw "^^^ This #{type} is using the name \"#{name}\", which is already in use."
       (named[type] ?= {})[name] = item
     
     get: (type, name)->
       named[type]?[name]
     
-    closeRegistration: ()->
-      tooLate = true
+    closeRegistration: (type)->
+      closed[type] = true

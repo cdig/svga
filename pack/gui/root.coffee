@@ -1,4 +1,4 @@
-Take ["Reaction", "ScopeReady"], (Reaction)->
+Take ["Reaction", "SceneReady"], (Reaction)->
   
   root = document.querySelector "#root"
   

@@ -1,5 +1,5 @@
-Take ["Control", "GUI", "SVG"], (Control, {ControlPanel:GUI}, SVG)->
-  Control "divider", (elm, props)->
+Take ["GUI", "Registry", "SVG"], ({ControlPanel:GUI}, Registry, SVG)->
+  Registry.set "Control", "divider", (elm, props)->
     
     g = SVG.create "rect", elm,
       x: GUI.pad

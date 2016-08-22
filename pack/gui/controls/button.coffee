@@ -1,5 +1,5 @@
-Take ["Control", "GUI", "Input", "SVG", "Tween"], (Control, {ControlPanel:GUI}, Input, SVG, Tween)->
-  Control "button", (elm, props)->
+Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, Registry, SVG, Tween)->
+  Registry.set "Control", "button", (elm, props)->
     
     # An array to hold all the click functions that have been attached to this button
     handlers = []

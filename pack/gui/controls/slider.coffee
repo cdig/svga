@@ -1,5 +1,5 @@
-Take ["Control", "GUI", "Input", "SVG", "TRS", "Tween"], (Control, {ControlPanel:GUI}, Input, SVG, TRS, Tween)->
-  Control "slider", (elm, props)->
+Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPanel:GUI}, Input, SVG, TRS, Tween)->
+  Registry.set "Control", "slider", (elm, props)->
     
     # An array to hold all the change functions that have been attached to this slider
     handlers = []

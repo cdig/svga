@@ -1,18 +1,10 @@
-Take ["ControlPanel", "ControlPanelLayout", "Scope"], (ControlPanel, ControlPanelLayout, Scope )->
+Take ["ControlPanel", "ControlPanelLayout", "Registry", "Scope", "ControlReady"], (ControlPanel, ControlPanelLayout, Registry, Scope)->
+  Control = {}
   instances = {}
   
-  Make "Control", Control = (type, defn)->
-    
-    # This Control[type] = ()-> stuff establishes the Control.foo syntax for creating controls.
-    # We don't get the benefit of nice errors if a control definiton is too late to init,
-    # but because creating controls is an advanced topic, we can be confident that
-    # people creating controls will be able to work around this constraint, and that
-    # the benefit to people using controls is well worth it.
-    
+  setup = (type, defn)->
     Control[type] = (props = {})->
       if typeof props isnt "object" then console.log props; throw "Control.#{type}(props) takes a optional props object. Got ^^^, which is not an object."
-      
-      ControlPanel.show()
       
       # Re-using an existing ID? Just attach to the existing control.
       if props?.id? and instances[props.id]?
@@ -31,4 +23,7 @@ Take ["ControlPanel", "ControlPanelLayout", "Scope"], (ControlPanel, ControlPane
         ControlPanelLayout.addScope scope
         instances[props.id] = scope if props?.id?
         return scope
-      
+  
+  
+  setup type, defn for type, defn of Registry.all "Control", true
+  Make "Control", Control

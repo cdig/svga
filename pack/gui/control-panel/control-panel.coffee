@@ -16,7 +16,7 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
 
   Gradient.linear "CPGradient", false, "#5175bd", "#35488d"
   
-  g = SVG.create "g", null,
+  g = SVG.create "g", GUI.elm,
     xControls: ""
     fontSize: 16
     textAnchor: "middle"
@@ -84,5 +84,9 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
   Make "ControlPanel", ControlPanel
   Take "SceneReady", ()->
     if showing
-      SVG.append GUI.elm, g
       Resize resize, true
+    else
+      # It'd be simpler to just not add the CP unless we need it,
+      # rather than what we're doing here (remove it if it's unused).
+      # But we need to do it this way to avoid an IE bug.
+      GUI.elm.removeChild g

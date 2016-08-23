@@ -1,4 +1,5 @@
-Take ["GUI", "Resize", "SVG", "TRS", "SVGReady"], (GUI, Resize, SVG, TRS)->
+Take ["Config", "GUI", "Resize", "SVG", "TRS", "SVGReady"], (Config, GUI, Resize, SVG, TRS)->
+  return unless Config.nav
   
   g = TRS SVG.create "g", GUI.elm
   SVG.create "rect", g, x: -200, y:-30, width: 400, height: 60, rx: 30, fill: "#222", "fill-opacity": 0.9

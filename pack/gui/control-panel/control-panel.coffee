@@ -16,7 +16,7 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
 
   Gradient.linear "CPGradient", false, "#5175bd", "#35488d"
   
-  g = SVG.create "g", GUI.elm,
+  g = SVG.create "g", null,
     xControls: ""
     fontSize: 16
     textAnchor: "middle"
@@ -33,6 +33,7 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
 
   ControlPanel = Scope g, ()->
     createElement: (parent = null)->
+      showing = true
       elm = SVG.create "g", parent or panelElms.element
     
     claimSpace: (rect)->
@@ -81,4 +82,7 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
   # Init
   
   Make "ControlPanel", ControlPanel
-  Take "SceneReady", ()-> Resize resize, true
+  Take "SceneReady", ()->
+    if showing
+      SVG.append GUI.elm, g
+      Resize resize, true

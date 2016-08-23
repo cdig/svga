@@ -19,7 +19,16 @@ Take ["GUI"], ({ControlPanel:GUI})->
       fullHeight = 0
       
       for scope in scopes
-        preferredSizes.push s = scope.getPreferredSize()
+        
+        # These args aren't quite implemented yet.
+        # The intention is that they'll be:
+        # # A suggested size. Eg: the column width or row height.
+        # # The view, in case the control wants to do anything in screen-space
+        # # Whether we're vertical or horizontal
+        # By passing this data in, we can avoid using GUI as a gloabl inside controls.
+        # The intention is that this same signature will be used for both getPreferredSize() and resize()
+        preferredSizes.push s = scope.getPreferredSize null, view, true
+        
         widestWidth = Math.max widestWidth, s.w
         fullHeight += s.h
       
@@ -36,7 +45,7 @@ Take ["GUI"], ({ControlPanel:GUI})->
         scope.x = xOffset
         scope.y = yOffset
         scopeHeight = preferredSizes[i].h
-        scope.resize w:columnWidth, h:scopeHeight
+        scope.resize w:columnWidth, h:scopeHeight, view, true # See the notes above for scope.getPreferredSize
         yOffset += scopeHeight
         if yOffset > approxColumnHeight
           xOffset += widestWidth
@@ -67,7 +76,10 @@ Take ["GUI"], ({ControlPanel:GUI})->
       
       # Compute the size of all scopes, and the tallest of them
       for scope in scopes
-        preferredSizes.push s = scope.getPreferredSize()
+        
+        # See the notes above for scope.getPreferredSize in vertical
+        preferredSizes.push s = scope.getPreferredSize null, view, false
+        
         tallestHeight = Math.max tallestHeight, s.h
       
       # Compute the row height, which will be at least as tall as the tallest scope
@@ -104,7 +116,7 @@ Take ["GUI"], ({ControlPanel:GUI})->
           scope.y = 0
           yOffset = scopeHeight
           col++
-        scope.resize w:columnWidths[col], h:scopeHeight
+        scope.resize w:columnWidths[col], h:scopeHeight, view, false # See the notes above for scope.getPreferredSize in vertical
       
       return w:totalWidth, h:rowHeight
   

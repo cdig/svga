@@ -50,8 +50,13 @@ Take ["Registry", "GUI", "SelectorButton", "Scope", "SVG"], (Registry, {ControlP
         return buttonScope
       
       getPreferredSize: ()->
+        xOffset = 0
+        for button in buttons
+          button.x = xOffset
+          xOffset += button.resize 1, xOffset
+
         size =
-          w:GUI.width
+          w:xOffset
           h:GUI.unit + labelHeight
       
       resize: ({w:w, h:h})->
@@ -80,3 +85,5 @@ Take ["Registry", "GUI", "SelectorButton", "Scope", "SVG"], (Registry, {ControlP
           SVG.attrs label,
             x: w/2
             y: 18
+        
+        return w:w, h:h

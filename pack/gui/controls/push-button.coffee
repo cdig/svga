@@ -1,8 +1,12 @@
 Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, Registry, SVG, Tween)->
-  Registry.set "Control", "button", (elm, props)->
+  buttonWidth = GUI.unit * 1.8
+  buttonHeight = GUI.unit * 1.8
     
-    # An array to hold all the click functions that have been attached to this button
-    handlers = []
+  Registry.set "Control", "pushButton", (elm, props)->
+    
+    # Arrays to hold all the functions that have been attached to this control
+    onHandlers = []
+    offHandlers = []
     
     bgFill = "hsl(220, 10%, 92%)"
     labelFill = "hsl(227, 16%, 24%)"
@@ -13,9 +17,6 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     
     # Button background element
     bg = SVG.create "rect", elm,
-      x: GUI.pad
-      y: GUI.pad
-      rx: GUI.borderRadius
       strokeWidth: 2
       fill: bgFill
     
@@ -26,8 +27,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     
     
     # Pre-compute some size info that will be used later for layout
-    buttonWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-    buttonHeight = GUI.unit
+    buttonWidth = Math.max buttonWidth, label.getComputedTextLength() + GUI.pad*8
     
     
     # Setup the bg stroke color for tweening
@@ -42,38 +42,44 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     
     # Input event handling
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
-    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
+    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG
     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
-    toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:tickBG
     Input elm,
       moveIn: toHover
-      dragIn: (e, state)-> toClicking() if state.clicking
-      down: toClicking
-      up: toHover
+      down: ()->
+        toClicking()
+        onHandler() for onHandler in onHandlers
+      up: ()->
+        toHover()
+        offHandler() for offHandler in offHandlers
+      miss: ()->
+        toNormal()
+        offHandler() for offHandler in offHandlers
       moveOut: toNormal
-      dragOut: toNormal
-      click: ()->
-        toClicked()
-        handler() for handler in handlers
+        
     
     
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
       attach: (props)->
-        handlers.push props.click if props.click?
+        onHandlers.push props.on if props.on?
+        offHandlers.push props.off if props.off?
       
       getPreferredSize: ()->
-        return size =
-          w:buttonWidth
-          h:buttonHeight
+        size = Math.max buttonWidth, buttonHeight
+        return w:size, h:size
       
-      resize: (size)->
-        height = Math.min buttonHeight, size.h
+      resize: (space)->
+        size = Math.max(buttonWidth, buttonHeight)
+        extra = x:space.w-size, y:space.h-size
         SVG.attrs bg,
-          width: size.w - GUI.pad*2
-          height: height - GUI.pad*2
-        SVG.attrs label, x: size.w/2, y: height/2 + 6
-        return w:size.w, h:height
+          x: GUI.pad + extra.x/2
+          y: GUI.pad + extra.y/2
+          width: size - GUI.pad*2
+          height: size - GUI.pad*2
+          rx: size/2 - GUI.pad
+        SVG.attrs label, x: space.w/2, y: space.h/2 + 6
+        return w:size, h:size
       
       _highlight: (enable)->
         if enable

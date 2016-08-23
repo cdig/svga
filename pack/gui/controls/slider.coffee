@@ -97,22 +97,25 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
         update props.value if props.value?
       
       getPreferredSize: ()->
-        size =
+        return size =
           w:GUI.width
           h:GUI.unit
       
-      resize: ({w:w, h:h})->
-        range = w - GUI.pad*2 - labelWidth
+      resize: (size)->
+        height = Math.min GUI.unit, size.h
+        range = size.w - GUI.pad*2 - labelWidth
         update()
         
         SVG.attrs track,
-          width: w - GUI.pad*2
-          height: h - GUI.pad*2
-          rx: (h - GUI.pad*2)/2
+          width: size.w - GUI.pad*2
+          height: height - GUI.pad*2
+          rx: (height - GUI.pad*2)/2
         
         SVG.attrs thumbBG,
-          height: h - GUI.pad*2
-          rx: (h - GUI.pad*2)/2
+          height: height - GUI.pad*2
+          rx: (height - GUI.pad*2)/2
+        
+        return w:size.w, h:height
 
       _highlight: (enable)->
         if enable

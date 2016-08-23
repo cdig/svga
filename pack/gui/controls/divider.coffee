@@ -4,17 +4,19 @@ Take ["GUI", "Registry", "SVG"], ({ControlPanel:GUI}, Registry, SVG)->
     g = SVG.create "rect", elm,
       x: GUI.pad
       y: GUI.pad
-      width: GUI.width - GUI.pad*2
       height: GUI.pad*2
       rx: 2
       fill: "hsl(227, 45%, 24%)"
     
-    resize = (size, view, vertical)->
-      if @alpha = vertical
-        w:GUI.width, h:GUI.pad * 4
-      else
-        w:0, h:0
+    height = GUI.pad * 4
     
     return scope =
-      resize: resize
-      getPreferredSize: resize
+      getPreferredSize: (size, view, vertical)-> w:0, h:0
+      
+      resize: (size, view, vertical)->
+        if @alpha = vertical
+          width = size.w - GUI.pad*2
+          SVG.attrs g, width: width
+          w:width, h:height
+        else
+          w:0, h:0

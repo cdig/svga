@@ -80,7 +80,7 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Re
       
       eventInside: (e)->
         e = e.touches[0] if e.touches?.length > 0
-        e.target is document.body or root.contains e.target
+        e.target is document.body or e.target is SVG.root or root.contains e.target
       
       assignSpace: (rect)->
         wFrac = rect.w / initialSize.width

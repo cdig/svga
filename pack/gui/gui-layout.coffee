@@ -1,6 +1,4 @@
-Take ["Config", "ControlPanel", "Nav", "RAF", "Resize"], (Config, ControlPanel, Nav, RAF, Resize)->
-  return unless Config.nav
-  
+Take ["Config", "ControlPanel", "Nav", "RAF", "Resize", "SceneReady"], (Config, ControlPanel, Nav, RAF, Resize)->
   Resize ()->
     # This rect holds the amount of space in the GUI
     rect =
@@ -9,8 +7,8 @@ Take ["Config", "ControlPanel", "Nav", "RAF", "Resize"], (Config, ControlPanel, 
       w: window.innerWidth
       h: window.innerHeight
     
-    # These mutate rect, shrinking it based on the space they need
+    # claimSpace mutates the rect, shrinking it based on the space needed
     ControlPanel.claimSpace rect
     
     # Whatever space is left, we give to Nav
-    Nav.assignSpace rect
+    Nav.assignSpace rect if Config.nav

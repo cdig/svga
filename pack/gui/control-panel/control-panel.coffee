@@ -29,6 +29,12 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
   panelElms.x = panelElms.y = CP.pad*2
   
   
+  # It'd be simpler to just not add the CP unless we need it,
+  # rather than what we're doing here (remove it if it's unused).
+  # But we need to do it this way to avoid an IE bug.
+  Take "SceneReady", ()-> GUI.elm.removeChild g if not showing
+
+  
   # Scope
 
   ControlPanel = Scope g, ()->
@@ -37,6 +43,7 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
       elm = SVG.create "g", parent or panelElms.element
     
     claimSpace: (rect)->
+      resize()
       if vertical
         rect.w -= panelWidth
       else
@@ -80,13 +87,4 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
   
   
   # Init
-  
   Make "ControlPanel", ControlPanel
-  Take "SceneReady", ()->
-    if showing
-      Resize resize, true
-    else
-      # It'd be simpler to just not add the CP unless we need it,
-      # rather than what we're doing here (remove it if it's unused).
-      # But we need to do it this way to avoid an IE bug.
-      GUI.elm.removeChild g

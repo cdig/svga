@@ -62,8 +62,8 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
     panelWidth = size.w + CP.pad*4
     panelHeight = size.h + CP.pad*4
     
-    widthPad = if Conf.x is 1 then panelRadius else if Conf.x is -1 then -panelRadius else if vertical then panelRadius else 0
-    heightPad = if Conf.y is 1 then panelRadius else if Conf.y is -1 then -panelRadius else if !vertical then panelRadius else 0
+    widthPad = if Math.abs(Conf.x) is 1 then panelRadius else if Conf.x? then 0 else if vertical then panelRadius else 0
+    heightPad = if Math.abs(Conf.y) is 1 then panelRadius else if Conf.y? then 0 else if !vertical then panelRadius else 0
     panelBgX = if Conf.x is -1 then -panelRadius else 0
     panelBgY = if Conf.y is -1 then -panelRadius else 0
     

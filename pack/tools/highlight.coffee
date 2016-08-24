@@ -104,6 +104,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
         # Handle Mouse and Touch differently, for better perf
         mouseProps =
           moveIn: activate
+          moveOut: deactivate
         touchProps =
           down: activate
         

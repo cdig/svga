@@ -40,16 +40,6 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     label = SVG.create "text", thumb,
       textContent: props.name
       fill: labelFill
-      y: GUI.unit/2 + 6
-    
-    
-    # Pre-compute some size info that will be used later for layout
-    labelWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-    
-    
-    # Size and position the thumb
-    SVG.attrs thumbBG, width: labelWidth
-    SVG.attrs label, x: GUI.pad + labelWidth/2
     
     
     # Setup the thumbBG stroke color for tweening
@@ -102,6 +92,8 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
           h:GUI.unit
       
       resize: (size)->
+        # Recompute the label length on every resize, because the font may have changed
+        labelWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
         height = Math.min GUI.unit, size.h
         range = size.w - GUI.pad*2 - labelWidth
         update()
@@ -112,9 +104,14 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
           rx: (height - GUI.pad*2)/2
         
         SVG.attrs thumbBG,
+          width: labelWidth
           height: height - GUI.pad*2
           rx: (height - GUI.pad*2)/2
         
+        SVG.attrs label,
+          x: GUI.pad + labelWidth/2
+          y: height/2 + 6
+
         return w:size.w, h:height
 
       _highlight: (enable)->

@@ -23,12 +23,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     label = SVG.create "text", elm,
       textContent: props.name
       fill: labelFill
-    
-    
-    # Pre-compute some size info that will be used later for layout
-    buttonWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-    buttonHeight = GUI.unit
-    
+        
     
     # Setup the bg stroke color for tweening
     bgc = blueBG = r:34, g:46, b:89
@@ -63,16 +58,20 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
         handlers.push props.click if props.click?
       
       getPreferredSize: ()->
+        # Recompute the label length on every resize, because the font may have changed
+        buttonWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
         return size =
           w:buttonWidth
-          h:buttonHeight
+          h:GUI.unit
       
       resize: (size)->
-        height = Math.min buttonHeight, size.h
+        height = Math.min GUI.unit, size.h
         SVG.attrs bg,
           width: size.w - GUI.pad*2
           height: height - GUI.pad*2
-        SVG.attrs label, x: size.w/2, y: height/2 + 6
+        SVG.attrs label,
+          x: size.w/2
+          y: height/2 + 6
         return w:size.w, h:height
       
       _highlight: (enable)->

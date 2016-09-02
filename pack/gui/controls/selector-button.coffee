@@ -23,9 +23,6 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       fill: labelFill
     
     
-    preferredSize.w = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-    
-    
     # Setup the bg stroke color for tweening
     curBG = whiteBG = r:233, g:234, b:237
     lightBG = r:142, g:196, b:96
@@ -57,13 +54,13 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       toActive()
       handler() for handler in handlers
     Input elm,
-      moveIn: (e, state)-> toHover e, state unless isActive
-      dragIn: (e, state)-> toClicking e, state if state.clicking and !isActive
-      down: (e, state)-> toClicking e, state unless isActive
-      up: (e, state)-> toHover e, state unless isActive
-      moveOut: (e, state)-> toNormal e, state unless isActive
-      dragOut: (e, state)-> toNormal e, state unless isActive
-      click: (e, state)-> click e, state unless isActive
+      moveIn:  (e, state)->    toHover e, state unless isActive
+      dragIn:  (e, state)-> toClicking e, state if state.clicking and !isActive
+      down:    (e, state)-> toClicking e, state unless isActive
+      up:      (e, state)->    toHover e, state unless isActive
+      moveOut: (e, state)->   toNormal e, state unless isActive
+      dragOut: (e, state)->   toNormal e, state unless isActive
+      click:   (e, state)->      click e, state unless isActive
     
     
     # Set up click handling
@@ -77,6 +74,8 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       click: attachClick
       
       getPreferredSize: ()->
+        # Recompute the label length on every resize, because the font may have changed
+        preferredSize.w = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
         preferredSize
       
       resize: (upscale)->

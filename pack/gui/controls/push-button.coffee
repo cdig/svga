@@ -26,10 +26,6 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       fill: labelFill
     
     
-    # Pre-compute some size info that will be used later for layout
-    buttonWidth = Math.max buttonWidth, label.getComputedTextLength() + GUI.pad*8
-    
-    
     # Setup the bg stroke color for tweening
     bgc = blueBG = r:34, g:46, b:89
     lightBG = r:133, g:163, b:224
@@ -66,6 +62,8 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
         offHandlers.push props.off if props.off?
       
       getPreferredSize: ()->
+        # Update the buttonWidth every resize, because the font may have changed
+        buttonWidth = Math.max buttonWidth, label.getComputedTextLength() + GUI.pad*8
         size = Math.max buttonWidth, buttonHeight
         return w:size, h:size
       
@@ -78,7 +76,9 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
           width: size - GUI.pad*2
           height: size - GUI.pad*2
           rx: size/2 - GUI.pad
-        SVG.attrs label, x: space.w/2, y: space.h/2 + 6
+        SVG.attrs label,
+          x: space.w/2
+          y: space.h/2 + 6
         return w:size, h:size
       
       _highlight: (enable)->

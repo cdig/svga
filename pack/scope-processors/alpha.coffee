@@ -10,7 +10,7 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
       get: ()-> alpha
       set: (val)->
         val = 1 if val is true
-        val = 0 if val is false
+        val = 0 if !val
         if alpha isnt val
           SVG.style element, "opacity", alpha = val
           if alpha > 0

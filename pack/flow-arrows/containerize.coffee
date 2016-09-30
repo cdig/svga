@@ -26,7 +26,7 @@ Take ["Pressure", "SVG"], (Pressure , SVG)->
     
     updateActive = ()->
       active = enabled and visible and flow isnt 0
-      SVG.styles scope.element, display: if active then null else "none"
+      SVG.styles scope.element, display: if active then "inline" else "none"
     
     
     # This is used by FlowArrows when toggling

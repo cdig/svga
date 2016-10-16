@@ -5,7 +5,15 @@ Take ["Config", "ParentObject"], (Config, ParentObject)->
   fetch = (name)->
     attrName = "x-" + name
     if ParentObject.hasAttribute attrName
-      JSON.parse ParentObject.getAttribute attrName
+      # This isn't ideal, but it is good enough for now
+      val = ParentObject.getAttribute attrName
+      switch val
+        when "true"
+          true
+        when "false"
+          false
+        else
+          val
     else
       Config[name]
   

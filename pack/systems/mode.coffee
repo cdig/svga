@@ -2,12 +2,14 @@
 
 Take ["Config", "ParentObject"], (Config, ParentObject)->
   
-  fetch = (name)->
+  fetchAttribute = (name)->
     attrName = "x-" + name
     if ParentObject.hasAttribute attrName
       # This isn't ideal, but it is good enough for now
       val = ParentObject.getAttribute attrName
       switch val
+        when ""
+          true
         when "true"
           true
         when "false"
@@ -18,8 +20,9 @@ Take ["Config", "ParentObject"], (Config, ParentObject)->
       Config[name]
   
   Make "Mode", Mode =
-    background: fetch "background"
-    controlPanel: fetch "controlPanel"
+    autosize: fetchAttribute "autosize"
+    background: fetchAttribute "background"
+    controlPanel: fetchAttribute "controlPanel"
     dev: window.top.location.port?.length >= 4
-    nav: fetch "nav"
+    nav: fetchAttribute "nav"
     embed: window isnt window.top

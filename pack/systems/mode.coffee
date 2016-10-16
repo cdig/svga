@@ -1,6 +1,17 @@
-Take ["Config", "Dev", "ParentObject"], (Config, Dev, ParentObject)->
+# Config is defined in the config.coffee in every SVGA
+
+Take ["Config", "ParentObject"], (Config, ParentObject)->
+  
+  fetch = (name)->
+    attrName = "x-" + name
+    if ParentObject.hasAttribute attrName
+      JSON.parse ParentObject.getAttribute attrName
+    else
+      Config[name]
   
   Make "Mode", Mode =
-    dev: Dev
-    nav: Config.nav
+    background: fetch "background"
+    controlPanel: fetch "controlPanel"
+    dev: window.top.location.port?.length >= 4
+    nav: fetch "nav"
     embed: window isnt window.top

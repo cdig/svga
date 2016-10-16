@@ -12,7 +12,7 @@ Take ["ParentObject", "RAF"], (ParentObject, RAF)->
   RAF tick = (t)->
     dt = Math.min t/1000 - wallTime, minimumDT
     wallTime = t/1000
-    if not ParentObject.disableSVGA
+    if not ParentObject.disableSVGA # disableSVGA is set automatically by cd-module when the SVGA is offscreen
       internalTime += dt
       cb internalTime, dt for cb in callbacks
     RAF tick

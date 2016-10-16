@@ -1,11 +1,11 @@
-Take ["Action", "Config", "ParentObject", "Reaction", "SVG"], (Action, Config, ParentObject, Reaction, SVG)->
+Take ["Action", "Mode", "ParentObject", "Reaction", "SVG"], (Action, Mode, ParentObject, Reaction, SVG)->
   
   # Set to a specific color
-  if typeof Config.background is "string"
-    SVG.style ParentObject, "background-color", Config.background
+  if typeof Mode.background is "string"
+    SVG.style ParentObject, "background-color", Mode.background
   
   # Allow adjustment, default to grey
-  else if Config.background is true
+  else if Mode.background is true
     Reaction "Background:Set", (v)-> SVG.style ParentObject, "background-color", "hsl(227, 5%, #{v*100}%)"
     Take "SceneReady", ()-> Action "Background:Set", .70
   

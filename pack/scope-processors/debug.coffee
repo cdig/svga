@@ -1,4 +1,4 @@
-Take ["Dev", "Registry", "ScopeCheck", "Scope", "SVG"], (Dev, Registry, ScopeCheck, Scope, SVG)->
+Take ["Mode", "Registry", "ScopeCheck", "Scope", "SVG"], (Mode, Registry, ScopeCheck, Scope, SVG)->
   Registry.add "ScopeProcessor", (scope)->
     
     ScopeCheck scope, "debug"
@@ -6,7 +6,7 @@ Take ["Dev", "Registry", "ScopeCheck", "Scope", "SVG"], (Dev, Registry, ScopeChe
     Object.defineProperty scope, 'debug', get: ()->
       
       point: (color)->
-        if Dev
+        if Mode.dev
           point = Scope SVG.create "g", scope.element
           SVG.create "rect", point.element, fill: "#000", x:0, y:0, width: 10, height: 10 if color?
           SVG.create "rect", point.element, fill: color, x:0, y:0, width: 9, height: 9 if color?

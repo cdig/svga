@@ -1,5 +1,5 @@
-Take ["Config", "Nav"], (Config, Nav)->
-  return unless Config.nav
+Take ["Mode", "Nav"], (Mode, Nav)->
+  return unless Mode.nav
   
   lastTouches = null
 

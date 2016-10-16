@@ -1,8 +1,8 @@
-Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope"], (Config, ControlPanelLayout, Gradient, GUI, Resize, SVG, Scope)->
+Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Resize", "SVG", "Scope"], (ControlPanelLayout, Gradient, GUI, Mode, Resize, SVG, Scope)->
   
   # Aliases
   CP = GUI.ControlPanel
-  Conf = Config.controlPanel ?= {}
+  config = Mode.controlPanel ?= {}
 
   # State
   showing = false
@@ -54,7 +54,7 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
   
   resize = ()->
     view = w:window.innerWidth, h:window.innerHeight
-    vertical = if Conf.vertical? then Conf.vertical else view.w >= view.h * 1.3
+    vertical = if config.vertical? then config.vertical else view.w >= view.h * 1.3
     size = if vertical
       ControlPanelLayout.vertical view
     else
@@ -62,10 +62,10 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
     panelWidth = size.w + CP.pad*4
     panelHeight = size.h + CP.pad*4
     
-    widthPad = if Math.abs(Conf.x) is 1 then panelRadius else if Conf.x? then 0 else if vertical then panelRadius else 0
-    heightPad = if Math.abs(Conf.y) is 1 then panelRadius else if Conf.y? then 0 else if !vertical then panelRadius else 0
-    panelBgX = if Conf.x is -1 then -panelRadius else 0
-    panelBgY = if Conf.y is -1 then -panelRadius else 0
+    widthPad = if Math.abs(config.x) is 1 then panelRadius else if config.x? then 0 else if vertical then panelRadius else 0
+    heightPad = if Math.abs(config.y) is 1 then panelRadius else if config.y? then 0 else if !vertical then panelRadius else 0
+    panelBgX = if config.x is -1 then -panelRadius else 0
+    panelBgY = if config.y is -1 then -panelRadius else 0
     
     SVG.attrs bg,
       x: panelBgX
@@ -73,9 +73,9 @@ Take ["Config", "ControlPanelLayout", "Gradient", "GUI", "Resize", "SVG", "Scope
       width: panelWidth + widthPad
       height: panelHeight + heightPad
     
-    if Conf.x? or Conf.y?
-      x = (Conf.x or 0)/2 + 0.5
-      y = (Conf.y or 0)/2 + 0.5
+    if config.x? or config.y?
+      x = (config.x or 0)/2 + 0.5
+      y = (config.y or 0)/2 + 0.5
       ControlPanel.x = x * view.w - x * panelWidth |0
       ControlPanel.y = y * view.h - y * panelHeight |0
     else if vertical

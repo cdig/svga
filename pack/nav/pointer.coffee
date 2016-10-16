@@ -1,5 +1,5 @@
-Take ["Config", "Nav"], (Config, Nav)->
-  return unless Config.nav
+Take ["Mode", "Nav"], (Mode, Nav)->
+  return unless Mode.nav
   return unless navigator.msMaxTouchPoints and navigator.msMaxTouchPoints > 1
   
   gesture = new MSGesture()

@@ -1,5 +1,5 @@
-Take ["Config", "Input", "Nav"], (Config, Input, Nav)->
-  return unless Config.nav
+Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
+  return unless Mode.nav
   
   dragging = false
   

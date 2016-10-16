@@ -1,8 +1,8 @@
-Take ["Dev","FlowArrows:Arrow","FlowArrows:Config","FlowArrows:Containerize"],
-(      Dev ,            Arrow ,            Config ,            Containerize)->
+Take ["FlowArrows:Arrow","FlowArrows:Config","FlowArrows:Containerize","Mode"],
+(                 Arrow ,            Config ,            Containerize , Mode)->
   Make "FlowArrows:Segment", (parentElm, segmentData, segmentName)->
     Containerize parentElm, (scope)-> # This function must return an array of children
-      if Dev
+      if Mode.dev
         scope.element.addEventListener "mouseover", ()->
           console.log segmentName
       

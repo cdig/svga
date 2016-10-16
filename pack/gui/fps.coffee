@@ -1,4 +1,4 @@
-Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev, GUI, Resize, SVG, Tick)->
+Take ["GUI", "Mode", "Resize", "SVG", "Tick", "SVGReady"], (GUI, Mode, Resize, SVG, Tick)->
   count = 60 # Update immediately
   freq = 0.5 # Update every n seconds
   avgLength = 10 # Average of the last 10 frames
@@ -8,7 +8,7 @@ Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev
   
   Make "FPS", ()-> fps
   
-  if Dev
+  if Mode.dev
     text = SVG.create "text", GUI.elm
 
     Resize ()->
@@ -17,7 +17,7 @@ Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev
   Tick (time, dt)->
     current = 1/dt
     
-    # This needs to happen regardless of Dev, becasue other systems use FPS to turn on/off features for perf (eg: Highlight)
+    # This needs to happen regardless of Mode.dev, becasue other systems use FPS to turn on/off features for perf (eg: Highlight)
     if current > 20
       avgList.push 1/dt
       total += 1/dt
@@ -26,6 +26,6 @@ Take ["Config", "Dev", "GUI", "Resize", "SVG", "Tick", "SVGReady"], (Config, Dev
     else
       fps = Math.ceil current
     
-    if Dev and ++count / fps >= freq
+    if Mode.dev and ++count / fps >= freq
       count = 0
       SVG.attrs text, textContent: "FPS: " + fps, fill: if fps <= 5 then "#C00" else if fps <= 10 then "#E60" else "#777"

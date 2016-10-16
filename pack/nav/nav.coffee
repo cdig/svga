@@ -1,7 +1,7 @@
-Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Resize, SVG, Tween)->
+Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize, SVG, Tween)->
   root = document.getElementById "root"
 
-  if not Config.nav
+  if not Mode.nav
     Make "Nav", false
     width = SVG.attr SVG.root, "width"
     height = SVG.attr SVG.root, "height"
@@ -104,7 +104,7 @@ Take ["Config", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Config, RAF, Re
       Math.sqrt x*x + y*y + z*z
     
     
-    if Config.debugNavPaint
-      Take "Tick", (Tick)->
-        Tick (t)->
-          Nav.at z: Math.sin(t)/10 - .1
+    # Enable this to debug nav repaints
+    # Take "Tick", (Tick)->
+    #   Tick (t)->
+    #     Nav.at z: Math.sin(t)/10 - .1

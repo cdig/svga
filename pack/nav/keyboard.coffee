@@ -1,5 +1,5 @@
-Take ["Config", "KeyMe", "Nav", "Tick"], (Config, KeyMe, Nav, Tick)->
-  return unless Config.nav
+Take ["KeyMe", "Mode", "Nav", "Tick"], (KeyMe, Mode, Nav, Tick)->
+  return unless Mode.nav
   
   decel = 1.25
   maxVel = xy: 10, z: 0.05 # xy polar, z cartesian

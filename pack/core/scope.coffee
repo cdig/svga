@@ -1,4 +1,4 @@
-Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Symbol)->
+Take ["Mode", "Registry", "ScopeCheck", "Symbol"], (Mode, Registry, ScopeCheck, Symbol)->
   Make "Scope", Scope = (element, symbol, props = {})->
     if not element instanceof SVGElement then console.log element; throw "Scope() takes an element as the first argument. Got ^^^"
     if symbol? and typeof symbol isnt "function" then console.log symbol; throw "Scope() takes a function as the second arg. Got ^^^"
@@ -33,7 +33,7 @@ Take ["Dev", "Registry", "ScopeCheck", "Symbol"], (Dev, Registry, ScopeCheck, Sy
       parentScope.children.push scope
     
     # Add some info to help devs locate scope elements in the DOM
-    if Dev and not (navigator.userAgent.indexOf("Trident") >= 0 or navigator.userAgent.indexOf("Edge") >= 0)
+    if Mode.dev and not (navigator.userAgent.indexOf("Trident") >= 0 or navigator.userAgent.indexOf("Edge") >= 0)
       # Add some helpful dev names to the element
       element.setAttribute "SCOPE", scope.id or ""
       element.setAttribute "SYMBOL", symbol.symbolName if symbol?.symbolName?

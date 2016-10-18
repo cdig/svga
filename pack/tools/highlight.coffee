@@ -1,4 +1,4 @@
-Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS, Gradient, Input, SVG, Tick)->
+Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ease, FPS, Gradient, Input, RAF, SVG, Tick)->
   
   activeHighlight = null
   counter = 0
@@ -43,15 +43,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
       if not doFunction
         for elm in elm.childNodes
           if elm.tagName is "g" or elm.tagName is "path" or elm.tagName is "text" or elm.tagName is "tspan" or elm.tagName is "rect" or elm.tagName is "circle"
-              setup elm
-    
-    
-    for target in targets
-      if not target? then console.log targets; throw "Highlight called with a null element ^^^"
-      t = target.element or target # Support both scopes and elements
-      unless t._HighlighterSetup
-        t._HighlighterSetup = true
-        setup t
+            setup elm
     
     
     activate = ()->
@@ -94,19 +86,29 @@ Take ["Ease", "FPS", "Gradient", "Input", "SVG", "Tick", "SVGReady"], (Ease, FPS
             h.function false
           else
             SVG.attrs h.elm, h.attrs
-
     
-    for target in targets
-      t = target.element or target # Support both scopes and elements
-      unless t._Highlighter
-        t._Highlighter = true
-        
-        # Handle Mouse and Touch differently, for better perf
-        mouseProps =
-          moveIn: activate
-          moveOut: deactivate
-        touchProps =
-          down: activate
-        
-        Input t, mouseProps, true, false
-        Input t, touchProps, false, true
+    # Delay running the Highlight setup code by one frame so that if fills / strokes are changed
+    # by the @animate() function (eg: an @linearGradient is created), we can capture those changes.
+    # See: https://github.com/cdig/svga/issues/133
+    RAF ()->
+      for target in targets
+        if not target? then console.log targets; throw "Highlight called with a null element ^^^"
+        t = target.element or target # Support both scopes and elements
+        unless t._HighlighterSetup
+          t._HighlighterSetup = true
+          setup t
+          
+      for target in targets
+        t = target.element or target # Support both scopes and elements
+        unless t._Highlighter
+          t._Highlighter = true
+          
+          # Handle Mouse and Touch differently, for better perf
+          mouseProps =
+            moveIn: activate
+            moveOut: deactivate
+          touchProps =
+            down: activate
+          
+          Input t, mouseProps, true, false
+          Input t, touchProps, false, true

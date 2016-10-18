@@ -5,6 +5,8 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
     Make "Nav", false
     width = SVG.attr SVG.root, "width"
     height = SVG.attr SVG.root, "height"
+    throw new Error "This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash." unless width? and height?
+    
     Resize ()->
       wFrac = window.innerWidth / width
       hFrac = window.innerHeight / height

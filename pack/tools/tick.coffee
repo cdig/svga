@@ -21,7 +21,7 @@ Take ["ParentObject", "RAF"], (ParentObject, RAF)->
     for c in callbacks when c is cb
       return if ignoreDuplicates
       console.log cb
-      throw "^ Tick was called more than once with this function. You can use Tick(fn, true) to drop duplicates and bypass this error."
+      throw new Error "^ Tick was called more than once with this function. You can use Tick(fn, true) to drop duplicates and bypass this error."
     
     callbacks.push cb
     cb # Composable

@@ -1,8 +1,8 @@
 Take ["Mode", "Registry", "ScopeCheck", "Symbol"], (Mode, Registry, ScopeCheck, Symbol)->
   Make "Scope", Scope = (element, symbol, props = {})->
-    if not element instanceof SVGElement then console.log element; throw "Scope() takes an element as the first argument. Got ^^^"
-    if symbol? and typeof symbol isnt "function" then console.log symbol; throw "Scope() takes a function as the second arg. Got ^^^"
-    if typeof props isnt "object" then console.log props; throw "Scope() takes an optional object as the third arg. Got ^^^"
+    if not element instanceof SVGElement then console.log element; throw new Error "Scope() takes an element as the first argument. Got ^^^"
+    if symbol? and typeof symbol isnt "function" then console.log symbol; throw new Error "Scope() takes a function as the second arg. Got ^^^"
+    if typeof props isnt "object" then console.log props; throw new Error "Scope() takes an optional object as the third arg. Got ^^^"
     
     scope = if symbol? then symbol element, props else {}
     parentScope = props.parent or findParent element

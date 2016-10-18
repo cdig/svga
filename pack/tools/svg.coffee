@@ -41,8 +41,8 @@ do ()->
       elm # Composable
     
     clone: (source, parent, attrs)->
-      throw "Clone source is undefined in SVG.clone(source, parent, attrs)" unless source?
-      throw "SVG.clone() called before SVGReady" unless CheckSVGReady()
+      throw new Error "Clone source is undefined in SVG.clone(source, parent, attrs)" unless source?
+      throw new Error "SVG.clone() called before SVGReady" unless CheckSVGReady()
       elm = document.createElementNS svgNS, "g"
       SVG.attr elm, attr.name, attr.value for attr in source.attributes
       SVG.attrs elm, id: null
@@ -52,12 +52,12 @@ do ()->
       elm # Composable
     
     append: (parent, child)->
-      throw "SVG.append() called before SVGReady" unless CheckSVGReady()
+      throw new Error "SVG.append() called before SVGReady" unless CheckSVGReady()
       parent.appendChild child
       child # Composable
     
     prepend: (parent, child)->
-      throw "SVG.prepend() called before SVGReady" unless CheckSVGReady()
+      throw new Error "SVG.prepend() called before SVGReady" unless CheckSVGReady()
       if parent.hasChildNodes()
         parent.insertBefore child, parent.firstChild
       else
@@ -65,15 +65,15 @@ do ()->
       child # Composable
     
     attrs: (elm, attrs)->
-      unless elm then throw "SVG.attrs was called with a null element"
-      unless typeof attrs is "object" then console.log attrs; throw "SVG.attrs requires an object as the second argument, got ^"
+      unless elm then throw new Error "SVG.attrs was called with a null element"
+      unless typeof attrs is "object" then console.log attrs; throw new Error "SVG.attrs requires an object as the second argument, got ^"
       for k, v of attrs
         SVG.attr elm, k, v
       elm # Composable
     
     attr: (elm, k, v)->
-      unless elm then throw "SVG.attr was called with a null element"
-      unless typeof k is "string" then console.log k; throw "SVG.attr requires a string as the second argument, got ^^^"
+      unless elm then throw new Error "SVG.attr was called with a null element"
+      unless typeof k is "string" then console.log k; throw new Error "SVG.attr requires a string as the second argument, got ^^^"
       elm._SVG_attr ?= {}
       # Note that we only do DOM->cache on a read call (not on a write call),
       # to slightly avoid intermingling DOM reads and writes, which causes thrashing.
@@ -90,14 +90,14 @@ do ()->
       return v # Not Composable
     
     styles: (elm, styles)->
-      unless elm then throw "SVG.styles was called with a null element"
-      unless typeof styles is "object" then console.log styles; throw "SVG.styles requires an object as the second argument, got ^"
+      unless elm then throw new Error "SVG.styles was called with a null element"
+      unless typeof styles is "object" then console.log styles; throw new Error "SVG.styles requires an object as the second argument, got ^"
       SVG.style elm, k, v for k, v of styles
       elm # Composable
     
     style: (elm, k, v)->
-      unless elm then throw "SVG.style was called with a null element"
-      unless typeof k is "string" then console.log k; throw "SVG.style requires a string as the second argument, got ^"
+      unless elm then throw new Error "SVG.style was called with a null element"
+      unless typeof k is "string" then console.log k; throw new Error "SVG.style requires a string as the second argument, got ^"
       elm._SVG_style ?= {}
       return elm._SVG_style[k] ?= elm.style[k] if v is undefined
       if elm._SVG_style[k] isnt v

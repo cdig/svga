@@ -53,7 +53,7 @@ Take ["Tick"], (Tick)->
   
   getEaseFn = (given)->
     if typeof given is "string"
-      eases[given] or throw "Tween: \"#{given}\" is not a value ease type."
+      eases[given] or throw new Error "Tween: \"#{given}\" is not a value ease type."
     else if typeof given is "function"
       given
     else

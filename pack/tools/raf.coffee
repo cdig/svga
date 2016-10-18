@@ -15,12 +15,12 @@ do ()->
   
   
   Make "RAF", (cb, ignoreDuplicates = false, p = 0)->
-    throw "RAF(null)" unless cb?
+    throw new Error "RAF(null)" unless cb?
     
     for c in callbacksByPriority[p] when c is cb
       return if ignoreDuplicates
       console.log cb
-      throw "^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error."
+      throw new Error "^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error."
     
     (callbacksByPriority[p] ?= []).push cb
     

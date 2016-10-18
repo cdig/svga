@@ -12,8 +12,8 @@ do ()->
   
   # Give a keyname or keycode, and an options object with props for down, up, and/or modifier
   KeyMe = (key, opts)->
-    if not key? then throw "You must provide a key name or code for KeyMe(key, options)"
-    if typeof opts isnt "object" then throw "You must provide an options object for KeyMe(key, options)"
+    if not key? then throw new Error "You must provide a key name or code for KeyMe(key, options)"
+    if typeof opts isnt "object" then throw new Error "You must provide an options object for KeyMe(key, options)"
     name = if typeof key is "string" then key else KeyNames[key]
     actionize opts.down, opts.up, name, opts.modifier
   

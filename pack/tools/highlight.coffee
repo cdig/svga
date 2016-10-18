@@ -92,7 +92,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ea
     # See: https://github.com/cdig/svga/issues/133
     RAF ()->
       for target in targets
-        if not target? then console.log targets; throw "Highlight called with a null element ^^^"
+        if not target? then console.log targets; throw new Error "Highlight called with a null element ^^^"
         t = target.element or target # Support both scopes and elements
         unless t._HighlighterSetup
           t._HighlighterSetup = true

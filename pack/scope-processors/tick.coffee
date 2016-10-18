@@ -10,7 +10,7 @@ Take ["Registry", "Tick"], (Registry, Tick)->
     
     # Replace the actual scope tick function with a warning
     tick = scope.tick
-    scope.tick = ()-> throw "@tick() is called by the system. Please don't call it yourself."
+    scope.tick = ()-> throw new Error "@tick() is called by the system. Please don't call it yourself."
     
     Tick (time, dt)->
       return unless running

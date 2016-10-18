@@ -10,7 +10,7 @@ Take ["Reaction", "Registry", "Tick"], (Reaction, Registry, Tick)->
     
     # Replace the actual scope animate function with a warning
     animate = scope.animate
-    scope.animate = ()-> throw "@animate() is called by the system. Please don't call it yourself."
+    scope.animate = ()-> throw new Error "@animate() is called by the system. Please don't call it yourself."
     
     Tick (time, dt)->
       return unless running

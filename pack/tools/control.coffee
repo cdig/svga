@@ -4,7 +4,7 @@ Take ["ControlPanel", "ControlPanelLayout", "Registry", "Scope", "ControlReady"]
   
   setup = (type, defn)->
     Control[type] = (props = {})->
-      if typeof props isnt "object" then console.log props; throw "Control.#{type}(props) takes a optional props object. Got ^^^, which is not an object."
+      if typeof props isnt "object" then console.log props; throw new Error "Control.#{type}(props) takes a optional props object. Got ^^^, which is not an object."
       
       # Re-using an existing ID? Just attach to the existing control.
       if props?.id? and instances[props.id]?

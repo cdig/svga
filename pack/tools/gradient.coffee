@@ -29,7 +29,7 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
       SVG.attrs gradient, props
     
     linear: (name, props = {}, stops...)->
-      if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
+      if existing[name]? then throw new Error "Gradient named #{name} already exists. Please don't create the same gradient more than once."
       attrs = if typeof props is "object"
         props.id = name
         props
@@ -42,7 +42,7 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
       return gradient # Composable
     
     radial: (name, props = {}, stops...)->
-      if existing[name]? then throw "Gradient named #{name} already exists. Please don't create the same gradient more than once."
+      if existing[name]? then throw new Error "Gradient named #{name} already exists. Please don't create the same gradient more than once."
       existing[name] = true
       props.id = name
       gradient = existing[name] = SVG.create "radialGradient", SVG.defs, props

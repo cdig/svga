@@ -5,7 +5,7 @@ do ()->
   
   Make "Registry", Registry =
     add: (type, item)->
-      if closed[type] then console.log item; throw "^^^ This #{type} was registered too late."
+      if closed[type] then console.log item; throw new Error "^^^ This #{type} was registered too late."
       (unnamed[type] ?= []).push item
     
     all: (type, byName = false)->
@@ -15,8 +15,8 @@ do ()->
         unnamed[type]
     
     set: (type, name, item)->
-      if closed[type] then console.log item; throw "^^^ This #{type} named \"#{name}\" was registered too late."
-      if named[type]?[name]? then console.log item; throw "^^^ This #{type} is using the name \"#{name}\", which is already in use."
+      if closed[type] then console.log item; throw new Error "^^^ This #{type} named \"#{name}\" was registered too late."
+      if named[type]?[name]? then console.log item; throw new Error "^^^ This #{type} is using the name \"#{name}\", which is already in use."
       (named[type] ?= {})[name] = item
     
     get: (type, name)->

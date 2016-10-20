@@ -24,11 +24,12 @@ Take ["GUI", "Mode", "ParentObject", "Resize", "SVG", "Tick", "SVGReady"], (GUI,
     total += dt
     total -= avgList.shift() while total > avgWindow and avgList.length > 0
     fps = avgList.length/total # will be artifically low for the first second — that's fine
+    fps = Math.min 60, fps # our method is slightly inexact, so sometimes you get numbers over 60 — cap to 60
     fps = 2 if isNaN fps # If we drop too low we get NaN — cap to 2
     
     count += dt
     if Mode.dev and count >= freq
       count -= freq
-      fpsDisplay = if fps < 10 then fps.toFixed(1) else Math.ceil(fps)
+      fpsDisplay = if fps < 30 then fps.toFixed(1) else Math.ceil(fps)
       text.textContent = fpsDisplay
       text.style.color = if fps <= 5 then "#C00" else if fps <= 10 then "#E60" else "rgba(0,0,0,0.5)"

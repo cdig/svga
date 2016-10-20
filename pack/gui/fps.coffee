@@ -15,7 +15,13 @@ Take ["GUI", "Mode", "ParentObject", "Resize", "SVG", "Tick", "SVGReady"], (GUI,
     if ParentObject is document.body
       document.body.insertBefore text, document.body.firstChild
     else
-      ParentObject.parentNode?.insertBefore text, ParentObject
+      # If the SVGA is removed and re-added, it creates duplicate FPS text elements.
+      # So if there's an existing element, we should just use it.
+      prev = ParentObject.previousSibling
+      if prev.hasAttribute "svga-fps"
+        text = prev
+      else
+        ParentObject.parentNode?.insertBefore text, ParentObject
 
   Tick (time, dt)->
     # This needs to happen regardless of Mode.dev, becasue other systems use FPS to turn on/off features for perf (eg: Highlight)

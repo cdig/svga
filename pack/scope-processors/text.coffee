@@ -9,5 +9,6 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
     Object.defineProperty scope, 'text',
       get: ()-> text
       set: (val)->
+        if not textElement? then console.log scope; throw new Error "^^^ You called .text = '#{val}' but this scope doesn't contain any text or tspan elements."
         if text isnt val
-          SVG.attr "textContent", text = val
+          SVG.attr textElement, "textContent", text = val

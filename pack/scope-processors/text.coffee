@@ -11,9 +11,9 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
       get: ()-> alignment
       set: (val)->
         if not textElement? then throw new Error "You have #{scope.id}.align = '#{val}', but this scope doesn't contain any text or tspan elements."
-        val = if val is "left" then "start" else if val is "center" then "middle" else "end"
         if alignment isnt val
-          SVG.attr textElement, "textAnchor", alignment = val
+          alignment = val
+          SVG.attr textElement, "textAnchor", if val is "left" then "start" else if val is "center" then "middle" else "end"
 
     Object.defineProperty scope, 'text',
       get: ()-> text

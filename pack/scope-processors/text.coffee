@@ -5,7 +5,7 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
     element = scope.element
     textElement = element.querySelector "tspan" or element.querySelector "text"
     text = textElement?.textContent
-    alignment = "start"
+    alignment = "left"
     
     Object.defineProperty scope, 'align',
       get: ()-> alignment

@@ -89,8 +89,7 @@ Take ["Tick"], (Tick)->
   Tick (t, dt)->
     skipGC = true # It's probably not safe to GC in the middle of our tick loop
     for tween in tweens when not tween.cancelled
-      # It's safe for tween.time to be 0 because of the Math.min
-      tween.pos = Math.min 1, tween.pos + dt / tween.time
+      tween.pos = if tween.time <= 0 then 1 else Math.min 1, tween.pos + dt / tween.time
       e = tween.ease tween.pos
       for k in tween.keys
         tween.value[k] = tween.from[k] + tween.delta[k] * e

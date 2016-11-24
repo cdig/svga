@@ -7,15 +7,10 @@ Take ["Config", "ParentObject"], (Config, ParentObject)->
     if ParentObject.hasAttribute attrName
       # This isn't ideal, but it is good enough for now
       val = ParentObject.getAttribute attrName
-      switch val
-        when ""
-          true
-        when "true"
-          true
-        when "false"
-          false
-        else
-          val
+      return true if val is "" or val is "true"
+      return false if val is "false"
+      return JSON.parse(val) if val.charAt(0) is "{"
+      return val
     else
       Config[name]
   

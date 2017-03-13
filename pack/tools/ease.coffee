@@ -52,3 +52,12 @@ do ()->
     
     quartic: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       Ease.power(input, 4, inputMin, inputMax, outputMin, outputMax, clip)
+
+    
+    # This is a special easing helper for moving from one value to another.
+    # It's sorta halfway between a tween and an ease, so it lives here.
+    # You pass in the current value, target value, rate of change (per second), and dT.
+    # It returns the new "current" value.
+    ramp: (current, target, rate, dT)->
+      delta = target - current
+      current + (if delta >= 0 then Math.min(rate*dT, delta) else Math.max(-rate*dT, delta))

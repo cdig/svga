@@ -15,6 +15,7 @@ Take ["Config", "ParentObject"], (Config, ParentObject)->
       Config[name]
   
   Make "Mode", Mode =
+    get: fetchAttribute
     autosize: fetchAttribute "autosize"
     background: fetchAttribute "background"
     controlPanel: fetchAttribute "controlPanel"

@@ -17,4 +17,3 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
             scope.fill = Pressure scope.pressure
     
     Object.defineProperty scope, 'pressure', accessors
-    Object.defineProperty scope, 'voltage', accessors

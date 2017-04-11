@@ -6,7 +6,7 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
     
     pressure = null
     
-    Object.defineProperty scope, 'pressure',
+    accessors = 
       get: ()-> pressure
       set: (val)->
         if pressure isnt val
@@ -15,3 +15,6 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
             scope._setPressure pressure
           else
             scope.fill = Pressure scope.pressure
+    
+    Object.defineProperty scope, 'pressure', accessors
+    Object.defineProperty scope, 'voltage', accessors

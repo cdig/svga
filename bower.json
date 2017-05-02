@@ -1,0 +1,17 @@
+{
+  "name": "svga",
+  "description": "A framework for creating interactive SVG animations",
+  "version": "4.0.0",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": [],
+  "ignore": [
+    "**/*",
+    "!dist/**/*",
+    "!pack/**/*"
+  ],
+  "dependencies": {
+    "pressure": "cdig/pressure#v4",
+    "take-and-make": "cdig/take-and-make#v4"
+  }
+}

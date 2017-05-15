@@ -8,6 +8,18 @@ Take ["Pressure", "SVG"], (Pressure, SVG)->
         delete existing[name]
     
     updateStops: (gradient, stops...)->
+      if gradient._stops?
+        dirty = false
+        for stop, i in gradient._stops
+          dirty = if stop.color? and stops[i].color?
+            stop.color isnt stops[i].color or stop.offset isnt stops[i].offset or stop.opacity isnt stops[i].opacity
+          else
+            stop isnt stops[i]
+          break if dirty
+        return unless dirty
+      
+      gradient._stops = stops
+      
       while gradient.hasChildNodes()
         gradient.removeChild gradient.lastChild
       stops = if stops[0] instanceof Array then stops[0] else stops

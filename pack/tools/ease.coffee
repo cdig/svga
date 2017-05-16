@@ -17,7 +17,7 @@ do ()->
       input = Math.max inputMin, Math.min inputMax, input if clip
       p = (input - inputMin) / (inputMax - inputMin)
       cos = Math.cos(p * Math.PI)
-      return (.5 - cos/2) * outputMax + outputMin
+      return (.5 - cos/2) * (outputMax - outputMin) + outputMin
     
     
     cubic: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->

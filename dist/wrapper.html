@@ -7,7 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=yes">
   <meta name="msapplication-tap-highlight" content="no">
   <script>
-    document.domain = "lunchboxsessions.com" if document.domain.indexOf("lunchboxsessions.com") > 0
+    if (document.domain.indexOf("lunchboxsessions.com") > 0) {
+      document.domain = "lunchboxsessions.com";
+    }
   </script>
   <style>
     html, body, svg {

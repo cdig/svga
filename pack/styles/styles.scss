@@ -1,8 +1,24 @@
+html, body, svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+[svga-fps] {
+  position: absolute;
+  padding: .2em;
+  font-family: sans-serif;
+  overflow: visible;
+}
+
 * {
   user-select: none;
   cursor: default;
-  touch-action: manipulation; // Safari
-  touch-action: none; // Chrome
+  touch-action: manipulation; /* Safari */
+  touch-action: none; /* Chrome */
 }
 
 svg {

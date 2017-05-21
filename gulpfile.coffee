@@ -113,9 +113,9 @@ gulp.task "recompile",
   gulp.series "del:dist", "coffee", "html", "scss"
 
 
-gulp.task "watch",
-  gulp.series "recompile", "watch"
+gulp.task "prod",
+  gulp.series "prod:setup", "recompile"
 
 
 gulp.task "default",
-  gulp.series "prod:setup", "recompile"
+  gulp.series "recompile", "watch"

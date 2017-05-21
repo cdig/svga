@@ -14,12 +14,6 @@ path = require "path"
 spawn = require("child_process").spawn
 
 
-# STATE ##########################################################################################
-
-
-prod = false
-
-
 # CONFIG ##########################################################################################
 
 
@@ -65,7 +59,7 @@ gulp.task "coffee", ()->
     .pipe gulp_concat "svga.coffee"
     .pipe gulp_coffee()
     .on "error", logAndKillError
-    .pipe cond prod, gulp_uglify
+    .pipe gulp_uglify()
     .pipe gulp.dest "dist"
 
 
@@ -97,11 +91,6 @@ gulp.task "del:dist", ()->
   del "dist"
 
 
-gulp.task "prod:setup", (cb)->
-  prod = true
-  cb()
-
-
 gulp.task "watch", (cb)->
   gulp.watch paths.coffee, gulp.series "coffee"
   gulp.watch paths.html, gulp.series "html"
@@ -111,10 +100,6 @@ gulp.task "watch", (cb)->
 
 gulp.task "recompile",
   gulp.series "del:dist", "coffee", "html", "scss"
-
-
-gulp.task "prod",
-  gulp.series "prod:setup", "recompile"
 
 
 gulp.task "default",

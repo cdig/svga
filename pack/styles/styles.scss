@@ -17,8 +17,8 @@ html, body, svg {
 * {
   user-select: none;
   cursor: default;
-  touch-action: manipulation; /* Safari */
-  touch-action: none; /* Chrome */
+  touch-action: manipulation; // Safari
+  touch-action: none; // Chrome
 }
 
 svg {

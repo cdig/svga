@@ -57,8 +57,6 @@ gulp.task "scss", ()->
     .pipe gulp_natural_sort()
     .pipe gulp_concat "svga.scss"
     .pipe gulp_sass
-      errLogToConsole: true
-      outputStyle: "compressed"
       precision: 2
     .on "error", logAndKillError
     .pipe gulp.dest "dist"

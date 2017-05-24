@@ -1,2 +1,4896 @@
-(function(){var t,e=[].slice,n=[].indexOf||function(t){for(var e=0,n=this.length;e<n;e++)if(e in this&&this[e]===t)return e;return-1};Take(["Registry","Scene","DOMContentLoaded"],function(t,e){var n;return n=e.crawl(document.getElementById("root")),Make("SVGReady"),setTimeout(function(){return t.closeRegistration("ScopeProcessor"),Make("ScopeReady"),t.closeRegistration("Control"),Make("ControlReady"),t.closeRegistration("Symbol"),e.build(n),n=null,Make("SceneReady"),Make("AllReady")})}),Take(["Scope","SVG","Symbol"],function(t,r,o){var i,l,u,a,c;return u=["controlPanel","ctrlPanel","navOverlay"],a=[],l={},Make("Scene",{crawl:function(t){var n;return n=c(t),a.length&&console.log.apply(console,["Please remove these mask elements from your SVG:"].concat(e.call(a))),a=null,l=null,n},build:function(t){var e,n,r,o;for(i(t,o=[]),n=[],e=o.length-1;e>=0;e+=-1)r=o[e],n.push(r());return n}}),c=function(t){var e,o,i,s,f,d,h,p,g,m;for(m={elm:t,sub:[]},o=Array.prototype.slice.call(t.childNodes),h=0,d=o.length;h<d;h++)e=o[h],p=e.id,n.call(u,p)>=0?(console.log("#"+e.id+" is obsolete. Please remove it from your FLA and re-export this SVG."),t.removeChild(e)):"clipPath"===e.tagName?t.removeChild(e):"text"===e.tagName?"function"==typeof e.removeAttribute&&e.removeAttribute("clip-path"):(null!=(g=e.id)?g.indexOf("Mask"):void 0)>-1?(a.push(e.id),t.removeChild(e)):e instanceof SVGGElement?m.sub.push(c(e)):e instanceof SVGUseElement&&(f=e.getAttribute("xlink:href"),s=null!=l[f]?l[f]:l[f]=r.defs.querySelector(f),i=s.cloneNode(!0),t.replaceChild(i,e),null!=s.parentNode&&s.parentNode.removeChild(s),i instanceof SVGGElement&&m.sub.push(c(i)));return m},i=function(e,n,r){var l,u,a,c,s,f,d,h,p,g;for(null==r&&(r=null),c={parent:r},e.elm.id.replace(/_FL/g,"").length>0&&(c.id=e.elm.id.replace(/_FL/g,"")),l=null!=(s=e.elm.id)?s.split("_")[0]:void 0,g=l.indexOf("Line")>-1||0===l.indexOf("line")?o.forSymbolName("HydraulicLine"):l.indexOf("Field")>-1||0===l.indexOf("field")?o.forSymbolName("HydraulicField"):o.forInstanceName(c.id),null==g&&(g=function(){return{}}),h=t(e.elm,g,c),null!=h.setup&&n.push(h.setup.bind(h)),f=e.sub,d=[],a=0,u=f.length;a<u;a++)p=f[a],d.push(i(p,n,h));return d}}),Take(["Mode","Registry","ScopeCheck","Symbol"],function(t,e,n,r){var o,i;return Make("Scope",o=function(r,l,u){var a,c,s,f,d,h,p,g,m,w,v;if(null==u&&(u={}),!r instanceof SVGElement)throw console.log(r),new Error("Scope() takes an element as the first argument. Got ^^^");if(null!=l&&"function"!=typeof l)throw console.log(l),new Error("Scope() takes a function as the second arg. Got ^^^");if("object"!=typeof u)throw console.log(u),new Error("Scope() takes an optional object as the third arg. Got ^^^");if(w=null!=l?l(r,u):{},g=u.parent||i(r),n(w,"_symbol","children","element","id","parent","root"),r._scope=w,w._symbol=l,w.children=[],w.element=r,w.root=null!=o.root?o.root:o.root=w,w.id=u.id,null!=g){if(w.parent=g,null==w.id&&(w.id="child"+(g.children.length||0)),null!=g[w.id]){for(v=w.id,s=1;null!=g[v+s];)s++;w.id=v+s}g[w.id]=w,g.children.push(w)}if(t.dev&&!(navigator.userAgent.indexOf("Trident")>=0||navigator.userAgent.indexOf("Edge")>=0))for(r.setAttribute("SCOPE",w.id||""),null!=(null!=l?l.symbolName:void 0)&&r.setAttribute("SYMBOL",l.symbolName),c=Array.prototype.slice.call(r.attributes),h=0,f=c.length;h<f;h++)a=c[h],"SCOPE"!==a.name&&"SYMBOL"!==a.name&&(r.removeAttributeNS(a.namespaceURI,a.name),r.setAttributeNS(a.namespaceURI,a.name,a.value));for(window.getComputedStyle(r),m=e.all("ScopeProcessor"),p=0,d=m.length;p<d;p++)(0,m[p])(w);return w}),i=function(t){for(;null!=t;){if(null!=t._scope)return t._scope;t=t.parentNode}return null}}),Take(["FlowArrows:Config","SVG","TRS"],function(t,e,n){return Make("FlowArrows:Arrow",function(r,o,i,l,u){var a,c;return c=o.vectors[u],a=n(e.create("g",r)),e.create("polyline",a,{points:"0,-16 30,0 0,16"}),e.create("line",a,{x1:-23,y1:0,x2:5,y2:0,"stroke-width":11,"stroke-linecap":"round"}),{update:function(e,r){var s;for(l+=e,i+=e;l>c.dist;)u++,u>=o.vectors.length&&(u=0,i-=o.dist),l-=c.dist,c=o.vectors[u];for(;l<0;)u--,u<0&&(u=o.vectors.length-1,i+=o.dist),c=o.vectors[u],l+=c.dist;return s=i<o.dist/2?Math.max(0,Math.min(1,i/o.dist*o.dist/t.FADE_LENGTH)):Math.max(0,Math.min(1,1-(i-(o.dist-t.FADE_LENGTH))/t.FADE_LENGTH)),n.abs(a,{x:Math.cos(c.angle)*l+c.x,y:Math.sin(c.angle)*l+c.y,scale:s*r,r:c.angle/(2*Math.PI)+(e<0?.5:0)})}}})}),function(){var t,e;Make("FlowArrows:Config",t={SCALE:.5,SPACING:600,FADE_LENGTH:50,MIN_SEGMENT_LENGTH:200,SPEED:200,MIN_EDGE_LENGTH:8,CONNECTED_DISTANCE:1,wrap:function(n){var r;for(r in t)"wrap"!==r&&e(n,r);return n}}),e=function(e,n){return Object.defineProperty(e,n,{get:function(){return t[n]},set:function(e){return t[n]=e}})}}(),Take(["Pressure","SVG"],function(t,e){return Make("FlowArrows:Containerize",function(n,r){var o,i,l,u,a,c,s,f,d,h,p;return o=!0,l=1,u=!0,a=1,c=null,s=1,h=!0,p=1,f={element:e.create("g",n),reverse:function(){return l*=-1},update:function(t,e){var n,r,u,c,f,d;if(o){for(r=a*l*t,d=p*s*e,f=[],c=0,u=i.length;c<u;c++)n=i[c],f.push(n.update(r,d));return f}}},i=r(f),d=function(){return o=u&&h&&0!==a,e.styles(f.element,{display:o?"inline":"none"})},Object.defineProperty(f,"enabled",{set:function(t){if(h!==t)return d(h=t)}}),Object.defineProperty(f,"flow",{get:function(){return a},set:function(t){if(a!==t)return d(a=t)}}),Object.defineProperty(f,"pressure",{get:function(){return c},set:function(n){var r;if(c!==n)return c=n,r=t(n),e.attrs(f.element,{fill:r,stroke:r})}}),Object.defineProperty(f,"scale",{get:function(){return s},set:function(t){if(s!==t)return s=t}}),Object.defineProperty(f,"visible",{get:function(){return h},set:function(t){if(h!==t)return d(h=t)}}),Object.defineProperty(f,"volume",{get:function(){return p},set:function(t){if(p!==t)return p=t}}),f})}),Take(["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick"],function(t,n,r,o,i){var l,u,a,c;return a=[],c=!0,l=!0,u=function(){var t,e,n,r;for(n=[],e=0,t=a.length;e<t;e++)r=a[e],n.push(r.enabled=c&&l);return n},i(function(e,n){var r,o,i,u,s,f;if(c&&l){for(u=[],i=0,o=a.length;i<o;i++)f=a[i],f.parentScope.alpha>0?(r=n*t.SPEED,s=t.SCALE,u.push(f.update(r,s))):u.push(void 0);return u}}),o("Schematic:Hide",function(){return setTimeout(function(){return u(l=!0)})}),o("Schematic:Show",function(){return u(l=!1)}),o("FlowArrows:Show",function(){return u(c=!0)}),o("FlowArrows:Hide",function(){return u(c=!1)}),Make("FlowArrows",t.wrap(function(){var t,o,i,l,u;if(i=arguments[0],o=2<=arguments.length?e.call(arguments,1):[],null==i)throw console.log(o),new Error("FlowArrows was called with a null target. ^^^ was the baked line data.");if(t=i.element,t.querySelector("[id^=markerBox]"))for(;t.hasChildNodes();)t.removeChild(t.firstChild);return u=n(o),l=r(t,u),l.parentScope=i,a.push(l),l}))}),Take("FlowArrows:Config",function(t){var e,n,r,o,i,l,u,a,c,s,f,d;return Make("FlowArrows:Process",function(t){return d(t).process(l).process(c).process(r).process(n).process(f).process(s).process(o).result}),function(t){return console.dir(t),t},l=function(t){var e,n,r,o,i,l,a;for(a=[],l=null,e=n=0,i=t.length;n<i;e=n+=2)r=t[e],o=t[e+1],null!=l&&u(r,l[l.length-1])?l.push(o):null!=l&&u(o,l[l.length-1])?l.push(r):null!=l&&u(l[0],o)?l.unshift(r):null!=l&&u(l[0],r)?l.unshift(o):a.push(l=[r,o]);return a},c=function(t){var e,n,r,o,i,l;for(i=null,l=null,r=null,o=null,e=t.length;e--;)for(n=t.length;--n>e;)i=t[e],l=t[n],r=i[0],o=l[0],u(r,o)?(l.reverse(),l.pop(),t[e]=l.concat(i),t.splice(n,1)):(r=i[i.length-1],o=l[l.length-1],u(r,o)?(l.reverse(),l.unshift(),t[e]=i.concat(l),t.splice(n,1)):(r=i[i.length-1],o=l[0],u(r,o)?(t[e]=i.concat(l),t.splice(n,1)):(r=i[0],o=l[l.length-1],u(r,o)&&(t[e]=l.concat(i),t.splice(n,1)))));return t},r=function(e){var n,r,o,l,u;for(n=e.length,u=[],o=l=null;n--;)for(u=e[n],r=u.length-1;r-- >0;)o=u[r],l=u[r+1],i(o,l)<t.MIN_EDGE_LENGTH&&(o.cull=!0);for(n=e.length;n--;)for(u=e[n],r=u.length-1;r-- >0;)u[r].cull&&u.splice(r,1);return e},n=function(t){var e,n,r,o,i,l;for(l=[],r=null,o=null,i=null,e=t.length;e--;)for(l=t[e],n=l.length-2;n-- >0&&l.length>2;)r=l[n],o=l[n+1],i=l[n+2],a(r,o,i)&&l.splice(n+1,1);return t},f=function(t){var n,r,o,l,u,a,c,s;for(a=[],o=0,r=t.length;o<r;o++)c=t[o],a.push(function(){var t,r,o;for(o=[],n=r=0,t=c.length;r<t;n=++r)l=c[n],(u=c[n+1])&&o.push(s={x:l.x,y:l.y,dist:i(l,u),angle:e(l,u)});return o}());return a},s=function(t){var e,n,r,o,i,l,u,a;for(l=[],o=0,n=t.length;o<n;o++){for(u=t[o],e=0,i=0,r=u.length;i<r;i++)a=u[i],e+=a.dist;l.push({vectors:u,dist:e})}return l},o=function(e){return e.filter(function(e){return e.dist>=t.MIN_SEGMENT_LENGTH})},d=function(t){return{process:function(e){return d(e(t))},result:t}},u=function(e,n){var r,o;return r=Math.abs(e.x-n.x),o=Math.abs(e.y-n.y),r<t.CONNECTED_DISTANCE&&o<t.CONNECTED_DISTANCE},a=function(t,e,n){var r,o,i;return r=(n.y-t.y)*(e.x-t.x)-(n.x-t.x)*(e.y-t.y),!(Math.abs(r)>.01)&&(!((o=(n.x-t.x)*(e.x-t.x)+(n.y-t.y)*(e.y-t.y))<0)&&(i=(e.x-t.x)*(e.x-t.x)+(e.y-t.y)*(e.y-t.y),!(o>i)))},i=function(t,e){var n,r;return n=e.x-t.x,r=e.y-t.y,Math.sqrt(n*n+r*r)},e=function(t,e){return Math.atan2(e.y-t.y,e.x-t.x)}}),Take(["FlowArrows:Arrow","FlowArrows:Config","FlowArrows:Containerize","Mode"],function(t,e,n,r){return Make("FlowArrows:Segment",function(o,i,l){return n(o,function(n){var o,u,a,c,s,f,d,h,p,g;for(r.dev&&n.element.addEventListener("mouseover",function(){return console.log(l)}),u=Math.max(1,Math.round(i.dist/e.SPACING)),d=i.dist/u,f=0,g=0,p=0,h=i.vectors[p],s=[],a=0,c=u;0<=c?a<c:a>c;0<=c?++a:--a){for(;g>h.dist;)g-=h.dist,h=i.vectors[++p];o=t(n.element,i,f,g,p),g+=d,f+=d,s.push(o)}return s})})}),Take(["FlowArrows:Config","FlowArrows:Containerize","FlowArrows:Segment"],function(t,e,n){return Make("FlowArrows:Set",function(r,o){return e(r,function(e){var r,i,l,u,a,c,s;for(c=[],l=a=0,u=o.length;a<u;l=++a){if(s=o[l],s.dist<2*t.FADE_LENGTH)throw new Error("You have a FlowArrows segment that is only "+Math.round(s.dist)+" units long, which is clashing with your fade length of "+t.FADE_LENGTH+" units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.");i="segment"+l,r=n(e.element,s,i),c.push(e[i]=r)}return c})})}),Take(["Action","Mode","ParentObject","Reaction","SVG"],function(t,e,n,r,o){return"string"==typeof e.background?o.style(n,"background-color",e.background):!0===e.background?(r("Background:Set",function(t){return o.style(n,"background-color","hsl(227, 5%, "+100*t+"%)")}),Take("SceneReady",function(){return t("Background:Set",.7)})):o.style(n,"background-color","transparent")}),Take(["GUI","Mode","Resize","SVG","TRS","SVGReady"],function(t,e,n,r,o){var i,l,u;if(e.nav)return i=o(r.create("g",t.elm)),r.create("rect",i,{x:-200,y:-30,width:400,height:60,rx:30,fill:"#222","fill-opacity":.9}),r.create("text",i,{y:22,textContent:"Click To Focus","font-size":20,fill:"#FFF","text-anchor":"middle"}),u=function(){return r.attrs(i,{style:"display: block"})},l=function(){return r.attrs(i,{style:"display: none"})},n(function(){return o.abs(i,{x:window.innerWidth/2})}),window.addEventListener("focus",l),window.addEventListener("touchstart",l),window.addEventListener("blur",u),window.addEventListener("mousedown",function(){if(document.activeElement===r.root)return window.focus()}),window.focus(),l()}),Take(["ControlPanelLayout","Gradient","GUI","Mode","Resize","SVG","Scope"],function(t,e,n,r,o,i,l){var u,a,c,s,f,d,h,p,g,m,w,v;return u=n.ControlPanel,s=null!=r.controlPanel?r.controlPanel:r.controlPanel={},w=!1,p=u.borderRadius+2*u.pad,v=!0,g=0,h=0,e.linear("CPGradient",!1,"#5175bd","#35488d"),f=i.create("g",n.elm,{xControls:"",fontSize:16,textAnchor:"middle"}),c=i.create("rect",f,{rx:p,fill:"url(#CPGradient)"}),d=l(i.create("g",f)),d.x=d.y=2*u.pad,Take("SceneReady",function(){if(!w)return n.elm.removeChild(f)}),a=l(f,function(){return{createElement:function(t){return null==t&&(t=null),w=!0,i.create("g",t||d.element)},claimSpace:function(t){return m(),v?t.w-=g:t.h-=h}}}),m=function(){var e,n,r,o,l,f,d,m;return l={w:window.innerWidth,h:window.innerHeight},v=null!=s.vertical?s.vertical:l.w>=1.3*l.h,o=v?t.vertical(l):t.horizontal(l),g=o.w+4*u.pad,h=o.h+4*u.pad,f=1===Math.abs(s.x)?p:null!=s.x?0:v?p:0,e=1===Math.abs(s.y)?p:null!=s.y?0:v?0:p,n=-1===s.x?-p:0,r=-1===s.y?-p:0,i.attrs(c,{x:n,y:r,width:g+f,height:h+e}),null!=s.x||null!=s.y?(d=(s.x||0)/2+.5,m=(s.y||0)/2+.5,a.x=d*l.w-d*g|0,a.y=m*l.h-m*h|0):v?(a.x=l.w-g|0,a.y=l.h/2-h/2|0):(a.x=l.w/2-g/2|0,a.y=l.h-h|0)},Make("ControlPanel",a)}),Take(["GUI"],function(t){var e,n,r;return e=t.ControlPanel,r=[],Make("ControlPanelLayout",{addScope:function(t){return r.push(t)},vertical:function(t){var e,n,o,i,l,u,a,c,s,f,d,h,p,g,m,w,v,y,S;if(!(t.h>0&&r.length>0))return{w:0,h:0};for(w=[],n=0,s=0,u=r.length;s<u;s++)g=r[s],m=g.getPreferredSize(null,t,!0),w.push(m),n=Math.max(n,m.w);for(i=0,l=f=0,a=r.length;f<a;l=++f)g=r[l],h=w[l],d=g.resize({w:n,h:h.h},t,!0),w[l]=d,i+=d.h;for(o=Math.ceil(i/t.h),e=Math.ceil(i/o),y=0,S=0,v=0,0,l=p=0,c=r.length;p<c;l=++p)g=r[l],g.x=y,g.y=S,m=w[l],(S+=m.h)>e&&(y+=n,S>t.h&&S>m.h?(v=Math.max(v,S-m.h),g.x=y,g.y=0,S=m.h):(v=Math.max(v,S),S=0));return v=Math.max(v,S),{w:g.x+n,h:v}},horizontal:function(t){var o,i,l,u,a,c,s,f,d,h,p,g,m,w,v,y,S,k,x,b,M,T,E,G;if(!(t.w>0&&r.length>0))return{w:0,h:0};for(b=[],y=0,p=0,c=r.length;p<c;p++)S=r[p],x=S.getPreferredSize(null,t,!1),b.push(x),y=Math.max(y,x.h);for(;!n(y,b,t);)y+=e.unit;for(u=g=0,s=r.length;g<s;u=++g)S=r[u],w=b[u],m=S.resize({w:w.w,h:y},t,!1),b[u]=m,y=Math.max(y,x.h);for(;!n(y,b,t);)y+=e.unit;for(l=[0],G=0,o=0,v=0,f=b.length;v<f;v++)x=b[v],G+=x.h,G>y&&(o++,l[o]=0,G=x.h),l[o]=Math.max(x.w,l[o]);for(M=0,T=0,d=l.length;T<d;T++)i=l[T],M+=i;for(E=0,G=0,o=0,u=a=0,h=r.length;a<h;u=++a)S=r[u],S.x=E,S.y=G,k=b[u].h,G+=k,G>y&&(S.x=E+=l[o],S.y=0,G=k,o++),S.resize({w:l[o],h:k},t,!1);return{w:M,h:y}}}),n=function(t,e,n){var r,o,i,l,u;for(l=0,u=0,o=0,r=e.length;o<r;o++)i=e[o],(u+=i.h)>t&&(l+=i.w,u=i.h);return l+i.w<n.w||t>n.h/2}}),Take(["GUI","Input","Registry","SVG","Tween"],function(t,e,n,r,o){var i;return i=t.ControlPanel,n.set("Control","button",function(t,n){var l,u,a,c,s,f,d,h,p,g,m,w,v,y;return s=[],u="hsl(220, 10%, 92%)",d="hsl(227, 16%, 24%)",r.attrs(t,{ui:!0}),l=r.create("rect",t,{x:i.pad,y:i.pad,rx:i.borderRadius,strokeWidth:2,fill:u}),f=r.create("text",t,{textContent:n.name,fill:d}),a=c={r:34,g:46,b:89},h={r:133,g:163,b:224},p={r:255,g:196,b:46},g=function(t){return a=t,r.attrs(l,{stroke:"rgb("+(0|a.r)+","+(0|a.g)+","+(0|a.b)+")"})},g(c),y=function(t,e){return o(a,c,.2,{tick:g})},v=function(t,e){if(!e.touch)return o(a,h,0,{tick:g})},w=function(t,e){return o(a,p,0,{tick:g})},m=function(t,e){return o(a,h,.2,{tick:g})},e(t,{moveIn:v,dragIn:function(t,e){if(e.clicking)return w()},down:w,up:v,moveOut:y,dragOut:y,click:function(){var t,e,n,r;for(m(),r=[],n=0,e=s.length;n<e;n++)t=s[n],r.push(t());return r}}),{attach:function(t){if(null!=t.click)return s.push(t.click)},getPreferredSize:function(){var t;return t=Math.max(i.unit,f.getComputedTextLength()+8*i.pad),{w:t,h:i.unit}},resize:function(t){var e;return e=Math.min(i.unit,t.h),r.attrs(l,{width:t.w-2*i.pad,height:e-2*i.pad}),r.attrs(f,{x:t.w/2,y:e/2+6}),{w:t.w,h:e}},_highlight:function(t){return t?(r.attrs(l,{fill:"url(#LightHighlightGradient)"}),r.attrs(f,{fill:"black"})):(r.attrs(l,{fill:u}),r.attrs(f,{fill:d}))}}})}),Take(["GUI","Registry","SVG"],function(t,e,n){var r;return r=t.ControlPanel,e.set("Control","divider",function(t,e){var o,i;return o=n.create("rect",t,{x:r.pad,y:r.pad,height:2*r.pad,rx:2,fill:"hsl(227, 45%, 24%)"}),i=4*r.pad,{getPreferredSize:function(t,e,n){return{w:0,h:0}},resize:function(t,e,l){var u;return(this.alpha=l)?(u=t.w-2*r.pad,n.attrs(o,{width:u}),{w:u,h:i}):{w:0,h:0}}}})}),Take(["GUI","Input","Registry","SVG","Tween"],function(t,e,n,r,o){var i,l,u;return i=t.ControlPanel,u=1.8*i.unit,l=1.8*i.unit,n.set("Control","pushButton",function(t,n){var a,c,s,f,d,h,p,g,m,w,v,y,S,k;return m=[],g=[],c="hsl(220, 10%, 92%)",h="hsl(227, 16%, 24%)",r.attrs(t,{ui:!0}),a=r.create("rect",t,{strokeWidth:2,fill:c}),d=r.create("text",t,{textContent:n.name,fill:h}),s=f={r:34,g:46,b:89},p={r:133,g:163,b:224},w={r:255,g:196,b:46},v=function(t){return s=t,r.attrs(a,{stroke:"rgb("+(0|s.r)+","+(0|s.g)+","+(0|s.b)+")"})},v(f),k=function(t,e){return o(s,f,.2,{tick:v})},S=function(t,e){return o(s,p,0,{tick:v})},y=function(t,e){return o(s,w,0,{tick:v})},e(t,{moveIn:S,down:function(){var t,e,n,r;for(y(),r=[],e=0,t=m.length;e<t;e++)n=m[e],r.push(n());return r},up:function(){var t,e,n,r;for(S(),r=[],e=0,t=g.length;e<t;e++)n=g[e],r.push(n());return r},miss:function(){var t,e,n,r;for(k(),r=[],e=0,t=g.length;e<t;e++)n=g[e],r.push(n());return r},moveOut:k}),{attach:function(t){if(null!=t.on&&m.push(t.on),null!=t.off)return g.push(t.off)},getPreferredSize:function(){var t;return u=Math.max(u,d.getComputedTextLength()+8*i.pad),t=Math.max(u,l),{w:t,h:t}},resize:function(t){var e,n;return n=Math.max(u,l),e={x:t.w-n,y:t.h-n},r.attrs(a,{x:i.pad+e.x/2,y:i.pad+e.y/2,width:n-2*i.pad,height:n-2*i.pad,rx:n/2-i.pad}),r.attrs(d,{x:t.w/2,y:t.h/2+6}),{w:n,h:n}},_highlight:function(t){return t?(r.attrs(a,{fill:"url(#LightHighlightGradient)"}),r.attrs(d,{fill:"black"})):(r.attrs(a,{fill:c}),r.attrs(d,{fill:h}))}}})}),Take(["Registry","GUI","SelectorButton","Scope","SVG"],function(t,e,n,r,o){var i,l;return i=e.ControlPanel,l=0,t.set("Control","selector",function(t,e){var u,a,c,s,f,d,h,p,g,m,w,v;return p="Selector"+l++,m=0,w={w:2*i.pad,h:i.unit},s=[],u=null,c=[],d=o.create("clipPath",o.defs,{id:p}),h=o.create("rect",d,{rx:i.borderRadius,fill:"#FFF"}),null!=e.name&&(g=o.create("text",t,{textContent:e.name,fontSize:16,fill:"hsl(220, 10%, 92%)"}),w.h+=m=22),a=o.create("rect",t,{rx:i.borderRadius+2,fill:"rgb(34, 46, 89)"}),f=r(o.create("g",t,{clipPath:"url(#"+p+")"})),f.x=i.pad,f.y=m,v=function(t){return"function"==typeof u&&u(),u=t},{button:function(t){var e,i,l;return t.setActive=v,i=o.create("g",f.element),l=r(i,n,t),s.push(l),e=l.getPreferredSize(),c.push(e),w.w+=e.w,l},getPreferredSize:function(){var t,e,n,r;for(r=0,n=0,e=s.length;n<e;n++)t=s[n],t.x=r,r+=t.resize(1,r);return{w:r,h:i.unit+m}},resize:function(t){var e,n,r,l,u,c,f,d;for(f=t.w,n=t.h,r=f-2*i.pad,n-2*i.pad,c=f/w.w,d=0,u=0,l=s.length;u<l;u++)e=s[u],e.x=d,d+=e.resize(c,d);return o.attrs(h,{x:1,y:i.pad+1,width:r-2,height:i.unit-2*i.pad-2}),o.attrs(a,{x:i.pad-1,y:i.pad+m-1,width:r+2,height:i.unit-2*i.pad+2}),null!=g&&o.attrs(g,{x:f/2,y:18}),{w:f,h:n}}}})}),Take(["GUI","Input","SVG","Tween"],function(t,e,n,r){var o;return o=t.ControlPanel,null,Make("SelectorButton",function(t,i){var l,u,a,c,s,f,d,h,p,g,m,w,v,y,S,k,x,b,M,T;return v={w:null,h:o.unit},f=[],h=!1,d=!1,g="hsl(227, 16%, 24%)",n.attrs(t,{ui:!0}),u=n.create("rect",t),p=n.create("text",t,{textContent:i.name,fill:g}),s=T={r:233,g:234,b:237},m={r:142,g:196,b:96},w={r:255,g:196,b:46},a={r:183,g:213,b:255},y=function(t){return s=t,d?h?n.attrs(u,{fill:"url(#MidHighlightGradient)"}):n.attrs(u,{fill:"url(#LightHighlightGradient)"}):n.attrs(u,{fill:"rgb("+(0|s.r)+","+(0|s.g)+","+(0|s.b)+")"})},y(T),b=function(t,e){return r(s,T,.2,{tick:y})},x=function(t,e){if(!e.touch&&!h)return r(s,a,0,{tick:y})},k=function(t,e){return r(s,w,0,{tick:y})},S=function(t,e){return r(s,m,.2,{tick:y})},M=function(){return b(),h=!1},c=function(t,e){var n,r,o,l;for(i.setActive(M),h=!0,S(),l=[],o=0,r=f.length;o<r;o++)n=f[o],l.push(n());return l},e(t,{moveIn:function(t,e){if(!h)return x(t,e)},dragIn:function(t,e){if(e.clicking&&!h)return k(t,e)},down:function(t,e){if(!h)return k(t,e)},up:function(t,e){if(!h)return x(t,e)},moveOut:function(t,e){if(!h)return b(t,e)},dragOut:function(t,e){if(!h)return b(t,e)},click:function(t,e){if(!h)return c(t,e)}}),l=function(t){return f.push(t)},null!=i.click&&l(i.click),Take("SceneReady",function(){if(i.active)return c()}),{click:l,getPreferredSize:function(){return v.w=Math.max(o.unit,p.getComputedTextLength()+8*o.pad),v},resize:function(t){var e,r;return r=Math.ceil(v.w*t),e=v.h-2*o.pad,n.attrs(u,{x:1,y:o.pad+1,width:r-2,height:e-2}),n.attrs(p,{x:r/2,y:e/2+6+o.pad}),r},_highlight:function(t){return(d=t)?n.attrs(p,{fill:"black"}):n.attrs(p,{fill:g}),y(s)}}})}),Take(["Registry","GUI","Input","SVG","TRS","Tween"],function(t,e,n,r,o,i){var l;return l=e.ControlPanel,t.set("Control","slider",function(t,e){var u,a,c,s,f,d,h,p,g,m,w,v,y,S,k,x,b,M,T,E,G,P,C;return s=[],C=0,g=0,m=0,G="hsl(227, 45%, 24%)",y="hsl(220, 10%, 92%)",d="hsl(227, 16%, 24%)",r.attrs(t,{ui:!0}),E=o(r.create("rect",t,{x:l.pad,y:l.pad,strokeWidth:2,fill:G,stroke:"hsl(227, 45%, 24%)"})),w=o(r.create("g",t)),v=r.create("rect",w,{x:l.pad,y:l.pad,strokeWidth:2,fill:y}),f=r.create("text",w,{textContent:e.name,fill:d}),u=a={r:34,g:46,b:89},h={r:133,g:163,b:224},p={r:255,g:196,b:46},S=function(t){return u=t,r.attrs(v,{stroke:"rgb("+(0|u.r)+","+(0|u.g)+","+(0|u.b)+")"})},S(a),P=function(t){return null!=t&&(C=Math.max(0,Math.min(1,t))),o.abs(w,{x:C*g})},T=function(t,e){return i(u,a,.2,{tick:S})},b=function(t,e){if(!e.touch)return i(u,h,0,{tick:S})},x=function(t,e){return i(u,p,0,{tick:S})},k=function(t,e){return i(u,h,.2,{tick:S})},M=function(t,e){return i(u,a,.2,{tick:S})},c=function(t,e){var n,r,o,i;if(e.clicking){for(P(t.clientX/g-m),i=[],o=0,r=s.length;o<r;o++)n=s[o],i.push(n(C));return i}},n(t,{moveIn:b,dragIn:function(t,e){if(e.clicking)return x()},down:function(t){return x(),m=t.clientX/g-C},moveOut:T,miss:M,drag:c,dragOther:c,click:k}),{attach:function(t){if(null!=t.change&&s.push(t.change),null!=t.value)return P(t.value)},getPreferredSize:function(){return{w:l.width,h:l.unit}},resize:function(t){var e,n;return n=Math.max(l.unit,f.getComputedTextLength()+8*l.pad),e=Math.min(l.unit,t.h),g=t.w-2*l.pad-n,P(),r.attrs(E,{width:t.w-2*l.pad,height:e-2*l.pad,rx:(e-2*l.pad)/2}),r.attrs(v,{width:n,height:e-2*l.pad,rx:(e-2*l.pad)/2}),r.attrs(f,{x:l.pad+n/2,y:e/2+6}),{w:t.w,h:e}},_highlight:function(t){return t?(r.attrs(E,{fill:"url(#DarkHighlightGradient)"}),r.attrs(v,{fill:"url(#LightHighlightGradient)"}),r.attrs(f,{fill:"black"})):(r.attrs(E,{fill:G}),r.attrs(v,{fill:y}),r.attrs(f,{fill:d}))}}})}),Take(["Mode"],function(t){if(t.dev||window.addEventListener("contextmenu",function(t){return t.preventDefault()}),window.addEventListener("dragstart",function(t){return t.preventDefault()}),t.nav)return window.addEventListener("scroll",function(t){return t.preventDefault()}),window.addEventListener("touchmove",function(t){return t.preventDefault()})}),Take(["GUI","Mode","ParentObject","Resize","SVG","Tick","SVGReady"],function(t,e,n,r,o,i){var l,u,a,c,s,f,d,h,p;return s=.2,a=s,u=1,l=[],p=0,c=1,h=null,Make("FPS",function(){return c}),e.dev&&(h=document.createElement("div"),h.setAttribute("svga-fps","true"),n===document.body?document.body.insertBefore(h,document.body.firstChild):(f=n.previousSibling,(null!=f&&"function"==typeof f.hasAttribute?f.hasAttribute("svga-fps"):void 0)?h=f:null!=(d=n.parentNode)&&d.insertBefore(h,n))),i(function(t,n){var r;for(l.push(n),p+=n;p>u&&l.length>0;)p-=l.shift();if(c=l.length/p,c=Math.min(60,c),isNaN(c)&&(c=2),a+=n,e.dev&&a>=s)return a-=s,r=c<30?c.toFixed(1):Math.ceil(c),h.textContent=r,h.style.color=c<=5?"#C00":c<=10?"#E60":"rgba(0,0,0,0.5)"})}),Take(["SVG","SVGReady"],function(t){return Make("GUI",{elm:t.create("g",t.root,{xGui:""}),ControlPanel:{width:200,unit:42,pad:3,borderRadius:4,light:"hsl(220, 45%, 50%)",dark:"hsl(227, 45%, 35%)"}})}),Take(["ControlPanel","Mode","Nav","RAF","Resize","SceneReady"],function(t,e,n,r,o){return o(function(){var r;if(r={x:0,y:0,w:window.innerWidth,h:window.innerHeight},t.claimSpace(r),e.nav)return n.assignSpace(r)})}),Take(["Reaction","SceneReady"],function(t){var e;return e=document.querySelector("#root"),t("Root:Show",function(){return e._scope.show(1)}),t("Root:Hide",function(){return e._scope.hide(1)})}),Take(["Mode","RAF","Tween","AllReady"],function(t,e,n){return t.dev?e(function(){return document.querySelector("svg").style.opacity=1}):n(0,1,.5,function(t){return document.querySelector("svg").style.opacity=t})}),Take(["Mode","Nav"],function(t,e){if(t.nav)return window.addEventListener("gesturestart",function(t){if(e.eventInside(t))return t.preventDefault(),e.startScale()}),window.addEventListener("gesturechange",function(t){if(e.eventInside(t))return t.preventDefault(),e.scale(t.scale)})}),Take(["KeyMe","Mode","Nav","Tick"],function(t,e,n,r){var o,i,l,u,a;if(e.nav)return i=1.25,u={xy:10,z:.05},o={xy:.7,z:.004},a={a:0,d:0,z:0},r(function(){var e,r,c,s,f,d,h,p,g;if(f=t.pressing.left,p=t.pressing.right,g=t.pressing.up,e=t.pressing.down,h=t.pressing.equals,d=t.pressing.minus,r=l(f,p),c=l(g,e),s=l(h,d),0===s&&(a.z/=i),a.z=Math.max(-u.z,Math.min(u.z,a.z+o.z*s)),0===r&&0===c&&(a.d/=i),(c||r)&&(a.a=Math.atan2(c,r)),a.d=Math.min(u.xy,a.d+o.xy*(Math.abs(r)+Math.abs(c))),Math.abs(a.d)>.01||Math.abs(a.z)>.01)return n.by({x:Math.cos(a.a)*a.d,y:Math.sin(a.a)*a.d,z:a.z})}),l=function(t,e){return t&&!e?1:e&&!t?-1:0}}),Take(["Input","Mode","Nav"],function(t,e,n){var r,o,i,l,u;if(e.nav)return l=!1,o=function(t){if(t.preventDefault(),n.eventInside(t))return l=!0},i=function(t,e){if(l&&e.down)return n.by({x:e.deltaX,y:e.deltaY})},u=function(){return l=!1},r={down:o,downOther:o,drag:i,dragOther:i,up:u,upOther:u},t(document,r,!0,!1),document.addEventListener("dblclick",function(t){if(0===t.button)return n.eventInside(t)?(t.preventDefault(),n.to({x:0,y:0,z:0})):void 0}),document.addEventListener("wheel",function(t){if(0===t.button)return n.eventInside(t)?(t.preventDefault(),t.deltaMode===WheelEvent.DOM_DELTA_PIXEL?n.by({z:-t.deltaY/500}):n.by({z:-t.deltaY/20})):void 0})}),Take(["Mode","RAF","Resize","SVG","Tween","SceneReady"],function(t,e,n,r,o){var i,l,u,a,c,s,f,d,h,p,g,m,w,v,y,S;if(p=document.getElementById("root"),t.nav){if(r.attrs(r.root,{width:null,height:null}),f={x:0,y:0,z:0},i={x:0,y:0,z:1},v={},y={},S={min:-.5,max:3},g=0,m=null,u=p.getBoundingClientRect(),!(u.width>0&&u.height>0))return;return c=p._scope.x-u.left-u.width/2,s=p._scope.y-u.top-u.height/2,v.max=u.width/2,y.max=u.height/2,v.min=-v.max,y.min=-y.max,h=function(){return e(d,!0)},d=function(){var t;return t=i.z*Math.pow(2,f.z),r.attr(p,"transform","translate("+i.x+","+i.y+") scale("+t+") translate("+(f.x+c)+","+(f.y+s)+")")},a=function(t,e){return Math.min(t.max,Math.max(t.min,e))},Make("Nav",{to:function(t){var e,n,r,i;return null!=m&&o.cancel(m),n=.03*Math.sqrt(Math.abs(t.x-f.x))||0,r=.03*Math.sqrt(Math.abs(t.y-f.y))||0,i=.7*Math.sqrt(Math.abs(t.z-f.z))||0,e=Math.sqrt(n*n+r*r+i*i),m=o(f,t,e,{mutate:!0,tick:d})},by:function(t){var e;return null!=m&&o.cancel(m),null!=t.z&&(f.z=a(S,f.z+t.z)),e=i.z*Math.pow(2,f.z),null!=t.x&&(f.x=a(v,f.x+t.x/e)),null!=t.y&&(f.y=a(y,f.y+t.y/e)),h()},at:function(t){var e;return null!=m&&o.cancel(m),null!=t.z&&(f.z=a(S,t.z)),e=i.z*Math.pow(2,f.z),null!=t.x&&(f.x=a(v,t.x/e)),null!=t.y&&(f.y=a(y,t.y/e)),h()},startScale:function(){return g=f.z},scale:function(t){return null!=m&&o.cancel(m),f.z=a(S,Math.log2(Math.pow(2,g)*t)),h()},eventInside:function(t){var e;return(null!=(e=t.touches)?e.length:void 0)>0&&(t=t.touches[0]),t.target===document.body||t.target===r.root||p.contains(t.target)},assignSpace:function(t){var e,n,r;return r=t.w/u.width,n=t.h/u.height,e={x:t.x+t.w/2,y:t.y+t.h/2,z:.9*Math.min(r,n)},0===i.x?(i=e,d()):o(i,e,.5,{mutate:!0,tick:d})}}),function(t,e){return t.x-e.x,t.y-e.y,200*t.z-e.z},function(t,e,n){return null==n&&(n=0),Math.sqrt(t*t+e*e+n*n)}}if(Make("Nav",!1),w=r.attr(r.root,"width"),l=r.attr(r.root,"height"),null==w||null==l)throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");return n(function(){var t,e,n,o,i;return n=window.innerWidth/w,t=window.innerHeight/l,e=Math.min(n,t),o=(window.innerWidth-w*e)/(2*e),i=(window.innerHeight-l*e)/(2*e),r.attr(p,"transform","scale("+e+") translate("+o+", "+i+")")})}),Take(["Mode","Nav"],function(t,e){var n;if(t.nav&&navigator.msMaxTouchPoints&&navigator.msMaxTouchPoints>1)return n=new MSGesture,n.target=document.querySelector("svg"),n.target.addEventListener("pointerdown",function(t){if(e.eventInside(t))return n.addPointer(t.pointerId)}),n.target.addEventListener("MSGestureChange",function(t){if(e.eventInside(t))return t.preventDefault(),e.by({z:Math.log2(t.scale)})})}),Take(["Mode","Nav"],function(t,e){var n,r,o;if(t.nav)return o=null,window.addEventListener("touchstart",function(t){if(e.eventInside(t))return t.preventDefault(),n(t)}),window.addEventListener("touchmove",function(t){var i,l;if(e.eventInside(t))return t.preventDefault(),t.touches.length!==o.length||(t.touches.length>1?(i=r(o),l=r(t.touches),e.by({z:(l-i)/200})):e.by({x:t.touches[0].clientX-o[0].clientX,y:t.touches[0].clientY-o[0].clientY})),n(t)}),n=function(t){var e;return o=function(){var n,r,o,i;for(o=t.touches,i=[],r=0,n=o.length;r<n;r++)e=o[r],i.push({clientX:e.clientX,clientY:e.clientY});return i}()},r=function(t){var e,n,r,o;return e=t[0],n=t[1],r=e.clientX-n.clientX,o=e.clientY-n.clientY,Math.sqrt(r*r+o*o)}}),null==(t=SVGElement.prototype).contains&&(t.contains=function(t){for(;null!=t;){if(this===t)return!0;t=t.parentNode}return!1}),null==Math.log2&&(Math.log2=function(t){return Math.log(t)/Math.LN2}),Take(["Action","ControlPanel","Reaction"],function(t,e,n){var r,o,i;return r=!0,o=!1,n("ControlPanel:Hide",e.hide),n("ControlPanel:Hide",e.show),i=function(){return t(r&&!o?"ControlPanel:Show":"ControlPanel:Hide")},n("Schematic:Hide",function(){return i(o=!1)}),n("Schematic:Show",function(){return i(o=!0)}),n("Root:Hide",function(){return i(r=!1)}),n("Root:Show",function(){return i(r=!0)})}),Take(["Action","Reaction"],function(t,e){var n;return n=!1,e("FlowArrows:Hide",function(){return n=!1}),e("FlowArrows:Show",function(){return n=!0}),e("FlowArrows:Toggle",function(){return t(n?"FlowArrows:Hide":"FlowArrows:Show")}),Take("AllReady",function(){return t("FlowArrows:Show")})}),Take(["Action","Reaction"],function(t,e){var n;return n=!1,e("Help:Hide",function(){return n=!1}),e("Help:Show",function(){return n=!0}),e("Help:Toggle",function(){return t(n?"Help:Hide":"Help:Show")}),e("Settings:Show",function(){return t("Help:Hide")})}),Take(["Action","Reaction"],function(t,e){var n;return n=!1,e("Labels:Hide",function(){return n=!1}),e("Labels:Show",function(){return n=!0}),e("Labels:Toggle",function(){return t(n?"Labels:Hide":"Labels:Show")})}),Take(["Action","Reaction"],function(t,e){var n,r,o;return n=!1,r=!1,o=function(){return t(n||r?"Root:Hide":"Root:Show")},e("Help:Show",function(){return o(n=!0)}),e("Help:Hide",function(){return o(n=!1)}),e("Settings:Show",function(){return o(r=!0)}),e("Settings:Hide",function(){return o(r=!1)})}),Take(["Action","Reaction"],function(t,e){var n;return n=!0,e("Schematic:Hide",function(){return n=!1}),e("Schematic:Show",function(){return n=!0}),e("Schematic:Toggle",function(){return t(n?"Schematic:Hide":"Schematic:Show")}),Take("AllReady",function(){return t("Schematic:Hide")})}),Take(["Action","Reaction"],function(t,e){var n;return n=!1,e("Settings:Hide",function(){return n=!1}),e("Settings:Show",function(){return n=!0}),e("Settings:Toggle",function(){return t(n?"Settings:Hide":"Settings:Show")}),e("Help:Show",function(){return t("Settings:Hide")})}),Take(["Registry","ScopeCheck","SVG"],function(t,e,n){return t.add("ScopeProcessor",function(t){var r,o,i;return e(t,"alpha"),o=t.element,i=n.create("g"),r=1,Object.defineProperty(t,"alpha",{get:function(){return r},set:function(t){if(!0===t&&(t=1),t||(t=0),r!==t)if(n.style(o,"opacity",r=t),r>0){if(null!=i.parentNode)return i.parentNode.replaceChild(o,i)}else if(null!=o.parentNode)return o.parentNode.replaceChild(i,o)}})})}),Take(["Reaction","Registry","Tick"],function(t,e,n){return e.add("ScopeProcessor",function(e){var r,o,i;if(null!=e.animate)return o=!1,i=0,r=e.animate,e.animate=function(){throw new Error("@animate() is called by the system. Please don't call it yourself.")},n(function(t,n){if(o)return null==i&&(i=t),r.call(e,t-i,n)}),t("Schematic:Hide",function(){return i=null,o=!0}),t("Schematic:Show",function(){
-return o=!1})})}),Take(["Reaction","Registry"],function(t,e){return e.add("ScopeProcessor",function(e){return t("Schematic:Hide",function(){return"function"==typeof e.animateMode?e.animateMode():void 0}),t("Schematic:Show",function(){return"function"==typeof e.schematicMode?e.schematicMode():void 0})})}),Take(["Registry","ScopeCheck","SVG"],function(t,e,n){return t.add("ScopeProcessor",function(t){var r;return e(t,"dash"),r=t.element.querySelectorAll("path"),t.dash=function(t){var e,o,i,l;for(l=[],o=0,e=r.length;o<e;o++)i=r[o],l.push(n.attrs(i,{"stroke-dasharray":t}));return l},t.dash.manifold=function(){return t.dash("50 5 10 5 10 5")},t.dash.pilot=function(){return t.dash("6 6")}})}),Take(["Mode","Registry","ScopeCheck","Scope","SVG"],function(t,e,n,r,o){return e.add("ScopeProcessor",function(e){return n(e,"debug"),Object.defineProperty(e,"debug",{get:function(){return{point:function(n){var i;if(t.dev)return i=r(o.create("g",e.element)),null!=n&&o.create("rect",i.element,{fill:"#000",x:0,y:0,width:10,height:10}),null!=n&&o.create("rect",i.element,{fill:n,x:0,y:0,width:9,height:9}),o.create("rect",i.element,{fill:"#000",x:-1,y:-1,width:2,height:2}),o.create("rect",i.element,{fill:"#FFF",x:-.5,y:-.5,width:1,height:1}),o.create("rect",i.element,{fill:"#FFF",x:1,y:-1,width:48,height:2}),o.create("rect",i.element,{fill:"#F00",x:1,y:-.5,width:48,height:1}),o.create("rect",i.element,{fill:"#000",x:-1,y:1,width:2,height:48}),o.create("rect",i.element,{fill:"#0F0",x:-.5,y:1,width:1,height:48}),i}}}})})}),Take(["Registry"],function(t){return t.add("ScopeProcessor",function(t){return t.getPressureColor=function(){throw new Error("@getPressureColor() has been removed. Please Take and use Pressure() instead.")},t.setText=function(){throw new Error("@setText(x) has been removed. Please @text = x instead.")},Object.defineProperty(t,"cx",{get:function(){throw new Error("cx has been removed.")}}),Object.defineProperty(t,"cy",{get:function(){throw new Error("cy has been removed.")}}),Object.defineProperty(t,"turns",{get:function(){throw new Error("turns has been removed. Please use @rotation instead.")}})})}),Take(["Registry","ScopeCheck","SVG"],function(t,e,n){return t.add("ScopeProcessor",function(t){var r,o,i,l;return e(t,"stroke","fill"),o=r=t.element.querySelector("path"),l=null,Object.defineProperty(t,"stroke",{get:function(){return l},set:function(e){if(l!==e&&(n.attr(t.element,"stroke",l=e),null!=o))return n.attr(o,"stroke",null),o=null}}),i=null,Object.defineProperty(t,"fill",{get:function(){return i},set:function(e){if(i!==e&&(n.attr(t.element,"fill",i=e),null!=r))return n.attr(r,"fill",null),r=null}})})}),Take(["Gradient","Registry","ScopeCheck"],function(t,n,r){var o;return o=0,n.add("ScopeProcessor",function(n){var i,l,u,a,c,s,f,d;return r(n,"linearGradient","radialGradient"),o++,a=null,d=null,l="LGradient"+o,i=null,u=null,c="RGradient"+o,s=null,f=null,n.linearGradient=function(){var r,o;return r=arguments[0],o=2<=arguments.length?e.call(arguments,1):[],null==a&&(a=t.linear(l)),"string"==typeof r&&(o.push(r),r=0),i!==r&&(i=r,t.updateProps(a,{x2:Math.cos(r*Math.PI/180),y2:Math.sin(r*Math.PI/180)})),u!==o&&(u=o,t.updateStops.apply(t,[a].concat(e.call(o)))),n.fill="url(#"+l+")"},n.radialGradient=function(){var r,o;return r=arguments[0],o=2<=arguments.length?e.call(arguments,1):[],null==d&&(d=t.radial(c)),"string"!=typeof r&&"number"!=typeof r||(o.push(r),r={r:.5}),s!==r&&(s=r,t.updateProps(d,r)),f!==o&&(f=o,t.updateStops.apply(t,[d].concat(e.call(o)))),n.fill="url(#"+c+")"}})}),Take(["Registry","ScopeCheck"],function(t,e){return t.add("ScopeProcessor",function(t){var n;return e(t,"initialWidth","initialHeight"),n=t.element.getBoundingClientRect(),t.initialWidth=n.width,t.initialHeight=n.height})}),Take(["Pressure","Registry","ScopeCheck","SVG"],function(t,e,n,r){return e.add("ScopeProcessor",function(e){var r,o;return n(e,"pressure"),o=null,r={get:function(){return o},set:function(n){if(o!==n)return o=n,null!=e._setPressure?e._setPressure(o):e.fill=t(e.pressure)}},Object.defineProperty(e,"pressure",r)})}),Take(["Registry","ScopeCheck","Tween"],function(t,e,n){return t.add("ScopeProcessor",function(t){var r;return e(t,"show","hide"),r=function(e){return t.alpha=e},t.show=function(e){return null==e&&(e=1),n(t.alpha,1,e,{tick:r,ease:"linear"})},t.hide=function(e){return null==e&&(e=1),n(t.alpha,0,e,{tick:r,ease:"linear"})}})}),Take(["Registry","ScopeCheck","SVG"],function(t,e,n){return t.add("ScopeProcessor",function(t){var r,o,i,l;return e(t,"text"),o=t.element,l=o.querySelector("tspan"),i=null!=l?l.textContent:void 0,r="left",Object.defineProperty(t,"align",{get:function(){return r},set:function(e){if(null==l)throw new Error("You have "+t.id+".align = '"+e+"', but this scope doesn't contain any text or tspan elements.");if(r!==e)return r=e,n.attr(l,"textAnchor","left"===e?"start":"center"===e?"middle":"end")}}),Object.defineProperty(t,"text",{get:function(){return i},set:function(e){if(null==l)throw new Error("You have "+t.id+".text = '"+e+"', but this scope doesn't contain any text or tspan elements.");if(i!==e)return n.attr(l,"textContent",i=e)}})})}),Take(["Registry","Tick"],function(t,e){return t.add("ScopeProcessor",function(t){var n,r,o;if(null!=t.tick)return n=!0,r=null,o=t.tick,t.tick=function(){throw new Error("@tick() is called by the system. Please don't call it yourself.")},e(function(e,i){if(n)return null==r&&(r=e),o.call(t,e-r,i)}),t.tick.start=function(){return n=!0},t.tick.stop=function(){return n=!1},t.tick.toggle=function(){return n?t.tick.stop():t.tick.start()},t.tick.restart=function(){return r=null}})}),Take(["RAF","Registry","ScopeCheck"],function(t,e,n){return e.add("ScopeProcessor",function(e){var r,o,i,l,u,a,c,s,f,d,h,p,g;if(n(e,"x","y","rotation","scale","scaleX","scaleY"),i=e.element,h=null!=(u=i.transform)?u.baseVal:void 0,d=document.querySelector("svg").createSVGTransform(),l=document.querySelector("svg").createSVGMatrix(),p=0,g=0,a=0,c=1,s=1,1===(null!=h?h.numberOfItems:void 0))switch(f=h.getItem(0),f.type){case SVGTransform.SVG_TRANSFORM_MATRIX:p=f.matrix.e,g=f.matrix.f,a=180/Math.PI*Math.atan2(f.matrix.b,f.matrix.a),o=Math.pow(f.matrix.a,2)+Math.pow(f.matrix.c,2),c=Math.sqrt(o),s=(f.matrix.a*f.matrix.d-f.matrix.b*f.matrix.c)/c;break;default:throw new Error("^ Transform encountered an SVG element with a non-matrix transform")}else if((null!=h?h.numberOfItems:void 0)>1)throw console.log(i),new Error("^ Transform encountered an SVG element with more than one transform");return r=function(){return l.a=c,l.d=s,l.e=p,l.f=g,d.setMatrix(l.rotate(a)),i.transform.baseVal.initialize(d)},Object.defineProperty(e,"x",{get:function(){return p},set:function(e){if(p!==e)return p=e,t(r,!0,1)}}),Object.defineProperty(e,"y",{get:function(){return g},set:function(e){if(g!==e)return g=e,t(r,!0,1)}}),Object.defineProperty(e,"rotation",{get:function(){return a},set:function(e){if(a!==e)return a=e,t(r,!0,1)}}),Object.defineProperty(e,"scale",{get:function(){return(c+s)/2},set:function(e){if(c!==e||s!==e)return c=s=e,t(r,!0,1)}}),Object.defineProperty(e,"scaleX",{get:function(){return c},set:function(e){if(c!==e)return c=e,t(r,!0,1)}}),Object.defineProperty(e,"scaleY",{get:function(){return s},set:function(e){if(s!==e)return s=e,t(r,!0,1)}})})}),Take(["Pressure","Reaction","Symbol"],function(t,e,n){return n("HydraulicField",[],function(n){return{setup:function(){var n,r;for(n=!1,r=this.parent;null!=r&&!n;)n=r._symbol===this._symbol,r=r.parent;if(!n)return this.pressure=0,e("Schematic:Show",function(){return this.pressure=t.white})}}})}),Take(["Pressure","Reaction","SVG","Symbol"],function(t,e,n,r){return r("HydraulicLine",[],function(r){var o,i,l,u,a,c;return c=[],i=[],l=!1,a=function(t){var e,n,o,l,u;if(("function"==typeof t.hasAttribute?t.hasAttribute("fill"):void 0)&&"none"!==t.getAttribute("fill")&&(t!==r&&i.push(t),t.removeAttribute("fill")),("function"==typeof t.hasAttribute?t.hasAttribute("stroke"):void 0)&&"none"!==t.getAttribute("stroke")&&(t!==r&&c.push(t),t.removeAttribute("stroke")),t.childNodes.length){for(l=t.childNodes,u=[],o=0,n=l.length;o<n;o++)e=l[o],u.push(a(e));return u}},a(r),r.setAttribute("fill","transparent"),o=function(t,e){var r,o,l,u,a,s;for(null==e&&(e=t),u=0,o=c.length;u<o;u++)r=c[u],n.attr(r,"stroke",t);for(s=[],a=0,l=i.length;a<l;a++)r=i[a],s.push(n.attr(r,"fill",e));return s},u={_highlight:function(e){return(l=e)?o("url(#MidHighlightGradient)","url(#LightHighlightGradient)"):o(t(u.pressure))},_setPressure:function(e){if(!l)return o(t(e))},setup:function(){return this.pressure=0,e("Schematic:Show",function(){return this.pressure=t.black})}}})}),Take(["Reaction","Symbol","SVG"],function(t,e,n){return e("Labels",["labelsContainer"],function(e){var r,o,i,l,u;for(l=e.querySelectorAll("[fill]"),i=0,o=l.length;i<o;i++)r=l[i],r.removeAttributeNS(null,"fill");return u={setup:function(){return t("Labels:Hide",function(){return u.alpha=!1}),t("Labels:Show",function(){return u.alpha=!0}),t("Background:Set",function(t){var r;return r=(t/2+.8)%1,n.attr(e,"fill","hsl(227, 4%, "+100*r+"%)")})}}})}),Take(["Mode","ParentObject","SVG"],function(t,e,n){var r,o,i,l;if(t.autosize)return l=n.attr(n.root,"width"),r=n.attr(n.root,"height"),o=null,i=function(){var t;if(e.offsetWidth!==o)return o=e.offsetWidth,t=r*o/l|0,e.style.height=t+"px"},i(),window.top.addEventListener("resize",i)}),function(){if(document.domain.indexOf("lunchboxsessions.com")>0)document.domain="lunchboxsessions.com"}(),Take(["Config","ParentObject"],function(t,e){var n,r;return n=function(n){var r,o;return r="x-"+n,e.hasAttribute(r)?""===(o=e.getAttribute(r))||"true"===o||"false"!==o&&("{"===o.charAt(0)?JSON.parse(o):o):t[n]},Make("Mode",{get:n,autosize:n("autosize"),background:n("background"),controlPanel:n("controlPanel"),dev:(null!=(r=window.top.location.port)?r.length:void 0)>=4,nav:n("nav"),embed:window!==window.top})}),function(){var t,e,n,r,o;for(o=null,r=window.parent.document.querySelectorAll("object"),e=0,t=r.length;e<t;e++)if(n=r[e],n.contentDocument===document){o=n;break}null==o&&(o=document.body),Make("ParentObject",o)}(),function(){var t;t=[],Make("Reaction",function(e,n){return(null!=t[e]?t[e]:t[e]=[]).push(n)}),Make("Action",function(){var n,r,o,i,l,u,a;if(l=arguments[0],n=2<=arguments.length?e.call(arguments,1):[],null!=t[l]){for(u=t[l],a=[],i=0,o=u.length;i<o;i++)r=u[i],a.push(r.apply(null,n));return a}})}(),Take(["ControlPanel","ControlPanelLayout","Registry","Scope","ControlReady"],function(t,e,n,r){var o,i,l,u,a,c;o={},l={},a=function(n,i){return o[n]=function(o){var u,a,c;if(null==o&&(o={}),"object"!=typeof o)throw console.log(o),new Error("Control."+n+"(props) takes a optional props object. Got ^^^, which is not an object.");return null!=(null!=o?o.id:void 0)&&null!=l[o.id]?("function"==typeof(u=l[o.id]).attach&&u.attach(o),l[o.id]):(a=t.createElement(null!=o?o.parent:void 0),c=r(a,i,o),"function"==typeof c.attach&&c.attach(o),e.addScope(c),null!=(null!=o?o.id:void 0)&&(l[o.id]=c),c)}},u=n.all("Control",!0);for(c in u)i=u[c],a(c,i);return Make("Control",o)}),function(){var t;Make("Ease",t={sin:function(t,e,n,r,o,i){var l;return null==e&&(e=0),null==n&&(n=1),null==r&&(r=0),null==o&&(o=1),null==i&&(i=!0),e===n?r:(i&&(t=Math.max(e,Math.min(n,t))),l=(t-e)/(n-e),(.5-Math.cos(l*Math.PI)/2)*(o-r)+r)},cubic:function(e,n,r,o,i,l){return null==n&&(n=0),null==r&&(r=1),null==o&&(o=0),null==i&&(i=1),null==l&&(l=!0),t.power(e,3,n,r,o,i,l)},linear:function(t,e,n,r,o,i){return null==e&&(e=0),null==n&&(n=1),null==r&&(r=0),null==o&&(o=1),null==i&&(i=!0),e===n?r:(i&&(t=Math.max(e,Math.min(n,t))),t-=e,t/=n-e,t*=o-r,t+=r)},power:function(t,e,n,r,o,i,l){var u,a,c;return null==e&&(e=1),null==n&&(n=0),null==r&&(r=1),null==o&&(o=0),null==i&&(i=1),null==l&&(l=!0),n===r?o:(l&&(t=Math.max(n,Math.min(r,t))),a=i-o,u=r-n,c=(t-n)/(u/2),c<1?o+a/2*Math.pow(c,e):o+a/2*(2-Math.abs(Math.pow(c-2,e))))},quadratic:function(e,n,r,o,i,l){return null==n&&(n=0),null==r&&(r=1),null==o&&(o=0),null==i&&(i=1),null==l&&(l=!0),t.power(e,2,n,r,o,i,l)},quartic:function(e,n,r,o,i,l){return null==n&&(n=0),null==r&&(r=1),null==o&&(o=0),null==i&&(i=1),null==l&&(l=!0),t.power(e,4,n,r,o,i,l)},ramp:function(t,e,n,r){var o;return o=e-t,t+(o>=0?Math.min(n*r,o):Math.max(-n*r,o))}})}(),Take(["Pressure","SVG"],function(t,n){var r,o;return o={},Make("Gradient",r={remove:function(t){if(null!=o[t])return n.defs.removeChild(o[t]),delete o[t]},updateStops:function(){var r,o,i,l,u,a,c,s,f,d,h;if(i=arguments[0],h=2<=arguments.length?e.call(arguments,1):[],null!=i._stops){for(o=!1,f=i._stops,l=c=0,u=f.length;c<u&&(d=f[l],!(o=null!=d.color&&null!=h[l].color?d.color!==h[l].color||d.offset!==h[l].offset||d.opacity!==h[l].opacity:d!==h[l]));l=++c);if(!o)return}for(i._stops=h;i.hasChildNodes();)i.removeChild(i.lastChild);for(h=h[0]instanceof Array?h[0]:h,l=s=0,a=h.length;s<a;l=++s)d=h[l],"string"==typeof d?n.create("stop",i,{stopColor:d,offset:100*l/(h.length-1)+"%"}):"number"==typeof d?n.create("stop",i,{stopColor:t(d),offset:100*l/(h.length-1)+"%"}):(r={stopColor:d.color,offset:100*(null!=d.offset?d.offset:l/(h.length-1))+"%"},null!=d.opacity&&(r.stopOpacity=d.opacity),n.create("stop",i,r));return i},updateProps:function(t,e){return n.attrs(t,e)},linear:function(){var t,i,l,u,a;if(l=arguments[0],u=arguments[1],a=3<=arguments.length?e.call(arguments,2):[],null==u&&(u={}),null!=o[l])throw new Error("Gradient named "+l+" already exists. Please don't create the same gradient more than once.");return t="object"==typeof u?(u.id=l,u):!0===u?{id:l,x2:0,y2:1}:{id:l},i=o[l]=n.create("linearGradient",n.defs,t),r.updateStops(i,a),i},radial:function(){var t,i,l,u;if(i=arguments[0],l=arguments[1],u=3<=arguments.length?e.call(arguments,2):[],null==l&&(l={}),null!=o[i])throw new Error("Gradient named "+i+" already exists. Please don't create the same gradient more than once.");return o[i]=!0,l.id=i,t=o[i]=n.create("radialGradient",n.defs,l),r.updateStops(t,u),t}})}),Take(["Ease","FPS","Gradient","Input","RAF","SVG","Tick","SVGReady"],function(t,n,r,o,i,l,u){var a,c,s,f,d,h;return a=null,c=0,f=r.linear("LightHighlightGradient",{gradientUnits:"userSpaceOnUse"},"#9FC","#FF8","#FD8"),d=r.linear("MidHighlightGradient",{gradientUnits:"userSpaceOnUse"},"#2F6","#FF2","#F72"),s=r.linear("DarkHighlightGradient",{gradientUnits:"userSpaceOnUse"},"#0B3","#DD0","#D50"),h=r.linear("TextHighlightGradient",{gradientUnits:"userSpaceOnUse"},"#091","#BB0","#B30"),u(function(t){var e;if(null!=a&&n()>20&&++c%3==0)return e={x1:-60*Math.cos(t*Math.PI)-50,y1:-60*Math.sin(t*Math.PI)-50,x2:60*Math.cos(t*Math.PI)-50,y2:60*Math.sin(t*Math.PI)-50},r.updateProps(f,e),r.updateProps(d,e),r.updateProps(s,e),r.updateProps(h,e)}),Make("Highlight",function(){var t,n,r,u,c,s,f;return s=1<=arguments.length?e.call(arguments,0):[],u=[],n=!1,f=null,c=function(t){var e,n,r,o,i,a,s,f,d,h,p,g;if(i=l.attr(t,"fill"),p=l.attr(t,"stroke"),e=null!=i&&"none"!==i&&"transparent"!==i,r=null!=p&&"none"!==p&&"transparent"!==p,n=null!=(null!=(f=t._scope)?f._highlight:void 0),n?u.push(o={elm:t,function:t._scope._highlight}):(e||r)&&(u.push(o={elm:t,attrs:{}}),e&&(o.attrs.fill=i),r&&(o.attrs.stroke=p),r&&null!=(g=l.attr(t,"stroke-width"))&&(o.attrs.strokeWidth=g)),!n){for(d=t.childNodes,h=[],s=0,a=d.length;s<a;s++)t=d[s],"g"===t.tagName||"path"===t.tagName||"text"===t.tagName||"tspan"===t.tagName||"rect"===t.tagName||"circle"===t.tagName?h.push(c(t)):h.push(void 0);return h}},t=function(){var t,e,o;if(!n){for(n=!0,"function"==typeof a&&a(),a=r,o=0,e=u.length;o<e;o++)t=u[o],null!=t.function?t.function(!0):(null!=t.attrs.stroke&&("text"===t.elm.tagName||"tspan"===t.elm.tagName?l.attrs(t.elm,{stroke:"url(#TextHighlightGradient)",strokeWidth:3}):"#FFF"===t.attrs.stroke||"white"===t.attrs.stroke?l.attrs(t.elm,{stroke:"url(#LightHighlightGradient)",strokeWidth:3}):"#000"===t.attrs.stroke||"black"===t.attrs.stroke?l.attrs(t.elm,{stroke:"url(#DarkHighlightGradient)",strokeWidth:3}):l.attrs(t.elm,{stroke:"url(#MidHighlightGradient)",strokeWidth:3})),null!=t.attrs.fill&&("text"===t.elm.tagName||"tspan"===t.elm.tagName?l.attrs(t.elm,{fill:"url(#TextHighlightGradient)"}):"#FFF"===t.attrs.fill||"white"===t.attrs.fill?l.attrs(t.elm,{fill:"url(#LightHighlightGradient)"}):"#000"===t.attrs.fill||"black"===t.attrs.fill?l.attrs(t.elm,{fill:"url(#DarkHighlightGradient)"}):l.attrs(t.elm,{fill:"url(#MidHighlightGradient)"})));return f=setTimeout(r,4e3)}},r=function(){var t,e,r,o;if(n){for(n=!1,clearTimeout(f),a=null,o=[],r=0,e=u.length;r<e;r++)t=u[r],null!=t.function?o.push(t.function(!1)):o.push(l.attrs(t.elm,t.attrs));return o}},i(function(){var e,n,i,l,u,a,f,d,h;for(i=0,e=s.length;i<e;i++){if(null==(d=s[i]))throw console.log(s),new Error("Highlight called with a null element ^^^");f=d.element||d,f._HighlighterSetup||(f._HighlighterSetup=!0,c(f))}for(a=[],u=0,n=s.length;u<n;u++)d=s[u],f=d.element||d,f._Highlighter?a.push(void 0):(f._Highlighter=!0,l={moveIn:t,moveOut:r},h={down:t},o(f,l,!0,!1),a.push(o(f,h,!1,!0)));return a})})}),Make("Input",function(t,e,n,r){var o,i,l,u,a,c,s;if(null==n&&(n=!0),null==r&&(r=!0),c={down:!1,over:!1,touch:!1,clicking:!1,captured:!1,deltaX:0,deltaY:0,lastX:0,lastY:0},o=function(t){if(c.lastX=t.clientX,c.lastY=t.clientY,c.deltaX=0,c.deltaY=0,!c.down)return c.down=!0,c.over?(c.clicking=!0,"function"==typeof e.down?e.down(t,c):void 0):"function"==typeof e.downOther?e.downOther(t,c):void 0},s=function(t){if(c.down)if(c.down=!1,c.over){if("function"==typeof e.up&&e.up(t,c),c.clicking)return c.clicking=!1,"function"==typeof e.click?e.click(t,c):void 0}else if("function"==typeof e.upOther&&e.upOther(t,c),c.clicking)return c.clicking=!1,"function"==typeof e.miss?e.miss(t,c):void 0},i=function(t){if(t.clientX!==c.lastX||t.clientY!==c.lastY)return c.deltaX=t.clientX-c.lastX,c.deltaY=t.clientY-c.lastY,c.over?c.down?"function"==typeof e.drag&&e.drag(t,c):"function"==typeof e.move&&e.move(t,c):c.down?"function"==typeof e.dragOther&&e.dragOther(t,c):"function"==typeof e.moveOther&&e.moveOther(t,c),c.lastX=t.clientX,c.lastY=t.clientY},l=function(t){if(c.over)return c.over=!1,c.down?"function"==typeof e.dragOut?e.dragOut(t,c):void 0:"function"==typeof e.moveOut?e.moveOut(t,c):void 0},u=function(t){if(c.lastX=t.clientX,c.lastY=t.clientY,!c.over)return c.over=!0,c.down?"function"==typeof e.dragIn?e.dragIn(t,c):void 0:"function"==typeof e.moveIn?e.moveIn(t,c):void 0},n&&(document.addEventListener("mousedown",function(t){if(0===t.button&&!c.touch)return o(t)}),null==e.move&&null==e.drag&&null==e.moveOther&&null==e.dragOther||document.addEventListener("mousemove",function(t){if(!c.touch)return i(t)}),document.addEventListener("mouseup",function(t){if(0===t.button&&!c.touch)return s(t)}),null!=t&&t.addEventListener("mouseleave",function(t){if(!c.touch)return l(t)}),null!=t&&t.addEventListener("mouseenter",function(t){if(!c.touch)return u(t)})),r)return a=function(e){var n,r,o,i;return c.touch=!0,e.clientX=null!=(o=e.touches[0])?o.clientX:void 0,e.clientY=null!=(i=e.touches[0])?i.clientY:void 0,null==t||null==e.clientX||null==e.clientY||null!==c.captured&&!0!==c.captured||(r=document.elementFromPoint(e.clientX,e.clientY),n=t===r||t.contains(r),n!==c.over&&(n?(null==c.captured&&(c.captured=!0),u(e)):l(e))),null!=c.captured?c.captured:c.captured=!1},document.addEventListener("touchstart",function(t){return c.captured=null,a(t),o(t)}),null==e.move&&null==e.drag&&null==e.moveOther&&null==e.dragOther&&null==e.moveIn&&null==e.dragIn&&null==e.moveOut&&null==e.dragOut||document.addEventListener("touchmove",function(t){return a(t),i(t)}),document.addEventListener("touchend",function(t){return a(t),s(t),c.touch=!1}),document.addEventListener("touchcancel",function(t){return a(t),s(t),c.touch=!1})}),function(){var t,e,n,r,o,i,l,u,a,c;r={},c={},t=function(t,r){var o;if(null==t)throw new Error("You must provide a key name or code for KeyMe(key, options)");if("object"!=typeof r)throw new Error("You must provide an options object for KeyMe(key, options)");return o="string"==typeof t?t:e[t],n(r.down,r.up,o,r.modifier)},t.any=function(t,e){return n(t,e,"any")},t.char=function(t,e,r){return n(e,r,t)},t.shortcut=function(t,e,r,o){return n(r,o,e,t)},t.pressing={},t.lastPressed=null,n=function(t,e,n,o){if(null!=t&&(null!=r[n]?r[n]:r[n]=[]).push({callback:t,modifier:o}),null!=e)return(null!=c[n]?c[n]:c[n]=[]).push({callback:e,modifier:o})},l=function(n){var o,l;if(o=n.which||n.keyCode,null!=(l=e[o])&&!t.pressing[l])return t.pressing[l]=!0,t.lastPressed={name:l,code:o},i(l,n,r)},u=function(n){var r,o;if(r=n.keyCode,null!=(o=e[r]))return delete t.pressing[o],i(o,n,c)},i=function(t,e,n){var r;return r=o(e),t===r&&(r=null),a(n.any,r),a(n[t],r)},o=function(t){return t.ctrlKey?"meta":t.altKey?"alt":t.shiftKey?"shift":void 0},a=function(t,e){var n,r,o,i;if(null!=t){for(i=[],o=0,r=t.length;o<r;o++)n=t[o],n.modifier===e&&i.push(n.callback());return i}},window.addEventListener("keydown",l),window.addEventListener("keyup",u),window.addEventListener("blur",function(){return t.pressing={}}),Make("KeyMe",t),e={3:"cancel",6:"help",8:"back_space",9:"tab",12:"clear",13:"return",14:"enter",16:"shift",17:"control",18:"alt",19:"pause",20:"caps_lock",27:"escape",32:"space",33:"page_up",34:"page_down",35:"end",36:"home",37:"left",38:"up",39:"right",40:"down",44:"printscreen",45:"insert",46:"delete",48:"0",49:"1",50:"2",51:"3",52:"4",53:"5",54:"6",55:"7",56:"8",57:"9",59:"semicolon",61:"equals",65:"a",66:"b",67:"c",68:"d",69:"e",70:"f",71:"g",72:"h",73:"i",74:"j",75:"k",76:"l",77:"m",78:"n",79:"o",80:"p",81:"q",82:"r",83:"s",84:"t",85:"u",86:"v",87:"w",88:"x",89:"y",90:"z",93:"context_menu",96:"numpad0",97:"numpad1",98:"numpad2",99:"numpad3",100:"numpad4",101:"numpad5",102:"numpad6",103:"numpad7",104:"numpad8",105:"numpad9",106:"multiply",107:"add",108:"separator",109:"subtract",110:"decimal",111:"divide",112:"f1",113:"f2",114:"f3",115:"f4",116:"f5",117:"f6",118:"f7",119:"f8",120:"f9",121:"f10",122:"f11",123:"f12",124:"f13",125:"f14",126:"f15",127:"f16",128:"f17",129:"f18",130:"f19",131:"f20",132:"f21",133:"f22",134:"f23",135:"f24",144:"num_lock",145:"scroll_lock",173:"minus",187:"equals",188:"comma",189:"minus",190:"period",191:"slash",192:"back_quote",219:"open_bracket",220:"back_slash",221:"close_bracket",222:"quote",224:"meta"}}(),function(){var t,e,n;e=!1,t=[[],[]],n=function(n){var r,o,i,l,u,a;for(e=!1,a=[],u=l=0,i=t.length;l<i;u=++l)null!=(r=t[u])&&(t[u]=[],a.push(function(){var t,e,i;for(i=[],e=0,t=r.length;e<t;e++)o=r[e],i.push(o(n));return i}()));return a},Make("RAF",function(r,o,i){var l,u,a;if(null==o&&(o=!1),null==i&&(i=0),null==r)throw new Error("RAF(null)");for(a=t[i],u=0,l=a.length;u<l;u++)if(a[u]===r){if(o)return;throw console.log(r),new Error("^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error.")}return(null!=t[i]?t[i]:t[i]=[]).push(r),e||(e=!0,requestAnimationFrame(n)),r})}(),function(){var t,e,n;e={},n={},t={},Make("Registry",{add:function(e,r){if(t[e])throw console.log(r),new Error("^^^ This "+e+" was registered too late.");return(null!=n[e]?n[e]:n[e]=[]).push(r)},all:function(t,r){return null==r&&(r=!1),r?e[t]:n[t]},set:function(n,r,o){var i;if(t[n])throw console.log(o),new Error("^^^ This "+n+' named "'+r+'" was registered too late.');if(null!=(null!=(i=e[n])?i[r]:void 0))throw console.log(o),new Error("^^^ This "+n+' is using the name "'+r+'", which is already in use.');return(null!=e[n]?e[n]:e[n]={})[r]=o},get:function(t,n){var r;return null!=(r=e[t])?r[n]:void 0},closeRegistration:function(e){return t[e]=!0}})}(),Take(["RAF"],function(t){return Make("Resize",function(e,n){var r;return null==n&&(n=!1),r=function(){return t(e,!0)},n?e():r(),window.addEventListener("resize",r)})}),Make("ScopeCheck",function(){var t,n,r,o,i,l;for(l=arguments[0],o=2<=arguments.length?e.call(arguments,1):[],i=[],n=0,t=o.length;n<t;n++)if(r=o[n],null!=l[r])throw console.log(l.element),new Error("^ @"+r+' is a reserved name. Please choose a different name for your child/property "'+r+'".');return i}),function(){var t,e,n,r,o,i,l,u,a;l=document.querySelector("svg"),o=l.querySelector("defs"),u="http://www.w3.org/2000/svg",a="http://www.w3.org/1999/xlink",i={textContent:!0},r={gradientUnits:"gradientUnits",viewBox:"viewBox",SCOPE:"SCOPE",SYMBOL:"SYMBOL"},n=!1,t=function(){return n||(n=Take("SVGReady"))},Make("SVG",e={root:l,defs:o,create:function(t,n,r){var o;return o=document.createElementNS(u,t),null!=r&&e.attrs(o,r),null!=n&&e.append(n,o),o},clone:function(n,r,o){var i,l,a,c,s,f,d,h,p;if(null==n)throw new Error("Clone source is undefined in SVG.clone(source, parent, attrs)");if(!t())throw new Error("SVG.clone() called before SVGReady");for(a=document.createElementNS(u,"g"),h=n.attributes,f=0,c=h.length;f<c;f++)i=h[f],e.attr(a,i.name,i.value);for(e.attrs(a,{id:null}),null!=o&&e.attrs(a,o),p=n.childNodes,d=0,s=p.length;d<s;d++)l=p[d],e.append(a,l.cloneNode(!0));return null!=r&&e.append(r,a),a},append:function(e,n){if(!t())throw new Error("SVG.append() called before SVGReady");return e.appendChild(n),n},prepend:function(e,n){if(!t())throw new Error("SVG.prepend() called before SVGReady");return e.hasChildNodes()?e.insertBefore(n,e.firstChild):e.appendChild(n),n},attrs:function(t,n){var r,o;if(!t)throw new Error("SVG.attrs was called with a null element");if("object"!=typeof n)throw console.log(n),new Error("SVG.attrs requires an object as the second argument, got ^");for(r in n)o=n[r],e.attr(t,r,o);return t},attr:function(t,e,n){var o,l;if(!t)throw new Error("SVG.attr was called with a null element");if("string"!=typeof e)throw console.log(e),new Error("SVG.attr requires a string as the second argument, got ^^^");return null==t._SVG_attr&&(t._SVG_attr={}),void 0===n?null!=(o=t._SVG_attr)[e]?o[e]:o[e]=t.getAttribute(e):t._SVG_attr[e]===n?n:(t._SVG_attr[e]=n,null!=i[e]?t[e]=n:(l="xlink:href"===e?a:null,e=null!=r[e]?r[e]:r[e]=e.replace(/([A-Z])/g,"-$1").toLowerCase(),null!=n?t.setAttributeNS(l,e,n):t.removeAttributeNS(l,e),n))},styles:function(t,n){var r,o;if(!t)throw new Error("SVG.styles was called with a null element");if("object"!=typeof n)throw console.log(n),new Error("SVG.styles requires an object as the second argument, got ^");for(r in n)o=n[r],e.style(t,r,o);return t},style:function(t,e,n){var r;if(!t)throw new Error("SVG.style was called with a null element");if("string"!=typeof e)throw console.log(e),new Error("SVG.style requires a string as the second argument, got ^");return null==t._SVG_style&&(t._SVG_style={}),void 0===n?null!=(r=t._SVG_style)[e]?r[e]:r[e]=t.style[e]:(t._SVG_style[e]!==n&&(t.style[e]=t._SVG_style[e]=n),n)}})}(),Take("Registry",function(t){var e;return e=function(e,n,r){var o,i,l,u;for(r.symbolName=e,t.set("Symbols",e,r),u=[],l=0,i=n.length;l<i;l++)o=n[l],u.push(t.set("SymbolNames",o,r));return u},e.forSymbolName=function(e){return t.get("Symbols",e)},e.forInstanceName=function(e){return t.get("SymbolNames",e)},Make("Symbol",e)}),Take(["ParentObject","RAF"],function(t,e){var n,r,o,i,l;return o=.5,n=[],l=(("undefined"!=typeof performance&&null!==performance?performance.now():void 0)||0)/1e3,r=0,e(i=function(u){var a,c,s;if(a=Math.min(u/1e3-l,o),l=u/1e3,!t.disableSVGA)for(r+=a,s=0,c=n.length;s<c;s++)(0,n[s])(r,a);return e(i)}),Make("Tick",function(t,e){var r,o;for(null==e&&(e=!1),o=0,r=n.length;o<r;o++)if(n[o]===t){if(e)return;throw console.log(t),new Error("^ Tick was called more than once with this function. You can use Tick(fn, true) to drop duplicates and bypass this error.")}return n.push(t),t})}),Take(["RAF","SVG"],function(t,e){var n;return n=function(t,n){var r,o;if(null==t)throw console.log(t),new Error("^ Null element passed to TRS(elm)");return o=e.create("g",t.parentNode,{xTrs:""}),e.append(o,t),null!=n&&e.create("rect",o,{class:"Debug",x:-2,y:-2,width:4,height:4,fill:n}),t._trs=r={x:0,y:0,r:0,sx:1,sy:1,ox:0,oy:0,apply:function(){return e.attr(o,"transform","translate("+r.x+","+r.y+") rotate("+360*r.r+") scale("+r.sx+","+r.sy+")"),e.attr(t,"transform","translate("+-r.ox+","+-r.oy+")")}},t},n.abs=function(e,n){var r;if(null==(null!=e?e._trs:void 0))throw console.log(e),new Error("^ Non-TRS element passed to TRS.abs(elm, attrs)");if(null==n)throw console.log(e),new Error("^ Null attrs passed to TRS.abs(elm, attrs)");return null!=n.scale&&(n.sx=n.sy=n.scale),null!=n.x&&(e._trs.x=n.x),null!=n.y&&(e._trs.y=n.y),null!=n.r&&(e._trs.r=n.r),null!=n.sx&&(e._trs.sx=n.sx),null!=n.sy&&(e._trs.sy=n.sy),null!=n.ox&&(r=n.ox-e._trs.ox,e._trs.ox=n.ox,e._trs.x+=r),null!=n.oy&&(r=n.oy-e._trs.oy,e._trs.oy=n.oy,e._trs.y+=r),n.now?e._trs.apply():t(e._trs.apply,!0,1),e},n.rel=function(e,n){if(null==(null!=e?e._trs:void 0))throw console.log(e),new Error("^ Non-TRS element passed to TRS.abs(elm, attrs)");if(null==n)throw console.log(e),new Error("^ Null attrs passed to TRS.abs(elm, attrs)");return null!=n.x&&(e._trs.x+=n.x),null!=n.y&&(e._trs.y+=n.y),null!=n.r&&(e._trs.r+=n.r),null!=n.sx&&(e._trs.sx+=n.sx),null!=n.sy&&(e._trs.sy+=n.sy),null!=n.ox&&(e._trs.ox+=n.ox,e._trs.x+=n.ox),null!=n.oy&&(e._trs.oy+=n.oy,e._trs.y+=n.oy),n.now?e._trs.apply():t(e._trs.apply,!0,1),e},n.move=function(t,e,r){if(null==e&&(e=0),null==r&&(r=0),null==t._trs)throw console.log(t),new Error("^ Non-TRS element passed to TRS.move");return n.abs(t,{x:e,y:r})},n.rotate=function(t,e){if(null==e&&(e=0),null==t._trs)throw console.log(t),new Error("^ Non-TRS element passed to TRS.rotate");return n.abs(t,{r:e})},n.scale=function(t,e,r){if(null==e&&(e=1),null==r&&(r=e),null==t._trs)throw console.log(t),new Error("^ Non-TRS element passed to TRS.scale");return n.abs(t,{sx:e,sy:r})},n.origin=function(t,e,r){if(null==e&&(e=0),null==r&&(r=0),null==t._trs)throw console.log(t),new Error("^ Non-TRS element passed to TRS.origin");return n.abs(t,{ox:e,oy:r})},Make("TRS",n)}),Take(["Tick"],function(t){var n,r,o,i,l,u,a,c,s;return s=[],c=!1,n=function(t,e,n,i){var c;return null==i&&(i={}),"function"==typeof i&&(i={tick:i}),i.multi="object"==typeof t,null==i.mutate&&(i.mutate=null==i.tick),i.keys=c=i.multi?a(e):["v"],i.from=i.multi?r(t,c):{v:t},i.to=i.multi?r(e,c):{v:e},i.delta=o(i.from,i.to,c),i.value=i.mutate&&i.multi?t:r(i.from,c),i.time=Math.max(0,n),i.ease=u(i.ease),i.pos=Math.min(1,i.pos||0),i.completed=!1,i.cancelled=!1,l(i.tick,i.from),s.push(i),i},a=function(t){var e,n;n=[];for(e in t)n.push(e);return n},r=function(t,e){var n,r,o,i;for(i={},o=0,r=e.length;o<r;o++)n=e[o],i[n]=t[n];return i},o=function(t,e,n){var r,o,i,l;for(l={},i=0,o=n.length;i<o;i++)r=n[i],l[r]=e[r]-t[r];return l},u=function(t){return"string"==typeof t?i[t]||function(){throw new Error('Tween: "'+t+'" is not a value ease type.')}():"function"==typeof t?t:i.cubic},i={linear:function(t){return t},cubic:function(t){return t=2*Math.min(1,Math.abs(t)),t<1?.5*Math.pow(t,3):1-.5*Math.abs(Math.pow(t-2,3))}},l=function(t,e){if(!c)return s=s.filter(function(n){return!n.completed&&(!n.cancelled&&((null==t||t!==n.tick)&&(null==e||e!==n.from)))})},n.cancel=function(){var t,n,r,o;for(o=1<=arguments.length?e.call(arguments,0):[],n=0,t=o.length;n<t;n++)r=o[n],r.cancelled=!0;return l()},t(function(t,e){var n,r,o,i,u,a,f,d,h;for(c=!0,u=0,o=s.length;u<o;u++)if(d=s[u],!d.cancelled){for(d.pos=d.time<=0?1:Math.min(1,d.pos+e/d.time),n=d.ease(d.pos),f=d.keys,a=0,i=f.length;a<i;a++)r=f[a],d.value[r]=d.from[r]+d.delta[r]*n;h=d.multi?d.value:d.value.v,"function"==typeof d.tick&&d.tick(h,d),(d.completed=1===d.pos)&&"function"==typeof d.then&&d.then(h,d)}return c=!1,l()}),Make("Tween",n)})}).call(this);
+(function() {
+  var base,
+    slice = [].slice,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  Take(["Registry", "Scene", "DOMContentLoaded"], function(Registry, Scene) {
+    var svgData;
+    svgData = Scene.crawl(document.getElementById("root"));
+    Make("SVGReady");
+    return setTimeout(function() {
+      Registry.closeRegistration("ScopeProcessor");
+      Make("ScopeReady");
+      Registry.closeRegistration("Control");
+      Make("ControlReady");
+      Registry.closeRegistration("Symbol");
+      Scene.build(svgData);
+      svgData = null;
+      Make("SceneReady");
+      return Make("AllReady");
+    });
+  });
+
+  Take(["Scope", "SVG", "Symbol"], function(Scope, SVG, Symbol) {
+    var Scene, buildScopes, defs, deprecations, masks, processElm;
+    deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
+    masks = [];
+    defs = {};
+    Make("Scene", Scene = {
+      crawl: function(elm) {
+        var tree;
+        tree = processElm(elm);
+        if (masks.length) {
+          console.log.apply(console, ["Please remove these mask elements from your SVG:"].concat(slice.call(masks)));
+        }
+        masks = null;
+        defs = null;
+        return tree;
+      },
+      build: function(tree) {
+        var m, results, setup, setups;
+        buildScopes(tree, setups = []);
+        results = [];
+        for (m = setups.length - 1; m >= 0; m += -1) {
+          setup = setups[m];
+          results.push(setup());
+        }
+        return results;
+      }
+    });
+    processElm = function(elm) {
+      var childElm, childNodes, clone, def, defId, len, m, ref, ref1, tree;
+      tree = {
+        elm: elm,
+        sub: []
+      };
+      childNodes = Array.prototype.slice.call(elm.childNodes);
+      for (m = 0, len = childNodes.length; m < len; m++) {
+        childElm = childNodes[m];
+        if ((ref = childElm.id, indexOf.call(deprecations, ref) >= 0)) {
+          console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
+          elm.removeChild(childElm);
+        } else if (childElm.tagName === "clipPath") {
+          elm.removeChild(childElm);
+        } else if (childElm.tagName === "text") {
+          if (typeof childElm.removeAttribute === "function") {
+            childElm.removeAttribute("clip-path");
+          }
+        } else if (((ref1 = childElm.id) != null ? ref1.indexOf("Mask") : void 0) > -1) {
+          masks.push(childElm.id);
+          elm.removeChild(childElm);
+        } else if (childElm instanceof SVGGElement) {
+          tree.sub.push(processElm(childElm));
+        } else if (childElm instanceof SVGUseElement) {
+          defId = childElm.getAttribute("xlink:href");
+          def = defs[defId] != null ? defs[defId] : defs[defId] = SVG.defs.querySelector(defId);
+          clone = def.cloneNode(true);
+          elm.replaceChild(clone, childElm);
+          if (def.parentNode != null) {
+            def.parentNode.removeChild(def);
+          }
+          if (clone instanceof SVGGElement) {
+            tree.sub.push(processElm(clone));
+          }
+        }
+      }
+      return tree;
+    };
+    return buildScopes = function(tree, setups, parentScope) {
+      var baseName, len, m, props, ref, ref1, results, scope, subTarget, symbol;
+      if (parentScope == null) {
+        parentScope = null;
+      }
+      props = {
+        parent: parentScope
+      };
+      if (tree.elm.id.replace(/_FL/g, "").length > 0) {
+        props.id = tree.elm.id.replace(/_FL/g, "");
+      }
+      baseName = (ref = tree.elm.id) != null ? ref.split("_")[0] : void 0;
+      symbol = baseName.indexOf("Line") > -1 || baseName.indexOf("line") === 0 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 || baseName.indexOf("field") === 0 ? Symbol.forSymbolName("HydraulicField") : Symbol.forInstanceName(props.id);
+      if (symbol == null) {
+        symbol = function() {
+          return {};
+        };
+      }
+      scope = Scope(tree.elm, symbol, props);
+      if (scope.setup != null) {
+        setups.push(scope.setup.bind(scope));
+      }
+      ref1 = tree.sub;
+      results = [];
+      for (m = 0, len = ref1.length; m < len; m++) {
+        subTarget = ref1[m];
+        results.push(buildScopes(subTarget, setups, scope));
+      }
+      return results;
+    };
+  });
+
+  Take(["Mode", "Registry", "ScopeCheck", "Symbol"], function(Mode, Registry, ScopeCheck, Symbol) {
+    var Scope, findParent;
+    Make("Scope", Scope = function(element, symbol, props) {
+      var attr, attrs, idCounter, len, len1, m, n, parentScope, ref, scope, scopeProcessor, tempID;
+      if (props == null) {
+        props = {};
+      }
+      if (!element instanceof SVGElement) {
+        console.log(element);
+        throw new Error("Scope() takes an element as the first argument. Got ^^^");
+      }
+      if ((symbol != null) && typeof symbol !== "function") {
+        console.log(symbol);
+        throw new Error("Scope() takes a function as the second arg. Got ^^^");
+      }
+      if (typeof props !== "object") {
+        console.log(props);
+        throw new Error("Scope() takes an optional object as the third arg. Got ^^^");
+      }
+      scope = symbol != null ? symbol(element, props) : {};
+      parentScope = props.parent || findParent(element);
+      ScopeCheck(scope, "_symbol", "children", "element", "id", "parent", "root");
+      element._scope = scope;
+      scope._symbol = symbol;
+      scope.children = [];
+      scope.element = element;
+      scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
+      scope.id = props.id;
+      if (parentScope != null) {
+        scope.parent = parentScope;
+        if (scope.id == null) {
+          scope.id = "child" + (parentScope.children.length || 0);
+        }
+        if (parentScope[scope.id] != null) {
+          tempID = scope.id;
+          idCounter = 1;
+          while (parentScope[tempID + idCounter] != null) {
+            idCounter++;
+          }
+          scope.id = tempID + idCounter;
+        }
+        parentScope[scope.id] = scope;
+        parentScope.children.push(scope);
+      }
+      if (Mode.dev && !(navigator.userAgent.indexOf("Trident") >= 0 || navigator.userAgent.indexOf("Edge") >= 0)) {
+        element.setAttribute("SCOPE", scope.id || "");
+        if ((symbol != null ? symbol.symbolName : void 0) != null) {
+          element.setAttribute("SYMBOL", symbol.symbolName);
+        }
+        attrs = Array.prototype.slice.call(element.attributes);
+        for (m = 0, len = attrs.length; m < len; m++) {
+          attr = attrs[m];
+          if (!(attr.name !== "SCOPE" && attr.name !== "SYMBOL")) {
+            continue;
+          }
+          element.removeAttributeNS(attr.namespaceURI, attr.name);
+          element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
+        }
+      }
+      window.getComputedStyle(element);
+      ref = Registry.all("ScopeProcessor");
+      for (n = 0, len1 = ref.length; n < len1; n++) {
+        scopeProcessor = ref[n];
+        scopeProcessor(scope);
+      }
+      return scope;
+    });
+    return findParent = function(element) {
+      while (element != null) {
+        if (element._scope != null) {
+          return element._scope;
+        }
+        element = element.parentNode;
+      }
+      return null;
+    };
+  });
+
+  Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
+    return Make("FlowArrows:Arrow", function(parentElm, segmentData, segmentPosition, vectorPosition, vectorIndex) {
+      var arrow, element, line, triangle, vector;
+      vector = segmentData.vectors[vectorIndex];
+      element = TRS(SVG.create("g", parentElm));
+      triangle = SVG.create("polyline", element, {
+        points: "0,-16 30,0 0,16"
+      });
+      line = SVG.create("line", element, {
+        x1: -23,
+        y1: 0,
+        x2: 5,
+        y2: 0,
+        "stroke-width": 11,
+        "stroke-linecap": "round"
+      });
+      return arrow = {
+        update: function(parentFlow, parentScale) {
+          var scale;
+          vectorPosition += parentFlow;
+          segmentPosition += parentFlow;
+          while (vectorPosition > vector.dist) {
+            vectorIndex++;
+            if (vectorIndex >= segmentData.vectors.length) {
+              vectorIndex = 0;
+              segmentPosition -= segmentData.dist;
+            }
+            vectorPosition -= vector.dist;
+            vector = segmentData.vectors[vectorIndex];
+          }
+          while (vectorPosition < 0) {
+            vectorIndex--;
+            if (vectorIndex < 0) {
+              vectorIndex = segmentData.vectors.length - 1;
+              segmentPosition += segmentData.dist;
+            }
+            vector = segmentData.vectors[vectorIndex];
+            vectorPosition += vector.dist;
+          }
+          if (segmentPosition < segmentData.dist / 2) {
+            scale = Math.max(0, Math.min(1, (segmentPosition / segmentData.dist) * segmentData.dist / Config.FADE_LENGTH));
+          } else {
+            scale = Math.max(0, Math.min(1, 1 - (segmentPosition - (segmentData.dist - Config.FADE_LENGTH)) / Config.FADE_LENGTH));
+          }
+          return TRS.abs(element, {
+            x: Math.cos(vector.angle) * vectorPosition + vector.x,
+            y: Math.sin(vector.angle) * vectorPosition + vector.y,
+            scale: scale * parentScale,
+            r: vector.angle / (2 * Math.PI) + (parentFlow < 0 ? 0.5 : 0)
+          });
+        }
+      };
+    });
+  });
+
+  (function() {
+    var Config, defineProp;
+    Make("FlowArrows:Config", Config = {
+      SCALE: 0.5,
+      SPACING: 600,
+      FADE_LENGTH: 50,
+      MIN_SEGMENT_LENGTH: 200,
+      SPEED: 200,
+      MIN_EDGE_LENGTH: 8,
+      CONNECTED_DISTANCE: 1,
+      wrap: function(obj) {
+        var k;
+        for (k in Config) {
+          if (k !== "wrap") {
+            defineProp(obj, k);
+          }
+        }
+        return obj;
+      }
+    });
+    return defineProp = function(obj, k) {
+      return Object.defineProperty(obj, k, {
+        get: function() {
+          return Config[k];
+        },
+        set: function(v) {
+          return Config[k] = v;
+        }
+      });
+    };
+  })();
+
+  Take(["Pressure", "SVG"], function(Pressure, SVG) {
+    return Make("FlowArrows:Containerize", function(parentElm, setupFn) {
+      var active, children, direction, enabled, flow, pressure, scale, scope, updateActive, visible, volume;
+      active = true;
+      direction = 1;
+      enabled = true;
+      flow = 1;
+      pressure = null;
+      scale = 1;
+      visible = true;
+      volume = 1;
+      scope = {
+        element: SVG.create("g", parentElm),
+        reverse: function() {
+          return direction *= -1;
+        },
+        update: function(parentFlow, parentScale) {
+          var child, f, len, m, results, s;
+          if (active) {
+            f = flow * direction * parentFlow;
+            s = volume * scale * parentScale;
+            results = [];
+            for (m = 0, len = children.length; m < len; m++) {
+              child = children[m];
+              results.push(child.update(f, s));
+            }
+            return results;
+          }
+        }
+      };
+      children = setupFn(scope);
+      updateActive = function() {
+        active = enabled && visible && flow !== 0;
+        return SVG.styles(scope.element, {
+          display: active ? "inline" : "none"
+        });
+      };
+      Object.defineProperty(scope, 'enabled', {
+        set: function(val) {
+          if (visible !== val) {
+            return updateActive(visible = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'flow', {
+        get: function() {
+          return flow;
+        },
+        set: function(val) {
+          if (flow !== val) {
+            return updateActive(flow = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'pressure', {
+        get: function() {
+          return pressure;
+        },
+        set: function(val) {
+          var color;
+          if (pressure !== val) {
+            pressure = val;
+            color = Pressure(val);
+            return SVG.attrs(scope.element, {
+              fill: color,
+              stroke: color
+            });
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return scale;
+        },
+        set: function(val) {
+          if (scale !== val) {
+            return scale = val;
+          }
+        }
+      });
+      Object.defineProperty(scope, 'visible', {
+        get: function() {
+          return visible;
+        },
+        set: function(val) {
+          if (visible !== val) {
+            return updateActive(visible = val);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'volume', {
+        get: function() {
+          return volume;
+        },
+        set: function(val) {
+          if (volume !== val) {
+            return volume = val;
+          }
+        }
+      });
+      return scope;
+    });
+  });
+
+  Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
+    var animateMode, enableAll, sets, visible;
+    sets = [];
+    visible = true;
+    animateMode = true;
+    enableAll = function() {
+      var len, m, results, set;
+      results = [];
+      for (m = 0, len = sets.length; m < len; m++) {
+        set = sets[m];
+        results.push(set.enabled = visible && animateMode);
+      }
+      return results;
+    };
+    Tick(function(time, dt) {
+      var f, len, m, results, s, set;
+      if (visible && animateMode) {
+        results = [];
+        for (m = 0, len = sets.length; m < len; m++) {
+          set = sets[m];
+          if (set.parentScope.alpha > 0) {
+            f = dt * Config.SPEED;
+            s = Config.SCALE;
+            results.push(set.update(f, s));
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      }
+    });
+    Reaction("Schematic:Hide", function() {
+      return setTimeout(function() {
+        return enableAll(animateMode = true);
+      });
+    });
+    Reaction("Schematic:Show", function() {
+      return enableAll(animateMode = false);
+    });
+    Reaction("FlowArrows:Show", function() {
+      return enableAll(visible = true);
+    });
+    Reaction("FlowArrows:Hide", function() {
+      return enableAll(visible = false);
+    });
+    return Make("FlowArrows", Config.wrap(function() {
+      var elm, lineData, parentScope, set, setData;
+      parentScope = arguments[0], lineData = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (parentScope == null) {
+        console.log(lineData);
+        throw new Error("FlowArrows was called with a null target. ^^^ was the baked line data.");
+      }
+      elm = parentScope.element;
+      if (elm.querySelector("[id^=markerBox]")) {
+        while (elm.hasChildNodes()) {
+          elm.removeChild(elm.firstChild);
+        }
+      }
+      setData = Process(lineData);
+      set = Set(elm, setData);
+      set.parentScope = parentScope;
+      sets.push(set);
+      return set;
+    }));
+  });
+
+  Take("FlowArrows:Config", function(Config) {
+    var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
+    Make("FlowArrows:Process", function(lineData) {
+      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
+    });
+    log = function(a) {
+      console.dir(a);
+      return a;
+    };
+    formSegments = function(lineData) {
+      var i, m, pointA, pointB, ref, segmentEdges, segments;
+      segments = [];
+      segmentEdges = null;
+      for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
+        pointA = lineData[i];
+        pointB = lineData[i + 1];
+        if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1])) {
+          segmentEdges.push(pointB);
+        } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1])) {
+          segmentEdges.push(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB)) {
+          segmentEdges.unshift(pointA);
+        } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA)) {
+          segmentEdges.unshift(pointB);
+        } else {
+          segments.push(segmentEdges = [pointA, pointB]);
+        }
+      }
+      return segments;
+    };
+    joinSegments = function(segments) {
+      var i, j, pointA, pointB, segA, segB;
+      segA = null;
+      segB = null;
+      pointA = null;
+      pointB = null;
+      i = segments.length;
+      while (i--) {
+        j = segments.length;
+        while (--j > i) {
+          segA = segments[i];
+          segB = segments[j];
+          pointA = segA[0];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB)) {
+            segB.reverse();
+            segB.pop();
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB)) {
+            segB.reverse();
+            segB.unshift();
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[segA.length - 1];
+          pointB = segB[0];
+          if (isConnected(pointA, pointB)) {
+            segments[i] = segA.concat(segB);
+            segments.splice(j, 1);
+            continue;
+          }
+          pointA = segA[0];
+          pointB = segB[segB.length - 1];
+          if (isConnected(pointA, pointB)) {
+            segments[i] = segB.concat(segA);
+            segments.splice(j, 1);
+            continue;
+          }
+        }
+      }
+      return segments;
+    };
+    cullShortEdges = function(segments) {
+      var i, j, pointA, pointB, seg;
+      i = segments.length;
+      seg = [];
+      pointA = pointB = null;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          if (distance(pointA, pointB) < Config.MIN_EDGE_LENGTH) {
+            pointA.cull = true;
+          }
+        }
+      }
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 1;
+        while (j-- > 0) {
+          if (seg[j].cull) {
+            seg.splice(j, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    cullInlinePoints = function(segments) {
+      var i, j, pointA, pointB, pointC, seg;
+      seg = [];
+      pointA = null;
+      pointB = null;
+      pointC = null;
+      i = segments.length;
+      while (i--) {
+        seg = segments[i];
+        j = seg.length - 2;
+        while (j-- > 0 && seg.length > 2) {
+          pointA = seg[j];
+          pointB = seg[j + 1];
+          pointC = seg[j + 2];
+          if (isInline(pointA, pointB, pointC)) {
+            seg.splice(j + 1, 1);
+          }
+        }
+      }
+      return segments;
+    };
+    reifyVectors = function(segments) {
+      var i, len, m, pointA, pointB, results, segment, vector;
+      results = [];
+      for (m = 0, len = segments.length; m < len; m++) {
+        segment = segments[m];
+        results.push((function() {
+          var len1, n, results1;
+          results1 = [];
+          for (i = n = 0, len1 = segment.length; n < len1; i = ++n) {
+            pointA = segment[i];
+            if (pointB = segment[i + 1]) {
+              results1.push(vector = {
+                x: pointA.x,
+                y: pointA.y,
+                dist: distance(pointA, pointB),
+                angle: angle(pointA, pointB)
+              });
+            }
+          }
+          return results1;
+        })());
+      }
+      return results;
+    };
+    reifySegments = function(set) {
+      var dist, len, len1, m, n, results, segment, segmentVectors, vector;
+      results = [];
+      for (m = 0, len = set.length; m < len; m++) {
+        segmentVectors = set[m];
+        dist = 0;
+        for (n = 0, len1 = segmentVectors.length; n < len1; n++) {
+          vector = segmentVectors[n];
+          dist += vector.dist;
+        }
+        results.push(segment = {
+          vectors: segmentVectors,
+          dist: dist
+        });
+      }
+      return results;
+    };
+    cullShortSegments = function(set) {
+      return set.filter(function(segment) {
+        return segment.dist >= Config.MIN_SEGMENT_LENGTH;
+      });
+    };
+    wrap = function(data) {
+      return {
+        process: function(fn) {
+          return wrap(fn(data));
+        },
+        result: data
+      };
+    };
+    isConnected = function(a, b) {
+      var dX, dY;
+      dX = Math.abs(a.x - b.x);
+      dY = Math.abs(a.y - b.y);
+      return dX < Config.CONNECTED_DISTANCE && dY < Config.CONNECTED_DISTANCE;
+    };
+    isInline = function(a, b, c) {
+      var crossproduct, dotproduct, squaredlengthba;
+      crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
+      if (Math.abs(crossproduct) > 0.01) {
+        return false;
+      }
+      dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
+      if (dotproduct < 0) {
+        return false;
+      }
+      squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+      if (dotproduct > squaredlengthba) {
+        return false;
+      }
+      return true;
+    };
+    distance = function(a, b) {
+      var dx, dy;
+      dx = b.x - a.x;
+      dy = b.y - a.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    return angle = function(a, b) {
+      return Math.atan2(b.y - a.y, b.x - a.x);
+    };
+  });
+
+  Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize", "Mode"], function(Arrow, Config, Containerize, Mode) {
+    return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName) {
+      return Containerize(parentElm, function(scope) {
+        var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
+        if (Mode.dev) {
+          scope.element.addEventListener("mouseover", function() {
+            return console.log(segmentName);
+          });
+        }
+        arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
+        segmentSpacing = segmentData.dist / arrowCount;
+        segmentPosition = 0;
+        vectorPosition = 0;
+        vectorIndex = 0;
+        vector = segmentData.vectors[vectorIndex];
+        results = [];
+        for (i = m = 0, ref = arrowCount; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
+          while (vectorPosition > vector.dist) {
+            vectorPosition -= vector.dist;
+            vector = segmentData.vectors[++vectorIndex];
+          }
+          arrow = Arrow(scope.element, segmentData, segmentPosition, vectorPosition, vectorIndex);
+          vectorPosition += segmentSpacing;
+          segmentPosition += segmentSpacing;
+          results.push(arrow);
+        }
+        return results;
+      });
+    });
+  });
+
+  Take(["FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Config, Containerize, Segment) {
+    return Make("FlowArrows:Set", function(parentElm, setData) {
+      return Containerize(parentElm, function(scope) {
+        var child, childName, i, len, m, results, segmentData;
+        results = [];
+        for (i = m = 0, len = setData.length; m < len; i = ++m) {
+          segmentData = setData[i];
+          if (segmentData.dist < Config.FADE_LENGTH * 2) {
+            throw new Error("You have a FlowArrows segment that is only " + (Math.round(segmentData.dist)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.");
+          }
+          childName = "segment" + i;
+          child = Segment(scope.element, segmentData, childName);
+          results.push(scope[childName] = child);
+        }
+        return results;
+      });
+    });
+  });
+
+  Take(["Action", "Mode", "ParentObject", "Reaction", "SVG"], function(Action, Mode, ParentObject, Reaction, SVG) {
+    if (typeof Mode.background === "string") {
+      return SVG.style(ParentObject, "background-color", Mode.background);
+    } else if (Mode.background === true) {
+      Reaction("Background:Set", function(v) {
+        return SVG.style(ParentObject, "background-color", "hsl(227, 5%, " + (v * 100) + "%)");
+      });
+      return Take("SceneReady", function() {
+        return Action("Background:Set", .70);
+      });
+    } else {
+      return SVG.style(ParentObject, "background-color", "transparent");
+    }
+  });
+
+  Take(["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], function(GUI, Mode, Resize, SVG, TRS) {
+    var g, hide, show;
+    if (!Mode.nav) {
+      return;
+    }
+    g = TRS(SVG.create("g", GUI.elm));
+    SVG.create("rect", g, {
+      x: -200,
+      y: -30,
+      width: 400,
+      height: 60,
+      rx: 30,
+      fill: "#222",
+      "fill-opacity": 0.9
+    });
+    SVG.create("text", g, {
+      y: 22,
+      textContent: "Click To Focus",
+      "font-size": 20,
+      fill: "#FFF",
+      "text-anchor": "middle"
+    });
+    show = function() {
+      return SVG.attrs(g, {
+        style: "display: block"
+      });
+    };
+    hide = function() {
+      return SVG.attrs(g, {
+        style: "display: none"
+      });
+    };
+    Resize(function() {
+      return TRS.abs(g, {
+        x: window.innerWidth / 2
+      });
+    });
+    window.addEventListener("focus", hide);
+    window.addEventListener("touchstart", hide);
+    window.addEventListener("blur", show);
+    window.addEventListener("mousedown", function() {
+      if (document.activeElement === SVG.root) {
+        return window.focus();
+      }
+    });
+    window.focus();
+    return hide();
+  });
+
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Mode, Resize, SVG, Scope) {
+    var CP, ControlPanel, bg, config, g, panelElms, panelHeight, panelRadius, panelWidth, resize, showing, vertical;
+    CP = GUI.ControlPanel;
+    config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
+    showing = false;
+    panelRadius = CP.borderRadius + CP.pad * 2;
+    vertical = true;
+    panelWidth = 0;
+    panelHeight = 0;
+    Gradient.linear("CPGradient", false, "#5175bd", "#35488d");
+    g = SVG.create("g", GUI.elm, {
+      xControls: "",
+      fontSize: 16,
+      textAnchor: "middle"
+    });
+    bg = SVG.create("rect", g, {
+      rx: panelRadius,
+      fill: "url(#CPGradient)"
+    });
+    panelElms = Scope(SVG.create("g", g));
+    panelElms.x = panelElms.y = CP.pad * 2;
+    Take("SceneReady", function() {
+      if (!showing) {
+        return GUI.elm.removeChild(g);
+      }
+    });
+    ControlPanel = Scope(g, function() {
+      return {
+        createElement: function(parent) {
+          var elm;
+          if (parent == null) {
+            parent = null;
+          }
+          showing = true;
+          return elm = SVG.create("g", parent || panelElms.element);
+        },
+        claimSpace: function(rect) {
+          resize();
+          if (vertical) {
+            return rect.w -= panelWidth;
+          } else {
+            return rect.h -= panelHeight;
+          }
+        }
+      };
+    });
+    resize = function() {
+      var heightPad, panelBgX, panelBgY, size, view, widthPad, x, y;
+      view = {
+        w: window.innerWidth,
+        h: window.innerHeight
+      };
+      vertical = config.vertical != null ? config.vertical : view.w >= view.h * 1.3;
+      size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
+      panelWidth = size.w + CP.pad * 4;
+      panelHeight = size.h + CP.pad * 4;
+      widthPad = Math.abs(config.x) === 1 ? panelRadius : config.x != null ? 0 : vertical ? panelRadius : 0;
+      heightPad = Math.abs(config.y) === 1 ? panelRadius : config.y != null ? 0 : !vertical ? panelRadius : 0;
+      panelBgX = config.x === -1 ? -panelRadius : 0;
+      panelBgY = config.y === -1 ? -panelRadius : 0;
+      SVG.attrs(bg, {
+        x: panelBgX,
+        y: panelBgY,
+        width: panelWidth + widthPad,
+        height: panelHeight + heightPad
+      });
+      if ((config.x != null) || (config.y != null)) {
+        x = (config.x || 0) / 2 + 0.5;
+        y = (config.y || 0) / 2 + 0.5;
+        ControlPanel.x = x * view.w - x * panelWidth | 0;
+        return ControlPanel.y = y * view.h - y * panelHeight | 0;
+      } else if (vertical) {
+        ControlPanel.x = view.w - panelWidth | 0;
+        return ControlPanel.y = view.h / 2 - panelHeight / 2 | 0;
+      } else {
+        ControlPanel.x = view.w / 2 - panelWidth / 2 | 0;
+        return ControlPanel.y = view.h - panelHeight | 0;
+      }
+    };
+    return Make("ControlPanel", ControlPanel);
+  });
+
+  Take(["GUI"], function(arg) {
+    var GUI, checkRowHeight, scopes;
+    GUI = arg.ControlPanel;
+    scopes = [];
+    Make("ControlPanelLayout", {
+      addScope: function(scope) {
+        return scopes.push(scope);
+      },
+      vertical: function(view) {
+        var approxColumnHeight, columnWidth, columns, fullHeight, i, len, len1, len2, m, n, newSize, oldSize, panelWidth, q, scope, size, sizes, tallestColumn, xOffset, yOffset;
+        if (!(view.h > 0 && scopes.length > 0)) {
+          return {
+            w: 0,
+            h: 0
+          };
+        }
+        sizes = [];
+        columnWidth = 0;
+        for (m = 0, len = scopes.length; m < len; m++) {
+          scope = scopes[m];
+          size = scope.getPreferredSize(null, view, true);
+          sizes.push(size);
+          columnWidth = Math.max(columnWidth, size.w);
+        }
+        fullHeight = 0;
+        for (i = n = 0, len1 = scopes.length; n < len1; i = ++n) {
+          scope = scopes[i];
+          oldSize = sizes[i];
+          newSize = scope.resize({
+            w: columnWidth,
+            h: oldSize.h
+          }, view, true);
+          sizes[i] = newSize;
+          fullHeight += newSize.h;
+        }
+        columns = Math.ceil(fullHeight / view.h);
+        approxColumnHeight = Math.ceil(fullHeight / columns);
+        xOffset = 0;
+        yOffset = 0;
+        tallestColumn = 0;
+        panelWidth = 0;
+        for (i = q = 0, len2 = scopes.length; q < len2; i = ++q) {
+          scope = scopes[i];
+          scope.x = xOffset;
+          scope.y = yOffset;
+          size = sizes[i];
+          yOffset += size.h;
+          if (yOffset > approxColumnHeight) {
+            xOffset += columnWidth;
+            if (yOffset > view.h && yOffset > size.h) {
+              tallestColumn = Math.max(tallestColumn, yOffset - size.h);
+              scope.x = xOffset;
+              scope.y = 0;
+              yOffset = size.h;
+            } else {
+              tallestColumn = Math.max(tallestColumn, yOffset);
+              yOffset = 0;
+            }
+          }
+        }
+        tallestColumn = Math.max(tallestColumn, yOffset);
+        return {
+          w: scope.x + columnWidth,
+          h: tallestColumn
+        };
+      },
+      horizontal: function(view) {
+        var col, columnWidth, columnWidths, i, i1, len, len1, len2, len3, len4, m, n, newSize, oldSize, q, rowHeight, scope, scopeHeight, size, sizes, totalWidth, u, xOffset, yOffset;
+        if (!(view.w > 0 && scopes.length > 0)) {
+          return {
+            w: 0,
+            h: 0
+          };
+        }
+        sizes = [];
+        rowHeight = 0;
+        for (m = 0, len = scopes.length; m < len; m++) {
+          scope = scopes[m];
+          size = scope.getPreferredSize(null, view, false);
+          sizes.push(size);
+          rowHeight = Math.max(rowHeight, size.h);
+        }
+        while (!checkRowHeight(rowHeight, sizes, view)) {
+          rowHeight += GUI.unit;
+        }
+        for (i = n = 0, len1 = scopes.length; n < len1; i = ++n) {
+          scope = scopes[i];
+          oldSize = sizes[i];
+          newSize = scope.resize({
+            w: oldSize.w,
+            h: rowHeight
+          }, view, false);
+          sizes[i] = newSize;
+          rowHeight = Math.max(rowHeight, size.h);
+        }
+        while (!checkRowHeight(rowHeight, sizes, view)) {
+          rowHeight += GUI.unit;
+        }
+        columnWidths = [0];
+        yOffset = 0;
+        col = 0;
+        for (q = 0, len2 = sizes.length; q < len2; q++) {
+          size = sizes[q];
+          yOffset += size.h;
+          if (yOffset > rowHeight) {
+            col++;
+            columnWidths[col] = 0;
+            yOffset = size.h;
+          }
+          columnWidths[col] = Math.max(size.w, columnWidths[col]);
+        }
+        totalWidth = 0;
+        for (u = 0, len3 = columnWidths.length; u < len3; u++) {
+          columnWidth = columnWidths[u];
+          totalWidth += columnWidth;
+        }
+        xOffset = 0;
+        yOffset = 0;
+        col = 0;
+        for (i = i1 = 0, len4 = scopes.length; i1 < len4; i = ++i1) {
+          scope = scopes[i];
+          scope.x = xOffset;
+          scope.y = yOffset;
+          scopeHeight = sizes[i].h;
+          yOffset += scopeHeight;
+          if (yOffset > rowHeight) {
+            scope.x = xOffset += columnWidths[col];
+            scope.y = 0;
+            yOffset = scopeHeight;
+            col++;
+          }
+          scope.resize({
+            w: columnWidths[col],
+            h: scopeHeight
+          }, view, false);
+        }
+        return {
+          w: totalWidth,
+          h: rowHeight
+        };
+      }
+    });
+    return checkRowHeight = function(rowHeight, sizes, view) {
+      var len, m, size, xOffset, yOffset;
+      xOffset = 0;
+      yOffset = 0;
+      for (m = 0, len = sizes.length; m < len; m++) {
+        size = sizes[m];
+        yOffset += size.h;
+        if (yOffset > rowHeight) {
+          xOffset += size.w;
+          yOffset = size.h;
+        }
+      }
+      if (xOffset + size.w < view.w) {
+        return true;
+      } else if (rowHeight > view.h / 2) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+  });
+
+  Take(["GUI", "Input", "Registry", "SVG", "Tween"], function(arg, Input, Registry, SVG, Tween) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Registry.set("Control", "button", function(elm, props) {
+      var bg, bgFill, bgc, blueBG, handlers, label, labelFill, lightBG, orangeBG, scope, tickBG, toClicked, toClicking, toHover, toNormal;
+      handlers = [];
+      bgFill = "hsl(220, 10%, 92%)";
+      labelFill = "hsl(227, 16%, 24%)";
+      SVG.attrs(elm, {
+        ui: true
+      });
+      bg = SVG.create("rect", elm, {
+        x: GUI.pad,
+        y: GUI.pad,
+        rx: GUI.borderRadius,
+        strokeWidth: 2,
+        fill: bgFill
+      });
+      label = SVG.create("text", elm, {
+        textContent: props.name,
+        fill: labelFill
+      });
+      bgc = blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      tickBG = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(bg, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+        });
+      };
+      tickBG(blueBG);
+      toNormal = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(bgc, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toClicked = function(e, state) {
+        return Tween(bgc, lightBG, .2, {
+          tick: tickBG
+        });
+      };
+      Input(elm, {
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
+        },
+        down: toClicking,
+        up: toHover,
+        moveOut: toNormal,
+        dragOut: toNormal,
+        click: function() {
+          var handler, len, m, results;
+          toClicked();
+          results = [];
+          for (m = 0, len = handlers.length; m < len; m++) {
+            handler = handlers[m];
+            results.push(handler());
+          }
+          return results;
+        }
+      });
+      return scope = {
+        attach: function(props) {
+          if (props.click != null) {
+            return handlers.push(props.click);
+          }
+        },
+        getPreferredSize: function() {
+          var buttonWidth, size;
+          buttonWidth = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
+          return size = {
+            w: buttonWidth,
+            h: GUI.unit
+          };
+        },
+        resize: function(size) {
+          var height;
+          height = Math.min(GUI.unit, size.h);
+          SVG.attrs(bg, {
+            width: size.w - GUI.pad * 2,
+            height: height - GUI.pad * 2
+          });
+          SVG.attrs(label, {
+            x: size.w / 2,
+            y: height / 2 + 6
+          });
+          return {
+            w: size.w,
+            h: height
+          };
+        },
+        _highlight: function(enable) {
+          if (enable) {
+            SVG.attrs(bg, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            return SVG.attrs(label, {
+              fill: "black"
+            });
+          } else {
+            SVG.attrs(bg, {
+              fill: bgFill
+            });
+            return SVG.attrs(label, {
+              fill: labelFill
+            });
+          }
+        }
+      };
+    });
+  });
+
+  Take(["GUI", "Registry", "SVG"], function(arg, Registry, SVG) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Registry.set("Control", "divider", function(elm, props) {
+      var g, height, scope;
+      g = SVG.create("rect", elm, {
+        x: GUI.pad,
+        y: GUI.pad,
+        height: GUI.pad * 2,
+        rx: 2,
+        fill: "hsl(227, 45%, 24%)"
+      });
+      height = GUI.pad * 4;
+      return scope = {
+        getPreferredSize: function(size, view, vertical) {
+          return {
+            w: 0,
+            h: 0
+          };
+        },
+        resize: function(size, view, vertical) {
+          var width;
+          if (this.alpha = vertical) {
+            width = size.w - GUI.pad * 2;
+            SVG.attrs(g, {
+              width: width
+            });
+            return {
+              w: width,
+              h: height
+            };
+          } else {
+            return {
+              w: 0,
+              h: 0
+            };
+          }
+        }
+      };
+    });
+  });
+
+  Take(["GUI", "Input", "Registry", "SVG", "Tween"], function(arg, Input, Registry, SVG, Tween) {
+    var GUI, buttonHeight, buttonWidth;
+    GUI = arg.ControlPanel;
+    buttonWidth = GUI.unit * 1.8;
+    buttonHeight = GUI.unit * 1.8;
+    return Registry.set("Control", "pushButton", function(elm, props) {
+      var bg, bgFill, bgc, blueBG, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, scope, tickBG, toClicking, toHover, toNormal;
+      onHandlers = [];
+      offHandlers = [];
+      bgFill = "hsl(220, 10%, 92%)";
+      labelFill = "hsl(227, 16%, 24%)";
+      SVG.attrs(elm, {
+        ui: true
+      });
+      bg = SVG.create("rect", elm, {
+        strokeWidth: 2,
+        fill: bgFill
+      });
+      label = SVG.create("text", elm, {
+        textContent: props.name,
+        fill: labelFill
+      });
+      bgc = blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      tickBG = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(bg, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+        });
+      };
+      tickBG(blueBG);
+      toNormal = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        return Tween(bgc, lightBG, 0, {
+          tick: tickBG
+        });
+      };
+      toClicking = function(e, state) {
+        return Tween(bgc, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      Input(elm, {
+        moveIn: toHover,
+        down: function() {
+          var len, m, onHandler, results;
+          toClicking();
+          results = [];
+          for (m = 0, len = onHandlers.length; m < len; m++) {
+            onHandler = onHandlers[m];
+            results.push(onHandler());
+          }
+          return results;
+        },
+        up: function() {
+          var len, m, offHandler, results;
+          toHover();
+          results = [];
+          for (m = 0, len = offHandlers.length; m < len; m++) {
+            offHandler = offHandlers[m];
+            results.push(offHandler());
+          }
+          return results;
+        },
+        miss: function() {
+          var len, m, offHandler, results;
+          toNormal();
+          results = [];
+          for (m = 0, len = offHandlers.length; m < len; m++) {
+            offHandler = offHandlers[m];
+            results.push(offHandler());
+          }
+          return results;
+        },
+        moveOut: toNormal
+      });
+      return scope = {
+        attach: function(props) {
+          if (props.on != null) {
+            onHandlers.push(props.on);
+          }
+          if (props.off != null) {
+            return offHandlers.push(props.off);
+          }
+        },
+        getPreferredSize: function() {
+          var size;
+          buttonWidth = Math.max(buttonWidth, label.getComputedTextLength() + GUI.pad * 8);
+          size = Math.max(buttonWidth, buttonHeight);
+          return {
+            w: size,
+            h: size
+          };
+        },
+        resize: function(space) {
+          var extra, size;
+          size = Math.max(buttonWidth, buttonHeight);
+          extra = {
+            x: space.w - size,
+            y: space.h - size
+          };
+          SVG.attrs(bg, {
+            x: GUI.pad + extra.x / 2,
+            y: GUI.pad + extra.y / 2,
+            width: size - GUI.pad * 2,
+            height: size - GUI.pad * 2,
+            rx: size / 2 - GUI.pad
+          });
+          SVG.attrs(label, {
+            x: space.w / 2,
+            y: space.h / 2 + 6
+          });
+          return {
+            w: size,
+            h: size
+          };
+        },
+        _highlight: function(enable) {
+          if (enable) {
+            SVG.attrs(bg, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            return SVG.attrs(label, {
+              fill: "black"
+            });
+          } else {
+            SVG.attrs(bg, {
+              fill: bgFill
+            });
+            return SVG.attrs(label, {
+              fill: labelFill
+            });
+          }
+        }
+      };
+    });
+  });
+
+  Take(["Registry", "GUI", "SelectorButton", "Scope", "SVG"], function(Registry, arg, SelectorButton, Scope, SVG) {
+    var GUI, idCounter;
+    GUI = arg.ControlPanel;
+    idCounter = 0;
+    return Registry.set("Control", "selector", function(elm, props) {
+      var activeButton, borderRect, buttonPreferredSizes, buttons, buttonsContainer, clip, clipRect, id, label, labelHeight, preferredSize, scope, setActive;
+      id = "Selector" + (idCounter++);
+      labelHeight = 0;
+      preferredSize = {
+        w: GUI.pad * 2,
+        h: GUI.unit
+      };
+      buttons = [];
+      activeButton = null;
+      buttonPreferredSizes = [];
+      clip = SVG.create("clipPath", SVG.defs, {
+        id: id
+      });
+      clipRect = SVG.create("rect", clip, {
+        rx: GUI.borderRadius,
+        fill: "#FFF"
+      });
+      if (props.name != null) {
+        label = SVG.create("text", elm, {
+          textContent: props.name,
+          fontSize: 16,
+          fill: "hsl(220, 10%, 92%)"
+        });
+        preferredSize.h += labelHeight = 22;
+      }
+      borderRect = SVG.create("rect", elm, {
+        rx: GUI.borderRadius + 2,
+        fill: "rgb(34, 46, 89)"
+      });
+      buttonsContainer = Scope(SVG.create("g", elm, {
+        clipPath: "url(#" + id + ")"
+      }));
+      buttonsContainer.x = GUI.pad;
+      buttonsContainer.y = labelHeight;
+      setActive = function(unclick) {
+        if (typeof activeButton === "function") {
+          activeButton();
+        }
+        return activeButton = unclick;
+      };
+      return scope = {
+        button: function(props) {
+          var bps, buttonElm, buttonScope;
+          props.setActive = setActive;
+          buttonElm = SVG.create("g", buttonsContainer.element);
+          buttonScope = Scope(buttonElm, SelectorButton, props);
+          buttons.push(buttonScope);
+          bps = buttonScope.getPreferredSize();
+          buttonPreferredSizes.push(bps);
+          preferredSize.w += bps.w;
+          return buttonScope;
+        },
+        getPreferredSize: function() {
+          var button, len, m, size, xOffset;
+          xOffset = 0;
+          for (m = 0, len = buttons.length; m < len; m++) {
+            button = buttons[m];
+            button.x = xOffset;
+            xOffset += button.resize(1, xOffset);
+          }
+          return size = {
+            w: xOffset,
+            h: GUI.unit + labelHeight
+          };
+        },
+        resize: function(arg1) {
+          var button, h, innerHeight, innerWidth, len, m, upscale, w, xOffset;
+          w = arg1.w, h = arg1.h;
+          innerWidth = w - GUI.pad * 2;
+          innerHeight = h - GUI.pad * 2;
+          upscale = w / preferredSize.w;
+          xOffset = 0;
+          for (m = 0, len = buttons.length; m < len; m++) {
+            button = buttons[m];
+            button.x = xOffset;
+            xOffset += button.resize(upscale, xOffset);
+          }
+          SVG.attrs(clipRect, {
+            x: 1,
+            y: GUI.pad + 1,
+            width: innerWidth - 2,
+            height: GUI.unit - GUI.pad * 2 - 2
+          });
+          SVG.attrs(borderRect, {
+            x: GUI.pad - 1,
+            y: GUI.pad + labelHeight - 1,
+            width: innerWidth + 2,
+            height: GUI.unit - GUI.pad * 2 + 2
+          });
+          if (label != null) {
+            SVG.attrs(label, {
+              x: w / 2,
+              y: 18
+            });
+          }
+          return {
+            w: w,
+            h: h
+          };
+        }
+      };
+    });
+  });
+
+  Take(["GUI", "Input", "SVG", "Tween"], function(arg, Input, SVG, Tween) {
+    var GUI, active;
+    GUI = arg.ControlPanel;
+    active = null;
+    return Make("SelectorButton", function(elm, props) {
+      var attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, lightBG, orangeBG, preferredSize, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
+      preferredSize = {
+        w: null,
+        h: GUI.unit
+      };
+      handlers = [];
+      isActive = false;
+      highlighting = false;
+      labelFill = "hsl(227, 16%, 24%)";
+      SVG.attrs(elm, {
+        ui: true
+      });
+      bg = SVG.create("rect", elm);
+      label = SVG.create("text", elm, {
+        textContent: props.name,
+        fill: labelFill
+      });
+      curBG = whiteBG = {
+        r: 233,
+        g: 234,
+        b: 237
+      };
+      lightBG = {
+        r: 142,
+        g: 196,
+        b: 96
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      blueBG = {
+        r: 183,
+        g: 213,
+        b: 255
+      };
+      tickBG = function(_curBG) {
+        curBG = _curBG;
+        if (highlighting) {
+          if (isActive) {
+            return SVG.attrs(bg, {
+              fill: "url(#MidHighlightGradient)"
+            });
+          } else {
+            return SVG.attrs(bg, {
+              fill: "url(#LightHighlightGradient)"
+            });
+          }
+        } else {
+          return SVG.attrs(bg, {
+            fill: "rgb(" + (curBG.r | 0) + "," + (curBG.g | 0) + "," + (curBG.b | 0) + ")"
+          });
+        }
+      };
+      tickBG(whiteBG);
+      toNormal = function(e, state) {
+        return Tween(curBG, whiteBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch && !isActive) {
+          return Tween(curBG, blueBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(curBG, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toActive = function(e, state) {
+        return Tween(curBG, lightBG, .2, {
+          tick: tickBG
+        });
+      };
+      unclick = function() {
+        toNormal();
+        return isActive = false;
+      };
+      click = function(e, state) {
+        var handler, len, m, results;
+        props.setActive(unclick);
+        isActive = true;
+        toActive();
+        results = [];
+        for (m = 0, len = handlers.length; m < len; m++) {
+          handler = handlers[m];
+          results.push(handler());
+        }
+        return results;
+      };
+      Input(elm, {
+        moveIn: function(e, state) {
+          if (!isActive) {
+            return toHover(e, state);
+          }
+        },
+        dragIn: function(e, state) {
+          if (state.clicking && !isActive) {
+            return toClicking(e, state);
+          }
+        },
+        down: function(e, state) {
+          if (!isActive) {
+            return toClicking(e, state);
+          }
+        },
+        up: function(e, state) {
+          if (!isActive) {
+            return toHover(e, state);
+          }
+        },
+        moveOut: function(e, state) {
+          if (!isActive) {
+            return toNormal(e, state);
+          }
+        },
+        dragOut: function(e, state) {
+          if (!isActive) {
+            return toNormal(e, state);
+          }
+        },
+        click: function(e, state) {
+          if (!isActive) {
+            return click(e, state);
+          }
+        }
+      });
+      attachClick = function(cb) {
+        return handlers.push(cb);
+      };
+      if (props.click != null) {
+        attachClick(props.click);
+      }
+      Take("SceneReady", function() {
+        if (props.active) {
+          return click();
+        }
+      });
+      return scope = {
+        click: attachClick,
+        getPreferredSize: function() {
+          preferredSize.w = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
+          return preferredSize;
+        },
+        resize: function(upscale) {
+          var innerHeight, innerWidth;
+          innerWidth = Math.ceil(preferredSize.w * upscale);
+          innerHeight = preferredSize.h - GUI.pad * 2;
+          SVG.attrs(bg, {
+            x: 1,
+            y: GUI.pad + 1,
+            width: innerWidth - 2,
+            height: innerHeight - 2
+          });
+          SVG.attrs(label, {
+            x: innerWidth / 2,
+            y: innerHeight / 2 + 6 + GUI.pad
+          });
+          return innerWidth;
+        },
+        _highlight: function(enable) {
+          if (highlighting = enable) {
+            SVG.attrs(label, {
+              fill: "black"
+            });
+          } else {
+            SVG.attrs(label, {
+              fill: labelFill
+            });
+          }
+          return tickBG(curBG);
+        }
+      };
+    });
+  });
+
+  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Registry.set("Control", "slider", function(elm, props) {
+      var bgc, blueBG, handleDrag, handlers, label, labelFill, lightBG, orangeBG, range, scope, startDrag, thumb, thumbBG, thumbBGFill, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
+      handlers = [];
+      v = 0;
+      range = 0;
+      startDrag = 0;
+      trackFill = "hsl(227, 45%, 24%)";
+      thumbBGFill = "hsl(220, 10%, 92%)";
+      labelFill = "hsl(227, 16%, 24%)";
+      SVG.attrs(elm, {
+        ui: true
+      });
+      track = TRS(SVG.create("rect", elm, {
+        x: GUI.pad,
+        y: GUI.pad,
+        strokeWidth: 2,
+        fill: trackFill,
+        stroke: "hsl(227, 45%, 24%)"
+      }));
+      thumb = TRS(SVG.create("g", elm));
+      thumbBG = SVG.create("rect", thumb, {
+        x: GUI.pad,
+        y: GUI.pad,
+        strokeWidth: 2,
+        fill: thumbBGFill
+      });
+      label = SVG.create("text", thumb, {
+        textContent: props.name,
+        fill: labelFill
+      });
+      bgc = blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      tickBG = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(thumbBG, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+        });
+      };
+      tickBG(blueBG);
+      update = function(V) {
+        if (V != null) {
+          v = Math.max(0, Math.min(1, V));
+        }
+        return TRS.abs(thumb, {
+          x: v * range
+        });
+      };
+      toNormal = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(bgc, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toClicked = function(e, state) {
+        return Tween(bgc, lightBG, .2, {
+          tick: tickBG
+        });
+      };
+      toMissed = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      handleDrag = function(e, state) {
+        var handler, len, m, results;
+        if (state.clicking) {
+          update(e.clientX / range - startDrag);
+          results = [];
+          for (m = 0, len = handlers.length; m < len; m++) {
+            handler = handlers[m];
+            results.push(handler(v));
+          }
+          return results;
+        }
+      };
+      Input(elm, {
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
+        },
+        down: function(e) {
+          toClicking();
+          return startDrag = e.clientX / range - v;
+        },
+        moveOut: toNormal,
+        miss: toMissed,
+        drag: handleDrag,
+        dragOther: handleDrag,
+        click: toClicked
+      });
+      return scope = {
+        attach: function(props) {
+          if (props.change != null) {
+            handlers.push(props.change);
+          }
+          if (props.value != null) {
+            return update(props.value);
+          }
+        },
+        getPreferredSize: function() {
+          var size;
+          return size = {
+            w: GUI.width,
+            h: GUI.unit
+          };
+        },
+        resize: function(size) {
+          var height, labelWidth;
+          labelWidth = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
+          height = Math.min(GUI.unit, size.h);
+          range = size.w - GUI.pad * 2 - labelWidth;
+          update();
+          SVG.attrs(track, {
+            width: size.w - GUI.pad * 2,
+            height: height - GUI.pad * 2,
+            rx: (height - GUI.pad * 2) / 2
+          });
+          SVG.attrs(thumbBG, {
+            width: labelWidth,
+            height: height - GUI.pad * 2,
+            rx: (height - GUI.pad * 2) / 2
+          });
+          SVG.attrs(label, {
+            x: GUI.pad + labelWidth / 2,
+            y: height / 2 + 6
+          });
+          return {
+            w: size.w,
+            h: height
+          };
+        },
+        _highlight: function(enable) {
+          if (enable) {
+            SVG.attrs(track, {
+              fill: "url(#DarkHighlightGradient)"
+            });
+            SVG.attrs(thumbBG, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            return SVG.attrs(label, {
+              fill: "black"
+            });
+          } else {
+            SVG.attrs(track, {
+              fill: trackFill
+            });
+            SVG.attrs(thumbBG, {
+              fill: thumbBGFill
+            });
+            return SVG.attrs(label, {
+              fill: labelFill
+            });
+          }
+        }
+      };
+    });
+  });
+
+  Take(["Mode"], function(Mode) {
+    if (!Mode.dev) {
+      window.addEventListener("contextmenu", function(e) {
+        return e.preventDefault();
+      });
+    }
+    window.addEventListener("dragstart", function(e) {
+      return e.preventDefault();
+    });
+    if (Mode.nav) {
+      window.addEventListener("scroll", function(e) {
+        return e.preventDefault();
+      });
+      return window.addEventListener("touchmove", function(e) {
+        return e.preventDefault();
+      });
+    }
+  });
+
+  Take(["GUI", "Mode", "ParentObject", "Resize", "SVG", "Tick", "SVGReady"], function(GUI, Mode, ParentObject, Resize, SVG, Tick) {
+    var avgList, avgWindow, count, fps, freq, prev, ref, text, total;
+    freq = .2;
+    count = freq;
+    avgWindow = 1;
+    avgList = [];
+    total = 0;
+    fps = 1;
+    text = null;
+    Make("FPS", function() {
+      return fps;
+    });
+    if (Mode.dev) {
+      text = document.createElement("div");
+      text.setAttribute("svga-fps", "true");
+      if (ParentObject === document.body) {
+        document.body.insertBefore(text, document.body.firstChild);
+      } else {
+        prev = ParentObject.previousSibling;
+        if (prev != null ? typeof prev.hasAttribute === "function" ? prev.hasAttribute("svga-fps") : void 0 : void 0) {
+          text = prev;
+        } else {
+          if ((ref = ParentObject.parentNode) != null) {
+            ref.insertBefore(text, ParentObject);
+          }
+        }
+      }
+    }
+    return Tick(function(time, dt) {
+      var fpsDisplay;
+      avgList.push(dt);
+      total += dt;
+      while (total > avgWindow && avgList.length > 0) {
+        total -= avgList.shift();
+      }
+      fps = avgList.length / total;
+      fps = Math.min(60, fps);
+      if (isNaN(fps)) {
+        fps = 2;
+      }
+      count += dt;
+      if (Mode.dev && count >= freq) {
+        count -= freq;
+        fpsDisplay = fps < 30 ? fps.toFixed(1) : Math.ceil(fps);
+        text.textContent = fpsDisplay;
+        return text.style.color = fps <= 5 ? "#C00" : fps <= 10 ? "#E60" : "rgba(0,0,0,0.5)";
+      }
+    });
+  });
+
+  Take(["SVG", "SVGReady"], function(SVG) {
+    var GUI;
+    return Make("GUI", GUI = {
+      elm: SVG.create("g", SVG.root, {
+        xGui: ""
+      }),
+      ControlPanel: {
+        width: 200,
+        unit: 42,
+        pad: 3,
+        borderRadius: 4,
+        light: "hsl(220, 45%, 50%)",
+        dark: "hsl(227, 45%, 35%)"
+      }
+    });
+  });
+
+  Take(["ControlPanel", "Mode", "Nav", "RAF", "Resize", "SceneReady"], function(ControlPanel, Mode, Nav, RAF, Resize) {
+    return Resize(function() {
+      var rect;
+      rect = {
+        x: 0,
+        y: 0,
+        w: window.innerWidth,
+        h: window.innerHeight
+      };
+      ControlPanel.claimSpace(rect);
+      if (Mode.nav) {
+        return Nav.assignSpace(rect);
+      }
+    });
+  });
+
+  Take(["Reaction", "SceneReady"], function(Reaction) {
+    var root;
+    root = document.querySelector("#root");
+    Reaction("Root:Show", function() {
+      return root._scope.show(1);
+    });
+    return Reaction("Root:Hide", function() {
+      return root._scope.hide(1);
+    });
+  });
+
+  Take(["Mode", "RAF", "Tween", "AllReady"], function(Mode, RAF, Tween) {
+    if (Mode.dev) {
+      return RAF(function() {
+        return document.querySelector("svg").style.opacity = 1;
+      });
+    } else {
+      return Tween(0, 1, .5, function(v) {
+        return document.querySelector("svg").style.opacity = v;
+      });
+    }
+  });
+
+  Take(["Mode", "Nav"], function(Mode, Nav) {
+    if (!Mode.nav) {
+      return;
+    }
+    window.addEventListener("gesturestart", function(e) {
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return Nav.startScale();
+      }
+    });
+    return window.addEventListener("gesturechange", function(e) {
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return Nav.scale(e.scale);
+      }
+    });
+  });
+
+  Take(["KeyMe", "Mode", "Nav", "Tick"], function(KeyMe, Mode, Nav, Tick) {
+    var accel, decel, getAccel, maxVel, vel;
+    if (!Mode.nav) {
+      return;
+    }
+    decel = 1.25;
+    maxVel = {
+      xy: 10,
+      z: 0.05
+    };
+    accel = {
+      xy: 0.7,
+      z: 0.004
+    };
+    vel = {
+      a: 0,
+      d: 0,
+      z: 0
+    };
+    Tick(function() {
+      var down, inputX, inputY, inputZ, left, minus, plus, right, up;
+      left = KeyMe.pressing["left"];
+      right = KeyMe.pressing["right"];
+      up = KeyMe.pressing["up"];
+      down = KeyMe.pressing["down"];
+      plus = KeyMe.pressing["equals"];
+      minus = KeyMe.pressing["minus"];
+      inputX = getAccel(left, right);
+      inputY = getAccel(up, down);
+      inputZ = getAccel(plus, minus);
+      if (inputZ === 0) {
+        vel.z /= decel;
+      }
+      vel.z = Math.max(-maxVel.z, Math.min(maxVel.z, vel.z + accel.z * inputZ));
+      if (inputX === 0 && inputY === 0) {
+        vel.d /= decel;
+      }
+      if (inputY || inputX) {
+        vel.a = Math.atan2(inputY, inputX);
+      }
+      vel.d = Math.min(maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY)));
+      if (!(Math.abs(vel.d) > 0.01 || Math.abs(vel.z) > 0.01)) {
+        return;
+      }
+      return Nav.by({
+        x: Math.cos(vel.a) * vel.d,
+        y: Math.sin(vel.a) * vel.d,
+        z: vel.z
+      });
+    });
+    return getAccel = function(pos, neg) {
+      if (pos && !neg) {
+        return 1;
+      }
+      if (neg && !pos) {
+        return -1;
+      }
+      return 0;
+    };
+  });
+
+  Take(["Input", "Mode", "Nav"], function(Input, Mode, Nav) {
+    var calls, down, drag, dragging, up;
+    if (!Mode.nav) {
+      return;
+    }
+    dragging = false;
+    down = function(e) {
+      e.preventDefault();
+      if (Nav.eventInside(e)) {
+        return dragging = true;
+      }
+    };
+    drag = function(e, state) {
+      if (dragging && state.down) {
+        return Nav.by({
+          x: state.deltaX,
+          y: state.deltaY
+        });
+      }
+    };
+    up = function() {
+      return dragging = false;
+    };
+    calls = {
+      down: down,
+      downOther: down,
+      drag: drag,
+      dragOther: drag,
+      up: up,
+      upOther: up
+    };
+    Input(document, calls, true, false);
+    document.addEventListener("dblclick", function(e) {
+      if (e.button !== 0) {
+        return;
+      }
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return Nav.to({
+          x: 0,
+          y: 0,
+          z: 0
+        });
+      }
+    });
+    return document.addEventListener("wheel", function(e) {
+      if (e.button !== 0) {
+        return;
+      }
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        if (e.deltaMode === WheelEvent.DOM_DELTA_PIXEL) {
+          return Nav.by({
+            z: -e.deltaY / 500
+          });
+        } else {
+          return Nav.by({
+            z: -e.deltaY / 20
+          });
+        }
+      }
+    });
+  });
+
+  Take(["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(Mode, RAF, Resize, SVG, Tween) {
+    var Nav, center, dist, distTo, height, initialSize, limit, ox, oy, pos, render, requestRender, root, scaleStartPosZ, tween, width, xLimit, yLimit, zLimit;
+    root = document.getElementById("root");
+    if (!Mode.nav) {
+      Make("Nav", false);
+      width = SVG.attr(SVG.root, "width");
+      height = SVG.attr(SVG.root, "height");
+      if (!((width != null) && (height != null))) {
+        throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
+      }
+      return Resize(function() {
+        var hFrac, scale, wFrac, x, y;
+        wFrac = window.innerWidth / width;
+        hFrac = window.innerHeight / height;
+        scale = Math.min(wFrac, hFrac);
+        x = (window.innerWidth - width * scale) / (2 * scale);
+        y = (window.innerHeight - height * scale) / (2 * scale);
+        return SVG.attr(root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
+      });
+    } else {
+      SVG.attrs(SVG.root, {
+        width: null,
+        height: null
+      });
+      pos = {
+        x: 0,
+        y: 0,
+        z: 0
+      };
+      center = {
+        x: 0,
+        y: 0,
+        z: 1
+      };
+      xLimit = {};
+      yLimit = {};
+      zLimit = {
+        min: -0.5,
+        max: 3
+      };
+      scaleStartPosZ = 0;
+      tween = null;
+      initialSize = root.getBoundingClientRect();
+      if (!(initialSize.width > 0 && initialSize.height > 0)) {
+        return;
+      }
+      ox = root._scope.x - initialSize.left - initialSize.width / 2;
+      oy = root._scope.y - initialSize.top - initialSize.height / 2;
+      xLimit.max = initialSize.width / 2;
+      yLimit.max = initialSize.height / 2;
+      xLimit.min = -xLimit.max;
+      yLimit.min = -yLimit.max;
+      requestRender = function() {
+        return RAF(render, true);
+      };
+      render = function() {
+        var z;
+        z = center.z * Math.pow(2, pos.z);
+        return SVG.attr(root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
+      };
+      limit = function(l, v) {
+        return Math.min(l.max, Math.max(l.min, v));
+      };
+      Make("Nav", Nav = {
+        to: function(p) {
+          var time, timeX, timeY, timeZ;
+          if (tween != null) {
+            Tween.cancel(tween);
+          }
+          timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
+          timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
+          timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
+          time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
+          return tween = Tween(pos, p, time, {
+            mutate: true,
+            tick: render
+          });
+        },
+        by: function(p) {
+          var scale;
+          if (tween != null) {
+            Tween.cancel(tween);
+          }
+          if (p.z != null) {
+            pos.z = limit(zLimit, pos.z + p.z);
+          }
+          scale = center.z * Math.pow(2, pos.z);
+          if (p.x != null) {
+            pos.x = limit(xLimit, pos.x + p.x / scale);
+          }
+          if (p.y != null) {
+            pos.y = limit(yLimit, pos.y + p.y / scale);
+          }
+          return requestRender();
+        },
+        at: function(p) {
+          var scale;
+          if (tween != null) {
+            Tween.cancel(tween);
+          }
+          if (p.z != null) {
+            pos.z = limit(zLimit, p.z);
+          }
+          scale = center.z * Math.pow(2, pos.z);
+          if (p.x != null) {
+            pos.x = limit(xLimit, p.x / scale);
+          }
+          if (p.y != null) {
+            pos.y = limit(yLimit, p.y / scale);
+          }
+          return requestRender();
+        },
+        startScale: function() {
+          return scaleStartPosZ = pos.z;
+        },
+        scale: function(s) {
+          if (tween != null) {
+            Tween.cancel(tween);
+          }
+          pos.z = limit(zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s));
+          return requestRender();
+        },
+        eventInside: function(e) {
+          var ref;
+          if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+            e = e.touches[0];
+          }
+          return e.target === document.body || e.target === SVG.root || root.contains(e.target);
+        },
+        assignSpace: function(rect) {
+          var c, hFrac, wFrac;
+          wFrac = rect.w / initialSize.width;
+          hFrac = rect.h / initialSize.height;
+          c = {
+            x: rect.x + rect.w / 2,
+            y: rect.y + rect.h / 2,
+            z: .9 * Math.min(wFrac, hFrac)
+          };
+          if (center.x === 0) {
+            center = c;
+            return render();
+          } else {
+            return Tween(center, c, 0.5, {
+              mutate: true,
+              tick: render
+            });
+          }
+        }
+      });
+      distTo = function(a, b) {
+        var dx, dy, dz;
+        dx = a.x - b.x;
+        dy = a.y - b.y;
+        return dz = 200 * a.z - b.z;
+      };
+      return dist = function(x, y, z) {
+        if (z == null) {
+          z = 0;
+        }
+        return Math.sqrt(x * x + y * y + z * z);
+      };
+    }
+  });
+
+  Take(["Mode", "Nav"], function(Mode, Nav) {
+    var gesture;
+    if (!Mode.nav) {
+      return;
+    }
+    if (!(navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 1)) {
+      return;
+    }
+    gesture = new MSGesture();
+    gesture.target = document.querySelector("svg");
+    gesture.target.addEventListener("pointerdown", function(e) {
+      if (Nav.eventInside(e)) {
+        return gesture.addPointer(e.pointerId);
+      }
+    });
+    return gesture.target.addEventListener("MSGestureChange", function(e) {
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return Nav.by({
+          z: Math.log2(e.scale)
+        });
+      }
+    });
+  });
+
+  Take(["Mode", "Nav"], function(Mode, Nav) {
+    var cloneTouches, distTouches, lastTouches, touchMove, touchStart;
+    if (!Mode.nav) {
+      return;
+    }
+    lastTouches = null;
+    window.addEventListener("touchstart", touchStart = function(e) {
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        return cloneTouches(e);
+      }
+    });
+    window.addEventListener("touchmove", touchMove = function(e) {
+      var a, b;
+      if (Nav.eventInside(e)) {
+        e.preventDefault();
+        if (e.touches.length !== lastTouches.length) {
+
+        } else if (e.touches.length > 1) {
+          a = distTouches(lastTouches);
+          b = distTouches(e.touches);
+          Nav.by({
+            z: (b - a) / 200
+          });
+        } else {
+          Nav.by({
+            x: e.touches[0].clientX - lastTouches[0].clientX,
+            y: e.touches[0].clientY - lastTouches[0].clientY
+          });
+        }
+        return cloneTouches(e);
+      }
+    });
+    cloneTouches = function(e) {
+      var t;
+      return lastTouches = (function() {
+        var len, m, ref, results;
+        ref = e.touches;
+        results = [];
+        for (m = 0, len = ref.length; m < len; m++) {
+          t = ref[m];
+          results.push({
+            clientX: t.clientX,
+            clientY: t.clientY
+          });
+        }
+        return results;
+      })();
+    };
+    return distTouches = function(touches) {
+      var a, b, dx, dy;
+      a = touches[0];
+      b = touches[1];
+      dx = a.clientX - b.clientX;
+      dy = a.clientY - b.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+  });
+
+  if ((base = SVGElement.prototype).contains == null) {
+    base.contains = function(node) {
+      while (node != null) {
+        if (this === node) {
+          return true;
+        }
+        node = node.parentNode;
+      }
+      return false;
+    };
+  }
+
+  if (Math.log2 == null) {
+    Math.log2 = function(x) {
+      return Math.log(x) / Math.LN2;
+    };
+  }
+
+  Take(["Action", "ControlPanel", "Reaction"], function(Action, ControlPanel, Reaction) {
+    var root, schematic, update;
+    root = true;
+    schematic = false;
+    Reaction("ControlPanel:Hide", ControlPanel.hide);
+    Reaction("ControlPanel:Hide", ControlPanel.show);
+    update = function() {
+      if (root && !schematic) {
+        return Action("ControlPanel:Show");
+      } else {
+        return Action("ControlPanel:Hide");
+      }
+    };
+    Reaction("Schematic:Hide", function() {
+      return update(schematic = false);
+    });
+    Reaction("Schematic:Show", function() {
+      return update(schematic = true);
+    });
+    Reaction("Root:Hide", function() {
+      return update(root = false);
+    });
+    return Reaction("Root:Show", function() {
+      return update(root = true);
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Reaction("FlowArrows:Hide", function() {
+      return showing = false;
+    });
+    Reaction("FlowArrows:Show", function() {
+      return showing = true;
+    });
+    Reaction("FlowArrows:Toggle", function() {
+      return Action(showing ? "FlowArrows:Hide" : "FlowArrows:Show");
+    });
+    return Take("AllReady", function() {
+      return Action("FlowArrows:Show");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Reaction("Help:Hide", function() {
+      return showing = false;
+    });
+    Reaction("Help:Show", function() {
+      return showing = true;
+    });
+    Reaction("Help:Toggle", function() {
+      return Action(showing ? "Help:Hide" : "Help:Show");
+    });
+    return Reaction("Settings:Show", function() {
+      return Action("Help:Hide");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Reaction("Labels:Hide", function() {
+      return showing = false;
+    });
+    Reaction("Labels:Show", function() {
+      return showing = true;
+    });
+    return Reaction("Labels:Toggle", function() {
+      return Action(showing ? "Labels:Hide" : "Labels:Show");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var help, settings, update;
+    help = false;
+    settings = false;
+    update = function() {
+      if (help || settings) {
+        return Action("Root:Hide");
+      } else {
+        return Action("Root:Show");
+      }
+    };
+    Reaction("Help:Show", function() {
+      return update(help = true);
+    });
+    Reaction("Help:Hide", function() {
+      return update(help = false);
+    });
+    Reaction("Settings:Show", function() {
+      return update(settings = true);
+    });
+    return Reaction("Settings:Hide", function() {
+      return update(settings = false);
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var schematicMode;
+    schematicMode = true;
+    Reaction("Schematic:Hide", function() {
+      return schematicMode = false;
+    });
+    Reaction("Schematic:Show", function() {
+      return schematicMode = true;
+    });
+    Reaction("Schematic:Toggle", function() {
+      return Action(schematicMode ? "Schematic:Hide" : "Schematic:Show");
+    });
+    return Take("AllReady", function() {
+      return Action("Schematic:Hide");
+    });
+  });
+
+  Take(["Action", "Reaction"], function(Action, Reaction) {
+    var showing;
+    showing = false;
+    Reaction("Settings:Hide", function() {
+      return showing = false;
+    });
+    Reaction("Settings:Show", function() {
+      return showing = true;
+    });
+    Reaction("Settings:Toggle", function() {
+      return Action(showing ? "Settings:Hide" : "Settings:Show");
+    });
+    return Reaction("Help:Show", function() {
+      return Action("Settings:Hide");
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var alpha, element, placeholder;
+      ScopeCheck(scope, "alpha");
+      element = scope.element;
+      placeholder = SVG.create("g");
+      alpha = 1;
+      return Object.defineProperty(scope, 'alpha', {
+        get: function() {
+          return alpha;
+        },
+        set: function(val) {
+          if (val === true) {
+            val = 1;
+          }
+          if (!val) {
+            val = 0;
+          }
+          if (alpha !== val) {
+            SVG.style(element, "opacity", alpha = val);
+            if (alpha > 0) {
+              if (placeholder.parentNode != null) {
+                return placeholder.parentNode.replaceChild(element, placeholder);
+              }
+            } else {
+              if (element.parentNode != null) {
+                return element.parentNode.replaceChild(placeholder, element);
+              }
+            }
+          }
+        }
+      });
+    });
+  });
+
+  Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var animate, running, startTime;
+      if (scope.animate == null) {
+        return;
+      }
+      running = false;
+      startTime = 0;
+      animate = scope.animate;
+      scope.animate = function() {
+        throw new Error("@animate() is called by the system. Please don't call it yourself.");
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        if (startTime == null) {
+          startTime = time;
+        }
+        return animate.call(scope, time - startTime, dt);
+      });
+      Reaction("Schematic:Hide", function() {
+        startTime = null;
+        return running = true;
+      });
+      return Reaction("Schematic:Show", function() {
+        return running = false;
+      });
+    });
+  });
+
+  Take(["Reaction", "Registry"], function(Reaction, Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      Reaction("Schematic:Hide", function() {
+        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
+      });
+      return Reaction("Schematic:Show", function() {
+        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
+      });
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var paths;
+      ScopeCheck(scope, "dash");
+      paths = scope.element.querySelectorAll("path");
+      scope.dash = function(v) {
+        var len, m, path, results;
+        results = [];
+        for (m = 0, len = paths.length; m < len; m++) {
+          path = paths[m];
+          results.push(SVG.attrs(path, {
+            "stroke-dasharray": v
+          }));
+        }
+        return results;
+      };
+      scope.dash.manifold = function() {
+        return scope.dash("50 5 10 5 10 5");
+      };
+      return scope.dash.pilot = function() {
+        return scope.dash("6 6");
+      };
+    });
+  });
+
+  Take(["Mode", "Registry", "ScopeCheck", "Scope", "SVG"], function(Mode, Registry, ScopeCheck, Scope, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      ScopeCheck(scope, "debug");
+      return Object.defineProperty(scope, 'debug', {
+        get: function() {
+          return {
+            point: function(color) {
+              var point;
+              if (Mode.dev) {
+                point = Scope(SVG.create("g", scope.element));
+                if (color != null) {
+                  SVG.create("rect", point.element, {
+                    fill: "#000",
+                    x: 0,
+                    y: 0,
+                    width: 10,
+                    height: 10
+                  });
+                }
+                if (color != null) {
+                  SVG.create("rect", point.element, {
+                    fill: color,
+                    x: 0,
+                    y: 0,
+                    width: 9,
+                    height: 9
+                  });
+                }
+                SVG.create("rect", point.element, {
+                  fill: "#000",
+                  x: -1,
+                  y: -1,
+                  width: 2,
+                  height: 2
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#FFF",
+                  x: -.5,
+                  y: -.5,
+                  width: 1,
+                  height: 1
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#FFF",
+                  x: 1,
+                  y: -1,
+                  width: 48,
+                  height: 2
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#F00",
+                  x: 1,
+                  y: -.5,
+                  width: 48,
+                  height: 1
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#000",
+                  x: -1,
+                  y: 1,
+                  width: 2,
+                  height: 48
+                });
+                SVG.create("rect", point.element, {
+                  fill: "#0F0",
+                  x: -.5,
+                  y: 1,
+                  width: 1,
+                  height: 48
+                });
+                return point;
+              }
+            }
+          };
+        }
+      });
+    });
+  });
+
+  Take(["Registry"], function(Registry) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      scope.getPressureColor = function() {
+        throw new Error("@getPressureColor() has been removed. Please Take and use Pressure() instead.");
+      };
+      scope.setText = function() {
+        throw new Error("@setText(x) has been removed. Please @text = x instead.");
+      };
+      Object.defineProperty(scope, "cx", {
+        get: function() {
+          throw new Error("cx has been removed.");
+        }
+      });
+      Object.defineProperty(scope, "cy", {
+        get: function() {
+          throw new Error("cy has been removed.");
+        }
+      });
+      return Object.defineProperty(scope, "turns", {
+        get: function() {
+          throw new Error("turns has been removed. Please use @rotation instead.");
+        }
+      });
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var childPathFill, childPathStroke, fill, stroke;
+      ScopeCheck(scope, "stroke", "fill");
+      childPathStroke = childPathFill = scope.element.querySelector("path");
+      stroke = null;
+      Object.defineProperty(scope, 'stroke', {
+        get: function() {
+          return stroke;
+        },
+        set: function(val) {
+          if (stroke !== val) {
+            SVG.attr(scope.element, "stroke", stroke = val);
+            if (childPathStroke != null) {
+              SVG.attr(childPathStroke, "stroke", null);
+              return childPathStroke = null;
+            }
+          }
+        }
+      });
+      fill = null;
+      return Object.defineProperty(scope, 'fill', {
+        get: function() {
+          return fill;
+        },
+        set: function(val) {
+          if (fill !== val) {
+            SVG.attr(scope.element, "fill", fill = val);
+            if (childPathFill != null) {
+              SVG.attr(childPathFill, "fill", null);
+              return childPathFill = null;
+            }
+          }
+        }
+      });
+    });
+  });
+
+  Take(["Gradient", "Registry", "ScopeCheck"], function(Gradient, Registry, ScopeCheck) {
+    var gradientCount;
+    gradientCount = 0;
+    return Registry.add("ScopeProcessor", function(scope) {
+      var lGradAngle, lGradName, lGradStops, linearGradient, rGradName, rGradProps, rGradStops, radialGradient;
+      ScopeCheck(scope, "linearGradient", "radialGradient");
+      gradientCount++;
+      linearGradient = null;
+      radialGradient = null;
+      lGradName = "LGradient" + gradientCount;
+      lGradAngle = null;
+      lGradStops = null;
+      rGradName = "RGradient" + gradientCount;
+      rGradProps = null;
+      rGradStops = null;
+      scope.linearGradient = function() {
+        var angle, stops;
+        angle = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+        if (linearGradient == null) {
+          linearGradient = Gradient.linear(lGradName);
+        }
+        if (typeof angle === "string") {
+          stops.push(angle);
+          angle = 0;
+        }
+        if (lGradAngle !== angle) {
+          lGradAngle = angle;
+          Gradient.updateProps(linearGradient, {
+            x2: Math.cos(angle * Math.PI / 180),
+            y2: Math.sin(angle * Math.PI / 180)
+          });
+        }
+        if (lGradStops !== stops) {
+          lGradStops = stops;
+          Gradient.updateStops.apply(Gradient, [linearGradient].concat(slice.call(stops)));
+        }
+        return scope.fill = "url(#" + lGradName + ")";
+      };
+      return scope.radialGradient = function() {
+        var props, stops;
+        props = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+        if (radialGradient == null) {
+          radialGradient = Gradient.radial(rGradName);
+        }
+        if (typeof props === "string" || typeof props === "number") {
+          stops.push(props);
+          props = {
+            r: 0.5
+          };
+        }
+        if (rGradProps !== props) {
+          rGradProps = props;
+          Gradient.updateProps(radialGradient, props);
+        }
+        if (rGradStops !== stops) {
+          rGradStops = stops;
+          Gradient.updateStops.apply(Gradient, [radialGradient].concat(slice.call(stops)));
+        }
+        return scope.fill = "url(#" + rGradName + ")";
+      };
+    });
+  });
+
+  Take(["Registry", "ScopeCheck"], function(Registry, ScopeCheck) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var size;
+      ScopeCheck(scope, "initialWidth", "initialHeight");
+      size = scope.element.getBoundingClientRect();
+      scope.initialWidth = size.width;
+      return scope.initialHeight = size.height;
+    });
+  });
+
+  Take(["Pressure", "Registry", "ScopeCheck", "SVG"], function(Pressure, Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var accessors, pressure;
+      ScopeCheck(scope, "pressure");
+      pressure = null;
+      accessors = {
+        get: function() {
+          return pressure;
+        },
+        set: function(val) {
+          if (pressure !== val) {
+            pressure = val;
+            if (scope._setPressure != null) {
+              return scope._setPressure(pressure);
+            } else {
+              return scope.fill = Pressure(scope.pressure);
+            }
+          }
+        }
+      };
+      return Object.defineProperty(scope, 'pressure', accessors);
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "Tween"], function(Registry, ScopeCheck, Tween) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var tick;
+      ScopeCheck(scope, "show", "hide");
+      tick = function(v) {
+        return scope.alpha = v;
+      };
+      scope.show = function(d) {
+        if (d == null) {
+          d = 1;
+        }
+        return Tween(scope.alpha, 1, d, {
+          tick: tick,
+          ease: "linear"
+        });
+      };
+      return scope.hide = function(d) {
+        if (d == null) {
+          d = 1;
+        }
+        return Tween(scope.alpha, 0, d, {
+          tick: tick,
+          ease: "linear"
+        });
+      };
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var alignment, element, text, textElement;
+      ScopeCheck(scope, "text");
+      element = scope.element;
+      textElement = element.querySelector("tspan" || element.querySelector("text"));
+      text = textElement != null ? textElement.textContent : void 0;
+      alignment = "left";
+      Object.defineProperty(scope, 'align', {
+        get: function() {
+          return alignment;
+        },
+        set: function(val) {
+          if (textElement == null) {
+            throw new Error("You have " + scope.id + ".align = '" + val + "', but this scope doesn't contain any text or tspan elements.");
+          }
+          if (alignment !== val) {
+            alignment = val;
+            return SVG.attr(textElement, "textAnchor", val === "left" ? "start" : val === "center" ? "middle" : "end");
+          }
+        }
+      });
+      return Object.defineProperty(scope, 'text', {
+        get: function() {
+          return text;
+        },
+        set: function(val) {
+          if (textElement == null) {
+            throw new Error("You have " + scope.id + ".text = '" + val + "', but this scope doesn't contain any text or tspan elements.");
+          }
+          if (text !== val) {
+            return SVG.attr(textElement, "textContent", text = val);
+          }
+        }
+      });
+    });
+  });
+
+  Take(["Registry", "Tick"], function(Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var running, startTime, tick;
+      if (scope.tick == null) {
+        return;
+      }
+      running = true;
+      startTime = null;
+      tick = scope.tick;
+      scope.tick = function() {
+        throw new Error("@tick() is called by the system. Please don't call it yourself.");
+      };
+      Tick(function(time, dt) {
+        if (!running) {
+          return;
+        }
+        if (startTime == null) {
+          startTime = time;
+        }
+        return tick.call(scope, time - startTime, dt);
+      });
+      scope.tick.start = function() {
+        return running = true;
+      };
+      scope.tick.stop = function() {
+        return running = false;
+      };
+      scope.tick.toggle = function() {
+        if (running) {
+          return scope.tick.stop();
+        } else {
+          return scope.tick.start();
+        }
+      };
+      return scope.tick.restart = function() {
+        return startTime = null;
+      };
+    });
+  });
+
+  Take(["RAF", "Registry", "ScopeCheck"], function(RAF, Registry, ScopeCheck) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var applyTransform, denom, element, matrix, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
+      ScopeCheck(scope, "x", "y", "rotation", "scale", "scaleX", "scaleY");
+      element = scope.element;
+      transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
+      transform = document.querySelector("svg").createSVGTransform();
+      matrix = document.querySelector("svg").createSVGMatrix();
+      x = 0;
+      y = 0;
+      rotation = 0;
+      scaleX = 1;
+      scaleY = 1;
+      if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
+        t = transformBaseVal.getItem(0);
+        switch (t.type) {
+          case SVGTransform.SVG_TRANSFORM_MATRIX:
+            x = t.matrix.e;
+            y = t.matrix.f;
+            rotation = 180 / Math.PI * Math.atan2(t.matrix.b, t.matrix.a);
+            denom = Math.pow(t.matrix.a, 2) + Math.pow(t.matrix.c, 2);
+            scaleX = Math.sqrt(denom);
+            scaleY = (t.matrix.a * t.matrix.d - t.matrix.b * t.matrix.c) / scaleX;
+            break;
+          default:
+            throw new Error("^ Transform encountered an SVG element with a non-matrix transform");
+        }
+      } else if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) > 1) {
+        console.log(element);
+        throw new Error("^ Transform encountered an SVG element with more than one transform");
+      }
+      applyTransform = function() {
+        matrix.a = scaleX;
+        matrix.d = scaleY;
+        matrix.e = x;
+        matrix.f = y;
+        transform.setMatrix(matrix.rotate(rotation));
+        return element.transform.baseVal.initialize(transform);
+      };
+      Object.defineProperty(scope, 'x', {
+        get: function() {
+          return x;
+        },
+        set: function(val) {
+          if (x !== val) {
+            x = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'y', {
+        get: function() {
+          return y;
+        },
+        set: function(val) {
+          if (y !== val) {
+            y = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'rotation', {
+        get: function() {
+          return rotation;
+        },
+        set: function(val) {
+          if (rotation !== val) {
+            rotation = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scale', {
+        get: function() {
+          return (scaleX + scaleY) / 2;
+        },
+        set: function(val) {
+          if (scaleX !== val || scaleY !== val) {
+            scaleX = scaleY = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      Object.defineProperty(scope, 'scaleX', {
+        get: function() {
+          return scaleX;
+        },
+        set: function(val) {
+          if (scaleX !== val) {
+            scaleX = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+      return Object.defineProperty(scope, 'scaleY', {
+        get: function() {
+          return scaleY;
+        },
+        set: function(val) {
+          if (scaleY !== val) {
+            scaleY = val;
+            return RAF(applyTransform, true, 1);
+          }
+        }
+      });
+    });
+  });
+
+  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
+    return Symbol("HydraulicField", [], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          var isInsideOtherField, p;
+          isInsideOtherField = false;
+          p = this.parent;
+          while ((p != null) && !isInsideOtherField) {
+            isInsideOtherField = p._symbol === this._symbol;
+            p = p.parent;
+          }
+          if (!isInsideOtherField) {
+            this.pressure = 0;
+            return Reaction("Schematic:Show", function() {
+              return this.pressure = Pressure.white;
+            });
+          }
+        }
+      };
+    });
+  });
+
+  Take(["Pressure", "Reaction", "SVG", "Symbol"], function(Pressure, Reaction, SVG, Symbol) {
+    return Symbol("HydraulicLine", [], function(element) {
+      var apply, fillElms, highlightActive, scope, strip, strokeElms;
+      strokeElms = [];
+      fillElms = [];
+      highlightActive = false;
+      strip = function(elm) {
+        var child, len, m, ref, results;
+        if ((typeof elm.hasAttribute === "function" ? elm.hasAttribute("fill") : void 0) && elm.getAttribute("fill") !== "none") {
+          if (elm !== element) {
+            fillElms.push(elm);
+          }
+          elm.removeAttribute("fill");
+        }
+        if ((typeof elm.hasAttribute === "function" ? elm.hasAttribute("stroke") : void 0) && elm.getAttribute("stroke") !== "none") {
+          if (elm !== element) {
+            strokeElms.push(elm);
+          }
+          elm.removeAttribute("stroke");
+        }
+        if (elm.childNodes.length) {
+          ref = elm.childNodes;
+          results = [];
+          for (m = 0, len = ref.length; m < len; m++) {
+            child = ref[m];
+            results.push(strip(child));
+          }
+          return results;
+        }
+      };
+      strip(element);
+      element.setAttribute("fill", "transparent");
+      apply = function(stroke, fill) {
+        var elm, len, len1, m, n, results;
+        if (fill == null) {
+          fill = stroke;
+        }
+        for (m = 0, len = strokeElms.length; m < len; m++) {
+          elm = strokeElms[m];
+          SVG.attr(elm, "stroke", stroke);
+        }
+        results = [];
+        for (n = 0, len1 = fillElms.length; n < len1; n++) {
+          elm = fillElms[n];
+          results.push(SVG.attr(elm, "fill", fill));
+        }
+        return results;
+      };
+      return scope = {
+        _highlight: function(enable) {
+          if (highlightActive = enable) {
+            return apply("url(#MidHighlightGradient)", "url(#LightHighlightGradient)");
+          } else {
+            return apply(Pressure(scope.pressure));
+          }
+        },
+        _setPressure: function(p) {
+          if (!highlightActive) {
+            return apply(Pressure(p));
+          }
+        },
+        setup: function() {
+          this.pressure = 0;
+          return Reaction("Schematic:Show", function() {
+            return this.pressure = Pressure.black;
+          });
+        }
+      };
+    });
+  });
+
+  Take(["Reaction", "Symbol", "SVG"], function(Reaction, Symbol, SVG) {
+    return Symbol("Labels", ["labelsContainer"], function(svgElement) {
+      var c, len, m, ref, scope;
+      ref = svgElement.querySelectorAll("[fill]");
+      for (m = 0, len = ref.length; m < len; m++) {
+        c = ref[m];
+        c.removeAttributeNS(null, "fill");
+      }
+      return scope = {
+        setup: function() {
+          Reaction("Labels:Hide", function() {
+            return scope.alpha = false;
+          });
+          Reaction("Labels:Show", function() {
+            return scope.alpha = true;
+          });
+          return Reaction("Background:Set", function(v) {
+            var l;
+            l = (v / 2 + .8) % 1;
+            return SVG.attr(svgElement, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
+          });
+        }
+      };
+    });
+  });
+
+  Take(["Mode", "ParentObject", "SVG"], function(Mode, ParentObject, SVG) {
+    var height, newWidth, resize, width;
+    if (!Mode.autosize) {
+      return;
+    }
+    width = SVG.attr(SVG.root, "width");
+    height = SVG.attr(SVG.root, "height");
+    newWidth = null;
+    resize = function() {
+      var newHeight;
+      if (ParentObject.offsetWidth !== newWidth) {
+        newWidth = ParentObject.offsetWidth;
+        newHeight = height * newWidth / width | 0;
+        return ParentObject.style.height = newHeight + "px";
+      }
+    };
+    resize();
+    return window.top.addEventListener("resize", resize);
+  });
+
+  (function() {
+    if (document.domain.indexOf("lunchboxsessions.com") > 0) {
+      return document.domain = "lunchboxsessions.com";
+    }
+  })();
+
+  Take(["Config", "ParentObject"], function(Config, ParentObject) {
+    var Mode, fetchAttribute, ref;
+    fetchAttribute = function(name) {
+      var attrName, val;
+      attrName = "x-" + name;
+      if (ParentObject.hasAttribute(attrName)) {
+        val = ParentObject.getAttribute(attrName);
+        if (val === "" || val === "true") {
+          return true;
+        }
+        if (val === "false") {
+          return false;
+        }
+        if (val.charAt(0) === "{") {
+          return JSON.parse(val);
+        }
+        return val;
+      } else {
+        return Config[name];
+      }
+    };
+    return Make("Mode", Mode = {
+      get: fetchAttribute,
+      autosize: fetchAttribute("autosize"),
+      background: fetchAttribute("background"),
+      controlPanel: fetchAttribute("controlPanel"),
+      dev: ((ref = window.top.location.port) != null ? ref.length : void 0) >= 4,
+      nav: fetchAttribute("nav"),
+      embed: window !== window.top
+    });
+  });
+
+  (function() {
+    var len, m, o, ref, target;
+    target = null;
+    ref = window.parent.document.querySelectorAll("object");
+    for (m = 0, len = ref.length; m < len; m++) {
+      o = ref[m];
+      if (o.contentDocument === document) {
+        target = o;
+        break;
+      }
+    }
+    if (target == null) {
+      target = document.body;
+    }
+    return Make("ParentObject", target);
+  })();
+
+  (function() {
+    var cbs;
+    cbs = [];
+    Make("Reaction", function(name, cb) {
+      return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
+    });
+    return Make("Action", function() {
+      var args, cb, len, m, name, ref, results;
+      name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (cbs[name] != null) {
+        ref = cbs[name];
+        results = [];
+        for (m = 0, len = ref.length; m < len; m++) {
+          cb = ref[m];
+          results.push(cb.apply(null, args));
+        }
+        return results;
+      }
+    });
+  })();
+
+  Take(["ControlPanel", "ControlPanelLayout", "Registry", "Scope", "ControlReady"], function(ControlPanel, ControlPanelLayout, Registry, Scope) {
+    var Control, defn, instances, ref, setup, type;
+    Control = {};
+    instances = {};
+    setup = function(type, defn) {
+      return Control[type] = function(props) {
+        var base1, elm, scope;
+        if (props == null) {
+          props = {};
+        }
+        if (typeof props !== "object") {
+          console.log(props);
+          throw new Error("Control." + type + "(props) takes a optional props object. Got ^^^, which is not an object.");
+        }
+        if (((props != null ? props.id : void 0) != null) && (instances[props.id] != null)) {
+          if (typeof (base1 = instances[props.id]).attach === "function") {
+            base1.attach(props);
+          }
+          return instances[props.id];
+        } else {
+          elm = ControlPanel.createElement(props != null ? props.parent : void 0);
+          scope = Scope(elm, defn, props);
+          if (typeof scope.attach === "function") {
+            scope.attach(props);
+          }
+          ControlPanelLayout.addScope(scope);
+          if ((props != null ? props.id : void 0) != null) {
+            instances[props.id] = scope;
+          }
+          return scope;
+        }
+      };
+    };
+    ref = Registry.all("Control", true);
+    for (type in ref) {
+      defn = ref[type];
+      setup(type, defn);
+    }
+    return Make("Control", Control);
+  });
+
+  (function() {
+    var Ease;
+    return Make("Ease", Ease = {
+      sin: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        var cos, p;
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        if (inputMin === inputMax) {
+          return outputMin;
+        }
+        if (clip) {
+          input = Math.max(inputMin, Math.min(inputMax, input));
+        }
+        p = (input - inputMin) / (inputMax - inputMin);
+        cos = Math.cos(p * Math.PI);
+        return (.5 - cos / 2) * (outputMax - outputMin) + outputMin;
+      },
+      cubic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        return Ease.power(input, 3, inputMin, inputMax, outputMin, outputMax, clip);
+      },
+      linear: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        if (inputMin === inputMax) {
+          return outputMin;
+        }
+        if (clip) {
+          input = Math.max(inputMin, Math.min(inputMax, input));
+        }
+        input -= inputMin;
+        input /= inputMax - inputMin;
+        input *= outputMax - outputMin;
+        input += outputMin;
+        return input;
+      },
+      power: function(input, power, inputMin, inputMax, outputMin, outputMax, clip) {
+        var inputDiff, outputDiff, p;
+        if (power == null) {
+          power = 1;
+        }
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        if (inputMin === inputMax) {
+          return outputMin;
+        }
+        if (clip) {
+          input = Math.max(inputMin, Math.min(inputMax, input));
+        }
+        outputDiff = outputMax - outputMin;
+        inputDiff = inputMax - inputMin;
+        p = (input - inputMin) / (inputDiff / 2);
+        if (p < 1) {
+          return outputMin + outputDiff / 2 * Math.pow(p, power);
+        } else {
+          return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
+        }
+      },
+      quadratic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        return Ease.power(input, 2, inputMin, inputMax, outputMin, outputMax, clip);
+      },
+      quartic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+        if (inputMin == null) {
+          inputMin = 0;
+        }
+        if (inputMax == null) {
+          inputMax = 1;
+        }
+        if (outputMin == null) {
+          outputMin = 0;
+        }
+        if (outputMax == null) {
+          outputMax = 1;
+        }
+        if (clip == null) {
+          clip = true;
+        }
+        return Ease.power(input, 4, inputMin, inputMax, outputMin, outputMax, clip);
+      },
+      ramp: function(current, target, rate, dT) {
+        var delta;
+        delta = target - current;
+        return current + (delta >= 0 ? Math.min(rate * dT, delta) : Math.max(-rate * dT, delta));
+      }
+    });
+  })();
+
+  Take(["Pressure", "SVG"], function(Pressure, SVG) {
+    var Gradient, existing;
+    existing = {};
+    return Make("Gradient", Gradient = {
+      remove: function(name) {
+        if (existing[name] != null) {
+          SVG.defs.removeChild(existing[name]);
+          return delete existing[name];
+        }
+      },
+      updateStops: function() {
+        var attrs, dirty, gradient, i, len, len1, m, n, ref, stop, stops;
+        gradient = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+        if (gradient._stops != null) {
+          dirty = false;
+          ref = gradient._stops;
+          for (i = m = 0, len = ref.length; m < len; i = ++m) {
+            stop = ref[i];
+            dirty = (stop.color != null) && (stops[i].color != null) ? stop.color !== stops[i].color || stop.offset !== stops[i].offset || stop.opacity !== stops[i].opacity : stop !== stops[i];
+            if (dirty) {
+              break;
+            }
+          }
+          if (!dirty) {
+            return;
+          }
+        }
+        gradient._stops = stops;
+        while (gradient.hasChildNodes()) {
+          gradient.removeChild(gradient.lastChild);
+        }
+        stops = stops[0] instanceof Array ? stops[0] : stops;
+        for (i = n = 0, len1 = stops.length; n < len1; i = ++n) {
+          stop = stops[i];
+          if (typeof stop === "string") {
+            SVG.create("stop", gradient, {
+              stopColor: stop,
+              offset: (100 * i / (stops.length - 1)) + "%"
+            });
+          } else if (typeof stop === "number") {
+            SVG.create("stop", gradient, {
+              stopColor: Pressure(stop),
+              offset: (100 * i / (stops.length - 1)) + "%"
+            });
+          } else {
+            attrs = {
+              stopColor: stop.color,
+              offset: 100 * (stop.offset != null ? stop.offset : i / (stops.length - 1)) + "%"
+            };
+            if (stop.opacity != null) {
+              attrs.stopOpacity = stop.opacity;
+            }
+            SVG.create("stop", gradient, attrs);
+          }
+        }
+        return gradient;
+      },
+      updateProps: function(gradient, props) {
+        return SVG.attrs(gradient, props);
+      },
+      linear: function() {
+        var attrs, gradient, name, props, stops;
+        name = arguments[0], props = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
+        if (props == null) {
+          props = {};
+        }
+        if (existing[name] != null) {
+          throw new Error("Gradient named " + name + " already exists. Please don't create the same gradient more than once.");
+        }
+        attrs = typeof props === "object" ? (props.id = name, props) : props === true ? {
+          id: name,
+          x2: 0,
+          y2: 1
+        } : {
+          id: name
+        };
+        gradient = existing[name] = SVG.create("linearGradient", SVG.defs, attrs);
+        Gradient.updateStops(gradient, stops);
+        return gradient;
+      },
+      radial: function() {
+        var gradient, name, props, stops;
+        name = arguments[0], props = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
+        if (props == null) {
+          props = {};
+        }
+        if (existing[name] != null) {
+          throw new Error("Gradient named " + name + " already exists. Please don't create the same gradient more than once.");
+        }
+        existing[name] = true;
+        props.id = name;
+        gradient = existing[name] = SVG.create("radialGradient", SVG.defs, props);
+        Gradient.updateStops(gradient, stops);
+        return gradient;
+      }
+    });
+  });
+
+  Take(["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], function(Ease, FPS, Gradient, Input, RAF, SVG, Tick) {
+    var activeHighlight, counter, dgradient, lgradient, mgradient, tgradient;
+    activeHighlight = null;
+    counter = 0;
+    lgradient = Gradient.linear("LightHighlightGradient", {
+      gradientUnits: "userSpaceOnUse"
+    }, "#9FC", "#FF8", "#FD8");
+    mgradient = Gradient.linear("MidHighlightGradient", {
+      gradientUnits: "userSpaceOnUse"
+    }, "#2F6", "#FF2", "#F72");
+    dgradient = Gradient.linear("DarkHighlightGradient", {
+      gradientUnits: "userSpaceOnUse"
+    }, "#0B3", "#DD0", "#D50");
+    tgradient = Gradient.linear("TextHighlightGradient", {
+      gradientUnits: "userSpaceOnUse"
+    }, "#091", "#BB0", "#B30");
+    Tick(function(time) {
+      var props;
+      if ((activeHighlight != null) && FPS() > 20) {
+        if (++counter % 3 === 0) {
+          props = {
+            x1: Math.cos(time * Math.PI) * -60 - 50,
+            y1: Math.sin(time * Math.PI) * -60 - 50,
+            x2: Math.cos(time * Math.PI) * 60 - 50,
+            y2: Math.sin(time * Math.PI) * 60 - 50
+          };
+          Gradient.updateProps(lgradient, props);
+          Gradient.updateProps(mgradient, props);
+          Gradient.updateProps(dgradient, props);
+          return Gradient.updateProps(tgradient, props);
+        }
+      }
+    });
+    return Make("Highlight", function() {
+      var activate, active, deactivate, highlights, setup, targets, timeout;
+      targets = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      highlights = [];
+      active = false;
+      timeout = null;
+      setup = function(elm) {
+        var doFill, doFunction, doStroke, e, fill, len, m, ref, ref1, results, stroke, width;
+        fill = SVG.attr(elm, "fill");
+        stroke = SVG.attr(elm, "stroke");
+        doFill = (fill != null) && fill !== "none" && fill !== "transparent";
+        doStroke = (stroke != null) && stroke !== "none" && stroke !== "transparent";
+        doFunction = ((ref = elm._scope) != null ? ref._highlight : void 0) != null;
+        if (doFunction) {
+          highlights.push(e = {
+            elm: elm,
+            "function": elm._scope._highlight
+          });
+        } else if (doFill || doStroke) {
+          highlights.push(e = {
+            elm: elm,
+            attrs: {}
+          });
+          if (doFill) {
+            e.attrs.fill = fill;
+          }
+          if (doStroke) {
+            e.attrs.stroke = stroke;
+          }
+          if (doStroke && ((width = SVG.attr(elm, "stroke-width")) != null)) {
+            e.attrs.strokeWidth = width;
+          }
+        }
+        if (!doFunction) {
+          ref1 = elm.childNodes;
+          results = [];
+          for (m = 0, len = ref1.length; m < len; m++) {
+            elm = ref1[m];
+            if (elm.tagName === "g" || elm.tagName === "path" || elm.tagName === "text" || elm.tagName === "tspan" || elm.tagName === "rect" || elm.tagName === "circle") {
+              results.push(setup(elm));
+            } else {
+              results.push(void 0);
+            }
+          }
+          return results;
+        }
+      };
+      activate = function() {
+        var h, len, m;
+        if (!active) {
+          active = true;
+          if (typeof activeHighlight === "function") {
+            activeHighlight();
+          }
+          activeHighlight = deactivate;
+          for (m = 0, len = highlights.length; m < len; m++) {
+            h = highlights[m];
+            if (h["function"] != null) {
+              h["function"](true);
+            } else {
+              if (h.attrs.stroke != null) {
+                if (h.elm.tagName === "text" || h.elm.tagName === "tspan") {
+                  SVG.attrs(h.elm, {
+                    stroke: "url(#TextHighlightGradient)",
+                    strokeWidth: 3
+                  });
+                } else if (h.attrs.stroke === "#FFF" || h.attrs.stroke === "white") {
+                  SVG.attrs(h.elm, {
+                    stroke: "url(#LightHighlightGradient)",
+                    strokeWidth: 3
+                  });
+                } else if (h.attrs.stroke === "#000" || h.attrs.stroke === "black") {
+                  SVG.attrs(h.elm, {
+                    stroke: "url(#DarkHighlightGradient)",
+                    strokeWidth: 3
+                  });
+                } else {
+                  SVG.attrs(h.elm, {
+                    stroke: "url(#MidHighlightGradient)",
+                    strokeWidth: 3
+                  });
+                }
+              }
+              if (h.attrs.fill != null) {
+                if (h.elm.tagName === "text" || h.elm.tagName === "tspan") {
+                  SVG.attrs(h.elm, {
+                    fill: "url(#TextHighlightGradient)"
+                  });
+                } else if (h.attrs.fill === "#FFF" || h.attrs.fill === "white") {
+                  SVG.attrs(h.elm, {
+                    fill: "url(#LightHighlightGradient)"
+                  });
+                } else if (h.attrs.fill === "#000" || h.attrs.fill === "black") {
+                  SVG.attrs(h.elm, {
+                    fill: "url(#DarkHighlightGradient)"
+                  });
+                } else {
+                  SVG.attrs(h.elm, {
+                    fill: "url(#MidHighlightGradient)"
+                  });
+                }
+              }
+            }
+          }
+          return timeout = setTimeout(deactivate, 4000);
+        }
+      };
+      deactivate = function() {
+        var h, len, m, results;
+        if (active) {
+          active = false;
+          clearTimeout(timeout);
+          activeHighlight = null;
+          results = [];
+          for (m = 0, len = highlights.length; m < len; m++) {
+            h = highlights[m];
+            if (h["function"] != null) {
+              results.push(h["function"](false));
+            } else {
+              results.push(SVG.attrs(h.elm, h.attrs));
+            }
+          }
+          return results;
+        }
+      };
+      return RAF(function() {
+        var len, len1, m, mouseProps, n, results, t, target, touchProps;
+        for (m = 0, len = targets.length; m < len; m++) {
+          target = targets[m];
+          if (target == null) {
+            console.log(targets);
+            throw new Error("Highlight called with a null element ^^^");
+          }
+          t = target.element || target;
+          if (!t._HighlighterSetup) {
+            t._HighlighterSetup = true;
+            setup(t);
+          }
+        }
+        results = [];
+        for (n = 0, len1 = targets.length; n < len1; n++) {
+          target = targets[n];
+          t = target.element || target;
+          if (!t._Highlighter) {
+            t._Highlighter = true;
+            mouseProps = {
+              moveIn: activate,
+              moveOut: deactivate
+            };
+            touchProps = {
+              down: activate
+            };
+            Input(t, mouseProps, true, false);
+            results.push(Input(t, touchProps, false, true));
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      });
+    });
+  });
+
+  Make("Input", function(elm, calls, mouse, touch) {
+    var down, move, out, over, prepTouchEvent, state, up;
+    if (mouse == null) {
+      mouse = true;
+    }
+    if (touch == null) {
+      touch = true;
+    }
+    state = {
+      down: false,
+      over: false,
+      touch: false,
+      clicking: false,
+      captured: false,
+      deltaX: 0,
+      deltaY: 0,
+      lastX: 0,
+      lastY: 0
+    };
+    down = function(e) {
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+      state.deltaX = 0;
+      state.deltaY = 0;
+      if (!state.down) {
+        state.down = true;
+        if (state.over) {
+          state.clicking = true;
+          return typeof calls.down === "function" ? calls.down(e, state) : void 0;
+        } else {
+          return typeof calls.downOther === "function" ? calls.downOther(e, state) : void 0;
+        }
+      }
+    };
+    up = function(e) {
+      if (state.down) {
+        state.down = false;
+        if (state.over) {
+          if (typeof calls.up === "function") {
+            calls.up(e, state);
+          }
+          if (state.clicking) {
+            state.clicking = false;
+            return typeof calls.click === "function" ? calls.click(e, state) : void 0;
+          }
+        } else {
+          if (typeof calls.upOther === "function") {
+            calls.upOther(e, state);
+          }
+          if (state.clicking) {
+            state.clicking = false;
+            return typeof calls.miss === "function" ? calls.miss(e, state) : void 0;
+          }
+        }
+      }
+    };
+    move = function(e) {
+      if (e.clientX === state.lastX && e.clientY === state.lastY) {
+        return;
+      }
+      state.deltaX = e.clientX - state.lastX;
+      state.deltaY = e.clientY - state.lastY;
+      if (state.over) {
+        if (state.down) {
+          if (typeof calls.drag === "function") {
+            calls.drag(e, state);
+          }
+        } else {
+          if (typeof calls.move === "function") {
+            calls.move(e, state);
+          }
+        }
+      } else {
+        if (state.down) {
+          if (typeof calls.dragOther === "function") {
+            calls.dragOther(e, state);
+          }
+        } else {
+          if (typeof calls.moveOther === "function") {
+            calls.moveOther(e, state);
+          }
+        }
+      }
+      state.lastX = e.clientX;
+      return state.lastY = e.clientY;
+    };
+    out = function(e) {
+      if (state.over) {
+        state.over = false;
+        if (state.down) {
+          return typeof calls.dragOut === "function" ? calls.dragOut(e, state) : void 0;
+        } else {
+          return typeof calls.moveOut === "function" ? calls.moveOut(e, state) : void 0;
+        }
+      }
+    };
+    over = function(e) {
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+      if (!state.over) {
+        state.over = true;
+        if (state.down) {
+          return typeof calls.dragIn === "function" ? calls.dragIn(e, state) : void 0;
+        } else {
+          return typeof calls.moveIn === "function" ? calls.moveIn(e, state) : void 0;
+        }
+      }
+    };
+    if (mouse) {
+      document.addEventListener("mousedown", function(e) {
+        if (e.button !== 0) {
+          return;
+        }
+        if (state.touch) {
+          return;
+        }
+        return down(e);
+      });
+      if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
+        document.addEventListener("mousemove", function(e) {
+          if (state.touch) {
+            return;
+          }
+          return move(e);
+        });
+      }
+      document.addEventListener("mouseup", function(e) {
+        if (e.button !== 0) {
+          return;
+        }
+        if (state.touch) {
+          return;
+        }
+        return up(e);
+      });
+      if (elm != null) {
+        elm.addEventListener("mouseleave", function(e) {
+          if (state.touch) {
+            return;
+          }
+          return out(e);
+        });
+      }
+      if (elm != null) {
+        elm.addEventListener("mouseenter", function(e) {
+          if (state.touch) {
+            return;
+          }
+          return over(e);
+        });
+      }
+    }
+    if (touch) {
+      prepTouchEvent = function(e) {
+        var newState, overChanged, pElm, ref, ref1;
+        state.touch = true;
+        e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
+        e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
+        if ((elm != null) && (e.clientX != null) && (e.clientY != null) && (state.captured === null || state.captured === true)) {
+          pElm = document.elementFromPoint(e.clientX, e.clientY);
+          newState = elm === pElm || elm.contains(pElm);
+          overChanged = newState !== state.over;
+          if (overChanged) {
+            if (newState) {
+              if (state.captured == null) {
+                state.captured = true;
+              }
+              over(e);
+            } else {
+              out(e);
+            }
+          }
+        }
+        return state.captured != null ? state.captured : state.captured = false;
+      };
+      document.addEventListener("touchstart", function(e) {
+        state.captured = null;
+        prepTouchEvent(e);
+        return down(e);
+      });
+      if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
+        document.addEventListener("touchmove", function(e) {
+          prepTouchEvent(e);
+          return move(e);
+        });
+      }
+      document.addEventListener("touchend", function(e) {
+        prepTouchEvent(e);
+        up(e);
+        return state.touch = false;
+      });
+      return document.addEventListener("touchcancel", function(e) {
+        prepTouchEvent(e);
+        up(e);
+        return state.touch = false;
+      });
+    }
+  });
+
+  (function() {
+    var KeyMe, KeyNames, actionize, downHandlers, getModifier, handleKey, keyDown, keyUp, runCallbacks, upHandlers;
+    downHandlers = {};
+    upHandlers = {};
+    KeyMe = function(key, opts) {
+      var name;
+      if (key == null) {
+        throw new Error("You must provide a key name or code for KeyMe(key, options)");
+      }
+      if (typeof opts !== "object") {
+        throw new Error("You must provide an options object for KeyMe(key, options)");
+      }
+      name = typeof key === "string" ? key : KeyNames[key];
+      return actionize(opts.down, opts.up, name, opts.modifier);
+    };
+    KeyMe.any = function(down, up) {
+      return actionize(down, up, "any");
+    };
+    KeyMe.char = function(char, down, up) {
+      return actionize(down, up, char);
+    };
+    KeyMe.shortcut = function(modifier, char, down, up) {
+      return actionize(down, up, char, modifier);
+    };
+    KeyMe.pressing = {};
+    KeyMe.lastPressed = null;
+    actionize = function(down, up, name, modifier) {
+      if (down != null) {
+        (downHandlers[name] != null ? downHandlers[name] : downHandlers[name] = []).push({
+          callback: down,
+          modifier: modifier
+        });
+      }
+      if (up != null) {
+        return (upHandlers[name] != null ? upHandlers[name] : upHandlers[name] = []).push({
+          callback: up,
+          modifier: modifier
+        });
+      }
+    };
+    keyDown = function(e) {
+      var code, name;
+      code = e.which || e.keyCode;
+      name = KeyNames[code];
+      if (name == null) {
+        return;
+      }
+      if (KeyMe.pressing[name]) {
+        return;
+      }
+      KeyMe.pressing[name] = true;
+      KeyMe.lastPressed = {
+        name: name,
+        code: code
+      };
+      return handleKey(name, e, downHandlers);
+    };
+    keyUp = function(e) {
+      var code, name;
+      code = e.keyCode;
+      name = KeyNames[code];
+      if (name == null) {
+        return;
+      }
+      delete KeyMe.pressing[name];
+      return handleKey(name, e, upHandlers);
+    };
+    handleKey = function(name, e, handlers) {
+      var modifier;
+      modifier = getModifier(e);
+      if (name === modifier) {
+        modifier = null;
+      }
+      runCallbacks(handlers.any, modifier);
+      return runCallbacks(handlers[name], modifier);
+    };
+    getModifier = function(e) {
+      if (e.ctrlKey) {
+        return "meta";
+      }
+      if (e.altKey) {
+        return "alt";
+      }
+      if (e.shiftKey) {
+        return "shift";
+      }
+    };
+    runCallbacks = function(callbacks, modifier) {
+      var command, len, m, results;
+      if (callbacks != null) {
+        results = [];
+        for (m = 0, len = callbacks.length; m < len; m++) {
+          command = callbacks[m];
+          if (command.modifier === modifier) {
+            results.push(command.callback());
+          }
+        }
+        return results;
+      }
+    };
+    window.addEventListener("keydown", keyDown);
+    window.addEventListener("keyup", keyUp);
+    window.addEventListener("blur", function() {
+      return KeyMe.pressing = {};
+    });
+    Make("KeyMe", KeyMe);
+    return KeyNames = {
+      3: "cancel",
+      6: "help",
+      8: "back_space",
+      9: "tab",
+      12: "clear",
+      13: "return",
+      14: "enter",
+      16: "shift",
+      17: "control",
+      18: "alt",
+      19: "pause",
+      20: "caps_lock",
+      27: "escape",
+      32: "space",
+      33: "page_up",
+      34: "page_down",
+      35: "end",
+      36: "home",
+      37: "left",
+      38: "up",
+      39: "right",
+      40: "down",
+      44: "printscreen",
+      45: "insert",
+      46: "delete",
+      48: "0",
+      49: "1",
+      50: "2",
+      51: "3",
+      52: "4",
+      53: "5",
+      54: "6",
+      55: "7",
+      56: "8",
+      57: "9",
+      59: "semicolon",
+      61: "equals",
+      65: "a",
+      66: "b",
+      67: "c",
+      68: "d",
+      69: "e",
+      70: "f",
+      71: "g",
+      72: "h",
+      73: "i",
+      74: "j",
+      75: "k",
+      76: "l",
+      77: "m",
+      78: "n",
+      79: "o",
+      80: "p",
+      81: "q",
+      82: "r",
+      83: "s",
+      84: "t",
+      85: "u",
+      86: "v",
+      87: "w",
+      88: "x",
+      89: "y",
+      90: "z",
+      93: "context_menu",
+      96: "numpad0",
+      97: "numpad1",
+      98: "numpad2",
+      99: "numpad3",
+      100: "numpad4",
+      101: "numpad5",
+      102: "numpad6",
+      103: "numpad7",
+      104: "numpad8",
+      105: "numpad9",
+      106: "multiply",
+      107: "add",
+      108: "separator",
+      109: "subtract",
+      110: "decimal",
+      111: "divide",
+      112: "f1",
+      113: "f2",
+      114: "f3",
+      115: "f4",
+      116: "f5",
+      117: "f6",
+      118: "f7",
+      119: "f8",
+      120: "f9",
+      121: "f10",
+      122: "f11",
+      123: "f12",
+      124: "f13",
+      125: "f14",
+      126: "f15",
+      127: "f16",
+      128: "f17",
+      129: "f18",
+      130: "f19",
+      131: "f20",
+      132: "f21",
+      133: "f22",
+      134: "f23",
+      135: "f24",
+      144: "num_lock",
+      145: "scroll_lock",
+      173: "minus",
+      187: "equals",
+      188: "comma",
+      189: "minus",
+      190: "period",
+      191: "slash",
+      192: "back_quote",
+      219: "open_bracket",
+      220: "back_slash",
+      221: "close_bracket",
+      222: "quote",
+      224: "meta"
+    };
+  })();
+
+  (function() {
+    var callbacksByPriority, requested, run;
+    requested = false;
+    callbacksByPriority = [[], []];
+    run = function(time) {
+      var callbacks, cb, len, m, p, results;
+      requested = false;
+      results = [];
+      for (p = m = 0, len = callbacksByPriority.length; m < len; p = ++m) {
+        callbacks = callbacksByPriority[p];
+        if (!(callbacks != null)) {
+          continue;
+        }
+        callbacksByPriority[p] = [];
+        results.push((function() {
+          var len1, n, results1;
+          results1 = [];
+          for (n = 0, len1 = callbacks.length; n < len1; n++) {
+            cb = callbacks[n];
+            results1.push(cb(time));
+          }
+          return results1;
+        })());
+      }
+      return results;
+    };
+    return Make("RAF", function(cb, ignoreDuplicates, p) {
+      var c, len, m, ref;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
+      if (p == null) {
+        p = 0;
+      }
+      if (cb == null) {
+        throw new Error("RAF(null)");
+      }
+      ref = callbacksByPriority[p];
+      for (m = 0, len = ref.length; m < len; m++) {
+        c = ref[m];
+        if (!(c === cb)) {
+          continue;
+        }
+        if (ignoreDuplicates) {
+          return;
+        }
+        console.log(cb);
+        throw new Error("^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error.");
+      }
+      (callbacksByPriority[p] != null ? callbacksByPriority[p] : callbacksByPriority[p] = []).push(cb);
+      if (!requested) {
+        requested = true;
+        requestAnimationFrame(run);
+      }
+      return cb;
+    });
+  })();
+
+  (function() {
+    var Registry, closed, named, unnamed;
+    named = {};
+    unnamed = {};
+    closed = {};
+    return Make("Registry", Registry = {
+      add: function(type, item) {
+        if (closed[type]) {
+          console.log(item);
+          throw new Error("^^^ This " + type + " was registered too late.");
+        }
+        return (unnamed[type] != null ? unnamed[type] : unnamed[type] = []).push(item);
+      },
+      all: function(type, byName) {
+        if (byName == null) {
+          byName = false;
+        }
+        if (byName) {
+          return named[type];
+        } else {
+          return unnamed[type];
+        }
+      },
+      set: function(type, name, item) {
+        var ref;
+        if (closed[type]) {
+          console.log(item);
+          throw new Error("^^^ This " + type + " named \"" + name + "\" was registered too late.");
+        }
+        if (((ref = named[type]) != null ? ref[name] : void 0) != null) {
+          console.log(item);
+          throw new Error("^^^ This " + type + " is using the name \"" + name + "\", which is already in use.");
+        }
+        return (named[type] != null ? named[type] : named[type] = {})[name] = item;
+      },
+      get: function(type, name) {
+        var ref;
+        return (ref = named[type]) != null ? ref[name] : void 0;
+      },
+      closeRegistration: function(type) {
+        return closed[type] = true;
+      }
+    });
+  })();
+
+  Take(["RAF"], function(RAF) {
+    return Make("Resize", function(cb, now) {
+      var r;
+      if (now == null) {
+        now = false;
+      }
+      r = function() {
+        return RAF(cb, true);
+      };
+      if (now) {
+        cb();
+      } else {
+        r();
+      }
+      return window.addEventListener("resize", r);
+    });
+  });
+
+  Make("ScopeCheck", function() {
+    var len, m, prop, props, results, scope;
+    scope = arguments[0], props = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    results = [];
+    for (m = 0, len = props.length; m < len; m++) {
+      prop = props[m];
+      if (!(scope[prop] != null)) {
+        continue;
+      }
+      console.log(scope.element);
+      throw new Error("^ @" + prop + " is a reserved name. Please choose a different name for your child/property \"" + prop + "\".");
+    }
+    return results;
+  });
+
+  (function() {
+    var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svgNS, xlinkNS;
+    root = document.querySelector("svg");
+    defs = root.querySelector("defs");
+    svgNS = "http://www.w3.org/2000/svg";
+    xlinkNS = "http://www.w3.org/1999/xlink";
+    propNames = {
+      textContent: true
+    };
+    attrNames = {
+      gradientUnits: "gradientUnits",
+      viewBox: "viewBox",
+      SCOPE: "SCOPE",
+      SYMBOL: "SYMBOL"
+    };
+    SVGReady = false;
+    CheckSVGReady = function() {
+      return SVGReady || (SVGReady = Take("SVGReady"));
+    };
+    return Make("SVG", SVG = {
+      root: root,
+      defs: defs,
+      create: function(type, parent, attrs) {
+        var elm;
+        elm = document.createElementNS(svgNS, type);
+        if (attrs != null) {
+          SVG.attrs(elm, attrs);
+        }
+        if (parent != null) {
+          SVG.append(parent, elm);
+        }
+        return elm;
+      },
+      clone: function(source, parent, attrs) {
+        var attr, child, elm, len, len1, m, n, ref, ref1;
+        if (source == null) {
+          throw new Error("Clone source is undefined in SVG.clone(source, parent, attrs)");
+        }
+        if (!CheckSVGReady()) {
+          throw new Error("SVG.clone() called before SVGReady");
+        }
+        elm = document.createElementNS(svgNS, "g");
+        ref = source.attributes;
+        for (m = 0, len = ref.length; m < len; m++) {
+          attr = ref[m];
+          SVG.attr(elm, attr.name, attr.value);
+        }
+        SVG.attrs(elm, {
+          id: null
+        });
+        if (attrs != null) {
+          SVG.attrs(elm, attrs);
+        }
+        ref1 = source.childNodes;
+        for (n = 0, len1 = ref1.length; n < len1; n++) {
+          child = ref1[n];
+          SVG.append(elm, child.cloneNode(true));
+        }
+        if (parent != null) {
+          SVG.append(parent, elm);
+        }
+        return elm;
+      },
+      append: function(parent, child) {
+        if (!CheckSVGReady()) {
+          throw new Error("SVG.append() called before SVGReady");
+        }
+        parent.appendChild(child);
+        return child;
+      },
+      prepend: function(parent, child) {
+        if (!CheckSVGReady()) {
+          throw new Error("SVG.prepend() called before SVGReady");
+        }
+        if (parent.hasChildNodes()) {
+          parent.insertBefore(child, parent.firstChild);
+        } else {
+          parent.appendChild(child);
+        }
+        return child;
+      },
+      attrs: function(elm, attrs) {
+        var k, v;
+        if (!elm) {
+          throw new Error("SVG.attrs was called with a null element");
+        }
+        if (typeof attrs !== "object") {
+          console.log(attrs);
+          throw new Error("SVG.attrs requires an object as the second argument, got ^");
+        }
+        for (k in attrs) {
+          v = attrs[k];
+          SVG.attr(elm, k, v);
+        }
+        return elm;
+      },
+      attr: function(elm, k, v) {
+        var base1, ns;
+        if (!elm) {
+          throw new Error("SVG.attr was called with a null element");
+        }
+        if (typeof k !== "string") {
+          console.log(k);
+          throw new Error("SVG.attr requires a string as the second argument, got ^^^");
+        }
+        if (elm._SVG_attr == null) {
+          elm._SVG_attr = {};
+        }
+        if (v === void 0) {
+          return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
+        }
+        if (elm._SVG_attr[k] === v) {
+          return v;
+        }
+        elm._SVG_attr[k] = v;
+        if (propNames[k] != null) {
+          return elm[k] = v;
+        }
+        ns = k === "xlink:href" ? xlinkNS : null;
+        k = attrNames[k] != null ? attrNames[k] : attrNames[k] = k.replace(/([A-Z])/g, "-$1").toLowerCase();
+        if (v != null) {
+          elm.setAttributeNS(ns, k, v);
+        } else {
+          elm.removeAttributeNS(ns, k);
+        }
+        return v;
+      },
+      styles: function(elm, styles) {
+        var k, v;
+        if (!elm) {
+          throw new Error("SVG.styles was called with a null element");
+        }
+        if (typeof styles !== "object") {
+          console.log(styles);
+          throw new Error("SVG.styles requires an object as the second argument, got ^");
+        }
+        for (k in styles) {
+          v = styles[k];
+          SVG.style(elm, k, v);
+        }
+        return elm;
+      },
+      style: function(elm, k, v) {
+        var base1;
+        if (!elm) {
+          throw new Error("SVG.style was called with a null element");
+        }
+        if (typeof k !== "string") {
+          console.log(k);
+          throw new Error("SVG.style requires a string as the second argument, got ^");
+        }
+        if (elm._SVG_style == null) {
+          elm._SVG_style = {};
+        }
+        if (v === void 0) {
+          return (base1 = elm._SVG_style)[k] != null ? base1[k] : base1[k] = elm.style[k];
+        }
+        if (elm._SVG_style[k] !== v) {
+          elm.style[k] = elm._SVG_style[k] = v;
+        }
+        return v;
+      }
+    });
+  })();
+
+  Take("Registry", function(Registry) {
+    var Symbol;
+    Symbol = function(symbolName, instanceNames, symbol) {
+      var instanceName, len, m, results;
+      symbol.symbolName = symbolName;
+      Registry.set("Symbols", symbolName, symbol);
+      results = [];
+      for (m = 0, len = instanceNames.length; m < len; m++) {
+        instanceName = instanceNames[m];
+        results.push(Registry.set("SymbolNames", instanceName, symbol));
+      }
+      return results;
+    };
+    Symbol.forSymbolName = function(symbolName) {
+      return Registry.get("Symbols", symbolName);
+    };
+    Symbol.forInstanceName = function(instanceName) {
+      return Registry.get("SymbolNames", instanceName);
+    };
+    return Make("Symbol", Symbol);
+  });
+
+  Take(["ParentObject", "RAF"], function(ParentObject, RAF) {
+    var callbacks, internalTime, maximumDt, tick, wallTime;
+    maximumDt = 0.5;
+    callbacks = [];
+    wallTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
+    internalTime = 0;
+    RAF(tick = function(t) {
+      var cb, dt, len, m;
+      dt = Math.min(t / 1000 - wallTime, maximumDt);
+      wallTime = t / 1000;
+      if (!ParentObject.disableSVGA) {
+        internalTime += dt;
+        for (m = 0, len = callbacks.length; m < len; m++) {
+          cb = callbacks[m];
+          cb(internalTime, dt);
+        }
+      }
+      return RAF(tick);
+    });
+    return Make("Tick", function(cb, ignoreDuplicates) {
+      var c, len, m;
+      if (ignoreDuplicates == null) {
+        ignoreDuplicates = false;
+      }
+      for (m = 0, len = callbacks.length; m < len; m++) {
+        c = callbacks[m];
+        if (!(c === cb)) {
+          continue;
+        }
+        if (ignoreDuplicates) {
+          return;
+        }
+        console.log(cb);
+        throw new Error("^ Tick was called more than once with this function. You can use Tick(fn, true) to drop duplicates and bypass this error.");
+      }
+      callbacks.push(cb);
+      return cb;
+    });
+  });
+
+  Take(["RAF", "SVG"], function(RAF, SVG) {
+    var TRS;
+    TRS = function(elm, debugColor) {
+      var v, wrapper;
+      if (elm == null) {
+        console.log(elm);
+        throw new Error("^ Null element passed to TRS(elm)");
+      }
+      wrapper = SVG.create("g", elm.parentNode, {
+        xTrs: ""
+      });
+      SVG.append(wrapper, elm);
+      if (debugColor != null) {
+        SVG.create("rect", wrapper, {
+          "class": "Debug",
+          x: -2,
+          y: -2,
+          width: 4,
+          height: 4,
+          fill: debugColor
+        });
+      }
+      elm._trs = v = {
+        x: 0,
+        y: 0,
+        r: 0,
+        sx: 1,
+        sy: 1,
+        ox: 0,
+        oy: 0,
+        apply: function() {
+          SVG.attr(wrapper, "transform", "translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")");
+          return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
+        }
+      };
+      return elm;
+    };
+    TRS.abs = function(elm, attrs) {
+      var delta;
+      if ((elm != null ? elm._trs : void 0) == null) {
+        console.log(elm);
+        throw new Error("^ Non-TRS element passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs == null) {
+        console.log(elm);
+        throw new Error("^ Null attrs passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs.scale != null) {
+        attrs.sx = attrs.sy = attrs.scale;
+      }
+      if (attrs.x != null) {
+        elm._trs.x = attrs.x;
+      }
+      if (attrs.y != null) {
+        elm._trs.y = attrs.y;
+      }
+      if (attrs.r != null) {
+        elm._trs.r = attrs.r;
+      }
+      if (attrs.sx != null) {
+        elm._trs.sx = attrs.sx;
+      }
+      if (attrs.sy != null) {
+        elm._trs.sy = attrs.sy;
+      }
+      if (attrs.ox != null) {
+        delta = attrs.ox - elm._trs.ox;
+        elm._trs.ox = attrs.ox;
+        elm._trs.x += delta;
+      }
+      if (attrs.oy != null) {
+        delta = attrs.oy - elm._trs.oy;
+        elm._trs.oy = attrs.oy;
+        elm._trs.y += delta;
+      }
+      if (attrs.now) {
+        elm._trs.apply();
+      } else {
+        RAF(elm._trs.apply, true, 1);
+      }
+      return elm;
+    };
+    TRS.rel = function(elm, attrs) {
+      if ((elm != null ? elm._trs : void 0) == null) {
+        console.log(elm);
+        throw new Error("^ Non-TRS element passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs == null) {
+        console.log(elm);
+        throw new Error("^ Null attrs passed to TRS.abs(elm, attrs)");
+      }
+      if (attrs.x != null) {
+        elm._trs.x += attrs.x;
+      }
+      if (attrs.y != null) {
+        elm._trs.y += attrs.y;
+      }
+      if (attrs.r != null) {
+        elm._trs.r += attrs.r;
+      }
+      if (attrs.sx != null) {
+        elm._trs.sx += attrs.sx;
+      }
+      if (attrs.sy != null) {
+        elm._trs.sy += attrs.sy;
+      }
+      if (attrs.ox != null) {
+        elm._trs.ox += attrs.ox;
+        elm._trs.x += attrs.ox;
+      }
+      if (attrs.oy != null) {
+        elm._trs.oy += attrs.oy;
+        elm._trs.y += attrs.oy;
+      }
+      if (attrs.now) {
+        elm._trs.apply();
+      } else {
+        RAF(elm._trs.apply, true, 1);
+      }
+      return elm;
+    };
+    TRS.move = function(elm, x, y) {
+      if (x == null) {
+        x = 0;
+      }
+      if (y == null) {
+        y = 0;
+      }
+      if (elm._trs == null) {
+        console.log(elm);
+        throw new Error("^ Non-TRS element passed to TRS.move");
+      }
+      return TRS.abs(elm, {
+        x: x,
+        y: y
+      });
+    };
+    TRS.rotate = function(elm, r) {
+      if (r == null) {
+        r = 0;
+      }
+      if (elm._trs == null) {
+        console.log(elm);
+        throw new Error("^ Non-TRS element passed to TRS.rotate");
+      }
+      return TRS.abs(elm, {
+        r: r
+      });
+    };
+    TRS.scale = function(elm, sx, sy) {
+      if (sx == null) {
+        sx = 1;
+      }
+      if (sy == null) {
+        sy = sx;
+      }
+      if (elm._trs == null) {
+        console.log(elm);
+        throw new Error("^ Non-TRS element passed to TRS.scale");
+      }
+      return TRS.abs(elm, {
+        sx: sx,
+        sy: sy
+      });
+    };
+    TRS.origin = function(elm, ox, oy) {
+      if (ox == null) {
+        ox = 0;
+      }
+      if (oy == null) {
+        oy = 0;
+      }
+      if (elm._trs == null) {
+        console.log(elm);
+        throw new Error("^ Non-TRS element passed to TRS.origin");
+      }
+      return TRS.abs(elm, {
+        ox: ox,
+        oy: oy
+      });
+    };
+    return Make("TRS", TRS);
+  });
+
+  Take(["Tick"], function(Tick) {
+    var Tween, clone, dist, eases, gc, getEaseFn, getKeys, skipGC, tweens;
+    tweens = [];
+    skipGC = false;
+    Tween = function(from, to, time, tween) {
+      var keys;
+      if (tween == null) {
+        tween = {};
+      }
+      if (typeof tween === "function") {
+        tween = {
+          tick: tween
+        };
+      }
+      tween.multi = typeof from === "object";
+      if (tween.mutate == null) {
+        tween.mutate = tween.tick == null;
+      }
+      tween.keys = keys = tween.multi ? getKeys(to) : ["v"];
+      tween.from = tween.multi ? clone(from, keys) : {
+        v: from
+      };
+      tween.to = tween.multi ? clone(to, keys) : {
+        v: to
+      };
+      tween.delta = dist(tween.from, tween.to, keys);
+      tween.value = tween.mutate && tween.multi ? from : clone(tween.from, keys);
+      tween.time = Math.max(0, time);
+      tween.ease = getEaseFn(tween.ease);
+      tween.pos = Math.min(1, tween.pos || 0);
+      tween.completed = false;
+      tween.cancelled = false;
+      gc(tween.tick, tween.from);
+      tweens.push(tween);
+      return tween;
+    };
+    getKeys = function(o) {
+      var k, results;
+      results = [];
+      for (k in o) {
+        results.push(k);
+      }
+      return results;
+    };
+    clone = function(i, keys) {
+      var k, len, m, o;
+      o = {};
+      for (m = 0, len = keys.length; m < len; m++) {
+        k = keys[m];
+        o[k] = i[k];
+      }
+      return o;
+    };
+    dist = function(from, to, keys) {
+      var k, len, m, o;
+      o = {};
+      for (m = 0, len = keys.length; m < len; m++) {
+        k = keys[m];
+        o[k] = to[k] - from[k];
+      }
+      return o;
+    };
+    getEaseFn = function(given) {
+      if (typeof given === "string") {
+        return eases[given] || (function() {
+          throw new Error("Tween: \"" + given + "\" is not a value ease type.");
+        })();
+      } else if (typeof given === "function") {
+        return given;
+      } else {
+        return eases.cubic;
+      }
+    };
+    eases = {
+      linear: function(v) {
+        return v;
+      },
+      cubic: function(input) {
+        input = 2 * Math.min(1, Math.abs(input));
+        if (input < 1) {
+          return 0.5 * Math.pow(input, 3);
+        } else {
+          return 1 - 0.5 * Math.abs(Math.pow(input - 2, 3));
+        }
+      }
+    };
+    gc = function(tick, from) {
+      if (skipGC) {
+        return;
+      }
+      return tweens = tweens.filter(function(tween) {
+        if (tween.completed) {
+          return false;
+        }
+        if (tween.cancelled) {
+          return false;
+        }
+        if ((tick != null) && tick === tween.tick) {
+          return false;
+        }
+        if ((from != null) && from === tween.from) {
+          return false;
+        }
+        return true;
+      });
+    };
+    Tween.cancel = function() {
+      var len, m, tween, tweensToCancel;
+      tweensToCancel = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      for (m = 0, len = tweensToCancel.length; m < len; m++) {
+        tween = tweensToCancel[m];
+        tween.cancelled = true;
+      }
+      return gc();
+    };
+    Tick(function(t, dt) {
+      var e, k, len, len1, m, n, ref, tween, v;
+      skipGC = true;
+      for (m = 0, len = tweens.length; m < len; m++) {
+        tween = tweens[m];
+        if (!(!tween.cancelled)) {
+          continue;
+        }
+        tween.pos = tween.time <= 0 ? 1 : Math.min(1, tween.pos + dt / tween.time);
+        e = tween.ease(tween.pos);
+        ref = tween.keys;
+        for (n = 0, len1 = ref.length; n < len1; n++) {
+          k = ref[n];
+          tween.value[k] = tween.from[k] + tween.delta[k] * e;
+        }
+        v = tween.multi ? tween.value : tween.value.v;
+        if (typeof tween.tick === "function") {
+          tween.tick(v, tween);
+        }
+        if (tween.completed = tween.pos === 1) {
+          if (typeof tween.then === "function") {
+            tween.then(v, tween);
+          }
+        }
+      }
+      skipGC = false;
+      return gc();
+    });
+    return Make("Tween", Tween);
+  });
+
+}).call(this);

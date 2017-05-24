@@ -1,15 +1,15 @@
 @font-face {
   font-family: "Lato";
-  src: url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-regular.woff2") format("woff2"),
-       url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-regular.woff") format("woff");
+  src: url("fonts/lato-regular.woff2") format("woff2"),
+       url("fonts/lato-regular.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Lato";
-  src: url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-bold.woff2") format("woff2"),
-       url("https://lunchboxsessions.s3.amazonaws.com/fonts/lato/lato-bold.woff") format("woff");
+  src: url("fonts/lato-bold.woff2") format("woff2"),
+       url("fonts/lato-bold.woff") format("woff");
   font-weight: bold;
   font-style: normal;
 }

@@ -1,17 +1,10 @@
-chalk = require "chalk"
 del = require "del"
 gulp = require "gulp"
-gulp_autoprefixer = require "gulp-autoprefixer"
 gulp_coffee = require "gulp-coffee"
 gulp_concat = require "gulp-concat"
 gulp_natural_sort = require "gulp-natural-sort"
 gulp_notify = require "gulp-notify"
-gulp_rename = require "gulp-rename"
 gulp_sass = require "gulp-sass"
-gulp_uglify = require "gulp-uglify"
-# gulp_using = require "gulp-using" # Uncomment and npm install for debug
-path = require "path"
-spawn = require("child_process").spawn
 
 
 # CONFIG ##########################################################################################
@@ -19,6 +12,7 @@ spawn = require("child_process").spawn
 
 paths =
   coffee: "source/**/*.coffee"
+  fonts: "source/fonts/*"
   html: "source/index.html"
   scss: "source/**/*.scss"
 
@@ -30,8 +24,8 @@ gulp_notify.logLevel(0)
 
 
 logAndKillError = (err)->
-  console.log chalk.bgRed("\n## Error ##")
-  console.log chalk.red err.toString() + "\n"
+  console.log "\n## Error ##"
+  console.log err.toString() + "\n"
   gulp_notify.onError(
     emitError: true
     icon: false
@@ -40,14 +34,6 @@ logAndKillError = (err)->
     wait: true
     )(err)
   @emit "end"
-
-
-cond = (predicate, action)->
-  if predicate
-    action()
-  else
-    # This is what we use as a noop *shrug*
-    gulp_rename (p)-> p
 
 
 # TASKS: COMPILATION #######################################################################  #####
@@ -59,8 +45,12 @@ gulp.task "coffee", ()->
     .pipe gulp_concat "svga.coffee"
     .pipe gulp_coffee()
     .on "error", logAndKillError
-    .pipe gulp_uglify()
     .pipe gulp.dest "dist"
+
+
+gulp.task "fonts", ()->
+  gulp.src paths.fonts
+    .pipe gulp.dest "dist/fonts"
 
 
 gulp.task "html", ()->
@@ -77,10 +67,6 @@ gulp.task "scss", ()->
       outputStyle: "compressed"
       precision: 2
     .on "error", logAndKillError
-    .pipe gulp_autoprefixer
-      browsers: "last 5 Chrome versions, last 2 ff versions, IE >= 10, Safari >= 8, iOS >= 8"
-      cascade: false
-      remove: false
     .pipe gulp.dest "dist"
 
 
@@ -98,9 +84,9 @@ gulp.task "watch", (cb)->
   cb()
 
 
-gulp.task "recompile",
-  gulp.series "del:dist", "coffee", "html", "scss"
+gulp.task "compile",
+  gulp.series "del:dist", "coffee", "fonts", "html", "scss"
 
 
 gulp.task "default",
-  gulp.series "recompile", "watch"
+  gulp.series "compile", "watch"

@@ -51,7 +51,7 @@ gulp.task "coffee", ()->
 
 
 gulp.task "static", ()->
-  gulp.src paths.static, base: "source"
+  gulp.src paths.static
     .pipe gulp.dest "dist"
 
 

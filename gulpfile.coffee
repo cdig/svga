@@ -12,8 +12,11 @@ gulp_sass = require "gulp-sass"
 
 paths =
   coffee: "source/**/*.coffee"
-  html: "source/index.html"
   scss: "source/**/*.scss"
+  static: [
+    "source/index.html"
+    "source/fonts/*"
+  ]
 
 
 gulp_notify.logLevel(0)
@@ -47,8 +50,8 @@ gulp.task "coffee", ()->
     .pipe gulp.dest "dist"
 
 
-gulp.task "html", ()->
-  gulp.src paths.html
+gulp.task "static", ()->
+  gulp.src paths.static, base: "source"
     .pipe gulp.dest "dist"
 
 
@@ -71,13 +74,13 @@ gulp.task "del:dist", ()->
 
 gulp.task "watch", (cb)->
   gulp.watch paths.coffee, gulp.series "coffee"
-  gulp.watch paths.html, gulp.series "html"
+  gulp.watch paths.static, gulp.series "static"
   gulp.watch paths.scss, gulp.series "scss"
   cb()
 
 
 gulp.task "compile",
-  gulp.series "del:dist", "coffee", "html", "scss"
+  gulp.series "del:dist", "coffee", "static", "scss"
 
 
 gulp.task "default",

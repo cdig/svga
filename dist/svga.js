@@ -3207,12 +3207,6 @@
     return window.top.addEventListener("resize", resize);
   });
 
-  (function() {
-    if (document.domain.indexOf("lunchboxsessions.com") > 0) {
-      return document.domain = "lunchboxsessions.com";
-    }
-  })();
-
   Take(["Config", "ParentObject"], function(Config, ParentObject) {
     var Mode, fetchAttribute, ref;
     fetchAttribute = function(name) {

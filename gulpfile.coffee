@@ -1,4 +1,4 @@
-del = require "del"
+fs = require "fs"
 gulp = require "gulp"
 gulp_coffee = require "gulp-coffee"
 gulp_concat = require "gulp-concat"
@@ -23,6 +23,18 @@ gulp_notify.logLevel(0)
 
 
 # HELPER FUNCTIONS ################################################################################
+
+
+del = (path)->
+  if fs.existsSync path
+    for file in fs.readdirSync path
+      curPath = path + "/" + file
+      if fs.lstatSync(curPath).isDirectory()
+        del curPath
+      else
+        fs.unlinkSync curPath
+      null
+    fs.rmdirSync path
 
 
 logAndKillError = (err)->
@@ -68,8 +80,9 @@ gulp.task "scss", ()->
 # TASKS: SYSTEM ###################################################################################
 
 
-gulp.task "del:dist", ()->
+gulp.task "del:dist", (cb)->
   del "dist"
+  cb()
 
 
 gulp.task "watch", (cb)->

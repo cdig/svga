@@ -2886,7 +2886,7 @@
       var alignment, element, text, textElement;
       ScopeCheck(scope, "text");
       element = scope.element;
-      textElement = element.querySelector("tspan" || element.querySelector("text"));
+      textElement = element.querySelector("tspan") || element.querySelector("text");
       text = textElement != null ? textElement.textContent : void 0;
       alignment = "left";
       Object.defineProperty(scope, 'align', {

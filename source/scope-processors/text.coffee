@@ -3,7 +3,7 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
     ScopeCheck scope, "text"
     
     element = scope.element
-    textElement = element.querySelector "tspan" or element.querySelector "text"
+    textElement = element.querySelector("tspan") or element.querySelector("text")
     text = textElement?.textContent
     alignment = "left"
     

@@ -1,5 +1,6 @@
 fs = require "fs"
 gulp = require "gulp"
+gulp_autoprefixer = require "gulp-autoprefixer"
 gulp_coffee = require "gulp-coffee"
 gulp_concat = require "gulp-concat"
 gulp_natural_sort = require "gulp-natural-sort"
@@ -73,6 +74,10 @@ gulp.task "scss", ()->
     .pipe gulp_concat "svga.scss"
     .pipe gulp_sass
       precision: 2
+    .pipe gulp_autoprefixer
+      browsers: "Android >= 4.4, Chrome >= 44, ChromeAndroid >= 44, Edge >= 12, ExplorerMobile >= 11, IE >= 11, Firefox >= 40, iOS >= 9, Safari >= 9"
+      cascade: false
+      remove: false
     .on "error", logAndKillError
     .pipe gulp.dest "dist"
 

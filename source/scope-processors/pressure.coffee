@@ -1,12 +1,11 @@
 # Depends on style
-
 Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCheck, SVG)->
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "pressure"
     
     pressure = null
-    
-    accessors = 
+
+    accessors =
       get: ()-> pressure
       set: (val)->
         if pressure isnt val
@@ -16,4 +15,4 @@ Take ["Pressure", "Registry", "ScopeCheck", "SVG"], (Pressure, Registry, ScopeCh
           else
             scope.fill = Pressure scope.pressure
     
-    Object.defineProperty scope, 'pressure', accessors
+    Object.defineProperty scope, "pressure", accessors

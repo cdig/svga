@@ -3,7 +3,6 @@
   "version": "4.0.0",
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
-    "pressure": "cdig/pressure#v4",
     "take-and-make": "cdig/take-and-make#v4"
   },
   "devDependencies": {

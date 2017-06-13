@@ -336,7 +336,7 @@
           }
         }
       });
-      Object.defineProperty(scope, 'pressure', {
+      Object.defineProperty(scope, "pressure", {
         get: function() {
           return pressure;
         },
@@ -2849,7 +2849,7 @@
           }
         }
       };
-      return Object.defineProperty(scope, 'pressure', accessors);
+      return Object.defineProperty(scope, "pressure", accessors);
     });
   });
 
@@ -4192,6 +4192,62 @@
       222: "quote",
       224: "meta"
     };
+  })();
+
+  (function() {
+    var Pressure, renderString;
+    Pressure = function(pressure, alpha) {
+      var green;
+      if (alpha == null) {
+        alpha = 1;
+      }
+      switch (false) {
+        case typeof pressure !== "string":
+          return pressure;
+        case pressure !== Pressure.black:
+          return renderString(0, 0, 0, alpha);
+        case pressure !== Pressure.white:
+          return renderString(255, 255, 255, alpha);
+        case pressure !== Pressure.vacuum:
+          return renderString(255, 0, 255, alpha);
+        case pressure !== Pressure.atmospheric:
+          return renderString(0, 153, 255, alpha);
+        case pressure !== Pressure.drain:
+          return renderString(0, 0, 255, alpha);
+        case pressure !== Pressure.electric:
+          return renderString(0, 218, 255, alpha);
+        case pressure !== Pressure.magnetic:
+          return renderString(141, 2, 155, alpha);
+        case !(pressure < Pressure.med):
+          green = Pressure.med - pressure;
+          green *= 153 / (Pressure.med - 1);
+          green += 102;
+          return renderString(255, green | 0, 0, alpha);
+        case !(pressure >= Pressure.med):
+          green = Pressure.max - pressure;
+          green *= 102 / Pressure.med;
+          return renderString(255, green | 0, 0, alpha);
+      }
+    };
+    Pressure.black = 101;
+    Pressure.white = -101;
+    Pressure.vacuum = -2;
+    Pressure.atmospheric = -1;
+    Pressure.drain = 0;
+    Pressure.zero = 0;
+    Pressure.min = 1;
+    Pressure.med = 50;
+    Pressure.max = 100;
+    Pressure.electric = 1000;
+    Pressure.magnetic = 1001;
+    renderString = function(r, g, b, a) {
+      if (a >= .99) {
+        return "rgb(" + r + "," + g + "," + b + ")";
+      } else {
+        return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+      }
+    };
+    return Make("Pressure", Pressure);
   })();
 
   (function() {

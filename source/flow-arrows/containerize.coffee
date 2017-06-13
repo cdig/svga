@@ -39,7 +39,7 @@ Take ["Pressure", "SVG"], (Pressure , SVG)->
       set: (val)->
         updateActive flow = val if flow isnt val
     
-    Object.defineProperty scope, 'pressure',
+    Object.defineProperty scope, "pressure",
       get: ()-> pressure
       set: (val)->
         if pressure isnt val

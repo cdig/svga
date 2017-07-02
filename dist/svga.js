@@ -1907,7 +1907,7 @@
         count -= freq;
         fpsDisplay = fps < 30 ? fps.toFixed(1) : Math.ceil(fps);
         text.textContent = fpsDisplay;
-        return text.style.color = fps <= 5 ? "#C00" : fps <= 10 ? "#E60" : "rgba(0,0,0,0.5)";
+        return text.style.color = fps <= 5 ? "#C00" : fps <= 10 ? "#E60" : "rgba(0,0,0,0.1)";
       }
     });
   });

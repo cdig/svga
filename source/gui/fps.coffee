@@ -38,4 +38,4 @@ Take ["GUI", "Mode", "ParentObject", "Resize", "SVG", "Tick", "SVGReady"], (GUI,
       count -= freq
       fpsDisplay = if fps < 30 then fps.toFixed(1) else Math.ceil(fps)
       text.textContent = fpsDisplay
-      text.style.color = if fps <= 5 then "#C00" else if fps <= 10 then "#E60" else "rgba(0,0,0,0.5)"
+      text.style.color = if fps <= 5 then "#C00" else if fps <= 10 then "#E60" else "rgba(0,0,0,0.1)"

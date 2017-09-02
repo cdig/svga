@@ -15,6 +15,8 @@ Take ["Mode", "ParentObject", "SVG"], (Mode, ParentObject, SVG)->
   resize()
   
   # Do another resize once everything is done loading, since our layout might have shifted
-  Take "load", resize
+  Take "load", ()->
+    console.log "resize"
+    setTimeout resize, 100
   
   window.top.addEventListener "resize", resize

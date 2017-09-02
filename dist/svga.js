@@ -3201,10 +3201,20 @@
         newWidth = ParentObject.offsetWidth;
         newHeight = height * newWidth / width | 0;
         return ParentObject.style.height = newHeight + "px";
+      } else {
+        return console.log("skipping resize");
       }
     };
+    console.log("first resize");
     resize();
-    return window.top.addEventListener("resize", resize);
+    Take("load", function() {
+      console.log("load resize");
+      return setTimeout(resize, 100);
+    });
+    return window.top.addEventListener("resize", function() {
+      console.log("normal resize");
+      return resize();
+    });
   });
 
   Take(["Config", "ParentObject"], function(Config, ParentObject) {

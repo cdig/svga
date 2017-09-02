@@ -1,6 +1,6 @@
 {
   "name": "svga",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
     "take-and-make": "cdig/take-and-make#v4-1"

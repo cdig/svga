@@ -1,4 +1,4 @@
-# SVGA v4
+# SVGA v4.1
 A framework for making interactive animations with SVG.
 
 ## License

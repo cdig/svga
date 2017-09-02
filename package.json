@@ -3,7 +3,7 @@
   "version": "4.0.0",
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
-    "take-and-make": "cdig/take-and-make#v4"
+    "take-and-make": "cdig/take-and-make#v4-1"
   },
   "devDependencies": {
     "coffee-script": "latest",

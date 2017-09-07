@@ -780,7 +780,7 @@
     return hide();
   });
 
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "Resize", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Mode, Resize, SVG, Scope) {
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Mode, SVG, Scope) {
     var CP, ControlPanel, bg, config, g, panelElms, panelHeight, panelRadius, panelWidth, resize, showing, vertical;
     CP = GUI.ControlPanel;
     config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
@@ -1862,7 +1862,7 @@
     }
   });
 
-  Take(["GUI", "Mode", "ParentObject", "Resize", "SVG", "Tick", "SVGReady"], function(GUI, Mode, ParentObject, Resize, SVG, Tick) {
+  Take(["GUI", "Mode", "ParentObject", "SVG", "Tick", "SVGReady"], function(GUI, Mode, ParentObject, SVG, Tick) {
     var avgList, avgWindow, count, fps, freq, prev, ref, text, total;
     freq = .2;
     count = freq;
@@ -3187,7 +3187,7 @@
     });
   });
 
-  Take(["Mode", "ParentObject", "SVG"], function(Mode, ParentObject, SVG) {
+  Take(["Mode", "ParentObject", "Resize", "SVG"], function(Mode, ParentObject, Resize, SVG) {
     var height, newWidth, resize, width;
     if (!Mode.autosize) {
       return;
@@ -3203,14 +3203,7 @@
         return ParentObject.style.height = newHeight + "px";
       }
     };
-    resize();
-    Take("load", function() {
-      resize();
-      return setTimeout(resize, 1000);
-    });
-    return window.top.addEventListener("resize", function() {
-      return resize();
-    });
+    return Resize(resize);
   });
 
   Take(["Config", "ParentObject"], function(Config, ParentObject) {
@@ -4373,7 +4366,11 @@
       } else {
         r();
       }
-      return window.addEventListener("resize", r);
+      window.addEventListener("resize", r);
+      return Take("load", function() {
+        r();
+        return setTimeout(r, 1000);
+      });
     });
   });
 

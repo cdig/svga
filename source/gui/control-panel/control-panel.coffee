@@ -1,4 +1,4 @@
-Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Resize", "SVG", "Scope"], (ControlPanelLayout, Gradient, GUI, Mode, Resize, SVG, Scope)->
+Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], (ControlPanelLayout, Gradient, GUI, Mode, SVG, Scope)->
   
   # Aliases
   CP = GUI.ControlPanel

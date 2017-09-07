@@ -1,4 +1,4 @@
-Take ["Mode", "ParentObject", "SVG"], (Mode, ParentObject, SVG)->
+Take ["Mode", "ParentObject", "Resize", "SVG"], (Mode, ParentObject, Resize, SVG)->
   return unless Mode.autosize
   
   width = SVG.attr SVG.root, "width"
@@ -12,12 +12,4 @@ Take ["Mode", "ParentObject", "SVG"], (Mode, ParentObject, SVG)->
       newHeight = height * newWidth / width |0
       ParentObject.style.height = newHeight + "px"
   
-  resize()
-  
-  # Do another couple resizes once everything is done loading, since our layout might have shifted
-  Take "load", ()->
-    resize()
-    setTimeout resize, 1000
-  
-  window.top.addEventListener "resize", ()->
-    resize()
+  Resize resize

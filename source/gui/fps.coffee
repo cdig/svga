@@ -1,4 +1,4 @@
-Take ["GUI", "Mode", "ParentObject", "Resize", "SVG", "Tick", "SVGReady"], (GUI, Mode, ParentObject, Resize, SVG, Tick)->
+Take ["GUI", "Mode", "ParentObject", "SVG", "Tick", "SVGReady"], (GUI, Mode, ParentObject, SVG, Tick)->
   freq = .2 # Update every n seconds
   count = freq # Update immediately
   avgWindow = 1 # average over the past n seconds

@@ -4,7 +4,10 @@
 
 do ()->
   
-  root = document.querySelector("svg")
+  # We give the main SVG an id in cd-core's gulpfile, so that we know which SVG to target.
+  # There's only ever one SVGA in the current context, but there might be other SVGs (eg: the header logo if this is a standalone SVGA)
+  root = document.getElementById "svga"
+  
   defs = root.querySelector "defs"
   
   svgNS = "http://www.w3.org/2000/svg"

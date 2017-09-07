@@ -4391,7 +4391,7 @@
 
   (function() {
     var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svgNS, xlinkNS;
-    root = document.querySelector("svg");
+    root = document.getElementById("svga");
     defs = root.querySelector("defs");
     svgNS = "http://www.w3.org/2000/svg";
     xlinkNS = "http://www.w3.org/1999/xlink";

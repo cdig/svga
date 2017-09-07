@@ -4389,7 +4389,7 @@
     return results;
   });
 
-  (function() {
+  Take("DOMContentLoaded", function() {
     var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svgNS, xlinkNS;
     root = document.getElementById("svga");
     defs = root.querySelector("defs");
@@ -4552,7 +4552,7 @@
         return v;
       }
     });
-  })();
+  });
 
   Take("Registry", function(Registry) {
     var Symbol;

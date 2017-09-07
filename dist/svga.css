@@ -22,7 +22,7 @@
   font-weight: bold;
   font-style: italic; }
 
-html, body, svg {
+html, body, #svga {
   display: block;
   width: 100%;
   height: 100%;
@@ -36,18 +36,16 @@ html, body, svg {
   font-family: sans-serif;
   overflow: visible; }
 
-* {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  cursor: default;
-  touch-action: manipulation;
-  touch-action: none; }
-
-svg {
+#svga {
   opacity: 0;
   -webkit-tap-highlight-color: transparent; }
-
-.ui, .ui *, [ui], [ui] * {
-  cursor: pointer; }
+  #svga * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: default;
+    touch-action: manipulation;
+    touch-action: none; }
+  #svga .ui, #svga .ui *, #svga [ui], #svga [ui] * {
+    cursor: pointer; }

@@ -1954,14 +1954,14 @@
     });
   });
 
-  Take(["Mode", "RAF", "Tween", "AllReady"], function(Mode, RAF, Tween) {
+  Take(["Mode", "RAF", "SVG", "Tween", "AllReady"], function(Mode, RAF, SVG, Tween) {
     if (Mode.dev) {
       return RAF(function() {
-        return document.querySelector("svg").style.opacity = 1;
+        return SVG.svg.style.opacity = 1;
       });
     } else {
       return Tween(0, 1, .5, function(v) {
-        return document.querySelector("svg").style.opacity = v;
+        return SVG.svg.style.opacity = v;
       });
     }
   });

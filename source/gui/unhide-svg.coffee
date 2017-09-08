@@ -1,7 +1,9 @@
 # The SVG starts off hidden. We unhide it when the time comes.
 
-Take ["Mode", "RAF", "Tween", "AllReady"], (Mode, RAF, Tween)->
+Take ["Mode", "RAF", "SVG", "Tween", "AllReady"], (Mode, RAF, SVG, Tween)->
+  
   if Mode.dev
-    RAF ()-> document.querySelector("svg").style.opacity = 1
+    RAF ()-> SVG.svg.style.opacity = 1
+  
   else
-    Tween 0, 1, .5, (v)-> document.querySelector("svg").style.opacity = v
+    Tween 0, 1, .5, (v)-> SVG.svg.style.opacity = v

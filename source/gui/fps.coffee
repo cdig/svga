@@ -1,4 +1,4 @@
-Take ["GUI", "Mode", "ParentObject", "SVG", "Tick", "SVGReady"], (GUI, Mode, ParentObject, SVG, Tick)->
+Take ["GUI", "Mode", "ParentElement", "SVG", "Tick", "SVGReady"], (GUI, Mode, ParentElement, SVG, Tick)->
   freq = .2 # Update every n seconds
   count = freq # Update immediately
   avgWindow = 1 # average over the past n seconds
@@ -12,16 +12,16 @@ Take ["GUI", "Mode", "ParentObject", "SVG", "Tick", "SVGReady"], (GUI, Mode, Par
   if Mode.dev
     text = document.createElement "div"
     text.setAttribute "svga-fps", "true"
-    if ParentObject is document.body
+    if ParentElement is document.body
       document.body.insertBefore text, document.body.firstChild
     else
       # If the SVGA is removed and re-added, it creates duplicate FPS text elements.
       # So if there's an existing element, we should just use it.
-      prev = ParentObject.previousSibling
+      prev = ParentElement.previousSibling
       if prev?.hasAttribute? "svga-fps"
         text = prev
       else
-        ParentObject.parentNode?.insertBefore text, ParentObject
+        ParentElement.parentNode?.insertBefore text, ParentElement
 
   Tick (time, dt)->
     # This needs to happen regardless of Mode.dev, becasue other systems use FPS to turn on/off features for perf (eg: Highlight)

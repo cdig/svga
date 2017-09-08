@@ -1,7 +1,7 @@
 # Tick is used for every-frame requestAnimationFrame callbacks.
 # For 1-time requestAnimationFrame callbacks, use system/raf.coffee
 
-Take ["ParentObject", "RAF"], (ParentObject, RAF)->
+Take ["ParentElement", "RAF"], (ParentElement, RAF)->
   # We go all the way down to 2 FPS, but no lower, to avoid weirdness if the JS thread is paused.
   # Below 2 FPS, we'll start to get temporal skew where the internal time and the wall time diverge.
   maximumDt = 0.5
@@ -12,7 +12,7 @@ Take ["ParentObject", "RAF"], (ParentObject, RAF)->
   RAF tick = (t)->
     dt = Math.min t/1000 - wallTime, maximumDt
     wallTime = t/1000
-    if not ParentObject.disableSVGA # disableSVGA is set automatically by cd-module when the SVGA is offscreen
+    if not ParentElement.disableSVGA # disableSVGA is set automatically by cd-module when the SVGA is offscreen
       internalTime += dt
       cb internalTime, dt for cb in callbacks
     RAF tick

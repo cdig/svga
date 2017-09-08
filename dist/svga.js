@@ -716,18 +716,18 @@
     });
   });
 
-  Take(["Action", "Mode", "ParentObject", "Reaction", "SVG"], function(Action, Mode, ParentObject, Reaction, SVG) {
+  Take(["Action", "Mode", "ParentElement", "Reaction", "SVG"], function(Action, Mode, ParentElement, Reaction, SVG) {
     if (typeof Mode.background === "string") {
-      return SVG.style(ParentObject, "background-color", Mode.background);
+      return SVG.style(ParentElement, "background-color", Mode.background);
     } else if (Mode.background === true) {
       Reaction("Background:Set", function(v) {
-        return SVG.style(ParentObject, "background-color", "hsl(227, 5%, " + (v * 100) + "%)");
+        return SVG.style(ParentElement, "background-color", "hsl(227, 5%, " + (v * 100) + "%)");
       });
       return Take("SceneReady", function() {
         return Action("Background:Set", .70);
       });
     } else {
-      return SVG.style(ParentObject, "background-color", "transparent");
+      return SVG.style(ParentElement, "background-color", "transparent");
     }
   });
 
@@ -1862,7 +1862,7 @@
     }
   });
 
-  Take(["GUI", "Mode", "ParentObject", "SVG", "Tick", "SVGReady"], function(GUI, Mode, ParentObject, SVG, Tick) {
+  Take(["GUI", "Mode", "ParentElement", "SVG", "Tick", "SVGReady"], function(GUI, Mode, ParentElement, SVG, Tick) {
     var avgList, avgWindow, count, fps, freq, prev, ref, text, total;
     freq = .2;
     count = freq;
@@ -1877,15 +1877,15 @@
     if (Mode.dev) {
       text = document.createElement("div");
       text.setAttribute("svga-fps", "true");
-      if (ParentObject === document.body) {
+      if (ParentElement === document.body) {
         document.body.insertBefore(text, document.body.firstChild);
       } else {
-        prev = ParentObject.previousSibling;
+        prev = ParentElement.previousSibling;
         if (prev != null ? typeof prev.hasAttribute === "function" ? prev.hasAttribute("svga-fps") : void 0 : void 0) {
           text = prev;
         } else {
-          if ((ref = ParentObject.parentNode) != null) {
-            ref.insertBefore(text, ParentObject);
+          if ((ref = ParentElement.parentNode) != null) {
+            ref.insertBefore(text, ParentElement);
           }
         }
       }
@@ -3184,7 +3184,7 @@
     });
   });
 
-  Take(["Mode", "ParentObject", "Resize", "SVG"], function(Mode, ParentObject, Resize, SVG) {
+  Take(["Mode", "ParentElement", "Resize", "SVG"], function(Mode, ParentElement, Resize, SVG) {
     var height, newWidth, resize, width;
     if (!Mode.autosize) {
       return;
@@ -3194,22 +3194,22 @@
     newWidth = null;
     resize = function() {
       var newHeight;
-      if (ParentObject.offsetWidth !== newWidth) {
-        newWidth = ParentObject.offsetWidth;
+      if (ParentElement.offsetWidth !== newWidth) {
+        newWidth = ParentElement.offsetWidth;
         newHeight = height * newWidth / width | 0;
-        return ParentObject.style.height = newHeight + "px";
+        return ParentElement.style.height = newHeight + "px";
       }
     };
     return Resize(resize);
   });
 
-  Take(["Config", "ParentObject"], function(Config, ParentObject) {
+  Take(["Config", "ParentElement"], function(Config, ParentElement) {
     var Mode, fetchAttribute, ref;
     fetchAttribute = function(name) {
       var attrName, val;
       attrName = "x-" + name;
-      if (ParentObject.hasAttribute(attrName)) {
-        val = ParentObject.getAttribute(attrName);
+      if (ParentElement.hasAttribute(attrName)) {
+        val = ParentElement.getAttribute(attrName);
         if (val === "" || val === "true") {
           return true;
         }
@@ -3236,20 +3236,20 @@
   });
 
   (function() {
-    var len, m, o, ref, target;
-    target = null;
+    var len, m, o, parentElement, ref;
+    parentElement = null;
     ref = window.parent.document.querySelectorAll("object");
     for (m = 0, len = ref.length; m < len; m++) {
       o = ref[m];
       if (o.contentDocument === document) {
-        target = o;
+        parentElement = o;
         break;
       }
     }
-    if (target == null) {
-      target = document.body;
+    if (parentElement == null) {
+      parentElement = document.body;
     }
-    return Make("ParentObject", target);
+    return Make("ParentElement", parentElement);
   })();
 
   (function() {
@@ -4575,7 +4575,7 @@
     return Make("Symbol", Symbol);
   });
 
-  Take(["ParentObject", "RAF"], function(ParentObject, RAF) {
+  Take(["ParentElement", "RAF"], function(ParentElement, RAF) {
     var callbacks, internalTime, maximumDt, tick, wallTime;
     maximumDt = 0.5;
     callbacks = [];
@@ -4585,7 +4585,7 @@
       var cb, dt, len, m;
       dt = Math.min(t / 1000 - wallTime, maximumDt);
       wallTime = t / 1000;
-      if (!ParentObject.disableSVGA) {
+      if (!ParentElement.disableSVGA) {
         internalTime += dt;
         for (m = 0, len = callbacks.length; m < len; m++) {
           cb = callbacks[m];

@@ -1,4 +1,4 @@
-Take ["Mode", "ParentObject", "Resize", "SVG"], (Mode, ParentObject, Resize, SVG)->
+Take ["Mode", "ParentElement", "Resize", "SVG"], (Mode, ParentElement, Resize, SVG)->
   return unless Mode.autosize
   
   width = SVG.attr SVG.svg, "width"
@@ -7,9 +7,9 @@ Take ["Mode", "ParentObject", "Resize", "SVG"], (Mode, ParentObject, Resize, SVG
   newWidth = null
   
   resize = ()->
-    if ParentObject.offsetWidth isnt newWidth
-      newWidth = ParentObject.offsetWidth
+    if ParentElement.offsetWidth isnt newWidth
+      newWidth = ParentElement.offsetWidth
       newHeight = height * newWidth / width |0
-      ParentObject.style.height = newHeight + "px"
+      ParentElement.style.height = newHeight + "px"
   
   Resize resize

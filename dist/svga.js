@@ -1929,14 +1929,14 @@
     });
   });
 
-  Take(["ControlPanel", "Mode", "Nav", "RAF", "Resize", "SceneReady"], function(ControlPanel, Mode, Nav, RAF, Resize) {
+  Take(["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], function(ControlPanel, Mode, Nav, SVG, Resize) {
     return Resize(function() {
       var rect;
       rect = {
         x: 0,
         y: 0,
-        w: window.innerWidth,
-        h: window.innerHeight
+        w: SVG.svg.offsetWidth,
+        h: SVG.svg.offsetHeight
       };
       ControlPanel.claimSpace(rect);
       if (Mode.nav) {

@@ -1,11 +1,11 @@
-Take ["ControlPanel", "Mode", "Nav", "RAF", "Resize", "SceneReady"], (ControlPanel, Mode, Nav, RAF, Resize)->
+Take ["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], (ControlPanel, Mode, Nav, SVG, Resize)->
   Resize ()->
     # This rect holds the amount of space in the GUI
     rect =
       x: 0
       y: 0
-      w: window.innerWidth
-      h: window.innerHeight
+      w: SVG.svg.offsetWidth
+      h: SVG.svg.offsetHeight
     
     # claimSpace mutates the rect, shrinking it based on the space needed
     ControlPanel.claimSpace rect

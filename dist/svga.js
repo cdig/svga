@@ -765,7 +765,7 @@
     };
     Resize(function() {
       return TRS.abs(g, {
-        x: window.innerWidth / 2
+        x: SVG.svg.offsetWidth / 2
       });
     });
     window.addEventListener("focus", hide);
@@ -829,8 +829,8 @@
     resize = function() {
       var heightPad, panelBgX, panelBgY, size, view, widthPad, x, y;
       view = {
-        w: window.innerWidth,
-        h: window.innerHeight
+        w: SVG.svg.offsetWidth,
+        h: SVG.svg.offsetHeight
       };
       vertical = config.vertical != null ? config.vertical : view.w >= view.h * 1.3;
       size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
@@ -2120,11 +2120,11 @@
       }
       return Resize(function() {
         var hFrac, scale, wFrac, x, y;
-        wFrac = window.innerWidth / width;
-        hFrac = window.innerHeight / height;
+        wFrac = SVG.svg.offsetWidth / width;
+        hFrac = SVG.svg.offsetHeight / height;
         scale = Math.min(wFrac, hFrac);
-        x = (window.innerWidth - width * scale) / (2 * scale);
-        y = (window.innerHeight - height * scale) / (2 * scale);
+        x = (SVG.svg.offsetWidth - width * scale) / (2 * scale);
+        y = (SVG.svg.offsetHeight - height * scale) / (2 * scale);
         return SVG.attr(SVG.root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
       });
     } else {

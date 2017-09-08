@@ -2272,7 +2272,7 @@
     }
   });
 
-  Take(["Mode", "Nav"], function(Mode, Nav) {
+  Take(["Mode", "Nav", "SVG"], function(Mode, Nav, SVG) {
     var gesture;
     if (!Mode.nav) {
       return;
@@ -2281,7 +2281,7 @@
       return;
     }
     gesture = new MSGesture();
-    gesture.target = document.querySelector("svg");
+    gesture.target = SVG.svg;
     gesture.target.addEventListener("pointerdown", function(e) {
       if (Nav.eventInside(e)) {
         return gesture.addPointer(e.pointerId);
@@ -2956,14 +2956,14 @@
     });
   });
 
-  Take(["RAF", "Registry", "ScopeCheck"], function(RAF, Registry, ScopeCheck) {
+  Take(["RAF", "Registry", "ScopeCheck", "SVG"], function(RAF, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var applyTransform, denom, element, matrix, ref, rotation, scaleX, scaleY, t, transform, transformBaseVal, x, y;
       ScopeCheck(scope, "x", "y", "rotation", "scale", "scaleX", "scaleY");
       element = scope.element;
       transformBaseVal = (ref = element.transform) != null ? ref.baseVal : void 0;
-      transform = document.querySelector("svg").createSVGTransform();
-      matrix = document.querySelector("svg").createSVGMatrix();
+      transform = SVG.svg.createSVGTransform();
+      matrix = SVG.svg.createSVGMatrix();
       x = 0;
       y = 0;
       rotation = 0;

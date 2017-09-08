@@ -1,9 +1,9 @@
-Take ["Mode", "Nav"], (Mode, Nav)->
+Take ["Mode", "Nav", "SVG"], (Mode, Nav, SVG)->
   return unless Mode.nav
   return unless navigator.msMaxTouchPoints and navigator.msMaxTouchPoints > 1
   
   gesture = new MSGesture()
-  gesture.target = document.querySelector("svg")
+  gesture.target = SVG.svg
   
   gesture.target.addEventListener "pointerdown", (e)->
     if Nav.eventInside e

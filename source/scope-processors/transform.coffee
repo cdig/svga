@@ -1,12 +1,12 @@
-Take ["RAF", "Registry", "ScopeCheck"], (RAF, Registry, ScopeCheck)->
+Take ["RAF", "Registry", "ScopeCheck", "SVG"], (RAF, Registry, ScopeCheck, SVG)->
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "x", "y", "rotation", "scale", "scaleX", "scaleY"
     
     element = scope.element
     transformBaseVal = element.transform?.baseVal
     
-    transform = document.querySelector("svg").createSVGTransform()
-    matrix = document.querySelector("svg").createSVGMatrix()
+    transform = SVG.svg.createSVGTransform()
+    matrix = SVG.svg.createSVGMatrix()
     x = 0
     y = 0
     rotation = 0

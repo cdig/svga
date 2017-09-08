@@ -1,4 +1,4 @@
-Take ["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], (ControlPanel, Mode, Nav, SVG, Resize)->
+Take ["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], (ControlPanel, Mode, Nav, Resize, SVG)->
   Resize ()->
     # This rect holds the amount of space in the GUI
     rect =

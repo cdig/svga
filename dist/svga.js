@@ -1929,7 +1929,7 @@
     });
   });
 
-  Take(["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], function(ControlPanel, Mode, Nav, SVG, Resize) {
+  Take(["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], function(ControlPanel, Mode, Nav, Resize, SVG) {
     return Resize(function() {
       var rect;
       rect = {

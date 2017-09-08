@@ -1,8 +1,8 @@
 Take ["Mode", "ParentObject", "Resize", "SVG"], (Mode, ParentObject, Resize, SVG)->
   return unless Mode.autosize
   
-  width = SVG.attr SVG.root, "width"
-  height = SVG.attr SVG.root, "height"
+  width = SVG.attr SVG.svg, "width"
+  height = SVG.attr SVG.svg, "height"
   
   newWidth = null
   

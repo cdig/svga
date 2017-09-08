@@ -1,9 +1,9 @@
-Take ["Registry", "Scene", "DOMContentLoaded"], (Registry, Scene)->
+Take ["Registry", "Scene", "SVG"], (Registry, Scene, SVG)->
   
-  # This is the very first code that touches the DOM. It crawls the entire DOM and:
+  # This is the very first code that changes the DOM. It crawls the entire DOM and:
   # 1. Makes structural changes to prepare things for animation.
   # 2. Returns a tree of DOM references that we'll link Symbols to.
-  svgData = Scene.crawl document.getElementById "root"
+  svgData = Scene.crawl SVG.root
   
   # We're done the initial traversal of the SVG. It's now safe for systems to mutate it.
   Make "SVGReady"

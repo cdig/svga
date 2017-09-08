@@ -1,10 +1,9 @@
 Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize, SVG, Tween)->
-  root = document.getElementById "root"
-
+  
   if not Mode.nav
     Make "Nav", false
-    width = SVG.attr SVG.root, "width"
-    height = SVG.attr SVG.root, "height"
+    width = SVG.attr SVG.svg, "width"
+    height = SVG.attr SVG.svg, "height"
     throw new Error "This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash." unless width? and height?
     
     Resize ()->
@@ -13,10 +12,10 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
       scale = Math.min wFrac, hFrac
       x = (window.innerWidth - width * scale) / (2 * scale)
       y = (window.innerHeight - height * scale) / (2 * scale)
-      SVG.attr root, "transform", "scale(#{scale}) translate(#{x}, #{y})"
+      SVG.attr SVG.root, "transform", "scale(#{scale}) translate(#{x}, #{y})"
   
   else
-    SVG.attrs SVG.root, width: null, height: null
+    SVG.attrs SVG.svg, width: null, height: null
     pos = x: 0, y: 0, z: 0
     center = x: 0, y: 0, z: 1
     xLimit = {}
@@ -82,7 +81,7 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
       
       eventInside: (e)->
         e = e.touches[0] if e.touches?.length > 0
-        e.target is document.body or e.target is SVG.root or root.contains e.target
+        e.target is document.body or e.target is SVG.svg or SVG.root.contains e.target
       
       assignSpace: (rect)->
         wFrac = rect.w / initialSize.width

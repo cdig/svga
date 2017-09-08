@@ -14,7 +14,7 @@ Take ["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], (GUI, Mode, Resize, SV
   window.addEventListener "blur", show
   
   # This makes IE happier
-  window.addEventListener "mousedown", ()-> window.focus() if document.activeElement is SVG.root
+  window.addEventListener "mousedown", ()-> window.focus() if document.activeElement is SVG.svg
   
   window.focus() # Focus by default
   hide() # Fix a flicker on IE

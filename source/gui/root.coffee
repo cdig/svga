@@ -1,6 +1,4 @@
-Take ["Reaction", "SceneReady"], (Reaction)->
+Take ["Reaction", "SVG", "SceneReady"], (Reaction, SVG)->
   
-  root = document.querySelector "#root"
-  
-  Reaction "Root:Show", ()-> root._scope.show 1
-  Reaction "Root:Hide", ()-> root._scope.hide 1
+  Reaction "Root:Show", ()-> SVG.root._scope.show 1
+  Reaction "Root:Hide", ()-> SVG.root._scope.hide 1

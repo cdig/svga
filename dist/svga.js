@@ -3,9 +3,9 @@
     slice = [].slice,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  Take(["Registry", "Scene", "DOMContentLoaded"], function(Registry, Scene) {
+  Take(["Registry", "Scene", "SVG"], function(Registry, Scene, SVG) {
     var svgData;
-    svgData = Scene.crawl(document.getElementById("root"));
+    svgData = Scene.crawl(SVG.root);
     Make("SVGReady");
     return setTimeout(function() {
       Registry.closeRegistration("ScopeProcessor");
@@ -772,7 +772,7 @@
     window.addEventListener("touchstart", hide);
     window.addEventListener("blur", show);
     window.addEventListener("mousedown", function() {
-      if (document.activeElement === SVG.root) {
+      if (document.activeElement === SVG.svg) {
         return window.focus();
       }
     });
@@ -1915,7 +1915,7 @@
   Take(["SVG", "SVGReady"], function(SVG) {
     var GUI;
     return Make("GUI", GUI = {
-      elm: SVG.create("g", SVG.root, {
+      elm: SVG.create("g", SVG.svg, {
         xGui: ""
       }),
       ControlPanel: {
@@ -1945,14 +1945,12 @@
     });
   });
 
-  Take(["Reaction", "SceneReady"], function(Reaction) {
-    var root;
-    root = document.querySelector("#root");
+  Take(["Reaction", "SVG", "SceneReady"], function(Reaction, SVG) {
     Reaction("Root:Show", function() {
-      return root._scope.show(1);
+      return SVG.root._scope.show(1);
     });
     return Reaction("Root:Hide", function() {
-      return root._scope.hide(1);
+      return SVG.root._scope.hide(1);
     });
   });
 
@@ -2112,12 +2110,11 @@
   });
 
   Take(["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(Mode, RAF, Resize, SVG, Tween) {
-    var Nav, center, dist, distTo, height, initialSize, limit, ox, oy, pos, render, requestRender, root, scaleStartPosZ, tween, width, xLimit, yLimit, zLimit;
-    root = document.getElementById("root");
+    var Nav, center, dist, distTo, height, initialSize, limit, ox, oy, pos, render, requestRender, scaleStartPosZ, tween, width, xLimit, yLimit, zLimit;
     if (!Mode.nav) {
       Make("Nav", false);
-      width = SVG.attr(SVG.root, "width");
-      height = SVG.attr(SVG.root, "height");
+      width = SVG.attr(SVG.svg, "width");
+      height = SVG.attr(SVG.svg, "height");
       if (!((width != null) && (height != null))) {
         throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
       }
@@ -2128,10 +2125,10 @@
         scale = Math.min(wFrac, hFrac);
         x = (window.innerWidth - width * scale) / (2 * scale);
         y = (window.innerHeight - height * scale) / (2 * scale);
-        return SVG.attr(root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
+        return SVG.attr(SVG.root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
       });
     } else {
-      SVG.attrs(SVG.root, {
+      SVG.attrs(SVG.svg, {
         width: null,
         height: null
       });
@@ -2238,7 +2235,7 @@
           if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
             e = e.touches[0];
           }
-          return e.target === document.body || e.target === SVG.root || root.contains(e.target);
+          return e.target === document.body || e.target === SVG.svg || SVG.root.contains(e.target);
         },
         assignSpace: function(rect) {
           var c, hFrac, wFrac;
@@ -3192,8 +3189,8 @@
     if (!Mode.autosize) {
       return;
     }
-    width = SVG.attr(SVG.root, "width");
-    height = SVG.attr(SVG.root, "height");
+    width = SVG.attr(SVG.svg, "width");
+    height = SVG.attr(SVG.svg, "height");
     newWidth = null;
     resize = function() {
       var newHeight;
@@ -4390,9 +4387,10 @@
   });
 
   Take("DOMContentLoaded", function() {
-    var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svgNS, xlinkNS;
-    root = document.querySelector("svg#svga");
-    defs = root.querySelector("defs");
+    var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svg, svgNS, xlinkNS;
+    svg = document.querySelector("svg#svga");
+    defs = svg.querySelector("defs");
+    root = svg.getElementById("root");
     svgNS = "http://www.w3.org/2000/svg";
     xlinkNS = "http://www.w3.org/1999/xlink";
     propNames = {
@@ -4409,8 +4407,9 @@
       return SVGReady || (SVGReady = Take("SVGReady"));
     };
     return Make("SVG", SVG = {
-      root: root,
+      svg: svg,
       defs: defs,
+      root: root,
       create: function(type, parent, attrs) {
         var elm;
         elm = document.createElementNS(svgNS, type);

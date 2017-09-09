@@ -53,7 +53,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], (Control
   # Helpers
   
   resize = ()->
-    view = w:SVG.svg.clientWidth, h:SVG.svg.clientHeight
+    view = w:SVG.svg.offsetWidth, h:SVG.svg.offsetHeight
     vertical = if config.vertical? then config.vertical else view.w >= view.h * 1.3
     size = if vertical
       ControlPanelLayout.vertical view

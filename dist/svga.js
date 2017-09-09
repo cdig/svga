@@ -829,8 +829,8 @@
     resize = function() {
       var heightPad, panelBgX, panelBgY, size, view, widthPad, x, y;
       view = {
-        w: SVG.svg.clientWidth,
-        h: SVG.svg.clientHeight
+        w: SVG.svg.offsetWidth,
+        h: SVG.svg.offsetHeight
       };
       vertical = config.vertical != null ? config.vertical : view.w >= view.h * 1.3;
       size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
@@ -1935,8 +1935,8 @@
       rect = {
         x: 0,
         y: 0,
-        w: SVG.svg.clientWidth,
-        h: SVG.svg.clientHeight
+        w: SVG.svg.offsetWidth,
+        h: SVG.svg.offsetHeight
       };
       ControlPanel.claimSpace(rect);
       if (Mode.nav) {
@@ -3194,8 +3194,8 @@
     newWidth = null;
     resize = function() {
       var newHeight;
-      if (ParentElement.clientWidth !== newWidth) {
-        newWidth = ParentElement.clientWidth;
+      if (ParentElement.offsetWidth !== newWidth) {
+        newWidth = ParentElement.offsetWidth;
         newHeight = height * newWidth / width | 0;
         return ParentElement.style.height = newHeight + "px";
       }

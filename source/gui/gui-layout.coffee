@@ -4,8 +4,8 @@ Take ["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], (ControlPan
     rect =
       x: 0
       y: 0
-      w: SVG.svg.offsetWidth
-      h: SVG.svg.offsetHeight
+      w: SVG.svg.clientWidth
+      h: SVG.svg.clientHeight
     
     # claimSpace mutates the rect, shrinking it based on the space needed
     ControlPanel.claimSpace rect

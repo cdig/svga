@@ -764,9 +764,8 @@
       });
     };
     Resize(function() {
-      throw "HAMMERTIME";
       return TRS.abs(g, {
-        x: SVG.svg.offsetWidth / 2
+        x: SVG.svg.clientWidth / 2
       });
     });
     window.addEventListener("focus", hide);
@@ -830,8 +829,8 @@
     resize = function() {
       var heightPad, panelBgX, panelBgY, size, view, widthPad, x, y;
       view = {
-        w: SVG.svg.offsetWidth,
-        h: SVG.svg.offsetHeight
+        w: SVG.svg.clientWidth,
+        h: SVG.svg.clientHeight
       };
       vertical = config.vertical != null ? config.vertical : view.w >= view.h * 1.3;
       size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
@@ -1936,8 +1935,8 @@
       rect = {
         x: 0,
         y: 0,
-        w: SVG.svg.offsetWidth,
-        h: SVG.svg.offsetHeight
+        w: SVG.svg.clientWidth,
+        h: SVG.svg.clientHeight
       };
       ControlPanel.claimSpace(rect);
       if (Mode.nav) {
@@ -2121,11 +2120,11 @@
       }
       return Resize(function() {
         var hFrac, scale, wFrac, x, y;
-        wFrac = SVG.svg.offsetWidth / width;
-        hFrac = SVG.svg.offsetHeight / height;
+        wFrac = SVG.svg.clientWidth / width;
+        hFrac = SVG.svg.clientHeight / height;
         scale = Math.min(wFrac, hFrac);
-        x = (SVG.svg.offsetWidth - width * scale) / (2 * scale);
-        y = (SVG.svg.offsetHeight - height * scale) / (2 * scale);
+        x = (SVG.svg.clientWidth - width * scale) / (2 * scale);
+        y = (SVG.svg.clientHeight - height * scale) / (2 * scale);
         return SVG.attr(SVG.root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
       });
     } else {
@@ -3195,8 +3194,8 @@
     newWidth = null;
     resize = function() {
       var newHeight;
-      if (ParentElement.offsetWidth !== newWidth) {
-        newWidth = ParentElement.offsetWidth;
+      if (ParentElement.clientWidth !== newWidth) {
+        newWidth = ParentElement.clientWidth;
         newHeight = height * newWidth / width | 0;
         return ParentElement.style.height = newHeight + "px";
       }
@@ -4655,9 +4654,6 @@
         ox: 0,
         oy: 0,
         apply: function() {
-          if (("translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")").indexOf("NaN") > 0) {
-            throw "BATMAN!";
-          }
           SVG.attr(wrapper, "transform", "translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")");
           return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
         }

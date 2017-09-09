@@ -36,7 +36,7 @@ Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
       e.preventDefault()
       Nav.to x:0, y:0, z:0
   
-  wheelHandler = (e)->
+  document.addEventListener "wheel", (e)->
     return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()
@@ -62,5 +62,3 @@ Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
       # # This is probably a scroll wheel # DOESN'T WORK! :(
       # else
       #   Nav.by z: -e.deltaY / 500
-  
-  document.addEventListener "wheel", wheelHandler, passive: true

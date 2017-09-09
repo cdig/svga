@@ -3001,10 +3001,6 @@
         },
         set: function(val) {
           if (x !== val) {
-            if (isNaN(val)) {
-              console.log(scope);
-              throw new Error("^^^ @x was set to a NaN value");
-            }
             x = val;
             return RAF(applyTransform, true, 1);
           }
@@ -3016,10 +3012,6 @@
         },
         set: function(val) {
           if (y !== val) {
-            if (isNaN(val)) {
-              console.log(scope);
-              throw new Error("^^^ @y was set to a NaN value");
-            }
             y = val;
             return RAF(applyTransform, true, 1);
           }
@@ -3031,10 +3023,6 @@
         },
         set: function(val) {
           if (rotation !== val) {
-            if (isNaN(val)) {
-              console.log(scope);
-              throw new Error("^^^ @rotation was set to a NaN value");
-            }
             rotation = val;
             return RAF(applyTransform, true, 1);
           }
@@ -3046,10 +3034,6 @@
         },
         set: function(val) {
           if (scaleX !== val || scaleY !== val) {
-            if (isNaN(val)) {
-              console.log(scope);
-              throw new Error("^^^ @scale was set to a NaN value");
-            }
             scaleX = scaleY = val;
             return RAF(applyTransform, true, 1);
           }
@@ -3061,10 +3045,6 @@
         },
         set: function(val) {
           if (scaleX !== val) {
-            if (isNaN(val)) {
-              console.log(scope);
-              throw new Error("^^^ @scaleX was set to a NaN value");
-            }
             scaleX = val;
             return RAF(applyTransform, true, 1);
           }
@@ -3076,10 +3056,6 @@
         },
         set: function(val) {
           if (scaleY !== val) {
-            if (isNaN(val)) {
-              console.log(scope);
-              throw new Error("^^^ @scaleY was set to a NaN value");
-            }
             scaleY = val;
             return RAF(applyTransform, true, 1);
           }

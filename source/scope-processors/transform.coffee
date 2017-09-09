@@ -46,7 +46,6 @@ Take ["RAF", "Registry", "ScopeCheck", "SVG"], (RAF, Registry, ScopeCheck, SVG)-
       get: ()-> x
       set: (val)->
         if x isnt val
-          if isNaN val then console.log scope; throw new Error "^^^ @x was set to a NaN value"
           x = val
           RAF applyTransform, true, 1
     
@@ -54,7 +53,6 @@ Take ["RAF", "Registry", "ScopeCheck", "SVG"], (RAF, Registry, ScopeCheck, SVG)-
       get: ()-> y
       set: (val)->
         if y isnt val
-          if isNaN val then console.log scope; throw new Error "^^^ @y was set to a NaN value"
           y = val
           RAF applyTransform, true, 1
     
@@ -62,7 +60,6 @@ Take ["RAF", "Registry", "ScopeCheck", "SVG"], (RAF, Registry, ScopeCheck, SVG)-
       get: ()-> rotation
       set: (val)->
         if rotation isnt val
-          if isNaN val then console.log scope; throw new Error "^^^ @rotation was set to a NaN value"
           rotation = val
           RAF applyTransform, true, 1
     
@@ -70,7 +67,6 @@ Take ["RAF", "Registry", "ScopeCheck", "SVG"], (RAF, Registry, ScopeCheck, SVG)-
       get: ()-> (scaleX + scaleY)/2
       set: (val)->
         if scaleX isnt val or scaleY isnt val
-          if isNaN val then console.log scope; throw new Error "^^^ @scale was set to a NaN value"
           scaleX = scaleY = val
           RAF applyTransform, true, 1
     
@@ -78,7 +74,6 @@ Take ["RAF", "Registry", "ScopeCheck", "SVG"], (RAF, Registry, ScopeCheck, SVG)-
       get: ()-> scaleX
       set: (val)->
         if scaleX isnt val
-          if isNaN val then console.log scope; throw new Error "^^^ @scaleX was set to a NaN value"
           scaleX = val
           RAF applyTransform, true, 1
     
@@ -86,6 +81,5 @@ Take ["RAF", "Registry", "ScopeCheck", "SVG"], (RAF, Registry, ScopeCheck, SVG)-
       get: ()-> scaleY
       set: (val)->
         if scaleY isnt val
-          if isNaN val then console.log scope; throw new Error "^^^ @scaleY was set to a NaN value"
           scaleY = val
           RAF applyTransform, true, 1

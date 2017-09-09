@@ -7,7 +7,7 @@ Take ["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], (GUI, Mode, Resize, SV
   
   show = ()-> SVG.attrs g, style: "display: block"
   hide = ()-> SVG.attrs g, style: "display: none"
-  Resize ()-> TRS.abs g, x: SVG.svg.clientWidth/2 # We use clientWidth instead of offsetWidth because offsetWidth is undefined in Chrome & FF until the first CSS layout finishes
+  Resize ()-> TRS.abs g, x: SVG.svg.offsetWidth/2
   
   window.addEventListener "focus", hide
   window.addEventListener "touchstart", hide

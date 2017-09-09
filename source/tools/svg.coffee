@@ -2,10 +2,11 @@
 # They're not to be used by content, since they might endure breaking changes at any time.
 # They may be used by Controls, since those are a more advanced feature of SVGA.
 
-Take "DOMContentLoaded", ()->
+Take ["RAF", "DOMContentLoaded"], (RAF)->
   
   # We give the main SVG an id in cd-core's gulpfile, so that we know which SVG to target.
-  # There's only ever one SVGA in the current context, but there might be other SVGs (eg: the header logo if this is a standalone SVGA).
+  # There's only ever one SVGA in the current context, but there might be other SVGs
+  # (eg: the header logo if this is a standalone deployed SVGA).
   # Also, we can't use getElementById because gulp-rev-all thinks it's a URL *facepalm*
   svg = document.querySelector "svg#svga"
   
@@ -30,12 +31,12 @@ Take "DOMContentLoaded", ()->
   
   # We want to wait until SVGReady fires before we change the structure of the DOM.
   # However, we can't just Take "SVGReady" at the top, because other systems want
-  # to use us in safe, non-structural ways before SVGReady has fired. So we do this:
+  # to use these SVG tools in safe, non-structural ways before SVGReady has fired.
+  # So we do this:
   SVGReady = false
   CheckSVGReady = ()-> SVGReady or (SVGReady = Take "SVGReady")
   
-  
-  Make "SVG", SVG =
+  SVG =
     svg: svg
     defs: defs
     root: root
@@ -111,3 +112,13 @@ Take "DOMContentLoaded", ()->
       if elm._SVG_style[k] isnt v
         elm.style[k] = elm._SVG_style[k] = v
       v # Not Composable
+  
+  # Since this file is the very first code that runs against the DOM,
+  # we need to make sure the DOM is fully ready before we kick things off.
+  # Firefox on Windows has issues if don't wait until offsetWidth has a valid value.
+  # Using a different property (like clientWidth) doesn't work. Safest move is to wait.
+  checkForFirstLayoutCompleted = ()->
+    if svg.offsetWidth?
+      Make "SVG", SVG
+    else
+      RAF checkForFirstLayoutCompleted

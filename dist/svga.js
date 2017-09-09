@@ -765,7 +765,7 @@
     };
     Resize(function() {
       return TRS.abs(g, {
-        x: SVG.svg.clientWidth / 2
+        x: SVG.svg.offsetWidth / 2
       });
     });
     window.addEventListener("focus", hide);
@@ -4386,8 +4386,8 @@
     return results;
   });
 
-  Take("DOMContentLoaded", function() {
-    var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svg, svgNS, xlinkNS;
+  Take(["RAF", "DOMContentLoaded"], function(RAF) {
+    var CheckSVGReady, SVG, SVGReady, attrNames, checkForFirstLayoutCompleted, defs, propNames, root, svg, svgNS, xlinkNS;
     svg = document.querySelector("svg#svga");
     defs = svg.querySelector("defs");
     root = svg.getElementById("root");
@@ -4406,7 +4406,7 @@
     CheckSVGReady = function() {
       return SVGReady || (SVGReady = Take("SVGReady"));
     };
-    return Make("SVG", SVG = {
+    SVG = {
       svg: svg,
       defs: defs,
       root: root,
@@ -4558,7 +4558,14 @@
         }
         return v;
       }
-    });
+    };
+    return checkForFirstLayoutCompleted = function() {
+      if (svg.offsetWidth != null) {
+        return Make("SVG", SVG);
+      } else {
+        return RAF(checkForFirstLayoutCompleted);
+      }
+    };
   });
 
   Take("Registry", function(Registry) {

@@ -12,6 +12,7 @@ Take ["RAF", "SVG"], (RAF, SVG)->
     elm._trs = v =
       x: 0, y: 0, r: 0, sx: 1, sy: 1, ox: 0, oy: 0,
       apply: ()->
+        if "translate(#{v.x},#{v.y}) rotate(#{v.r*360}) scale(#{v.sx},#{v.sy})".indexOf("NaN") > 0 then throw "BATMAN!"
         SVG.attr wrapper, "transform", "translate(#{v.x},#{v.y}) rotate(#{v.r*360}) scale(#{v.sx},#{v.sy})"
         SVG.attr elm, "transform", "translate(#{-v.ox},#{-v.oy})"
     elm # Composable

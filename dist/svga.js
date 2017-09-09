@@ -4654,6 +4654,9 @@
         ox: 0,
         oy: 0,
         apply: function() {
+          if (("translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")").indexOf("NaN") > 0) {
+            throw "BATMAN!";
+          }
           SVG.attr(wrapper, "transform", "translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")");
           return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
         }

@@ -7,11 +7,11 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
     throw new Error "This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash." unless width? and height?
     
     Resize ()->
-      wFrac = SVG.svg.clientWidth / width
-      hFrac = SVG.svg.clientHeight / height
+      wFrac = SVG.svg.offsetWidth / width
+      hFrac = SVG.svg.offsetHeight / height
       scale = Math.min wFrac, hFrac
-      x = (SVG.svg.clientWidth - width * scale) / (2 * scale)
-      y = (SVG.svg.clientHeight - height * scale) / (2 * scale)
+      x = (SVG.svg.offsetWidth - width * scale) / (2 * scale)
+      y = (SVG.svg.offsetHeight - height * scale) / (2 * scale)
       SVG.attr SVG.root, "transform", "scale(#{scale}) translate(#{x}, #{y})"
   
   else

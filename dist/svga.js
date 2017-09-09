@@ -2120,11 +2120,11 @@
       }
       return Resize(function() {
         var hFrac, scale, wFrac, x, y;
-        wFrac = SVG.svg.clientWidth / width;
-        hFrac = SVG.svg.clientHeight / height;
+        wFrac = SVG.svg.offsetWidth / width;
+        hFrac = SVG.svg.offsetHeight / height;
         scale = Math.min(wFrac, hFrac);
-        x = (SVG.svg.clientWidth - width * scale) / (2 * scale);
-        y = (SVG.svg.clientHeight - height * scale) / (2 * scale);
+        x = (SVG.svg.offsetWidth - width * scale) / (2 * scale);
+        y = (SVG.svg.offsetHeight - height * scale) / (2 * scale);
         return SVG.attr(SVG.root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
       });
     } else {
@@ -4386,7 +4386,7 @@
     return results;
   });
 
-  Take("load", function() {
+  Take("DOMContentLoaded", function() {
     var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svg, svgNS, xlinkNS;
     svg = document.querySelector("svg#svga");
     defs = svg.querySelector("defs");

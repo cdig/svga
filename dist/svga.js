@@ -4560,10 +4560,10 @@
       }
     };
     checkForFirstLayoutCompleted = function() {
-      console.log(svg);
       if (svg.offsetWidth != null) {
         return Make("SVG", SVG);
       } else {
+        console.log("NOT YET");
         return RAF(checkForFirstLayoutCompleted);
       }
     };

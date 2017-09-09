@@ -2153,12 +2153,12 @@
       };
       scaleStartPosZ = 0;
       tween = null;
-      initialSize = root.getBoundingClientRect();
+      initialSize = SVG.root.getBoundingClientRect();
       if (!(initialSize.width > 0 && initialSize.height > 0)) {
         return;
       }
-      ox = root._scope.x - initialSize.left - initialSize.width / 2;
-      oy = root._scope.y - initialSize.top - initialSize.height / 2;
+      ox = SVG.root._scope.x - initialSize.left - initialSize.width / 2;
+      oy = SVG.root._scope.y - initialSize.top - initialSize.height / 2;
       xLimit.max = initialSize.width / 2;
       yLimit.max = initialSize.height / 2;
       xLimit.min = -xLimit.max;
@@ -2169,7 +2169,7 @@
       render = function() {
         var z;
         z = center.z * Math.pow(2, pos.z);
-        return SVG.attr(root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
+        return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
       };
       limit = function(l, v) {
         return Math.min(l.max, Math.max(l.min, v));

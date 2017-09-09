@@ -25,10 +25,10 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
     scaleStartPosZ = 0
     tween = null
     
-    initialSize = root.getBoundingClientRect()
+    initialSize = SVG.root.getBoundingClientRect()
     return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty
-    ox = root._scope.x - initialSize.left - initialSize.width/2
-    oy = root._scope.y - initialSize.top - initialSize.height/2
+    ox = SVG.root._scope.x - initialSize.left - initialSize.width/2
+    oy = SVG.root._scope.y - initialSize.top - initialSize.height/2
     xLimit.max = initialSize.width/2
     yLimit.max = initialSize.height/2
     xLimit.min = -xLimit.max
@@ -41,7 +41,7 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
     
     render = ()->
       z = center.z * Math.pow 2, pos.z
-      SVG.attr root, "transform", "translate(#{center.x},#{center.y}) scale(#{z}) translate(#{pos.x+ox},#{pos.y+oy})"
+      SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{z}) translate(#{pos.x+ox},#{pos.y+oy})"
     
     
     limit = (l, v)->

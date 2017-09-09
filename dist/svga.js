@@ -4386,7 +4386,7 @@
     return results;
   });
 
-  Take("DOMContentLoaded", function() {
+  Take("load", function() {
     var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svg, svgNS, xlinkNS;
     svg = document.querySelector("svg#svga");
     defs = svg.querySelector("defs");

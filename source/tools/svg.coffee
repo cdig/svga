@@ -2,7 +2,7 @@
 # They're not to be used by content, since they might endure breaking changes at any time.
 # They may be used by Controls, since those are a more advanced feature of SVGA.
 
-Take "DOMContentLoaded", ()->
+Take "load", ()->
   
   # We give the main SVG an id in cd-core's gulpfile, so that we know which SVG to target.
   # There's only ever one SVGA in the current context, but there might be other SVGs (eg: the header logo if this is a standalone SVGA).

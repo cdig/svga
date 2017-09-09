@@ -4559,13 +4559,14 @@
         return v;
       }
     };
-    return checkForFirstLayoutCompleted = function() {
+    checkForFirstLayoutCompleted = function() {
       if (svg.offsetWidth != null) {
         return Make("SVG", SVG);
       } else {
         return RAF(checkForFirstLayoutCompleted);
       }
     };
+    return checkForFirstLayoutCompleted();
   });
 
   Take("Registry", function(Registry) {

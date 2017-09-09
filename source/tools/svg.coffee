@@ -122,3 +122,4 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
       Make "SVG", SVG
     else
       RAF checkForFirstLayoutCompleted
+  checkForFirstLayoutCompleted()

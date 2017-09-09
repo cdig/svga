@@ -2046,7 +2046,7 @@
   });
 
   Take(["Input", "Mode", "Nav"], function(Input, Mode, Nav) {
-    var calls, down, drag, dragging, up;
+    var calls, down, drag, dragging, up, wheelHandler;
     if (!Mode.nav) {
       return;
     }
@@ -2090,7 +2090,7 @@
         });
       }
     });
-    return document.addEventListener("wheel", function(e) {
+    wheelHandler = function(e) {
       if (e.button !== 0) {
         return;
       }
@@ -2106,6 +2106,9 @@
           });
         }
       }
+    };
+    return document.addEventListener("wheel", wheelHandler, {
+      passive: true
     });
   });
 

@@ -4493,6 +4493,10 @@
           console.log(k);
           throw new Error("SVG.attr requires a string as the second argument, got ^^^");
         }
+        if (isNaN(v)) {
+          console.log(elm, k);
+          throw new Error("SVG.attr was called with a NaN value for ^^^");
+        }
         if (elm._SVG_attr == null) {
           elm._SVG_attr = {};
         }
@@ -4538,6 +4542,10 @@
         if (typeof k !== "string") {
           console.log(k);
           throw new Error("SVG.style requires a string as the second argument, got ^");
+        }
+        if (isNaN(v)) {
+          console.log(elm, k);
+          throw new Error("SVG.style was called with a NaN value for ^^^");
         }
         if (elm._SVG_style == null) {
           elm._SVG_style = {};

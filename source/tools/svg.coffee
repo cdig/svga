@@ -80,6 +80,7 @@ Take "DOMContentLoaded", ()->
     attr: (elm, k, v)->
       unless elm then throw new Error "SVG.attr was called with a null element"
       unless typeof k is "string" then console.log k; throw new Error "SVG.attr requires a string as the second argument, got ^^^"
+      if isNaN v then console.log elm, k; throw new Error "SVG.attr was called with a NaN value for ^^^"
       elm._SVG_attr ?= {}
       # Note that we only do DOM->cache on a read call (not on a write call),
       # to slightly avoid intermingling DOM reads and writes, which causes thrashing.
@@ -104,6 +105,7 @@ Take "DOMContentLoaded", ()->
     style: (elm, k, v)->
       unless elm then throw new Error "SVG.style was called with a null element"
       unless typeof k is "string" then console.log k; throw new Error "SVG.style requires a string as the second argument, got ^"
+      if isNaN v then console.log elm, k; throw new Error "SVG.style was called with a NaN value for ^^^"
       elm._SVG_style ?= {}
       return elm._SVG_style[k] ?= elm.style[k] if v is undefined
       if elm._SVG_style[k] isnt v

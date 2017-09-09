@@ -2,7 +2,7 @@
 # They're not to be used by content, since they might endure breaking changes at any time.
 # They may be used by Controls, since those are a more advanced feature of SVGA.
 
-Take ["RAF", "DOMContentLoaded"], (RAF)->
+Take "DOMContentLoaded", ()->
   
   # We give the main SVG an id in cd-core's gulpfile, so that we know which SVG to target.
   # There's only ever one SVGA in the current context, but there might be other SVGs
@@ -36,7 +36,7 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
   SVGReady = false
   CheckSVGReady = ()-> SVGReady or (SVGReady = Take "SVGReady")
   
-  SVG =
+  Make "SVG", SVG =
     svg: svg
     defs: defs
     root: root
@@ -112,15 +112,3 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
       if elm._SVG_style[k] isnt v
         elm.style[k] = elm._SVG_style[k] = v
       v # Not Composable
-  
-  # Since this file is the very first code that runs against the DOM,
-  # we need to make sure the DOM is fully ready before we kick things off.
-  # Firefox on Windows has issues if don't wait until offsetWidth has a valid value.
-  # Using a different property (like clientWidth) doesn't work. Safest move is to wait.
-  checkForFirstLayoutCompleted = ()->
-    if svg.offsetWidth?
-      Make "SVG", SVG
-    else
-      console.log "NOT YET"
-      RAF checkForFirstLayoutCompleted
-  checkForFirstLayoutCompleted()

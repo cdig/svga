@@ -765,7 +765,7 @@
     };
     Resize(function() {
       return TRS.abs(g, {
-        x: SVG.svg.offsetWidth / 2
+        x: SVG.svg.getBoundingClientRect().width / 2
       });
     });
     window.addEventListener("focus", hide);
@@ -827,10 +827,11 @@
       };
     });
     resize = function() {
-      var heightPad, panelBgX, panelBgY, size, view, widthPad, x, y;
+      var cbr, heightPad, panelBgX, panelBgY, size, view, widthPad, x, y;
+      cbr = SVG.svg.getBoundingClientRect();
       view = {
-        w: SVG.svg.offsetWidth,
-        h: SVG.svg.offsetHeight
+        w: cbr.width,
+        h: cbr.height
       };
       vertical = config.vertical != null ? config.vertical : view.w >= view.h * 1.3;
       size = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
@@ -1931,12 +1932,13 @@
 
   Take(["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], function(ControlPanel, Mode, Nav, Resize, SVG) {
     return Resize(function() {
-      var rect;
+      var cbr, rect;
+      cbr = SVG.svg.getBoundingClientRect();
       rect = {
         x: 0,
         y: 0,
-        w: SVG.svg.offsetWidth,
-        h: SVG.svg.offsetHeight
+        w: cbr.width,
+        h: cbr.height
       };
       ControlPanel.claimSpace(rect);
       if (Mode.nav) {
@@ -2119,12 +2121,13 @@
         throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
       }
       return Resize(function() {
-        var hFrac, scale, wFrac, x, y;
-        wFrac = SVG.svg.offsetWidth / width;
-        hFrac = SVG.svg.offsetHeight / height;
+        var cbr, hFrac, scale, wFrac, x, y;
+        cbr = SVG.svg.getBoundingClientRect();
+        wFrac = cbr.width / width;
+        hFrac = cbr.height / height;
         scale = Math.min(wFrac, hFrac);
-        x = (SVG.svg.offsetWidth - width * scale) / (2 * scale);
-        y = (SVG.svg.offsetHeight - height * scale) / (2 * scale);
+        x = (cbr.width - width * scale) / (2 * scale);
+        y = (cbr.height - height * scale) / (2 * scale);
         return SVG.attr(SVG.root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
       });
     } else {
@@ -3193,9 +3196,10 @@
     height = SVG.attr(SVG.svg, "height");
     newWidth = null;
     resize = function() {
-      var newHeight;
-      if (ParentElement.offsetWidth !== newWidth) {
-        newWidth = ParentElement.offsetWidth;
+      var cbr, newHeight;
+      cbr = ParentElement.getBoundingClientRect();
+      if (cbr.width !== newWidth) {
+        newWidth = cbr.width;
         newHeight = height * newWidth / width | 0;
         return ParentElement.style.height = newHeight + "px";
       }
@@ -4386,8 +4390,8 @@
     return results;
   });
 
-  Take(["RAF", "DOMContentLoaded"], function(RAF) {
-    var CheckSVGReady, SVG, SVGReady, attrNames, checkForFirstLayoutCompleted, defs, propNames, root, svg, svgNS, xlinkNS;
+  Take("DOMContentLoaded", function() {
+    var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svg, svgNS, xlinkNS;
     svg = document.querySelector("svg#svga");
     defs = svg.querySelector("defs");
     root = svg.getElementById("root");
@@ -4406,7 +4410,7 @@
     CheckSVGReady = function() {
       return SVGReady || (SVGReady = Take("SVGReady"));
     };
-    SVG = {
+    return Make("SVG", SVG = {
       svg: svg,
       defs: defs,
       root: root,
@@ -4558,16 +4562,7 @@
         }
         return v;
       }
-    };
-    checkForFirstLayoutCompleted = function() {
-      if (svg.offsetWidth != null) {
-        return Make("SVG", SVG);
-      } else {
-        console.log("NOT YET");
-        return RAF(checkForFirstLayoutCompleted);
-      }
-    };
-    return checkForFirstLayoutCompleted();
+    });
   });
 
   Take("Registry", function(Registry) {

@@ -15,7 +15,7 @@ html, body, #svga {
 }
 
 #svga {
-  opacity: 0.05; // Can't be 0, or offsetWidth isn't calculated properly
+  opacity: 0;
   -webkit-tap-highlight-color: transparent;
   
   * {

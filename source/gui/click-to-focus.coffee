@@ -7,7 +7,7 @@ Take ["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], (GUI, Mode, Resize, SV
   
   show = ()-> SVG.attrs g, style: "display: block"
   hide = ()-> SVG.attrs g, style: "display: none"
-  Resize ()-> TRS.abs g, x: SVG.svg.offsetWidth/2
+  Resize ()-> TRS.abs g, x: SVG.svg.getBoundingClientRect().width/2
   
   window.addEventListener "focus", hide
   window.addEventListener "touchstart", hide

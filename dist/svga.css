@@ -37,7 +37,7 @@ html, body, #svga {
   overflow: visible; }
 
 #svga {
-  opacity: 0.05;
+  opacity: 0;
   -webkit-tap-highlight-color: transparent; }
   #svga * {
     -webkit-user-select: none;

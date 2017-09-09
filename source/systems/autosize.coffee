@@ -7,8 +7,9 @@ Take ["Mode", "ParentElement", "Resize", "SVG"], (Mode, ParentElement, Resize, S
   newWidth = null
   
   resize = ()->
-    if ParentElement.offsetWidth isnt newWidth
-      newWidth = ParentElement.offsetWidth
+    cbr = ParentElement.getBoundingClientRect()
+    if cbr.width isnt newWidth
+      newWidth = cbr.width
       newHeight = height * newWidth / width |0
       ParentElement.style.height = newHeight + "px"
   

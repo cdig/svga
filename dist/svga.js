@@ -764,6 +764,7 @@
       });
     };
     Resize(function() {
+      throw "HAMMERTIME";
       return TRS.abs(g, {
         x: SVG.svg.offsetWidth / 2
       });

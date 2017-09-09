@@ -4370,7 +4370,7 @@
       window.addEventListener("resize", r);
       return Take("load", function() {
         r();
-        return setTimeout(r, 1000);
+        return setTimeout(r, 500);
       });
     });
   });

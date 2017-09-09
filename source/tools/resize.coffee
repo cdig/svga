@@ -8,4 +8,4 @@ Take ["RAF"], (RAF)->
     # since the page layout might have shifted
     Take "load", ()->
       r()
-      setTimeout r, 1000
+      setTimeout r, 500

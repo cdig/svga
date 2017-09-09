@@ -2157,10 +2157,10 @@
       if (!(initialSize.width > 0 && initialSize.height > 0)) {
         return;
       }
-      console.log(ox = SVG.root._scope.x - initialSize.left - initialSize.width / 2);
-      console.log(oy = SVG.root._scope.y - initialSize.top - initialSize.height / 2);
-      console.log(xLimit.max = initialSize.width / 2);
-      console.log(yLimit.max = initialSize.height / 2);
+      ox = SVG.root._scope.x - initialSize.left - initialSize.width / 2;
+      oy = SVG.root._scope.y - initialSize.top - initialSize.height / 2;
+      xLimit.max = initialSize.width / 2;
+      yLimit.max = initialSize.height / 2;
       xLimit.min = -xLimit.max;
       yLimit.min = -yLimit.max;
       requestRender = function() {

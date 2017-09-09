@@ -118,6 +118,7 @@ Take ["RAF", "DOMContentLoaded"], (RAF)->
   # Firefox on Windows has issues if don't wait until offsetWidth has a valid value.
   # Using a different property (like clientWidth) doesn't work. Safest move is to wait.
   checkForFirstLayoutCompleted = ()->
+    console.log svg
     if svg.offsetWidth?
       Make "SVG", SVG
     else

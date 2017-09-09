@@ -19,3 +19,6 @@ Take ["Mode", "Registry", "ScopeCheck", "Scope", "SVG"], (Mode, Registry, ScopeC
           SVG.create "rect", point.element, fill: "#000", x:-1, y:1, width: 2, height: 48
           SVG.create "rect", point.element, fill: "#0F0", x:-.5, y:1, width: 1, height: 48
           return point
+        else
+          "Warning: @debug.point() is disabled unless you're in dev"
+          return {}

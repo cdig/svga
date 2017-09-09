@@ -25,24 +25,23 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
     scaleStartPosZ = 0
     tween = null
     
-    initialSize = SVG.root.getBoundingClientRect()
-    return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty
-    ox = SVG.root._scope.x - initialSize.left - initialSize.width/2
-    oy = SVG.root._scope.y - initialSize.top - initialSize.height/2
-    xLimit.max = initialSize.width/2
-    yLimit.max = initialSize.height/2
+    parentRect = SVG.svg.getBoundingClientRect()
+    initialRect = SVG.root.getBoundingClientRect()
+    
+    return unless initialRect.width > 0 and initialRect.height > 0 # This avoids a divide by zero error when the SVG is empty
+    ox = SVG.root._scope.x - (initialRect.left - parentRect.left) - initialRect.width/2
+    oy = SVG.root._scope.y - (initialRect.top - parentRect.top) - initialRect.height/2
+    xLimit.max = initialRect.width/2
+    yLimit.max = initialRect.height/2
     xLimit.min = -xLimit.max
     yLimit.min = -yLimit.max
-    
     
     requestRender = ()->
       RAF render, true
     
-    
     render = ()->
       z = center.z * Math.pow 2, pos.z
       SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{z}) translate(#{pos.x+ox},#{pos.y+oy})"
-    
     
     limit = (l, v)->
       Math.min l.max, Math.max l.min, v
@@ -85,8 +84,8 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
         e.target is document.body or e.target is SVG.svg or SVG.root.contains e.target
       
       assignSpace: (rect)->
-        wFrac = rect.w / initialSize.width
-        hFrac = rect.h / initialSize.height
+        wFrac = rect.w / initialRect.width
+        hFrac = rect.h / initialRect.height
         c =
          x: rect.x + rect.w/2
          y: rect.y + rect.h/2

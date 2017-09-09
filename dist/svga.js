@@ -2112,7 +2112,7 @@
   });
 
   Take(["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(Mode, RAF, Resize, SVG, Tween) {
-    var Nav, center, dist, distTo, height, initialSize, limit, ox, oy, pos, render, requestRender, scaleStartPosZ, tween, width, xLimit, yLimit, zLimit;
+    var Nav, center, dist, distTo, height, initialRect, limit, ox, oy, parentRect, pos, render, requestRender, scaleStartPosZ, tween, width, xLimit, yLimit, zLimit;
     if (!Mode.nav) {
       Make("Nav", false);
       width = SVG.attr(SVG.svg, "width");
@@ -2153,14 +2153,15 @@
       };
       scaleStartPosZ = 0;
       tween = null;
-      initialSize = SVG.root.getBoundingClientRect();
-      if (!(initialSize.width > 0 && initialSize.height > 0)) {
+      parentRect = SVG.svg.getBoundingClientRect();
+      initialRect = SVG.root.getBoundingClientRect();
+      if (!(initialRect.width > 0 && initialRect.height > 0)) {
         return;
       }
-      ox = SVG.root._scope.x - initialSize.left - initialSize.width / 2;
-      oy = SVG.root._scope.y - initialSize.top - initialSize.height / 2;
-      xLimit.max = initialSize.width / 2;
-      yLimit.max = initialSize.height / 2;
+      ox = SVG.root._scope.x - (initialRect.left - parentRect.left) - initialRect.width / 2;
+      oy = SVG.root._scope.y - (initialRect.top - parentRect.top) - initialRect.height / 2;
+      xLimit.max = initialRect.width / 2;
+      yLimit.max = initialRect.height / 2;
       xLimit.min = -xLimit.max;
       yLimit.min = -yLimit.max;
       requestRender = function() {
@@ -2242,8 +2243,8 @@
         },
         assignSpace: function(rect) {
           var c, hFrac, wFrac;
-          wFrac = rect.w / initialSize.width;
-          hFrac = rect.h / initialSize.height;
+          wFrac = rect.w / initialRect.width;
+          hFrac = rect.h / initialRect.height;
           c = {
             x: rect.x + rect.w / 2,
             y: rect.y + rect.h / 2,
@@ -2684,6 +2685,9 @@
                   height: 48
                 });
                 return point;
+              } else {
+                "Warning: @debug.point() is disabled unless you're in dev";
+                return {};
               }
             }
           };

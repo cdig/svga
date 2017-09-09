@@ -27,10 +27,10 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
     
     initialSize = SVG.root.getBoundingClientRect()
     return unless initialSize.width > 0 and initialSize.height > 0 # This avoids a divide by zero error when the SVG is empty
-    ox = SVG.root._scope.x - initialSize.left - initialSize.width/2
-    oy = SVG.root._scope.y - initialSize.top - initialSize.height/2
-    xLimit.max = initialSize.width/2
-    yLimit.max = initialSize.height/2
+    console.log ox = SVG.root._scope.x - initialSize.left - initialSize.width/2
+    console.log oy = SVG.root._scope.y - initialSize.top - initialSize.height/2
+    console.log xLimit.max = initialSize.width/2
+    console.log yLimit.max = initialSize.height/2
     xLimit.min = -xLimit.max
     yLimit.min = -yLimit.max
     

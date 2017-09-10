@@ -1,4 +1,4 @@
-Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize, SVG, Tween)->
+Take ["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, RAF, Resize, SVG, Tween)->
   
   if not Mode.nav
     Make "Nav", false
@@ -7,13 +7,14 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
     throw new Error "This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash." unless width? and height?
     
     Resize ()->
+      panelSpaceY = -ControlPanel.getAutosizePanelHeight()/2
       cbr = SVG.svg.getBoundingClientRect()
       wFrac = cbr.width / width
       hFrac = cbr.height / height
       scale = Math.min wFrac, hFrac
       x = (cbr.width - width * scale) / (2 * scale)
       y = (cbr.height - height * scale) / (2 * scale)
-      SVG.attr SVG.root, "transform", "scale(#{scale}) translate(#{x}, #{y})"
+      SVG.attr SVG.root, "transform", "translate(0, #{panelSpaceY}) scale(#{scale}) translate(#{x}, #{y})"
   
   else
     SVG.attrs SVG.svg, width: null, height: null
@@ -84,11 +85,12 @@ Take ["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Mode, RAF, Resize
         e.target is document.body or e.target is SVG.svg or SVG.root.contains e.target
       
       assignSpace: (rect)->
+        panelSpaceY = -ControlPanel.getAutosizePanelHeight()/2
         wFrac = rect.w / initialRect.width
         hFrac = rect.h / initialRect.height
         c =
          x: rect.x + rect.w/2
-         y: rect.y + rect.h/2
+         y: rect.y + rect.h/2 + panelSpaceY
          z: .9 * Math.min wFrac, hFrac
         if center.x is 0 # Initial render
           center = c

@@ -46,10 +46,13 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], (Control
       resize()
       if vertical
         rect.w -= panelWidth
-      else
+      else if not Mode.autosize
         rect.h -= panelHeight
+    
+    getAutosizePanelHeight: ()->
+      if Mode.autosize and not vertical then panelHeight + 10 else 0 # Give the panel 10px of padding
   
-
+  
   # Helpers
   
   resize = ()->

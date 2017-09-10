@@ -820,8 +820,15 @@
           resize();
           if (vertical) {
             return rect.w -= panelWidth;
-          } else {
+          } else if (!Mode.autosize) {
             return rect.h -= panelHeight;
+          }
+        },
+        getAutosizePanelHeight: function() {
+          if (vertical) {
+            return 0;
+          } else {
+            return panelHeight + 10;
           }
         }
       };
@@ -2111,7 +2118,7 @@
     });
   });
 
-  Take(["Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(Mode, RAF, Resize, SVG, Tween) {
+  Take(["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, RAF, Resize, SVG, Tween) {
     var Nav, center, dist, distTo, height, initialRect, limit, ox, oy, parentRect, pos, render, requestRender, scaleStartPosZ, tween, width, xLimit, yLimit, zLimit;
     if (!Mode.nav) {
       Make("Nav", false);
@@ -2121,14 +2128,15 @@
         throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
       }
       return Resize(function() {
-        var cbr, hFrac, scale, wFrac, x, y;
+        var cbr, hFrac, panelSpaceY, scale, wFrac, x, y;
+        panelSpaceY = Mode.autosize ? -ControlPanel.getAutosizePanelHeight() / 2 : 0;
         cbr = SVG.svg.getBoundingClientRect();
         wFrac = cbr.width / width;
         hFrac = cbr.height / height;
         scale = Math.min(wFrac, hFrac);
         x = (cbr.width - width * scale) / (2 * scale);
         y = (cbr.height - height * scale) / (2 * scale);
-        return SVG.attr(SVG.root, "transform", "scale(" + scale + ") translate(" + x + ", " + y + ")");
+        return SVG.attr(SVG.root, "transform", "translate(0, " + panelSpaceY + ") scale(" + scale + ") translate(" + x + ", " + y + ")");
       });
     } else {
       SVG.attrs(SVG.svg, {
@@ -2242,12 +2250,13 @@
           return e.target === document.body || e.target === SVG.svg || SVG.root.contains(e.target);
         },
         assignSpace: function(rect) {
-          var c, hFrac, wFrac;
+          var c, hFrac, panelSpaceY, wFrac;
+          panelSpaceY = Mode.autosize ? -ControlPanel.getAutosizePanelHeight() / 2 : 0;
           wFrac = rect.w / initialRect.width;
           hFrac = rect.h / initialRect.height;
           c = {
             x: rect.x + rect.w / 2,
-            y: rect.y + rect.h / 2,
+            y: rect.y + rect.h / 2 + panelSpaceY,
             z: .9 * Math.min(wFrac, hFrac)
           };
           if (center.x === 0) {
@@ -3191,24 +3200,19 @@
     });
   });
 
-  Take(["Mode", "ParentElement", "Resize", "SVG"], function(Mode, ParentElement, Resize, SVG) {
-    var height, newWidth, resize, width;
+  Take(["ControlPanel", "Mode", "ParentElement", "Resize", "SVG"], function(ControlPanel, Mode, ParentElement, Resize, SVG) {
+    var height, width;
     if (!Mode.autosize) {
       return;
     }
     width = SVG.attr(SVG.svg, "width");
     height = SVG.attr(SVG.svg, "height");
-    newWidth = null;
-    resize = function() {
-      var cbr, newHeight;
+    return Resize(function() {
+      var cbr, panelHeight;
+      panelHeight = ControlPanel.getAutosizePanelHeight();
       cbr = ParentElement.getBoundingClientRect();
-      if (cbr.width !== newWidth) {
-        newWidth = cbr.width;
-        newHeight = height * newWidth / width | 0;
-        return ParentElement.style.height = newHeight + "px";
-      }
-    };
-    return Resize(resize);
+      return ParentElement.style.height = (panelHeight + (height * cbr.width / width) | 0) + "px";
+    });
   });
 
   Take(["Config", "ParentElement"], function(Config, ParentElement) {
@@ -4374,7 +4378,20 @@
       window.addEventListener("resize", r);
       return Take("load", function() {
         r();
-        return setTimeout(r, 500);
+        setTimeout(r, 1000);
+        setTimeout(r, 1010);
+        setTimeout(r, 3000);
+        setTimeout(r, 3010);
+        setTimeout(r, 5000);
+        setTimeout(r, 5010);
+        setTimeout(r, 7500);
+        setTimeout(r, 7510);
+        setTimeout(r, 10000);
+        setTimeout(r, 10010);
+        setTimeout(r, 20000);
+        setTimeout(r, 20010);
+        setTimeout(r, 60000);
+        return setTimeout(r, 60010);
       });
     });
   });

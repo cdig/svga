@@ -825,10 +825,10 @@
           }
         },
         getAutosizePanelHeight: function() {
-          if (vertical) {
-            return 0;
-          } else {
+          if (Mode.autosize && !vertical) {
             return panelHeight + 10;
+          } else {
+            return 0;
           }
         }
       };
@@ -2129,7 +2129,7 @@
       }
       return Resize(function() {
         var cbr, hFrac, panelSpaceY, scale, wFrac, x, y;
-        panelSpaceY = Mode.autosize ? -ControlPanel.getAutosizePanelHeight() / 2 : 0;
+        panelSpaceY = -ControlPanel.getAutosizePanelHeight() / 2;
         cbr = SVG.svg.getBoundingClientRect();
         wFrac = cbr.width / width;
         hFrac = cbr.height / height;
@@ -2251,7 +2251,7 @@
         },
         assignSpace: function(rect) {
           var c, hFrac, panelSpaceY, wFrac;
-          panelSpaceY = Mode.autosize ? -ControlPanel.getAutosizePanelHeight() / 2 : 0;
+          panelSpaceY = -ControlPanel.getAutosizePanelHeight() / 2;
           wFrac = rect.w / initialRect.width;
           hFrac = rect.h / initialRect.height;
           c = {
@@ -3211,7 +3211,7 @@
       var cbr, panelHeight;
       panelHeight = ControlPanel.getAutosizePanelHeight();
       cbr = ParentElement.getBoundingClientRect();
-      return ParentElement.style.height = (panelHeight + (height * cbr.width / width) | 0) + "px";
+      return ParentElement.style.height = (panelHeight + height * cbr.width / width | 0) + "px";
     });
   });
 

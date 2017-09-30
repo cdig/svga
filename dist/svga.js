@@ -1886,7 +1886,7 @@
   });
 
   Take(["GUI", "Mode", "ParentElement", "SVG", "Tick", "SVGReady"], function(GUI, Mode, ParentElement, SVG, Tick) {
-    var avgList, avgWindow, count, fps, freq, prev, ref, text, total;
+    var avgList, avgWindow, count, fps, freq, nodeCountElm, nodeCountText, prev, ref, text, total;
     freq = .2;
     count = freq;
     avgWindow = 1;
@@ -1894,10 +1894,15 @@
     total = 0;
     fps = 1;
     text = null;
+    nodeCountText = "";
     Make("FPS", function() {
       return fps;
     });
     if (Mode.dev) {
+      nodeCountElm = document.querySelector("[node-count]");
+      if (nodeCountElm != null) {
+        nodeCountText = nodeCountElm.getAttribute("node-count") + " nodes<br>";
+      }
       text = document.createElement("div");
       text.setAttribute("svga-fps", "true");
       if (ParentElement === document.body) {
@@ -1929,7 +1934,7 @@
       if (Mode.dev && count >= freq) {
         count -= freq;
         fpsDisplay = fps < 30 ? fps.toFixed(1) : Math.ceil(fps);
-        text.textContent = fpsDisplay;
+        text.innerHTML = nodeCountText + fpsDisplay + " fps";
         return text.style.color = fps <= 5 ? "#C00" : fps <= 10 ? "#E60" : "rgba(0,0,0,0.1)";
       }
     });

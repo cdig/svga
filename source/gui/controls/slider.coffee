@@ -11,17 +11,17 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
 
     trackFill = "hsl(227, 45%, 24%)"
     thumbBGFill = "hsl(220, 10%, 92%)"
-    labelFill = "hsl(227, 16%, 24%)"
-
+    labelFill = "hsl(220, 10%, 92%)"
     
+    sliderShrink = 6 # Make the slider a bit smaller than GUI.unit
+    labelHeight = 0
+
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
-    
-    
+        
     # Slider background element
     track = TRS SVG.create "rect", elm,
       x: GUI.pad
-      y: GUI.pad
       strokeWidth: 2
       fill: trackFill
       stroke: "hsl(227, 45%, 24%)"
@@ -32,14 +32,17 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     # The thumb graphic
     thumbBG = SVG.create "rect", thumb,
       x: GUI.pad
-      y: GUI.pad
       strokeWidth: 2
       fill: thumbBGFill
     
-    # The text label in the thumb
-    label = SVG.create "text", thumb,
-      textContent: props.name
-      fill: labelFill
+    # The text label
+    if props.name?
+      label = SVG.create "text", elm,
+        textContent: props.name.toUpperCase()
+        # textAnchor: "start"
+        fontSize: 11
+        fill: labelFill
+      labelHeight = 16
     
     
     # Setup the thumbBG stroke color for tweening
@@ -90,30 +93,32 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       getPreferredSize: ()->
         return size =
           w:GUI.width
-          h:GUI.unit
+          h:GUI.unit - sliderShrink + labelHeight
       
       resize: (size)->
-        # Recompute the label length on every resize, because the font may have changed
-        labelWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-        height = Math.min GUI.unit, size.h
-        range = size.w - GUI.pad*2 - labelWidth
+        height = Math.min GUI.unit - sliderShrink, size.h
+        thumbWidth = height + sliderShrink
+        range = size.w - thumbWidth - GUI.pad*2
         update()
         
         SVG.attrs track,
+          y: GUI.pad + labelHeight
           width: size.w - GUI.pad*2
           height: height - GUI.pad*2
           rx: (height - GUI.pad*2)/2
         
         SVG.attrs thumbBG,
-          width: labelWidth
+          y: GUI.pad + labelHeight
+          width: thumbWidth
           height: height - GUI.pad*2
           rx: (height - GUI.pad*2)/2
-        
-        SVG.attrs label,
-          x: GUI.pad + labelWidth/2
-          y: height/2 + 6
 
-        return w:size.w, h:height
+        if label?
+          SVG.attrs label,
+            x: size.w/2
+            y: 14
+        
+        return w:size.w, h:height + labelHeight
 
       _highlight: (enable)->
         if enable

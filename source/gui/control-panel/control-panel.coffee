@@ -3,10 +3,10 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], (Control
   # Aliases
   CP = GUI.ControlPanel
   config = Mode.controlPanel ?= {}
-
+  
   # State
   showing = false
-  panelRadius = CP.borderRadius+CP.pad*2
+  panelRadius = CP.panelBorderRadius
   vertical = true
   panelWidth = 0
   panelHeight = 0
@@ -14,8 +14,6 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], (Control
   
   # Elements
 
-  Gradient.linear "CPGradient", false, "#5175bd", "#35488d"
-  
   g = SVG.create "g", GUI.elm,
     xControls: ""
     fontSize: 16
@@ -23,7 +21,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], (Control
   
   bg = SVG.create "rect", g,
     rx: panelRadius
-    fill: "url(#CPGradient)"
+    fill: CP.bg
   
   panelElms = Scope SVG.create "g", g
   panelElms.x = panelElms.y = CP.pad*2

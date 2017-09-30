@@ -806,11 +806,10 @@
     CP = GUI.ControlPanel;
     config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
     showing = false;
-    panelRadius = CP.borderRadius + CP.pad * 2;
+    panelRadius = CP.panelBorderRadius;
     vertical = true;
     panelWidth = 0;
     panelHeight = 0;
-    Gradient.linear("CPGradient", false, "#5175bd", "#35488d");
     g = SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 16,
@@ -818,7 +817,7 @@
     });
     bg = SVG.create("rect", g, {
       rx: panelRadius,
-      fill: "url(#CPGradient)"
+      fill: CP.bg
     });
     panelElms = Scope(SVG.create("g", g));
     panelElms.x = panelElms.y = CP.pad * 2;
@@ -1684,20 +1683,21 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, handlers, label, labelFill, lightBG, orangeBG, range, scope, startDrag, thumb, thumbBG, thumbBGFill, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
+      var bgc, blueBG, handleDrag, handlers, label, labelFill, labelHeight, lightBG, orangeBG, range, scope, sliderShrink, startDrag, thumb, thumbBG, thumbBGFill, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
       handlers = [];
       v = 0;
       range = 0;
       startDrag = 0;
       trackFill = "hsl(227, 45%, 24%)";
       thumbBGFill = "hsl(220, 10%, 92%)";
-      labelFill = "hsl(227, 16%, 24%)";
+      labelFill = "hsl(220, 10%, 92%)";
+      sliderShrink = 6;
+      labelHeight = 0;
       SVG.attrs(elm, {
         ui: true
       });
       track = TRS(SVG.create("rect", elm, {
         x: GUI.pad,
-        y: GUI.pad,
         strokeWidth: 2,
         fill: trackFill,
         stroke: "hsl(227, 45%, 24%)"
@@ -1705,14 +1705,17 @@
       thumb = TRS(SVG.create("g", elm));
       thumbBG = SVG.create("rect", thumb, {
         x: GUI.pad,
-        y: GUI.pad,
         strokeWidth: 2,
         fill: thumbBGFill
       });
-      label = SVG.create("text", thumb, {
-        textContent: props.name,
-        fill: labelFill
-      });
+      if (props.name != null) {
+        label = SVG.create("text", elm, {
+          textContent: props.name.toUpperCase(),
+          fontSize: 11,
+          fill: labelFill
+        });
+        labelHeight = 16;
+      }
       bgc = blueBG = {
         r: 34,
         g: 46,
@@ -1811,32 +1814,36 @@
           var size;
           return size = {
             w: GUI.width,
-            h: GUI.unit
+            h: GUI.unit - sliderShrink + labelHeight
           };
         },
         resize: function(size) {
-          var height, labelWidth;
-          labelWidth = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
-          height = Math.min(GUI.unit, size.h);
-          range = size.w - GUI.pad * 2 - labelWidth;
+          var height, thumbWidth;
+          height = Math.min(GUI.unit - sliderShrink, size.h);
+          thumbWidth = height + sliderShrink;
+          range = size.w - thumbWidth - GUI.pad * 2;
           update();
           SVG.attrs(track, {
+            y: GUI.pad + labelHeight,
             width: size.w - GUI.pad * 2,
             height: height - GUI.pad * 2,
             rx: (height - GUI.pad * 2) / 2
           });
           SVG.attrs(thumbBG, {
-            width: labelWidth,
+            y: GUI.pad + labelHeight,
+            width: thumbWidth,
             height: height - GUI.pad * 2,
             rx: (height - GUI.pad * 2) / 2
           });
-          SVG.attrs(label, {
-            x: GUI.pad + labelWidth / 2,
-            y: height / 2 + 6
-          });
+          if (label != null) {
+            SVG.attrs(label, {
+              x: size.w / 2,
+              y: 14
+            });
+          }
           return {
             w: size.w,
-            h: height
+            h: height + labelHeight
           };
         },
         _highlight: function(enable) {
@@ -1951,8 +1958,8 @@
         unit: 42,
         pad: 3,
         borderRadius: 4,
-        light: "hsl(220, 45%, 50%)",
-        dark: "hsl(227, 45%, 35%)"
+        panelBorderRadius: 24,
+        bg: "hsl(220, 45%, 45%)"
       }
     });
   });

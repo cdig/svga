@@ -54,7 +54,7 @@ Take ["Registry", "GUI", "SelectorButton", "Scope", "SVG"], (Registry, {ControlP
         for button in buttons
           button.x = xOffset
           xOffset += button.resize 1, xOffset
-
+          
         size =
           w:xOffset
           h:GUI.unit + labelHeight

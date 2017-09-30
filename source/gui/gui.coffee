@@ -6,5 +6,5 @@ Take ["SVG", "SVGReady"], (SVG)->
       unit: 42
       pad: 3
       borderRadius: 4
-      light: "hsl(220, 45%, 50%)"
-      dark: "hsl(227, 45%, 35%)"
+      panelBorderRadius: 24
+      bg: "hsl(220, 45%, 45%)"

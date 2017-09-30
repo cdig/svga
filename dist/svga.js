@@ -3743,7 +3743,9 @@
         for (m = 0, len = targets.length; m < len; m++) {
           target = targets[m];
           if (target == null) {
-            console.log(targets);
+            console.log(targets.map(function(e) {
+              return e != null ? e.element : void 0;
+            }));
             throw new Error("Highlight called with a null element ^^^");
           }
           t = target.element || target;

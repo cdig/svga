@@ -1,4 +1,7 @@
-Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
+# This system is mainly in charge of crawling the DOM, doing some initial cleanup,
+# and building a tree of important elements for animation.
+
+Take ["Mode", "Scope", "SVG", "Symbol"], (Mode, Scope, SVG, Symbol)->
   deprecations = ["controlPanel", "ctrlPanel", "navOverlay"]
   masks = []
   defs = {}
@@ -6,6 +9,7 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
   
   Make "Scene", Scene =
     crawl: (elm)->
+      cleanupIds elm
       tree = processElm elm
       if masks.length then console.log "Please remove these mask elements from your SVG:", masks...
       masks = null # Avoid dangling references
@@ -16,6 +20,19 @@ Take ["Scope", "SVG", "Symbol"], (Scope, SVG, Symbol)->
       buildScopes tree, setups = []
       setup() for setup in setups by -1 # loop backwards, to set up children before parents
   
+  
+  cleanupIds = (elm)->
+    return unless Mode.dev
+    # By default, elements with an ID are added to the window object.
+    # For the sake of better typo handling, we replace those references with a proxy.
+    for element in elm.querySelectorAll "[id]"
+      if window[element.id]?
+        do (element)->
+          handlers =
+            get: ()-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
+            set: (val)-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
+          window[element.id] = new Proxy {}, handlers
+
   
   processElm = (elm)->
     tree =

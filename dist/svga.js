@@ -20,14 +20,15 @@
     });
   });
 
-  Take(["Scope", "SVG", "Symbol"], function(Scope, SVG, Symbol) {
-    var Scene, buildScopes, defs, deprecations, masks, processElm;
+  Take(["Mode", "Scope", "SVG", "Symbol"], function(Mode, Scope, SVG, Symbol) {
+    var Scene, buildScopes, cleanupIds, defs, deprecations, masks, processElm;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     masks = [];
     defs = {};
     Make("Scene", Scene = {
       crawl: function(elm) {
         var tree;
+        cleanupIds(elm);
         tree = processElm(elm);
         if (masks.length) {
           console.log.apply(console, ["Please remove these mask elements from your SVG:"].concat(slice.call(masks)));
@@ -47,6 +48,36 @@
         return results;
       }
     });
+    cleanupIds = function(elm) {
+      var element, len, m, ref, results;
+      if (!Mode.dev) {
+        return;
+      }
+      ref = elm.querySelectorAll("[id]");
+      results = [];
+      for (m = 0, len = ref.length; m < len; m++) {
+        element = ref[m];
+        if (window[element.id] != null) {
+          results.push((function(element) {
+            var handlers;
+            handlers = {
+              get: function() {
+                console.log(element);
+                throw "You forgot to use an @ when accessing the scope for this element ^^^";
+              },
+              set: function(val) {
+                console.log(element);
+                throw "You forgot to use an @ when accessing the scope for this element ^^^";
+              }
+            };
+            return window[element.id] = new Proxy({}, handlers);
+          })(element));
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
     processElm = function(elm) {
       var childElm, childNodes, clone, def, defId, len, m, ref, ref1, tree;
       tree = {

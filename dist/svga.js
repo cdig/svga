@@ -2012,8 +2012,8 @@
       d: 0,
       z: 0
     };
-    Tick(function() {
-      var down, inputX, inputY, inputZ, left, minus, plus, right, up;
+    Tick(function(time, dt) {
+      var down, inputX, inputY, inputZ, left, minus, plus, right, scaledDt, up;
       left = KeyMe.pressing["left"];
       right = KeyMe.pressing["right"];
       up = KeyMe.pressing["up"];
@@ -2037,10 +2037,11 @@
       if (!(Math.abs(vel.d) > 0.01 || Math.abs(vel.z) > 0.01)) {
         return;
       }
+      scaledDt = (dt * 1000) / 16;
       return Nav.by({
-        x: Math.cos(vel.a) * vel.d,
-        y: Math.sin(vel.a) * vel.d,
-        z: vel.z
+        x: scaledDt * Math.cos(vel.a) * vel.d,
+        y: scaledDt * Math.sin(vel.a) * vel.d,
+        z: scaledDt * vel.z
       });
     });
     return getAccel = function(pos, neg) {

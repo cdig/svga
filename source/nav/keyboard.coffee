@@ -6,7 +6,7 @@ Take ["KeyMe", "Mode", "Nav", "Tick"], (KeyMe, Mode, Nav, Tick)->
   accel = xy: 0.7, z: 0.004 # xy polar, z cartesian
   vel = a: 0, d: 0, z: 0 # xy polar (angle, displacement), z cartesian
   
-  Tick ()->
+  Tick (time, dt)->
     left = KeyMe.pressing["left"]
     right = KeyMe.pressing["right"]
     up = KeyMe.pressing["up"]
@@ -25,13 +25,16 @@ Take ["KeyMe", "Mode", "Nav", "Tick"], (KeyMe, Mode, Nav, Tick)->
     vel.d /= decel if inputX is 0 and inputY is 0
     vel.a = Math.atan2 inputY, inputX if inputY or inputX
     vel.d = Math.min maxVel.xy, vel.d + accel.xy * (Math.abs(inputX) + Math.abs(inputY))
-
+        
     return unless Math.abs(vel.d) > 0.01 or Math.abs(vel.z) > 0.01
     
+    # Scale the speed of nav so that it's somewhat framerate independent
+    scaledDt = (dt * 1000) / 16
+    
     Nav.by
-      x: Math.cos(vel.a) * vel.d
-      y: Math.sin(vel.a) * vel.d
-      z: vel.z
+      x: scaledDt * Math.cos(vel.a) * vel.d
+      y: scaledDt * Math.sin(vel.a) * vel.d
+      z: scaledDt * vel.z
 
   
   getAccel = (pos, neg)->

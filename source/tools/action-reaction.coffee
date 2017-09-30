@@ -6,3 +6,4 @@ do ()->
   
   Make "Action", (name, args...)->
     cb args... for cb in cbs[name] if cbs[name]?
+    undefined

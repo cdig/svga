@@ -53,6 +53,7 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       isActive = true
       toActive()
       handler() for handler in handlers
+      undefined
     Input elm,
       moveIn:  (e, state)->    toHover e, state unless isActive
       dragIn:  (e, state)-> toClicking e, state if state.clicking and !isActive

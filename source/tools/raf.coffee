@@ -12,6 +12,8 @@ do ()->
     for callbacks, p in callbacksByPriority when callbacks?
       callbacksByPriority[p] = []
       cb time for cb in callbacks
+    
+    undefined
   
   
   Make "RAF", (cb, ignoreDuplicates = false, p = 0)->

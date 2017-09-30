@@ -80,6 +80,7 @@ do ()->
     if callbacks?
       for command in callbacks when command.modifier is modifier
         command.callback()
+    undefined
   
   
   window.addEventListener "keydown", keyDown

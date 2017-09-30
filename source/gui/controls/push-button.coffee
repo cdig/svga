@@ -45,12 +45,15 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       down: ()->
         toClicking()
         onHandler() for onHandler in onHandlers
+        undefined
       up: ()->
         toHover()
         offHandler() for offHandler in offHandlers
+        undefined
       miss: ()->
         toNormal()
         offHandler() for offHandler in offHandlers
+        undefined
       moveOut: toNormal
         
     

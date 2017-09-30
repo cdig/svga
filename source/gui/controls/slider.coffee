@@ -68,6 +68,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       if state.clicking
         update e.clientX/range - startDrag
         handler v for handler in handlers
+        undefined
     Input elm,
       moveIn: toHover
       dragIn: (e, state)-> toClicking() if state.clicking

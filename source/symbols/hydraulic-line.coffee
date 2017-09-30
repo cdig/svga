@@ -14,6 +14,8 @@ Take ["Pressure", "Reaction", "SVG", "Symbol"], (Pressure, Reaction, SVG, Symbol
         elm.removeAttribute "stroke"
       if elm.childNodes.length
         strip child for child in elm.childNodes
+      undefined
+
     strip element
     element.setAttribute "fill", "transparent"
     
@@ -23,6 +25,7 @@ Take ["Pressure", "Reaction", "SVG", "Symbol"], (Pressure, Reaction, SVG, Symbol
         SVG.attr elm, "stroke", stroke
       for elm in fillElms
         SVG.attr elm, "fill", fill
+      undefined
     
     
     return scope =

@@ -38,27 +38,25 @@
         return tree;
       },
       build: function(tree) {
-        var m, results, setup, setups;
+        var m, setup, setups;
         buildScopes(tree, setups = []);
-        results = [];
         for (m = setups.length - 1; m >= 0; m += -1) {
           setup = setups[m];
-          results.push(setup());
+          setup();
         }
-        return results;
+        return void 0;
       }
     });
     cleanupIds = function(elm) {
-      var element, len, m, ref, results;
+      var element, len, m, ref;
       if (!Mode.dev) {
         return;
       }
       ref = elm.querySelectorAll("[id]");
-      results = [];
       for (m = 0, len = ref.length; m < len; m++) {
         element = ref[m];
         if (window[element.id] != null) {
-          results.push((function(element) {
+          (function(element) {
             var handlers;
             handlers = {
               get: function() {
@@ -71,12 +69,10 @@
               }
             };
             return window[element.id] = new Proxy({}, handlers);
-          })(element));
-        } else {
-          results.push(void 0);
+          })(element);
         }
       }
-      return results;
+      return void 0;
     };
     processElm = function(elm) {
       var childElm, childNodes, clone, def, defId, len, m, ref, ref1, tree;
@@ -117,7 +113,7 @@
       return tree;
     };
     return buildScopes = function(tree, setups, parentScope) {
-      var baseName, len, m, props, ref, ref1, results, scope, subTarget, symbol;
+      var baseName, len, m, props, ref, ref1, scope, subTarget, symbol;
       if (parentScope == null) {
         parentScope = null;
       }
@@ -139,12 +135,11 @@
         setups.push(scope.setup.bind(scope));
       }
       ref1 = tree.sub;
-      results = [];
       for (m = 0, len = ref1.length; m < len; m++) {
         subTarget = ref1[m];
-        results.push(buildScopes(subTarget, setups, scope));
+        buildScopes(subTarget, setups, scope);
       }
-      return results;
+      return void 0;
     };
   });
 
@@ -330,17 +325,16 @@
           return direction *= -1;
         },
         update: function(parentFlow, parentScale) {
-          var child, f, len, m, results, s;
+          var child, f, len, m, s;
           if (active) {
             f = flow * direction * parentFlow;
             s = volume * scale * parentScale;
-            results = [];
             for (m = 0, len = children.length; m < len; m++) {
               child = children[m];
-              results.push(child.update(f, s));
+              child.update(f, s);
             }
-            return results;
           }
+          return void 0;
         }
       };
       children = setupFn(scope);
@@ -423,30 +417,26 @@
     visible = true;
     animateMode = true;
     enableAll = function() {
-      var len, m, results, set;
-      results = [];
+      var len, m, set;
       for (m = 0, len = sets.length; m < len; m++) {
         set = sets[m];
-        results.push(set.enabled = visible && animateMode);
+        set.enabled = visible && animateMode;
       }
-      return results;
+      return void 0;
     };
     Tick(function(time, dt) {
-      var f, len, m, results, s, set;
+      var f, len, m, s, set;
       if (visible && animateMode) {
-        results = [];
         for (m = 0, len = sets.length; m < len; m++) {
           set = sets[m];
           if (set.parentScope.alpha > 0) {
             f = dt * Config.SPEED;
             s = Config.SCALE;
-            results.push(set.update(f, s));
-          } else {
-            results.push(void 0);
+            set.update(f, s);
           }
         }
-        return results;
       }
+      return void 0;
     });
     Reaction("Schematic:Hide", function() {
       return setTimeout(function() {
@@ -1143,14 +1133,13 @@
         moveOut: toNormal,
         dragOut: toNormal,
         click: function() {
-          var handler, len, m, results;
+          var handler, len, m;
           toClicked();
-          results = [];
           for (m = 0, len = handlers.length; m < len; m++) {
             handler = handlers[m];
-            results.push(handler());
+            handler();
           }
-          return results;
+          return void 0;
         }
       });
       return scope = {
@@ -1308,34 +1297,31 @@
       Input(elm, {
         moveIn: toHover,
         down: function() {
-          var len, m, onHandler, results;
+          var len, m, onHandler;
           toClicking();
-          results = [];
           for (m = 0, len = onHandlers.length; m < len; m++) {
             onHandler = onHandlers[m];
-            results.push(onHandler());
+            onHandler();
           }
-          return results;
+          return void 0;
         },
         up: function() {
-          var len, m, offHandler, results;
+          var len, m, offHandler;
           toHover();
-          results = [];
           for (m = 0, len = offHandlers.length; m < len; m++) {
             offHandler = offHandlers[m];
-            results.push(offHandler());
+            offHandler();
           }
-          return results;
+          return void 0;
         },
         miss: function() {
-          var len, m, offHandler, results;
+          var len, m, offHandler;
           toNormal();
-          results = [];
           for (m = 0, len = offHandlers.length; m < len; m++) {
             offHandler = offHandlers[m];
-            results.push(offHandler());
+            offHandler();
           }
-          return results;
+          return void 0;
         },
         moveOut: toNormal
       });
@@ -1598,16 +1584,15 @@
         return isActive = false;
       };
       click = function(e, state) {
-        var handler, len, m, results;
+        var handler, len, m;
         props.setActive(unclick);
         isActive = true;
         toActive();
-        results = [];
         for (m = 0, len = handlers.length; m < len; m++) {
           handler = handlers[m];
-          results.push(handler());
+          handler();
         }
-        return results;
+        return void 0;
       };
       Input(elm, {
         moveIn: function(e, state) {
@@ -1786,15 +1771,14 @@
         });
       };
       handleDrag = function(e, state) {
-        var handler, len, m, results;
+        var handler, len, m;
         if (state.clicking) {
           update(e.clientX / range - startDrag);
-          results = [];
           for (m = 0, len = handlers.length; m < len; m++) {
             handler = handlers[m];
-            results.push(handler(v));
+            handler(v);
           }
-          return results;
+          return void 0;
         }
       };
       Input(elm, {
@@ -2377,7 +2361,7 @@
     });
     cloneTouches = function(e) {
       var t;
-      return lastTouches = (function() {
+      lastTouches = (function() {
         var len, m, ref, results;
         ref = e.touches;
         results = [];
@@ -2390,6 +2374,7 @@
         }
         return results;
       })();
+      return void 0;
     };
     return distTouches = function(touches) {
       var a, b, dx, dy;
@@ -2636,15 +2621,14 @@
       ScopeCheck(scope, "dash");
       paths = scope.element.querySelectorAll("path");
       scope.dash = function(v) {
-        var len, m, path, results;
-        results = [];
+        var len, m, path;
         for (m = 0, len = paths.length; m < len; m++) {
           path = paths[m];
-          results.push(SVG.attrs(path, {
+          SVG.attrs(path, {
             "stroke-dasharray": v
-          }));
+          });
         }
-        return results;
+        return void 0;
       };
       scope.dash.manifold = function() {
         return scope.dash("50 5 10 5 10 5");
@@ -3142,7 +3126,7 @@
       fillElms = [];
       highlightActive = false;
       strip = function(elm) {
-        var child, len, m, ref, results;
+        var child, len, m, ref;
         if ((typeof elm.hasAttribute === "function" ? elm.hasAttribute("fill") : void 0) && elm.getAttribute("fill") !== "none") {
           if (elm !== element) {
             fillElms.push(elm);
@@ -3157,18 +3141,17 @@
         }
         if (elm.childNodes.length) {
           ref = elm.childNodes;
-          results = [];
           for (m = 0, len = ref.length; m < len; m++) {
             child = ref[m];
-            results.push(strip(child));
+            strip(child);
           }
-          return results;
         }
+        return void 0;
       };
       strip(element);
       element.setAttribute("fill", "transparent");
       apply = function(stroke, fill) {
-        var elm, len, len1, m, n, results;
+        var elm, len, len1, m, n;
         if (fill == null) {
           fill = stroke;
         }
@@ -3176,12 +3159,11 @@
           elm = strokeElms[m];
           SVG.attr(elm, "stroke", stroke);
         }
-        results = [];
         for (n = 0, len1 = fillElms.length; n < len1; n++) {
           elm = fillElms[n];
-          results.push(SVG.attr(elm, "fill", fill));
+          SVG.attr(elm, "fill", fill);
         }
-        return results;
+        return void 0;
       };
       return scope = {
         _highlight: function(enable) {
@@ -3303,17 +3285,16 @@
       return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
     });
     return Make("Action", function() {
-      var args, cb, len, m, name, ref, results;
+      var args, cb, len, m, name, ref;
       name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
       if (cbs[name] != null) {
         ref = cbs[name];
-        results = [];
         for (m = 0, len = ref.length; m < len; m++) {
           cb = ref[m];
-          results.push(cb.apply(null, args));
+          cb.apply(null, args);
         }
-        return results;
       }
+      return void 0;
     });
   })();
 
@@ -3651,7 +3632,7 @@
       active = false;
       timeout = null;
       setup = function(elm) {
-        var doFill, doFunction, doStroke, e, fill, len, m, ref, ref1, results, stroke, width;
+        var doFill, doFunction, doStroke, e, fill, len, m, ref, ref1, stroke, width;
         fill = SVG.attr(elm, "fill");
         stroke = SVG.attr(elm, "stroke");
         doFill = (fill != null) && fill !== "none" && fill !== "transparent";
@@ -3679,17 +3660,14 @@
         }
         if (!doFunction) {
           ref1 = elm.childNodes;
-          results = [];
           for (m = 0, len = ref1.length; m < len; m++) {
             elm = ref1[m];
             if (elm.tagName === "g" || elm.tagName === "path" || elm.tagName === "text" || elm.tagName === "tspan" || elm.tagName === "rect" || elm.tagName === "circle") {
-              results.push(setup(elm));
-            } else {
-              results.push(void 0);
+              setup(elm);
             }
           }
-          return results;
         }
+        return void 0;
       };
       activate = function() {
         var h, len, m;
@@ -3752,25 +3730,24 @@
         }
       };
       deactivate = function() {
-        var h, len, m, results;
+        var h, len, m;
         if (active) {
           active = false;
           clearTimeout(timeout);
           activeHighlight = null;
-          results = [];
           for (m = 0, len = highlights.length; m < len; m++) {
             h = highlights[m];
             if (h["function"] != null) {
-              results.push(h["function"](false));
+              h["function"](false);
             } else {
-              results.push(SVG.attrs(h.elm, h.attrs));
+              SVG.attrs(h.elm, h.attrs);
             }
           }
-          return results;
         }
+        return void 0;
       };
       return RAF(function() {
-        var len, len1, m, mouseProps, n, results, t, target, touchProps;
+        var len, len1, m, mouseProps, n, t, target, touchProps;
         for (m = 0, len = targets.length; m < len; m++) {
           target = targets[m];
           if (target == null) {
@@ -3785,7 +3762,6 @@
             setup(t);
           }
         }
-        results = [];
         for (n = 0, len1 = targets.length; n < len1; n++) {
           target = targets[n];
           t = target.element || target;
@@ -3799,12 +3775,10 @@
               down: activate
             };
             Input(t, mouseProps, true, false);
-            results.push(Input(t, touchProps, false, true));
-          } else {
-            results.push(void 0);
+            Input(t, touchProps, false, true);
           }
         }
-        return results;
+        return void 0;
       });
     });
   });
@@ -4096,17 +4070,16 @@
       }
     };
     runCallbacks = function(callbacks, modifier) {
-      var command, len, m, results;
+      var command, len, m;
       if (callbacks != null) {
-        results = [];
         for (m = 0, len = callbacks.length; m < len; m++) {
           command = callbacks[m];
           if (command.modifier === modifier) {
-            results.push(command.callback());
+            command.callback();
           }
         }
-        return results;
       }
+      return void 0;
     };
     window.addEventListener("keydown", keyDown);
     window.addEventListener("keyup", keyUp);
@@ -4297,26 +4270,20 @@
     requested = false;
     callbacksByPriority = [[], []];
     run = function(time) {
-      var callbacks, cb, len, m, p, results;
+      var callbacks, cb, len, len1, m, n, p;
       requested = false;
-      results = [];
       for (p = m = 0, len = callbacksByPriority.length; m < len; p = ++m) {
         callbacks = callbacksByPriority[p];
         if (!(callbacks != null)) {
           continue;
         }
         callbacksByPriority[p] = [];
-        results.push((function() {
-          var len1, n, results1;
-          results1 = [];
-          for (n = 0, len1 = callbacks.length; n < len1; n++) {
-            cb = callbacks[n];
-            results1.push(cb(time));
-          }
-          return results1;
-        })());
+        for (n = 0, len1 = callbacks.length; n < len1; n++) {
+          cb = callbacks[n];
+          cb(time);
+        }
       }
-      return results;
+      return void 0;
     };
     return Make("RAF", function(cb, ignoreDuplicates, p) {
       var c, len, m, ref;
@@ -4431,9 +4398,8 @@
   });
 
   Make("ScopeCheck", function() {
-    var len, m, prop, props, results, scope;
+    var len, m, prop, props, scope;
     scope = arguments[0], props = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-    results = [];
     for (m = 0, len = props.length; m < len; m++) {
       prop = props[m];
       if (!(scope[prop] != null)) {
@@ -4442,7 +4408,7 @@
       console.log(scope.element);
       throw new Error("^ @" + prop + " is a reserved name. Please choose a different name for your child/property \"" + prop + "\".");
     }
-    return results;
+    return void 0;
   });
 
   Take("DOMContentLoaded", function() {
@@ -4623,15 +4589,14 @@
   Take("Registry", function(Registry) {
     var Symbol;
     Symbol = function(symbolName, instanceNames, symbol) {
-      var instanceName, len, m, results;
+      var instanceName, len, m;
       symbol.symbolName = symbolName;
       Registry.set("Symbols", symbolName, symbol);
-      results = [];
       for (m = 0, len = instanceNames.length; m < len; m++) {
         instanceName = instanceNames[m];
-        results.push(Registry.set("SymbolNames", instanceName, symbol));
+        Registry.set("SymbolNames", instanceName, symbol);
       }
-      return results;
+      return void 0;
     };
     Symbol.forSymbolName = function(symbolName) {
       return Registry.get("Symbols", symbolName);

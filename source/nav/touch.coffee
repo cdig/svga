@@ -29,6 +29,7 @@ Take ["Mode", "Nav"], (Mode, Nav)->
     lastTouches = for t in e.touches
       clientX: t.clientX
       clientY: t.clientY
+    undefined
 
   distTouches = (touches)->
     a = touches[0]

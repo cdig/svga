@@ -44,6 +44,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ea
         for elm in elm.childNodes
           if elm.tagName is "g" or elm.tagName is "path" or elm.tagName is "text" or elm.tagName is "tspan" or elm.tagName is "rect" or elm.tagName is "circle"
             setup elm
+      undefined
     
     
     activate = ()->
@@ -86,6 +87,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ea
             h.function false
           else
             SVG.attrs h.elm, h.attrs
+      undefined
     
     # Delay running the Highlight setup code by one frame so that if fills / strokes are changed
     # by the @animate() function (eg: an @linearGradient is created), we can capture those changes.
@@ -112,3 +114,4 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ea
           
           Input t, mouseProps, true, false
           Input t, touchProps, false, true
+      undefined

@@ -50,6 +50,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       click: ()->
         toClicked()
         handler() for handler in handlers
+        undefined
     
     
     # Our scope just has the 3 mandatory control functions, nothing special.

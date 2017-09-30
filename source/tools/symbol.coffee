@@ -3,6 +3,7 @@ Take "Registry", (Registry)->
     symbol.symbolName = symbolName
     Registry.set "Symbols", symbolName, symbol
     Registry.set "SymbolNames", instanceName, symbol for instanceName in instanceNames
+    undefined
   
   Symbol.forSymbolName = (symbolName)-> Registry.get "Symbols", symbolName
   Symbol.forInstanceName = (instanceName)-> Registry.get "SymbolNames", instanceName

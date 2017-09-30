@@ -19,7 +19,7 @@ Take ["Mode", "Scope", "SVG", "Symbol"], (Mode, Scope, SVG, Symbol)->
     build: (tree)->
       buildScopes tree, setups = []
       setup() for setup in setups by -1 # loop backwards, to set up children before parents
-  
+      undefined
   
   cleanupIds = (elm)->
     return unless Mode.dev
@@ -32,6 +32,7 @@ Take ["Mode", "Scope", "SVG", "Symbol"], (Mode, Scope, SVG, Symbol)->
             get: ()-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
             set: (val)-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
           window[element.id] = new Proxy {}, handlers
+    undefined
 
   
   processElm = (elm)->
@@ -98,3 +99,4 @@ Take ["Mode", "Scope", "SVG", "Symbol"], (Mode, Scope, SVG, Symbol)->
     scope = Scope tree.elm, symbol, props
     setups.push scope.setup.bind scope if scope.setup?
     buildScopes subTarget, setups, scope for subTarget in tree.sub
+    undefined

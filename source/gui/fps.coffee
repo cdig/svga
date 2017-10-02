@@ -6,6 +6,8 @@ Take ["GUI", "Mode", "ParentElement", "SVG", "Tick", "SVGReady"], (GUI, Mode, Pa
   total = 0
   fps = 1
   text = null
+  newText = null
+  lastText = null
   nodeCountText = ""
   
   Make "FPS", ()-> fps
@@ -43,5 +45,6 @@ Take ["GUI", "Mode", "ParentElement", "SVG", "Tick", "SVGReady"], (GUI, Mode, Pa
     if Mode.dev and count >= freq
       count -= freq
       fpsDisplay = if fps < 30 then fps.toFixed(1) else Math.ceil(fps)
-      text.innerHTML = nodeCountText + fpsDisplay + " fps"
+      newText = nodeCountText + fpsDisplay + " fps"
+      text.innerHTML = lastText = newText if lastText isnt newText
       text.style.color = if fps <= 5 then "#C00" else if fps <= 10 then "#E60" else "rgba(0,0,0,0.1)"

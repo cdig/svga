@@ -1892,66 +1892,6 @@
     }
   });
 
-  Take(["GUI", "Mode", "ParentElement", "SVG", "Tick", "SVGReady"], function(GUI, Mode, ParentElement, SVG, Tick) {
-    var avgList, avgWindow, count, fps, freq, lastText, newText, nodeCountElm, nodeCountText, prev, ref, text, total;
-    freq = .2;
-    count = freq;
-    avgWindow = 1;
-    avgList = [];
-    total = 0;
-    fps = 1;
-    text = null;
-    newText = null;
-    lastText = null;
-    nodeCountText = "";
-    Make("FPS", function() {
-      return fps;
-    });
-    if (Mode.dev) {
-      nodeCountElm = document.querySelector("[node-count]");
-      if (nodeCountElm != null) {
-        nodeCountText = nodeCountElm.getAttribute("node-count") + " nodes<br>";
-      }
-      text = document.createElement("div");
-      text.setAttribute("svga-fps", "true");
-      if (ParentElement === document.body) {
-        document.body.insertBefore(text, document.body.firstChild);
-      } else {
-        prev = ParentElement.previousSibling;
-        if (prev != null ? typeof prev.hasAttribute === "function" ? prev.hasAttribute("svga-fps") : void 0 : void 0) {
-          text = prev;
-        } else {
-          if ((ref = ParentElement.parentNode) != null) {
-            ref.insertBefore(text, ParentElement);
-          }
-        }
-      }
-    }
-    return Tick(function(time, dt) {
-      var fpsDisplay;
-      avgList.push(dt);
-      total += dt;
-      while (total > avgWindow && avgList.length > 0) {
-        total -= avgList.shift();
-      }
-      fps = avgList.length / total;
-      fps = Math.min(60, fps);
-      if (isNaN(fps)) {
-        fps = 2;
-      }
-      count += dt;
-      if (Mode.dev && count >= freq) {
-        count -= freq;
-        fpsDisplay = fps < 30 ? fps.toFixed(1) : Math.ceil(fps);
-        newText = nodeCountText + fpsDisplay + " fps";
-        if (lastText !== newText) {
-          text.innerHTML = lastText = newText;
-        }
-        return text.style.color = fps <= 5 ? "#C00" : fps <= 10 ? "#E60" : "rgba(0,0,0,0.1)";
-      }
-    });
-  });
-
   Take(["SVG", "SVGReady"], function(SVG) {
     var GUI;
     return Make("GUI", GUI = {
@@ -1984,6 +1924,82 @@
         return Nav.assignSpace(rect);
       }
     });
+  });
+
+  Take(["FPS", "HUD", "Mode", "Tick", "SVGReady"], function(FPS, HUD, Mode, Tick) {
+    if (!Mode.dev) {
+      return;
+    }
+    return Tick(function() {
+      var color, fps, fpsDisplay;
+      fps = FPS();
+      fpsDisplay = fps < 30 ? fps.toFixed(1) : Math.ceil(fps);
+      color = fps <= 10 ? "#C00" : fps <= 20 ? "#E608" : "#0003";
+      return HUD("FPS", fpsDisplay, color);
+    });
+  });
+
+  Take(["Mode", "ParentElement", "Tick", "SVGReady"], function(Mode, ParentElement, Tick) {
+    var colors, elapsed, elm, needsUpdate, prev, rate, ref, values;
+    if (!Mode.dev) {
+      return;
+    }
+    rate = .1;
+    elapsed = rate;
+    needsUpdate = true;
+    colors = {};
+    values = {};
+    elm = document.createElement("div");
+    elm.setAttribute("svga-hud", "true");
+    if (ParentElement === document.body) {
+      document.body.insertBefore(elm, document.body.firstChild);
+    } else {
+      prev = ParentElement.previousSibling;
+      if (prev != null ? typeof prev.hasAttribute === "function" ? prev.hasAttribute("svga-hud") : void 0 : void 0) {
+        elm = prev;
+      } else {
+        if ((ref = ParentElement.parentNode) != null) {
+          ref.insertBefore(elm, ParentElement);
+        }
+      }
+    }
+    Tick(function(time, dt) {
+      var html, k, v;
+      elapsed += dt;
+      if (elapsed >= rate) {
+        elapsed -= rate;
+        if (needsUpdate) {
+          needsUpdate = false;
+          html = "";
+          for (k in values) {
+            v = values[k];
+            html += "<div style='color:" + colors[k] + "'>" + k + ": " + v + "</div>";
+          }
+          return elm.innerHTML = html;
+        }
+      }
+    });
+    return Make("HUD", function(k, v, c) {
+      if (c == null) {
+        c = "#0008";
+      }
+      if (values[k] !== v) {
+        values[k] = v;
+        colors[k] = c;
+        return needsUpdate = true;
+      }
+    });
+  });
+
+  Take(["HUD", "Mode", "ParentElement", "SVGReady"], function(HUD, Mode, ParentElement) {
+    var nodeCountElm;
+    if (!Mode.dev) {
+      return;
+    }
+    nodeCountElm = document.querySelector("[node-count]");
+    if (nodeCountElm != null) {
+      return HUD("Nodes", nodeCountElm.getAttribute("node-count"), "#0003");
+    }
   });
 
   Take(["Reaction", "SVG", "SceneReady"], function(Reaction, SVG) {
@@ -3510,6 +3526,29 @@
       }
     });
   })();
+
+  Take(["Tick", "SVGReady"], function(Tick) {
+    var avgList, avgWindow, fps, total;
+    avgWindow = 1;
+    avgList = [];
+    total = 0;
+    fps = 1;
+    Make("FPS", function() {
+      return fps;
+    });
+    return Tick(function(time, dt) {
+      avgList.push(dt);
+      total += dt;
+      while (total > avgWindow && avgList.length > 0) {
+        total -= avgList.shift();
+      }
+      fps = avgList.length / total;
+      fps = Math.min(60, fps);
+      if (isNaN(fps)) {
+        return fps = 2;
+      }
+    });
+  });
 
   Take(["Pressure", "SVG"], function(Pressure, SVG) {
     var Gradient, existing;

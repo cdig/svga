@@ -86,7 +86,7 @@ Take "DOMContentLoaded", ()->
       # Note that we only do DOM->cache on a read call (not on a write call),
       # to slightly avoid intermingling DOM reads and writes, which causes thrashing.
       return elm._SVG_attr[k] ?= elm.getAttribute(k) if v is undefined # Read
-      return v if elm._SVG_attr[k] is v # cache hit — bail
+      return v if elm._SVG_attr[k] is v # cache hit — bail
       elm._SVG_attr[k] = v # update cache
       return elm[k] = v if propNames[k]? # set DOM property
       ns = if k is "xlink:href" then xlinkNS else null

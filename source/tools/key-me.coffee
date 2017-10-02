@@ -3,7 +3,7 @@
 # You can add handlers for "any"-key presses/releases, too.
 # And it automatically circumvents the key repeat rate, so you only get one call per press. Presto!
 # Hey, maybe also does shortcuts (aka: chords) too? Woo!
-# Note — shortcuts only work with 1 modifier. Command-g, perfect. Command-shift-g, no.
+# Note — shortcuts only work with 1 modifier. Command-g, perfect. Command-shift-g, no.
 
 
 do ()->
@@ -73,7 +73,7 @@ do ()->
   getModifier = (e)->
     return "meta"  if e.ctrlKey
     return "alt"   if e.altKey
-    return "shift" if e.shiftKey # If we support shift, then uppercase chars might not work — need to test
+    return "shift" if e.shiftKey # If we support shift, then uppercase chars might not work — need to test
   
   
   runCallbacks = (callbacks, modifier)->

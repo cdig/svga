@@ -36,7 +36,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], (Control
   # Scope
 
   ControlPanel = Scope g, ()->
-    createElement: (parent = null)->
+    createElement: (parent = null)->
       showing = true
       elm = SVG.create "g", parent or panelElms.element
     

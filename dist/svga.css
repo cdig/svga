@@ -10,7 +10,12 @@ html, body, #svga {
   position: absolute;
   padding: .2em;
   font-family: sans-serif;
-  overflow: visible; }
+  overflow: visible;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default; }
 
 #svga {
   opacity: 0;

@@ -12,6 +12,8 @@ html, body, #svga {
   padding: .2em;
   font-family: sans-serif;
   overflow: visible;
+  user-select: none;
+  cursor: default;
 }
 
 #svga {

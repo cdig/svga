@@ -6,6 +6,7 @@ Take ["RAF"], (RAF)->
     
     # Do another bunch of resizes once everything is done loading,
     # since the page layout might shift for any number of reasons
+    Take "AllReady", r
     Take "load", ()->
       r()
       setTimeout r, 1000

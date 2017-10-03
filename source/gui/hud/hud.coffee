@@ -2,7 +2,7 @@ Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)-
   return unless Mode.dev
 
   rate = .1 # Update every n seconds
-  elapsed = rate # Update immediately
+  elapsed = rate # Run the first update immediately
   needsUpdate = true
   
   colors = {}
@@ -11,7 +11,7 @@ Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)-
   elm = document.createElement "div"
   elm.setAttribute "svga-hud", "true"
   
-  if ParentElement is document.body
+  if not Mode.embed
     document.body.insertBefore elm, document.body.firstChild
   else
     # If the SVGA is removed and re-added, it creates duplicate HUD elements.
@@ -33,8 +33,17 @@ Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)-
           html += "<div style='color:#{colors[k]}'>#{k}: #{v}</div>"
         elm.innerHTML = html
   
-  Make "HUD", (k, v, c = "#0008")->
-    if values[k] isnt v
-      values[k] = v
-      colors[k] = c
-      needsUpdate = true
+  Make "HUD", HUD = (k, v, c = "#0008")->
+    
+    # Allow passing an object of k-v pairs, with the 2nd arg as the optional color
+    if typeof k is "object"
+      for _k, _v of k
+        HUD _k, _v, v
+    
+    else
+      if values[k] isnt v or not values[k]?
+        values[k] = v
+        colors[k] = c
+        needsUpdate = true
+
+    undefined

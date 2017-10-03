@@ -1,5 +1,8 @@
 Take ["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], (ControlPanel, Mode, Nav, Resize, SVG)->
   Resize ()->
+    
+    return # DISABLED FOR NOW
+    
     # This rect holds the amount of claimed space in the GUI
     cbr = SVG.svg.getBoundingClientRect()
     rect =

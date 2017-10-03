@@ -16,7 +16,6 @@ Take ["Config", "ParentElement"], (Config, ParentElement)->
   
   Make "Mode", Mode =
     get: fetchAttribute
-    autosize: fetchAttribute "autosize"
     background: fetchAttribute "background"
     controlPanel: fetchAttribute "controlPanel"
     dev: window.top.location.port?.length >= 4

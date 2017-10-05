@@ -2382,7 +2382,7 @@
     width = SVG.attr(SVG.svg, "width");
     height = SVG.attr(SVG.svg, "height");
     if (Mode.embed) {
-      alert("Implement ResizeEmbed!");
+      console.log("Implement ResizeEmbed!");
       Make("ResizeEmbed", ResizeEmbed = function(consumedHeight) {});
       return Resize(ResizeEmbed);
     } else {

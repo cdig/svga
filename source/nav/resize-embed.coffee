@@ -4,7 +4,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "Resize", "SVG", "SVGReady"], (Co
   height = SVG.attr SVG.svg, "height"
   
   if Mode.embed
-    alert "Implement ResizeEmbed!"
+    console.log "Implement ResizeEmbed!"
     Make "ResizeEmbed", ResizeEmbed = (consumedHeight)->
         # panelHeight = ControlPanel.getAutosizePanelHeight()
         # cbr = ParentElement.getBoundingClientRect()

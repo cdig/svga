@@ -2054,147 +2054,6 @@
     }
   });
 
-  Take(["ControlPanel", "RAF", "SVG", "Tween"], function(ControlPanel, RAF, SVG, Tween) {
-    var boxTransformed;
-    boxTransformed = SVG.create("rect", SVG.svg, {
-      stroke: "#0F03",
-      strokeWidth: "6",
-      fill: "none"
-    });
-    return Make("DynamicNav", function() {
-      var Nav, center, dist, distTo, initialRect, limit, ox, oy, parentRect, pos, render, requestRender, scaleStartPosZ, tween, xLimit, yLimit, zLimit;
-      SVG.attrs(SVG.svg, {
-        width: null,
-        height: null
-      });
-      pos = {
-        x: 0,
-        y: 0,
-        z: 0
-      };
-      center = {
-        x: 0,
-        y: 0,
-        z: 1
-      };
-      xLimit = {};
-      yLimit = {};
-      zLimit = {
-        min: -0.5,
-        max: 3
-      };
-      scaleStartPosZ = 0;
-      tween = null;
-      parentRect = SVG.svg.getBoundingClientRect();
-      initialRect = SVG.root.getBoundingClientRect();
-      if (!(initialRect.width > 0 && initialRect.height > 0)) {
-        return;
-      }
-      ox = SVG.root._scope.x - (initialRect.left - parentRect.left) - initialRect.width / 2;
-      oy = SVG.root._scope.y - (initialRect.top - parentRect.top) - initialRect.height / 2;
-      xLimit.max = initialRect.width * 0.5;
-      yLimit.max = initialRect.height * 0.5;
-      xLimit.min = -xLimit.max;
-      yLimit.min = -yLimit.max;
-      requestRender = function() {
-        return RAF(render, true);
-      };
-      render = function() {
-        var z;
-        z = center.z * Math.pow(2, pos.z);
-        return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + z + ") translate(" + (pos.x + ox) + "," + (pos.y + oy) + ")");
-      };
-      limit = function(l, v) {
-        return Math.min(l.max, Math.max(l.min, v));
-      };
-      Resize(function() {
-        return Tween(center, c, 0.5, {
-          mutate: true,
-          tick: render
-        });
-      });
-      Make("Nav", Nav = {
-        to: function(p) {
-          var time, timeX, timeY, timeZ;
-          if (tween != null) {
-            Tween.cancel(tween);
-          }
-          timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
-          timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
-          timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
-          time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
-          return tween = Tween(pos, p, time, {
-            mutate: true,
-            tick: render
-          });
-        },
-        by: function(p) {
-          var scale;
-          if (tween != null) {
-            Tween.cancel(tween);
-          }
-          if (p.z != null) {
-            pos.z = limit(zLimit, pos.z + p.z);
-          }
-          scale = center.z * Math.pow(2, pos.z);
-          if (p.x != null) {
-            pos.x = limit(xLimit, pos.x + p.x / scale);
-          }
-          if (p.y != null) {
-            pos.y = limit(yLimit, pos.y + p.y / scale);
-          }
-          return requestRender();
-        },
-        at: function(p) {
-          var scale;
-          if (tween != null) {
-            Tween.cancel(tween);
-          }
-          if (p.z != null) {
-            pos.z = limit(zLimit, p.z);
-          }
-          scale = center.z * Math.pow(2, pos.z);
-          if (p.x != null) {
-            pos.x = limit(xLimit, p.x / scale);
-          }
-          if (p.y != null) {
-            pos.y = limit(yLimit, p.y / scale);
-          }
-          return requestRender();
-        },
-        startScale: function() {
-          return scaleStartPosZ = pos.z;
-        },
-        scale: function(s) {
-          if (tween != null) {
-            Tween.cancel(tween);
-          }
-          pos.z = limit(zLimit, Math.log2(Math.pow(2, scaleStartPosZ) * s));
-          return requestRender();
-        },
-        eventInside: function(e) {
-          var ref;
-          if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
-            e = e.touches[0];
-          }
-          return e.target === document.body || e.target === SVG.svg || SVG.root.contains(e.target);
-        }
-      });
-      distTo = function(a, b) {
-        var dx, dy, dz;
-        dx = a.x - b.x;
-        dy = a.y - b.y;
-        return dz = 200 * a.z - b.z;
-      };
-      return dist = function(x, y, z) {
-        if (z == null) {
-          z = 0;
-        }
-        return Math.sqrt(x * x + y * y + z * z);
-      };
-    });
-  });
-
   Take(["Mode", "Nav"], function(Mode, Nav) {
     if (!Mode.nav) {
       return;
@@ -2339,13 +2198,158 @@
     });
   });
 
-  Take(["ControlPanel", "DynamicNav", "Mode", "ParentElement", "StaticSize", "SceneReady"], function(ControlPanel, DynamicNav, Mode, ParentElement, StaticSize) {
-    if (Mode.nav) {
-      return DynamicNav();
-    } else {
-      Make("Nav", false);
-      return StaticSize();
+  Take(["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, RAF, Resize, SVG, Tween) {
+    var Nav, applyLimit, center, centerInverse, contentHeight, contentWidth, dist, distTo, initialRootRect, limit, pos, render, requestRender, scaleStartPosZ, tween, windowScale;
+    contentWidth = SVG.attr(SVG.svg, "width");
+    contentHeight = SVG.attr(SVG.svg, "height");
+    if (!((contentWidth != null) && (contentHeight != null))) {
+      throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
     }
+    initialRootRect = SVG.root.getBoundingClientRect();
+    if (!(initialRootRect.width > 0 && initialRootRect.height > 0)) {
+      return;
+    }
+    pos = {
+      x: 0,
+      y: 0,
+      z: 0
+    };
+    center = {
+      x: 0,
+      y: 0
+    };
+    centerInverse = {
+      x: 0,
+      y: 0
+    };
+    limit = {
+      x: {
+        min: -contentWidth / 2,
+        max: contentWidth / 2
+      },
+      y: {
+        min: -contentHeight / 2,
+        max: contentHeight / 2
+      },
+      z: {
+        min: -0.5,
+        max: 3
+      }
+    };
+    windowScale = 1;
+    scaleStartPosZ = 0;
+    tween = null;
+    render = function() {
+      return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + (windowScale * Math.pow(2, pos.z)) + ") translate(" + (pos.x - centerInverse.x) + "," + (pos.y - centerInverse.y) + ")");
+    };
+    Resize(function() {
+      var availableSpaceH, availableSpaceW, availableSpaceX, availableSpaceY, hFrac, panelClaimedH, panelClaimedW, panelInfo, totalSpace, wFrac;
+      totalSpace = SVG.svg.getBoundingClientRect();
+      panelInfo = ControlPanel.getAutosizePanelInfo();
+      panelClaimedW = Math.abs(panelInfo.signedX) >= 0.9 ? panelInfo.w : 0;
+      panelClaimedH = Math.abs(panelInfo.signedY) >= 0.9 ? panelInfo.h : 0;
+      availableSpaceW = totalSpace.width - panelClaimedW;
+      availableSpaceH = totalSpace.height - panelClaimedH;
+      availableSpaceX = panelInfo.signedX < 0 ? panelInfo.w : 0;
+      availableSpaceY = panelInfo.signedY < 0 ? panelInfo.h : 0;
+      wFrac = availableSpaceW / contentWidth;
+      hFrac = availableSpaceH / contentHeight;
+      windowScale = Math.min(wFrac, hFrac);
+      center.x = availableSpaceX + availableSpaceW / 2;
+      center.y = availableSpaceY + availableSpaceH / 2;
+      centerInverse.x = contentWidth / 2;
+      centerInverse.y = contentHeight / 2;
+      return render();
+    });
+    if (!Mode.nav) {
+      Make("Nav", false);
+      return;
+    }
+    requestRender = function() {
+      return RAF(render, true);
+    };
+    applyLimit = function(l, v) {
+      return Math.min(l.max, Math.max(l.min, v));
+    };
+    Make("Nav", Nav = {
+      to: function(p) {
+        var time, timeX, timeY, timeZ;
+        if (tween != null) {
+          Tween.cancel(tween);
+        }
+        timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
+        timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
+        timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
+        time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
+        return tween = Tween(pos, p, time, {
+          mutate: true,
+          tick: render
+        });
+      },
+      by: function(p) {
+        var scale;
+        if (tween != null) {
+          Tween.cancel(tween);
+        }
+        if (p.z != null) {
+          pos.z = applyLimit(limit.z, pos.z + p.z);
+        }
+        scale = Math.pow(2, pos.z);
+        if (p.x != null) {
+          pos.x = applyLimit(limit.x, pos.x + p.x / scale);
+        }
+        if (p.y != null) {
+          pos.y = applyLimit(limit.y, pos.y + p.y / scale);
+        }
+        return requestRender();
+      },
+      at: function(p) {
+        var scale;
+        if (tween != null) {
+          Tween.cancel(tween);
+        }
+        if (p.z != null) {
+          pos.z = applyLimit(limit.z, p.z);
+        }
+        scale = Math.pow(2, pos.z);
+        if (p.x != null) {
+          pos.x = applyLimit(limit.x, p.x / scale);
+        }
+        if (p.y != null) {
+          pos.y = applyLimit(limit.y, p.y / scale);
+        }
+        return requestRender();
+      },
+      startScale: function() {
+        return scaleStartPosZ = pos.z;
+      },
+      scale: function(s) {
+        if (tween != null) {
+          Tween.cancel(tween);
+        }
+        pos.z = applyLimit(limit.z, Math.log2(Math.pow(2, scaleStartPosZ) * s));
+        return requestRender();
+      },
+      eventInside: function(e) {
+        var ref;
+        if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+          e = e.touches[0];
+        }
+        return e.target === document.body || e.target === SVG.svg || SVG.root.contains(e.target);
+      }
+    });
+    distTo = function(a, b) {
+      var dx, dy, dz;
+      dx = a.x - b.x;
+      dy = a.y - b.y;
+      return dz = 200 * a.z - b.z;
+    };
+    return dist = function(x, y, z) {
+      if (z == null) {
+        z = 0;
+      }
+      return Math.sqrt(x * x + y * y + z * z);
+    };
   });
 
   Take(["Mode", "Nav", "SVG"], function(Mode, Nav, SVG) {
@@ -2384,37 +2388,6 @@
     } else {
       return Make("ResizeEmbed", ResizeEmbed = function() {});
     }
-  });
-
-  Take(["ControlPanel", "Resize", "SVG", "HUD"], function(ControlPanel, Resize, SVG, HUD) {
-    return Make("StaticSize", function() {
-      var height, width;
-      width = SVG.attr(SVG.svg, "width");
-      height = SVG.attr(SVG.svg, "height");
-      if (!((width != null) && (height != null))) {
-        throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
-      }
-      return Resize(function() {
-        var availableH, availableW, hFrac, panelClaimedH, panelClaimedW, panelInfo, scale, transform, wFrac, windowSize, x, xShift, xSign, y, yShift, ySign;
-        windowSize = SVG.svg.getBoundingClientRect();
-        panelInfo = ControlPanel.getAutosizePanelInfo();
-        panelClaimedW = Math.abs(panelInfo.signedX) >= 0.9 ? panelInfo.w : 0;
-        panelClaimedH = Math.abs(panelInfo.signedY) >= 0.9 ? panelInfo.h : 0;
-        availableW = windowSize.width - panelInfo.w;
-        availableH = windowSize.height - panelInfo.h;
-        wFrac = availableW / width;
-        hFrac = availableH / height;
-        scale = Math.min(wFrac, hFrac);
-        xSign = panelInfo.signedX / Math.abs(panelInfo.signedX);
-        ySign = panelInfo.signedY / Math.abs(panelInfo.signedY);
-        xShift = xSign < 0 ? panelInfo.w : 0;
-        yShift = ySign < 0 ? panelInfo.h : 0;
-        x = xShift + availableW / 2 - (width * scale / 2);
-        y = yShift + availableH / 2 - (height * scale / 2);
-        transform = "translate(" + x + ", " + y + ") scale(" + scale + ")";
-        return SVG.attr(SVG.root, "transform", transform);
-      });
-    });
   });
 
   Take(["Mode", "Nav"], function(Mode, Nav) {

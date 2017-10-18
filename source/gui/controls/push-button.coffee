@@ -1,28 +1,45 @@
 Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, Registry, SVG, Tween)->
-  buttonWidth = GUI.unit * 1.8
-  buttonHeight = GUI.unit * 1.8
-    
   Registry.set "Control", "pushButton", (elm, props)->
     
     # Arrays to hold all the functions that have been attached to this control
     onHandlers = []
     offHandlers = []
     
+    radius = GUI.unit * 0.6
+    height = radius * 2
+    
     bgFill = "hsl(220, 10%, 92%)"
-    labelFill = "hsl(227, 16%, 24%)"
+    labelFill = "hsl(220, 10%, 92%)"
     
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
     
+    # Group background element
+    groupBg = SVG.create "rect", elm,
+      x: -GUI.groupPad
+      y: -GUI.groupPad
+      width: GUI.colInnerWidth + GUI.groupPad*2
+      height: radius*2 + GUI.groupPad*2
+      rx: GUI.groupBorderRadius
+      fill: props.group or "transparent"
     
     # Button background element
-    bg = SVG.create "rect", elm,
+    bg = SVG.create "circle", elm,
+      cx: radius
+      cy: radius
+      r: radius
       strokeWidth: 2
       fill: bgFill
     
     # Button text label
     label = SVG.create "text", elm,
       textContent: props.name
+      x: radius*2 + 6
+      y: radius + (props.fontSize or 16) * 0.36
+      textAnchor: "start"
+      fontSize: props.fontSize or 16
+      fontWeight: props.fontWeight or "normal"
+      fontStyle: props.fontStyle or "normal"
       fill: labelFill
     
     
@@ -55,34 +72,15 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
         offHandler() for offHandler in offHandlers
         undefined
       moveOut: toNormal
-        
     
     
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
+      height: height
+      
       attach: (props)->
         onHandlers.push props.on if props.on?
         offHandlers.push props.off if props.off?
-      
-      getPreferredSize: ()->
-        # Update the buttonWidth every resize, because the font may have changed
-        buttonWidth = Math.max buttonWidth, label.getComputedTextLength() + GUI.pad*8
-        size = Math.max buttonWidth, buttonHeight
-        return w:size, h:size
-      
-      resize: (space)->
-        size = Math.max(buttonWidth, buttonHeight)
-        extra = x:space.w-size, y:space.h-size
-        SVG.attrs bg,
-          x: GUI.pad + extra.x/2
-          y: GUI.pad + extra.y/2
-          width: size - GUI.pad*2
-          height: size - GUI.pad*2
-          rx: size/2 - GUI.pad
-        SVG.attrs label,
-          x: space.w/2
-          y: space.h/2 + 6
-        return w:size, h:size
       
       _highlight: (enable)->
         if enable

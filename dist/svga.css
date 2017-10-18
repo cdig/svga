@@ -10,6 +10,7 @@ html, body, #svga {
   position: absolute;
   padding: .2em;
   font-family: sans-serif;
+  font-size: 10pt;
   overflow: visible;
   -webkit-user-select: none;
   -moz-user-select: none;

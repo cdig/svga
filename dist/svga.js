@@ -801,276 +801,220 @@
     return hide();
   });
 
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope"], function(ControlPanelLayout, Gradient, GUI, Mode, SVG, Scope) {
-    var CP, ControlPanel, bg, config, g, marginedPanelHeight, marginedPanelWidth, panelElms, panelRadius, resize, showing, signedX, signedY, vertical;
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope", "TRS"], function(ControlPanelLayout, Gradient, GUI, Mode, SVG, Scope, TRS) {
+    var CP, ControlPanel, columnsElm, config, itemScopes, panelBg, panelElm, panelSize, resize, showing, signedXPosition, signedYPosition, vertical;
     CP = GUI.ControlPanel;
     config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
     showing = false;
-    panelRadius = CP.panelBorderRadius;
     vertical = true;
-    signedX = 0;
-    signedY = 0;
-    marginedPanelWidth = 0;
-    marginedPanelHeight = 0;
-    g = SVG.create("g", GUI.elm, {
+    signedXPosition = 0;
+    signedYPosition = 0;
+    panelSize = {
+      w: 0,
+      h: 0
+    };
+    itemScopes = [];
+    panelElm = SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 16,
       textAnchor: "middle"
     });
-    bg = SVG.create("rect", g, {
-      rx: panelRadius,
-      fill: CP.bg
+    panelBg = SVG.create("rect", panelElm, {
+      xPanelBg: "",
+      rx: 8,
+      fill: "hsl(220, 45%, 45%)"
     });
-    panelElms = Scope(SVG.create("g", g));
-    panelElms.x = panelElms.y = CP.pad * 2;
+    columnsElm = SVG.create("g", panelElm, {
+      xColumns: "",
+      transform: "translate(" + CP.panelPadding + "," + CP.panelPadding + ")"
+    });
     Take("SceneReady", function() {
       if (showing) {
         return resize();
       } else {
-        return GUI.elm.removeChild(g);
+        return GUI.elm.removeChild(panelElm);
       }
     });
-    ControlPanel = Scope(g, function() {
+    ControlPanel = Scope(panelElm, function() {
       return {
-        createElement: function(parent) {
+        createItemElement: function(parent, group) {
           var elm;
           if (parent == null) {
             parent = null;
           }
+          if (group == null) {
+            group = null;
+          }
           showing = true;
-          return elm = SVG.create("g", parent || panelElms.element);
+          return elm = SVG.create("g", parent || columnsElm);
         },
-        claimSpace: function(rect) {
-          resize();
-          if (vertical) {
-            return rect.w -= marginedPanelWidth;
-          } else {
-            return rect.h -= marginedPanelHeight;
-          }
+        registerItemScope: function(scope) {
+          return itemScopes.push(scope);
         },
-        getAutosizePanelHeight: function() {
-          if (!vertical) {
-            return marginedPanelHeight;
-          } else {
-            return 0;
-          }
-        },
-        getAutosizePanelWidth: function() {
-          if (vertical) {
-            return marginedPanelWidth;
-          } else {
-            return 0;
-          }
-        },
-        getAutosizePanelInfo: function() {
+        getPanelLayoutInfo: function() {
           resize();
           return {
-            signedX: signedX,
-            signedY: signedY,
-            w: vertical && showing ? marginedPanelWidth : 0,
-            h: !vertical && showing ? marginedPanelHeight : 0
+            vertical: vertical,
+            signedX: signedXPosition,
+            signedY: signedYPosition,
+            w: panelSize.w + CP.panelMargin * 2,
+            h: panelSize.h + CP.panelMargin * 2
           };
         }
       };
     });
     resize = function() {
-      var marginedViewHeight, marginedViewWidth, normalizedX, normalizedY, outerBounds, panelHeight, panelInnerSize, panelWidth, view;
+      var marginedViewHeight, marginedViewWidth, normalizedX, normalizedY, outerBounds, view;
       outerBounds = SVG.svg.getBoundingClientRect();
       view = {
-        w: outerBounds.width,
-        h: outerBounds.height
+        w: outerBounds.width - CP.panelMargin * 2,
+        h: outerBounds.height - CP.panelMargin * 2
       };
-      vertical = config.vertical != null ? config.vertical : view.w >= view.h * 1.3;
-      panelInnerSize = vertical ? ControlPanelLayout.vertical(view) : ControlPanelLayout.horizontal(view);
-      panelWidth = panelInnerSize.w + CP.pad * 4;
-      panelHeight = panelInnerSize.h + CP.pad * 4;
-      SVG.attrs(bg, {
-        width: panelWidth,
-        height: panelHeight
+      vertical = config.vertical != null ? isNaN(parseInt(config.vertical)) ? config.vertical : view.w >= config.vertical : Mode.embed ? view.w >= 800 : view.w >= view.h * 1.3;
+      panelSize = vertical ? ControlPanelLayout.vertical(itemScopes, view, columnsElm) : ControlPanelLayout.horizontal(itemScopes, view, columnsElm);
+      SVG.attrs(panelBg, {
+        width: panelSize.w,
+        height: panelSize.h
       });
-      if ((config.x != null) || (config.y != null)) {
-        signedX = config.x || 0;
-        signedY = config.y || 0;
-      } else if (vertical) {
-        signedX = 1;
-        signedY = 0;
+      if (vertical && (panelSize.w > view.w / 2 || panelSize.h > view.h)) {
+        ControlPanel.scale = Math.min(view.w / panelSize.w / 2, view.h / panelSize.h);
+      } else if (!vertical && (panelSize.h > view.h / 2 || panelSize.w > view.w)) {
+        ControlPanel.scale = Math.min(view.w / panelSize.w, view.h / panelSize.h / 2);
       } else {
-        signedX = 0;
-        signedY = 1;
+        ControlPanel.scale = 1;
       }
-      marginedPanelWidth = panelWidth + CP.panelMargin * 2;
-      marginedPanelHeight = panelHeight + CP.panelMargin * 2;
-      marginedViewWidth = view.w - marginedPanelWidth;
-      marginedViewHeight = view.h - marginedPanelHeight;
-      normalizedX = signedX / 2 + 0.5;
-      normalizedY = signedY / 2 + 0.5;
+      panelSize.w *= ControlPanel.scale;
+      panelSize.h *= ControlPanel.scale;
+      if ((config.x != null) || (config.y != null)) {
+        signedXPosition = config.x || 0;
+        signedYPosition = config.y || 0;
+      } else if (vertical) {
+        signedXPosition = 1;
+        signedYPosition = 0;
+      } else {
+        signedXPosition = 0;
+        signedYPosition = 1;
+      }
+      marginedViewWidth = view.w - panelSize.w;
+      marginedViewHeight = view.h - panelSize.h;
+      normalizedX = signedXPosition / 2 + 0.5;
+      normalizedY = signedYPosition / 2 + 0.5;
       ControlPanel.x = CP.panelMargin + normalizedX * marginedViewWidth | 0;
       return ControlPanel.y = CP.panelMargin + normalizedY * marginedViewHeight | 0;
     };
     return Make("ControlPanel", ControlPanel);
   });
 
-  Take(["GUI"], function(arg) {
-    var GUI, checkRowHeight, scopes;
+  Take(["GUI", "Mode", "SVG"], function(arg, Mode, SVG) {
+    var GUI, checkPanelSize, columns, getColumn, performLayout;
     GUI = arg.ControlPanel;
-    scopes = [];
+    columns = [];
+    getColumn = function(index, panelElm) {
+      return columns[index] != null ? columns[index] : columns[index] = {
+        x: index * (GUI.colInnerWidth + GUI.columnPadding),
+        itemScopes: [],
+        height: 0,
+        element: SVG.create("g", panelElm)
+      };
+    };
+    performLayout = function(itemScopes, panelElm, desiredColumnHeight) {
+      var c, colIndex, column, i, len, len1, len2, len3, m, n, nVisibleColumns, panelHeight, panelWidth, q, scope, tallestColumnHeight, u, y;
+      for (m = 0, len = columns.length; m < len; m++) {
+        column = columns[m];
+        column.itemScopes = [];
+        column.height = 0;
+      }
+      colIndex = 0;
+      column = getColumn(colIndex, panelElm);
+      for (i = n = 0, len1 = itemScopes.length; n < len1; i = ++n) {
+        scope = itemScopes[i];
+        if (column.height > desiredColumnHeight && column.itemScopes.length > 0) {
+          column = getColumn(++colIndex, panelElm);
+        }
+        column.itemScopes.push(scope);
+        SVG.append(column.element, scope.element);
+        scope.y = column.height;
+        column.height += scope.height + GUI.itemPad;
+      }
+      tallestColumnHeight = 0;
+      nVisibleColumns = 0;
+      for (c = q = 0, len2 = columns.length; q < len2; c = ++q) {
+        column = columns[c];
+        if (!(column.itemScopes.length > 0)) {
+          continue;
+        }
+        nVisibleColumns++;
+        column.height -= GUI.itemPad;
+        tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
+      }
+      for (u = 0, len3 = columns.length; u < len3; u++) {
+        column = columns[u];
+        if (!(column.itemScopes.length > 0)) {
+          continue;
+        }
+        y = tallestColumnHeight / 2 - column.height / 2;
+        SVG.attrs(column.element, {
+          transform: "translate(" + column.x + "," + y + ")"
+        });
+      }
+      panelWidth = GUI.panelPadding * 2 + nVisibleColumns * GUI.colInnerWidth + (nVisibleColumns - 1) * GUI.columnPadding;
+      panelHeight = tallestColumnHeight + GUI.panelPadding * 2;
+      return {
+        w: panelWidth,
+        h: panelHeight
+      };
+    };
     Make("ControlPanelLayout", {
-      addScope: function(scope) {
-        return scopes.push(scope);
-      },
-      vertical: function(view) {
-        var approxColumnHeight, columnWidth, columns, fullHeight, i, len, len1, len2, m, n, newSize, oldSize, panelWidth, q, scope, size, sizes, tallestColumn, xOffset, yOffset;
-        if (!(view.h > 0 && scopes.length > 0)) {
+      vertical: function(itemScopes, availableSpace, panelElm) {
+        var desiredColumnHeight, len, m, nColumns, scope, totalHeight;
+        if (!(availableSpace.h > 0 && itemScopes.length > 0)) {
           return {
             w: 0,
             h: 0
           };
         }
-        sizes = [];
-        columnWidth = 0;
-        for (m = 0, len = scopes.length; m < len; m++) {
-          scope = scopes[m];
-          size = scope.getPreferredSize(null, view, true);
-          sizes.push(size);
-          columnWidth = Math.max(columnWidth, size.w);
+        totalHeight = GUI.panelPadding * 2;
+        for (m = 0, len = itemScopes.length; m < len; m++) {
+          scope = itemScopes[m];
+          totalHeight += scope.height;
         }
-        fullHeight = 0;
-        for (i = n = 0, len1 = scopes.length; n < len1; i = ++n) {
-          scope = scopes[i];
-          oldSize = sizes[i];
-          newSize = scope.resize({
-            w: columnWidth,
-            h: oldSize.h
-          }, view, true);
-          sizes[i] = newSize;
-          fullHeight += newSize.h;
-        }
-        columns = Math.ceil(fullHeight / view.h);
-        approxColumnHeight = Math.ceil(fullHeight / columns);
-        xOffset = 0;
-        yOffset = 0;
-        tallestColumn = 0;
-        panelWidth = 0;
-        for (i = q = 0, len2 = scopes.length; q < len2; i = ++q) {
-          scope = scopes[i];
-          scope.x = xOffset;
-          scope.y = yOffset;
-          size = sizes[i];
-          yOffset += size.h;
-          if (yOffset > approxColumnHeight) {
-            xOffset += columnWidth;
-            if (yOffset > view.h && yOffset > size.h) {
-              tallestColumn = Math.max(tallestColumn, yOffset - size.h);
-              scope.x = xOffset;
-              scope.y = 0;
-              yOffset = size.h;
-            } else {
-              tallestColumn = Math.max(tallestColumn, yOffset);
-              yOffset = 0;
-            }
-          }
-        }
-        tallestColumn = Math.max(tallestColumn, yOffset);
-        return {
-          w: scope.x + columnWidth,
-          h: tallestColumn
-        };
+        totalHeight += GUI.itemPad * (itemScopes.length - 1);
+        nColumns = Mode.embed ? 1 : Math.ceil(totalHeight / availableSpace.h);
+        desiredColumnHeight = Math.ceil(totalHeight / nColumns);
+        return performLayout(itemScopes, panelElm, desiredColumnHeight);
       },
-      horizontal: function(view) {
-        var col, columnWidth, columnWidths, i, i1, len, len1, len2, len3, len4, m, n, newSize, oldSize, q, rowHeight, scope, scopeHeight, size, sizes, totalWidth, u, xOffset, yOffset;
-        if (!(view.w > 0 && scopes.length > 0)) {
+      horizontal: function(itemScopes, availableSpace, panelElm) {
+        var desiredColumnHeight, len, m, scope;
+        if (!(availableSpace.w > 0 && itemScopes.length > 0)) {
           return {
             w: 0,
             h: 0
           };
         }
-        sizes = [];
-        rowHeight = 0;
-        for (m = 0, len = scopes.length; m < len; m++) {
-          scope = scopes[m];
-          size = scope.getPreferredSize(null, view, false);
-          sizes.push(size);
-          rowHeight = Math.max(rowHeight, size.h);
+        desiredColumnHeight = 0;
+        for (m = 0, len = itemScopes.length; m < len; m++) {
+          scope = itemScopes[m];
+          desiredColumnHeight = Math.max(desiredColumnHeight, scope.height);
         }
-        while (!checkRowHeight(rowHeight, sizes, view)) {
-          rowHeight += GUI.unit;
+        while (!checkPanelSize(desiredColumnHeight, itemScopes, availableSpace)) {
+          desiredColumnHeight += GUI.unit / 2;
         }
-        for (i = n = 0, len1 = scopes.length; n < len1; i = ++n) {
-          scope = scopes[i];
-          oldSize = sizes[i];
-          newSize = scope.resize({
-            w: oldSize.w,
-            h: rowHeight
-          }, view, false);
-          sizes[i] = newSize;
-          rowHeight = Math.max(rowHeight, size.h);
-        }
-        while (!checkRowHeight(rowHeight, sizes, view)) {
-          rowHeight += GUI.unit;
-        }
-        columnWidths = [0];
-        yOffset = 0;
-        col = 0;
-        for (q = 0, len2 = sizes.length; q < len2; q++) {
-          size = sizes[q];
-          yOffset += size.h;
-          if (yOffset > rowHeight) {
-            col++;
-            columnWidths[col] = 0;
-            yOffset = size.h;
-          }
-          columnWidths[col] = Math.max(size.w, columnWidths[col]);
-        }
-        totalWidth = 0;
-        for (u = 0, len3 = columnWidths.length; u < len3; u++) {
-          columnWidth = columnWidths[u];
-          totalWidth += columnWidth;
-        }
-        xOffset = 0;
-        yOffset = 0;
-        col = 0;
-        for (i = i1 = 0, len4 = scopes.length; i1 < len4; i = ++i1) {
-          scope = scopes[i];
-          scope.x = xOffset;
-          scope.y = yOffset;
-          scopeHeight = sizes[i].h;
-          yOffset += scopeHeight;
-          if (yOffset > rowHeight) {
-            scope.x = xOffset += columnWidths[col];
-            scope.y = 0;
-            yOffset = scopeHeight;
-            col++;
-          }
-          scope.resize({
-            w: columnWidths[col],
-            h: scopeHeight
-          }, view, false);
-        }
-        return {
-          w: totalWidth,
-          h: rowHeight
-        };
+        return performLayout(itemScopes, panelElm, desiredColumnHeight);
       }
     });
-    return checkRowHeight = function(rowHeight, sizes, view) {
-      var len, m, size, xOffset, yOffset;
-      xOffset = 0;
-      yOffset = 0;
-      for (m = 0, len = sizes.length; m < len; m++) {
-        size = sizes[m];
-        yOffset += size.h;
-        if (yOffset > rowHeight) {
-          xOffset += size.w;
-          yOffset = size.h;
+    return checkPanelSize = function(columnHeight, itemScopes, availableSpace) {
+      var consumedHeight, consumedWidth, len, m, scope;
+      consumedWidth = GUI.colInnerWidth + GUI.panelPadding * 2;
+      consumedHeight = GUI.panelPadding * 2;
+      for (m = 0, len = itemScopes.length; m < len; m++) {
+        scope = itemScopes[m];
+        if (consumedHeight > columnHeight) {
+          consumedWidth += GUI.colInnerWidth + GUI.columnPadding;
+          consumedHeight = GUI.panelPadding * 2;
         }
+        consumedHeight += scope.height + GUI.itemPad;
       }
-      if (xOffset + size.w < view.w) {
-        return true;
-      } else if (rowHeight > view.h / 2) {
-        return true;
-      } else {
-        return false;
-      }
+      return consumedWidth < availableSpace.w || columnHeight > availableSpace.h / 2;
     };
   });
 
@@ -1078,22 +1022,36 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "button", function(elm, props) {
-      var bg, bgFill, bgc, blueBG, handlers, label, labelFill, lightBG, orangeBG, scope, tickBG, toClicked, toClicking, toHover, toNormal;
+      var bg, bgFill, bgc, blocked, blueBG, groupBg, handlers, label, labelFill, lightBG, orangeBG, scope, tickBG, toClicked, toClicking, toHover, toNormal;
       handlers = [];
       bgFill = "hsl(220, 10%, 92%)";
       labelFill = "hsl(227, 16%, 24%)";
       SVG.attrs(elm, {
         ui: true
       });
+      groupBg = SVG.create("rect", elm, {
+        x: -GUI.groupPad,
+        y: -GUI.groupPad,
+        width: GUI.colInnerWidth + GUI.groupPad * 2,
+        height: GUI.unit + GUI.groupPad * 2,
+        rx: GUI.groupBorderRadius,
+        fill: props.group || "transparent"
+      });
       bg = SVG.create("rect", elm, {
-        x: GUI.pad,
-        y: GUI.pad,
+        width: GUI.colInnerWidth,
+        height: GUI.unit,
         rx: GUI.borderRadius,
         strokeWidth: 2,
         fill: bgFill
       });
       label = SVG.create("text", elm, {
         textContent: props.name,
+        x: GUI.colInnerWidth / 2,
+        y: (props.fontSize || 16) + GUI.unit / 5,
+        width: GUI.colInnerWidth,
+        fontSize: props.fontSize || 16,
+        fontWeight: props.fontWeight || "normal",
+        fontStyle: props.fontStyle || "normal",
         fill: labelFill
       });
       bgc = blueBG = {
@@ -1118,6 +1076,7 @@
         });
       };
       tickBG(blueBG);
+      blocked = false;
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -1153,6 +1112,13 @@
         dragOut: toNormal,
         click: function() {
           var handler, len, m;
+          if (blocked) {
+            return;
+          }
+          blocked = true;
+          setTimeout((function() {
+            return blocked = false;
+          }), 100);
           toClicked();
           for (m = 0, len = handlers.length; m < len; m++) {
             handler = handlers[m];
@@ -1162,34 +1128,11 @@
         }
       });
       return scope = {
+        height: GUI.unit,
         attach: function(props) {
           if (props.click != null) {
             return handlers.push(props.click);
           }
-        },
-        getPreferredSize: function() {
-          var buttonWidth, size;
-          buttonWidth = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
-          return size = {
-            w: buttonWidth,
-            h: GUI.unit
-          };
-        },
-        resize: function(size) {
-          var height;
-          height = Math.min(GUI.unit, size.h);
-          SVG.attrs(bg, {
-            width: size.w - GUI.pad * 2,
-            height: height - GUI.pad * 2
-          });
-          SVG.attrs(label, {
-            x: size.w / 2,
-            y: height / 2 + 6
-          });
-          return {
-            w: size.w,
-            h: height
-          };
         },
         _highlight: function(enable) {
           if (enable) {
@@ -1216,64 +1159,78 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "divider", function(elm, props) {
-      var g, height, scope;
-      g = SVG.create("rect", elm, {
-        x: GUI.pad,
-        y: GUI.pad,
-        height: GUI.pad * 2,
-        rx: 2,
-        fill: "hsl(227, 45%, 24%)"
+      throw "Error: Control.divider() has been removed.";
+    });
+  });
+
+  Take(["Registry", "GUI", "Scope", "SVG"], function(Registry, arg, Scope, SVG) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Registry.set("Control", "label", function(elm, props) {
+      var groupBg, height, label, labelFill, labelY, scope;
+      labelY = (props.fontSize || 16) * 0.8;
+      height = props.fontSize || 16;
+      labelFill = "hsl(220, 10%, 92%)";
+      groupBg = SVG.create("rect", elm, {
+        x: -GUI.groupPad,
+        y: -GUI.groupPad,
+        width: GUI.colInnerWidth + GUI.groupPad * 2,
+        height: height + GUI.groupPad * 2,
+        rx: GUI.groupBorderRadius,
+        fill: props.group || "transparent"
       });
-      height = GUI.pad * 4;
+      label = SVG.create("text", elm, {
+        textContent: props.name,
+        x: GUI.colInnerWidth / 2,
+        y: labelY,
+        fontSize: props.fontSize || 16,
+        fontWeight: props.fontWeight || "normal",
+        fontStyle: props.fontStyle || "normal",
+        fill: labelFill
+      });
       return scope = {
-        getPreferredSize: function(size, view, vertical) {
-          return {
-            w: 0,
-            h: 0
-          };
-        },
-        resize: function(size, view, vertical) {
-          var width;
-          if (this.alpha = vertical) {
-            width = size.w - GUI.pad * 2;
-            SVG.attrs(g, {
-              width: width
-            });
-            return {
-              w: width,
-              h: height
-            };
-          } else {
-            return {
-              w: 0,
-              h: 0
-            };
-          }
-        }
+        height: height
       };
     });
   });
 
   Take(["GUI", "Input", "Registry", "SVG", "Tween"], function(arg, Input, Registry, SVG, Tween) {
-    var GUI, buttonHeight, buttonWidth;
+    var GUI;
     GUI = arg.ControlPanel;
-    buttonWidth = GUI.unit * 1.8;
-    buttonHeight = GUI.unit * 1.8;
     return Registry.set("Control", "pushButton", function(elm, props) {
-      var bg, bgFill, bgc, blueBG, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, scope, tickBG, toClicking, toHover, toNormal;
+      var bg, bgFill, bgc, blueBG, groupBg, height, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, tickBG, toClicking, toHover, toNormal;
       onHandlers = [];
       offHandlers = [];
+      radius = GUI.unit * 0.6;
+      height = radius * 2;
       bgFill = "hsl(220, 10%, 92%)";
-      labelFill = "hsl(227, 16%, 24%)";
+      labelFill = "hsl(220, 10%, 92%)";
       SVG.attrs(elm, {
         ui: true
       });
-      bg = SVG.create("rect", elm, {
+      groupBg = SVG.create("rect", elm, {
+        x: -GUI.groupPad,
+        y: -GUI.groupPad,
+        width: GUI.colInnerWidth + GUI.groupPad * 2,
+        height: radius * 2 + GUI.groupPad * 2,
+        rx: GUI.groupBorderRadius,
+        fill: props.group || "transparent"
+      });
+      bg = SVG.create("circle", elm, {
+        cx: radius,
+        cy: radius,
+        r: radius,
         strokeWidth: 2,
         fill: bgFill
       });
       label = SVG.create("text", elm, {
         textContent: props.name,
+        x: radius * 2 + 6,
+        y: radius + (props.fontSize || 16) * 0.36,
+        textAnchor: "start",
+        fontSize: props.fontSize || 16,
+        fontWeight: props.fontWeight || "normal",
+        fontStyle: props.fontStyle || "normal",
         fill: labelFill
       });
       bgc = blueBG = {
@@ -1345,6 +1302,7 @@
         moveOut: toNormal
       });
       return scope = {
+        height: height,
         attach: function(props) {
           if (props.on != null) {
             onHandlers.push(props.on);
@@ -1352,38 +1310,6 @@
           if (props.off != null) {
             return offHandlers.push(props.off);
           }
-        },
-        getPreferredSize: function() {
-          var size;
-          buttonWidth = Math.max(buttonWidth, label.getComputedTextLength() + GUI.pad * 8);
-          size = Math.max(buttonWidth, buttonHeight);
-          return {
-            w: size,
-            h: size
-          };
-        },
-        resize: function(space) {
-          var extra, size;
-          size = Math.max(buttonWidth, buttonHeight);
-          extra = {
-            x: space.w - size,
-            y: space.h - size
-          };
-          SVG.attrs(bg, {
-            x: GUI.pad + extra.x / 2,
-            y: GUI.pad + extra.y / 2,
-            width: size - GUI.pad * 2,
-            height: size - GUI.pad * 2,
-            rx: size / 2 - GUI.pad
-          });
-          SVG.attrs(label, {
-            x: space.w / 2,
-            y: space.h / 2 + 6
-          });
-          return {
-            w: size,
-            h: size
-          };
         },
         _highlight: function(enable) {
           if (enable) {
@@ -1411,39 +1337,60 @@
     GUI = arg.ControlPanel;
     idCounter = 0;
     return Registry.set("Control", "selector", function(elm, props) {
-      var activeButton, borderRect, buttonPreferredSizes, buttons, buttonsContainer, clip, clipRect, id, label, labelHeight, preferredSize, scope, setActive;
+      var activeButton, borderRect, buttons, buttonsContainer, clip, clipRect, groupBg, height, id, label, labelFill, labelHeight, labelY, scope, setActive;
       id = "Selector" + (idCounter++);
-      labelHeight = 0;
-      preferredSize = {
-        w: GUI.pad * 2,
-        h: GUI.unit
-      };
       buttons = [];
       activeButton = null;
-      buttonPreferredSizes = [];
+      if (props.name != null) {
+        labelY = (props.fontSize || 16) - 6;
+        labelHeight = (props.fontSize || 16) * 1.2;
+      } else {
+        labelHeight = 0;
+      }
+      height = labelHeight + GUI.unit;
+      labelFill = "hsl(220, 10%, 92%)";
+      groupBg = SVG.create("rect", elm, {
+        x: -GUI.groupPad,
+        y: -GUI.groupPad,
+        width: GUI.colInnerWidth + GUI.groupPad * 2,
+        height: height + GUI.groupPad * 2,
+        rx: GUI.groupBorderRadius,
+        fill: props.group || "transparent"
+      });
       clip = SVG.create("clipPath", SVG.defs, {
         id: id
       });
       clipRect = SVG.create("rect", clip, {
         rx: GUI.borderRadius,
-        fill: "#FFF"
+        fill: "#FFF",
+        x: 1,
+        y: 1,
+        width: GUI.colInnerWidth - 2,
+        height: GUI.unit - 2
       });
       if (props.name != null) {
         label = SVG.create("text", elm, {
           textContent: props.name,
-          fontSize: 16,
-          fill: "hsl(220, 10%, 92%)"
+          x: GUI.colInnerWidth / 2,
+          y: labelY,
+          fontSize: props.fontSize || 16,
+          fontWeight: props.fontWeight || "normal",
+          fontStyle: props.fontStyle || "normal",
+          fill: labelFill
         });
-        preferredSize.h += labelHeight = 22;
       }
       borderRect = SVG.create("rect", elm, {
         rx: GUI.borderRadius + 2,
-        fill: "rgb(34, 46, 89)"
+        fill: "rgb(34, 46, 89)",
+        x: -1,
+        y: labelHeight - 1,
+        width: GUI.colInnerWidth + 2,
+        height: GUI.unit + 2
       });
       buttonsContainer = Scope(SVG.create("g", elm, {
         clipPath: "url(#" + id + ")"
       }));
-      buttonsContainer.x = GUI.pad;
+      buttonsContainer.x = 0;
       buttonsContainer.y = labelHeight;
       setActive = function(unclick) {
         if (typeof activeButton === "function") {
@@ -1452,64 +1399,20 @@
         return activeButton = unclick;
       };
       return scope = {
+        height: height,
         button: function(props) {
-          var bps, buttonElm, buttonScope;
+          var button, buttonElm, buttonScope, buttonWidth, i, len, m;
           props.setActive = setActive;
           buttonElm = SVG.create("g", buttonsContainer.element);
           buttonScope = Scope(buttonElm, SelectorButton, props);
           buttons.push(buttonScope);
-          bps = buttonScope.getPreferredSize();
-          buttonPreferredSizes.push(bps);
-          preferredSize.w += bps.w;
+          buttonWidth = GUI.colInnerWidth / buttons.length;
+          for (i = m = 0, len = buttons.length; m < len; i = ++m) {
+            button = buttons[i];
+            button.resize(buttonWidth);
+            button.x = buttonWidth * i;
+          }
           return buttonScope;
-        },
-        getPreferredSize: function() {
-          var button, len, m, size, xOffset;
-          xOffset = 0;
-          for (m = 0, len = buttons.length; m < len; m++) {
-            button = buttons[m];
-            button.x = xOffset;
-            xOffset += button.resize(1, xOffset);
-          }
-          return size = {
-            w: xOffset,
-            h: GUI.unit + labelHeight
-          };
-        },
-        resize: function(arg1) {
-          var button, h, innerHeight, innerWidth, len, m, upscale, w, xOffset;
-          w = arg1.w, h = arg1.h;
-          innerWidth = w - GUI.pad * 2;
-          innerHeight = h - GUI.pad * 2;
-          upscale = w / preferredSize.w;
-          xOffset = 0;
-          for (m = 0, len = buttons.length; m < len; m++) {
-            button = buttons[m];
-            button.x = xOffset;
-            xOffset += button.resize(upscale, xOffset);
-          }
-          SVG.attrs(clipRect, {
-            x: 1,
-            y: GUI.pad + 1,
-            width: innerWidth - 2,
-            height: GUI.unit - GUI.pad * 2 - 2
-          });
-          SVG.attrs(borderRect, {
-            x: GUI.pad - 1,
-            y: GUI.pad + labelHeight - 1,
-            width: innerWidth + 2,
-            height: GUI.unit - GUI.pad * 2 + 2
-          });
-          if (label != null) {
-            SVG.attrs(label, {
-              x: w / 2,
-              y: 18
-            });
-          }
-          return {
-            w: w,
-            h: h
-          };
         }
       };
     });
@@ -1520,11 +1423,7 @@
     GUI = arg.ControlPanel;
     active = null;
     return Make("SelectorButton", function(elm, props) {
-      var attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, lightBG, orangeBG, preferredSize, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
-      preferredSize = {
-        w: null,
-        h: GUI.unit
-      };
+      var attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, lightBG, orangeBG, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
       handlers = [];
       isActive = false;
       highlighting = false;
@@ -1532,10 +1431,18 @@
       SVG.attrs(elm, {
         ui: true
       });
-      bg = SVG.create("rect", elm);
+      bg = SVG.create("rect", elm, {
+        x: 1,
+        y: GUI.pad + 1,
+        height: innerHeight - 2
+      });
       label = SVG.create("text", elm, {
+        y: (props.fontSize || 16) + GUI.unit / 5,
         textContent: props.name,
-        fill: labelFill
+        fill: labelFill,
+        fontSize: props.fontSize || 16,
+        fontWeight: props.fontWeight || "normal",
+        fontStyle: props.fontStyle || "normal"
       });
       curBG = whiteBG = {
         r: 233,
@@ -1663,25 +1570,13 @@
       });
       return scope = {
         click: attachClick,
-        getPreferredSize: function() {
-          preferredSize.w = Math.max(GUI.unit, label.getComputedTextLength() + GUI.pad * 8);
-          return preferredSize;
-        },
-        resize: function(upscale) {
-          var innerHeight, innerWidth;
-          innerWidth = Math.ceil(preferredSize.w * upscale);
-          innerHeight = preferredSize.h - GUI.pad * 2;
+        resize: function(width) {
           SVG.attrs(bg, {
-            x: 1,
-            y: GUI.pad + 1,
-            width: innerWidth - 2,
-            height: innerHeight - 2
+            width: width - 2
           });
-          SVG.attrs(label, {
-            x: innerWidth / 2,
-            y: innerHeight / 2 + 6 + GUI.pad
+          return SVG.attrs(label, {
+            x: width / 2
           });
-          return innerWidth;
         },
         _highlight: function(enable) {
           if (highlighting = enable) {
@@ -1703,38 +1598,55 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, handlers, label, labelFill, labelHeight, lightBG, orangeBG, range, scope, sliderShrink, startDrag, thumb, thumbBG, thumbBGFill, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
+      var bgc, blueBG, groupBg, handleDrag, handlers, height, label, labelFill, labelHeight, labelY, lightBG, orangeBG, range, scope, startDrag, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
       handlers = [];
       v = 0;
-      range = 0;
       startDrag = 0;
+      labelY = (props.fontSize || 16) - 4;
+      labelHeight = (props.fontSize || 16) * 1.2;
+      thumbSize = GUI.unit - 4;
+      height = labelHeight + thumbSize;
+      range = GUI.colInnerWidth - thumbSize;
       trackFill = "hsl(227, 45%, 24%)";
       thumbBGFill = "hsl(220, 10%, 92%)";
       labelFill = "hsl(220, 10%, 92%)";
-      sliderShrink = 6;
-      labelHeight = 0;
       SVG.attrs(elm, {
         ui: true
       });
+      groupBg = SVG.create("rect", elm, {
+        x: -GUI.groupPad,
+        y: -GUI.groupPad,
+        width: GUI.colInnerWidth + GUI.groupPad * 2,
+        height: height + GUI.groupPad * 2,
+        rx: GUI.groupBorderRadius,
+        fill: props.group || "transparent"
+      });
       track = TRS(SVG.create("rect", elm, {
-        x: GUI.pad,
+        y: labelHeight,
+        width: GUI.colInnerWidth,
+        height: thumbSize,
         strokeWidth: 2,
         fill: trackFill,
-        stroke: "hsl(227, 45%, 24%)"
+        stroke: "hsl(227, 45%, 24%)",
+        rx: thumbSize / 2
       }));
-      thumb = TRS(SVG.create("g", elm));
-      thumbBG = SVG.create("rect", thumb, {
-        x: GUI.pad,
+      thumb = TRS(SVG.create("circle", elm, {
+        cx: thumbSize / 2,
+        cy: labelHeight + thumbSize / 2,
         strokeWidth: 2,
-        fill: thumbBGFill
-      });
+        fill: thumbBGFill,
+        r: thumbSize / 2
+      }));
       if (props.name != null) {
         label = SVG.create("text", elm, {
-          textContent: props.name.toUpperCase(),
-          fontSize: 11,
+          textContent: props.name,
+          x: GUI.colInnerWidth / 2,
+          y: labelY,
+          fontSize: props.fontSize || 16,
+          fontWeight: props.fontWeight || "normal",
+          fontStyle: props.fontStyle || "normal",
           fill: labelFill
         });
-        labelHeight = 16;
       }
       bgc = blueBG = {
         r: 34,
@@ -1753,7 +1665,7 @@
       };
       tickBG = function(_bgc) {
         bgc = _bgc;
-        return SVG.attrs(thumbBG, {
+        return SVG.attrs(thumb, {
           stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
         });
       };
@@ -1822,6 +1734,7 @@
         click: toClicked
       });
       return scope = {
+        height: height,
         attach: function(props) {
           if (props.change != null) {
             handlers.push(props.change);
@@ -1830,48 +1743,12 @@
             return update(props.value);
           }
         },
-        getPreferredSize: function() {
-          var size;
-          return size = {
-            w: GUI.width,
-            h: GUI.unit - sliderShrink + labelHeight
-          };
-        },
-        resize: function(size) {
-          var height, thumbWidth;
-          height = Math.min(GUI.unit - sliderShrink, size.h);
-          thumbWidth = height + sliderShrink;
-          range = size.w - thumbWidth - GUI.pad * 2;
-          update();
-          SVG.attrs(track, {
-            y: GUI.pad + labelHeight,
-            width: size.w - GUI.pad * 2,
-            height: height - GUI.pad * 2,
-            rx: (height - GUI.pad * 2) / 2
-          });
-          SVG.attrs(thumbBG, {
-            y: GUI.pad + labelHeight,
-            width: thumbWidth,
-            height: height - GUI.pad * 2,
-            rx: (height - GUI.pad * 2) / 2
-          });
-          if (label != null) {
-            SVG.attrs(label, {
-              x: size.w / 2,
-              y: 14
-            });
-          }
-          return {
-            w: size.w,
-            h: height + labelHeight
-          };
-        },
         _highlight: function(enable) {
           if (enable) {
             SVG.attrs(track, {
               fill: "url(#DarkHighlightGradient)"
             });
-            SVG.attrs(thumbBG, {
+            SVG.attrs(thumb, {
               fill: "url(#LightHighlightGradient)"
             });
             return SVG.attrs(label, {
@@ -1881,7 +1758,7 @@
             SVG.attrs(track, {
               fill: trackFill
             });
-            SVG.attrs(thumbBG, {
+            SVG.attrs(thumb, {
               fill: thumbBGFill
             });
             return SVG.attrs(label, {
@@ -1913,37 +1790,25 @@
   });
 
   Take(["SVG", "SVGReady"], function(SVG) {
-    var GUI;
+    var GUI, colInnerWidth, colUnits, columnPadding, groupBorderRadius, groupPad, itemPad, unit;
     return Make("GUI", GUI = {
       elm: SVG.create("g", SVG.svg, {
         xGui: ""
       }),
       ControlPanel: {
-        width: 200,
-        unit: 42,
-        pad: 3,
         borderRadius: 4,
-        panelBorderRadius: 10,
-        panelMargin: 10,
-        bg: "hsl(220, 45%, 45%)"
-      }
-    });
-  });
-
-  Take(["ControlPanel", "Mode", "Nav", "Resize", "SVG", "SceneReady"], function(ControlPanel, Mode, Nav, Resize, SVG) {
-    return Resize(function() {
-      var cbr, rect;
-      return;
-      cbr = SVG.svg.getBoundingClientRect();
-      rect = {
-        x: 0,
-        y: 0,
-        w: cbr.width,
-        h: cbr.height
-      };
-      ControlPanel.claimSpace(rect);
-      if (Mode.nav) {
-        return Nav.assignSpace(rect);
+        groupBorderRadius: groupBorderRadius = 4,
+        panelMargin: 4,
+        itemPad: itemPad = 16,
+        groupPad: groupPad = itemPad * 2 / 5 + groupBorderRadius * 2 / 3,
+        unit: unit = 32,
+        colUnits: colUnits = 5,
+        columnPadding: columnPadding = groupPad * 2 + 8,
+        panelPadding: groupPad + 8,
+        colInnerWidth: colInnerWidth = unit * colUnits,
+        width: 200,
+        pad: 0,
+        colOuterWidth: colInnerWidth
       }
     });
   });
@@ -2198,12 +2063,16 @@
     });
   });
 
-  Take(["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, contentHeight, contentWidth, dist, distTo, initialRootRect, limit, pos, render, requestRender, scaleStartPosZ, tween, windowScale;
-    contentWidth = SVG.attr(SVG.svg, "width");
-    contentHeight = SVG.attr(SVG.svg, "height");
+  Take(["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween) {
+    var Nav, applyLimit, center, centerInverse, contentHeight, contentWidth, dist, distTo, initialRootRect, limit, parentRect, pos, render, requestRender, scaleStartPosZ, tween, windowScale;
+    contentWidth = +SVG.attr(SVG.svg, "width");
+    contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
       throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
+    }
+    if (Mode.embed) {
+      parentRect = ParentElement.getBoundingClientRect();
+      ParentElement.style.height = Math.round(contentHeight * parentRect.width / contentWidth) + "px";
     }
     initialRootRect = SVG.root.getBoundingClientRect();
     if (!(initialRootRect.width > 0 && initialRootRect.height > 0)) {
@@ -2243,11 +2112,24 @@
       return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + (windowScale * Math.pow(2, pos.z)) + ") translate(" + (pos.x - centerInverse.x) + "," + (pos.y - centerInverse.y) + ")");
     };
     Resize(function() {
-      var availableSpaceH, availableSpaceW, availableSpaceX, availableSpaceY, hFrac, panelClaimedH, panelClaimedW, panelInfo, totalSpace, wFrac;
-      totalSpace = SVG.svg.getBoundingClientRect();
-      panelInfo = ControlPanel.getAutosizePanelInfo();
+      var aspectAdjustedHeight, availableSpaceH, availableSpaceW, availableSpaceX, availableSpaceY, computedHeight, hFrac, panelClaimedH, panelClaimedW, panelInfo, totalSpace, wFrac;
+      panelInfo = ControlPanel.getPanelLayoutInfo();
       panelClaimedW = Math.abs(panelInfo.signedX) >= 0.9 ? panelInfo.w : 0;
       panelClaimedH = Math.abs(panelInfo.signedY) >= 0.9 ? panelInfo.h : 0;
+      if (panelClaimedW > 0 && panelClaimedH > 0) {
+        if (panelClaimedW < panelClaimedH) {
+          panelClaimedH = 0;
+        } else {
+          panelClaimedW = 0;
+        }
+      }
+      if (Mode.embed) {
+        parentRect = ParentElement.getBoundingClientRect();
+        aspectAdjustedHeight = panelClaimedH + contentHeight * (parentRect.width - panelClaimedW) / contentWidth;
+        computedHeight = Math.max(aspectAdjustedHeight, panelInfo.h);
+        ParentElement.style.height = Math.round(computedHeight) + "px";
+      }
+      totalSpace = SVG.svg.getBoundingClientRect();
       availableSpaceW = totalSpace.width - panelClaimedW;
       availableSpaceH = totalSpace.height - panelClaimedH;
       availableSpaceX = panelInfo.signedX < 0 ? panelInfo.w : 0;
@@ -2294,7 +2176,7 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, pos.z + p.z);
         }
-        scale = Math.pow(2, pos.z);
+        scale = windowScale * Math.pow(2, pos.z);
         if (p.x != null) {
           pos.x = applyLimit(limit.x, pos.x + p.x / scale);
         }
@@ -2311,7 +2193,7 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, p.z);
         }
-        scale = Math.pow(2, pos.z);
+        scale = windowScale * Math.pow(2, pos.z);
         if (p.x != null) {
           pos.x = applyLimit(limit.x, p.x / scale);
         }
@@ -2375,19 +2257,6 @@
         });
       }
     });
-  });
-
-  Take(["ControlPanel", "Mode", "ParentElement", "Resize", "SVG", "SVGReady"], function(ControlPanel, Mode, ParentElement, Resize, SVG) {
-    var ResizeEmbed, height, width;
-    width = SVG.attr(SVG.svg, "width");
-    height = SVG.attr(SVG.svg, "height");
-    if (Mode.embed) {
-      console.log("Implement ResizeEmbed!");
-      Make("ResizeEmbed", ResizeEmbed = function(consumedHeight) {});
-      return Resize(ResizeEmbed);
-    } else {
-      return Make("ResizeEmbed", ResizeEmbed = function() {});
-    }
   });
 
   Take(["Mode", "Nav"], function(Mode, Nav) {
@@ -3299,14 +3168,18 @@
         return Config[name];
       }
     };
-    return Make("Mode", Mode = {
+    Mode = {
       get: fetchAttribute,
       background: fetchAttribute("background"),
       controlPanel: fetchAttribute("controlPanel"),
       dev: ((ref = window.top.location.port) != null ? ref.length : void 0) >= 4,
       nav: fetchAttribute("nav"),
       embed: window !== window.top
-    });
+    };
+    if (Mode.embed) {
+      Mode.nav = false;
+    }
+    return Make("Mode", Mode);
   });
 
   (function() {
@@ -3366,12 +3239,12 @@
           }
           return instances[props.id];
         } else {
-          elm = ControlPanel.createElement(props != null ? props.parent : void 0);
+          elm = ControlPanel.createItemElement(props != null ? props.parent : void 0);
           scope = Scope(elm, defn, props);
           if (typeof scope.attach === "function") {
             scope.attach(props);
           }
-          ControlPanelLayout.addScope(scope);
+          ControlPanel.registerItemScope(scope);
           if ((props != null ? props.id : void 0) != null) {
             instances[props.id] = scope;
           }

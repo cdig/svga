@@ -3,9 +3,6 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
   
   Make "SelectorButton", (elm, props)->
     
-    preferredSize =
-      w:null
-      h:GUI.unit
     handlers = []
     isActive = false
     highlighting = false
@@ -16,11 +13,18 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     SVG.attrs elm, ui: true
     
     
-    bg = SVG.create "rect", elm
+    bg = SVG.create "rect", elm,
+      x: 1
+      y: GUI.pad + 1
+      height: innerHeight - 2
     
     label = SVG.create "text", elm,
+      y: (props.fontSize or 16) + GUI.unit/5
       textContent: props.name
       fill: labelFill
+      fontSize: props.fontSize or 16
+      fontWeight: props.fontWeight or "normal"
+      fontStyle: props.fontStyle or "normal"
     
     
     # Setup the bg stroke color for tweening
@@ -74,26 +78,9 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     return scope =
       click: attachClick
       
-      getPreferredSize: ()->
-        # Recompute the label length on every resize, because the font may have changed
-        preferredSize.w = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-        preferredSize
-      
-      resize: (upscale)->
-        innerWidth = Math.ceil preferredSize.w * upscale
-        innerHeight = preferredSize.h - GUI.pad*2
-        
-        SVG.attrs bg,
-          x: 1
-          y: GUI.pad + 1
-          width: innerWidth - 2
-          height: innerHeight - 2
-        
-        SVG.attrs label,
-          x: innerWidth/2
-          y: innerHeight/2 + 6 + GUI.pad
-        
-        return innerWidth
+      resize: (width)->
+        SVG.attrs bg, width: width - 2
+        SVG.attrs label, x: width/2
       
       _highlight: (enable)->
         if highlighting = enable

@@ -13,14 +13,14 @@ Take ["ControlPanel", "ControlPanelLayout", "Registry", "Scope", "ControlReady"]
         
       # Create a new control
       else
-        elm = ControlPanel.createElement props?.parent
+        elm = ControlPanel.createItemElement props?.parent
         scope = Scope elm, defn, props
         
         # Controls should not call attach themselves.
         # We'll always do the attaching, for consistency sake.
         scope.attach? props
         
-        ControlPanelLayout.addScope scope
+        ControlPanel.registerItemScope scope
         instances[props.id] = scope if props?.id?
         return scope
   

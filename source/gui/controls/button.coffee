@@ -10,11 +10,19 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
     
+    # Group background element
+    groupBg = SVG.create "rect", elm,
+      x: -GUI.groupPad
+      y: -GUI.groupPad
+      width: GUI.colInnerWidth + GUI.groupPad*2
+      height: GUI.unit + GUI.groupPad*2
+      rx: GUI.groupBorderRadius
+      fill: props.group or "transparent"
     
     # Button background element
     bg = SVG.create "rect", elm,
-      x: GUI.pad
-      y: GUI.pad
+      width: GUI.colInnerWidth
+      height: GUI.unit
       rx: GUI.borderRadius
       strokeWidth: 2
       fill: bgFill
@@ -22,8 +30,13 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     # Button text label
     label = SVG.create "text", elm,
       textContent: props.name
+      x: GUI.colInnerWidth / 2
+      y: (props.fontSize or 16) + GUI.unit/5
+      width: GUI.colInnerWidth
+      fontSize: props.fontSize or 16
+      fontWeight: props.fontWeight or "normal"
+      fontStyle: props.fontStyle or "normal"
       fill: labelFill
-        
     
     # Setup the bg stroke color for tweening
     bgc = blueBG = r:34, g:46, b:89
@@ -36,6 +49,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     
     
     # Input event handling
+    blocked = false
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
@@ -48,6 +62,11 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       moveOut: toNormal
       dragOut: toNormal
       click: ()->
+        # iOS fires 2 click events in rapid succession, so we debounce it here
+        return if blocked
+        blocked = true
+        setTimeout (()-> blocked = false), 100
+        
         toClicked()
         handler() for handler in handlers
         undefined
@@ -55,25 +74,10 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
+      height: GUI.unit
+      
       attach: (props)->
         handlers.push props.click if props.click?
-      
-      getPreferredSize: ()->
-        # Recompute the label length on every resize, because the font may have changed
-        buttonWidth = Math.max GUI.unit, label.getComputedTextLength() + GUI.pad*8
-        return size =
-          w:buttonWidth
-          h:GUI.unit
-      
-      resize: (size)->
-        height = Math.min GUI.unit, size.h
-        SVG.attrs bg,
-          width: size.w - GUI.pad*2
-          height: height - GUI.pad*2
-        SVG.attrs label,
-          x: size.w/2
-          y: height/2 + 6
-        return w:size.w, h:height
       
       _highlight: (enable)->
         if enable

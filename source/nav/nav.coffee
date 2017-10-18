@@ -1,10 +1,20 @@
-Take ["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, RAF, Resize, SVG, Tween)->
-
+Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween)->
+  
+  # Turn this on if we need to debug resizing
+  # debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F04", strokeWidth: 6
+  
   # Our SVGs don't have a viewbox, which means they render at 1:1 scale with surrounding content,
   # and are cropped when resized. We use their specified width and height as the desired bounding rect for the content.
-  contentWidth = SVG.attr SVG.svg, "width"
-  contentHeight = SVG.attr SVG.svg, "height"
+  contentWidth = +SVG.attr SVG.svg, "width"
+  contentHeight = +SVG.attr SVG.svg, "height"
   throw new Error "This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash." unless contentWidth? and contentHeight?
+  
+  # Right off the bat, set our height to something reasonable.
+  # This will help the control panel assume the correct size.
+  if Mode.embed
+    parentRect = ParentElement.getBoundingClientRect()
+    ParentElement.style.height = Math.round(contentHeight * parentRect.width / contentWidth) + "px"
+  
   
   initialRootRect = SVG.root.getBoundingClientRect()
   return unless initialRootRect.width > 0 and initialRootRect.height > 0 # This avoids a divide by zero error when the SVG is empty
@@ -31,19 +41,29 @@ Take ["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (C
   
   # TODO: We need to find a way to delay this until after the ControlPanel is resized
   # Otherwise, we get inconsistency when near the vertical/horizontal crossover point
-  # As a temporary fix, we call resize() from getAutosizePanelInfo
+  # As a temporary fix, we call resize() from getPanelLayoutInfo
   Resize ()->
+    
+    # Figure out whether to leave room for the panel, or just scale to fit the full window.
+    # (Eg: If the panel is in the bottom right corner, then we'll make room for it on the side when vertical, bottom when horizontal.)
+    # Note: We look for values greater than 0.9, because there are a lot of modules that used 0.9 (instead of 1) as a way to get rounded corners in v3.
+    panelInfo = ControlPanel.getPanelLayoutInfo()
+    panelClaimedW = if Math.abs(panelInfo.signedX) >= 0.9 then panelInfo.w else 0
+    panelClaimedH = if Math.abs(panelInfo.signedY) >= 0.9 then panelInfo.h else 0
+    
+    # If we're in a corner, only make room on whichever edge requires less space
+    if panelClaimedW > 0 and panelClaimedH > 0
+      if panelClaimedW < panelClaimedH then panelClaimedH = 0 else panelClaimedW = 0
+    
+    # If we're embedded into a cd-module, resize our embedding object so it matches our desired aspect, plus room for the panel
+    if Mode.embed
+      parentRect = ParentElement.getBoundingClientRect()
+      aspectAdjustedHeight = panelClaimedH + contentHeight * (parentRect.width - panelClaimedW) / contentWidth
+      computedHeight = Math.max aspectAdjustedHeight, panelInfo.h
+      ParentElement.style.height = Math.round(computedHeight) + "px"
     
     # We need to use getBoundingClientRect() on our full-screen <svg>, because window.innerWidth/Height are sometimes 0 or wrong, depending on where we are in the load/init process.
     totalSpace = SVG.svg.getBoundingClientRect()
-    
-    # Figure out whether to leave room for the panel, or just scale to fit the full window.
-    # (Note: Only one of panelInfo.w and panelInfo.h will be non-zero, based on whether we're in vertical or horizontal mode.)
-    # (Eg: If the panel is in the bottom right corner, then we'll make room for it on the side when vertical, bottom when horizontal.)
-    # Note: We look for values greater than 0.9, because there are a lot of modules that used 0.9 (instead of 1) as a way to get rounded corners in v3.
-    panelInfo = ControlPanel.getAutosizePanelInfo()
-    panelClaimedW = if Math.abs(panelInfo.signedX) >= 0.9 then panelInfo.w else 0
-    panelClaimedH = if Math.abs(panelInfo.signedY) >= 0.9 then panelInfo.h else 0
     
     # Figure out how much space is available for our main graphic, and whether it should be shifted away from the top/left to make room for the panel
     availableSpaceW = totalSpace.width - panelClaimedW
@@ -65,10 +85,16 @@ Take ["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (C
     centerInverse.y = contentHeight/2
     
     render()
-  
+    
+    # Turn this on if we need to debug resizing
+    # SVG.attrs debugBox,
+    #   width: contentWidth
+    #   height: contentHeight
+      
+    
   
   # BAIL IF WE'RE NOT NAV-ING
-  if not Mode.nav
+  unless Mode.nav
     Make "Nav", false
     return
   
@@ -91,7 +117,7 @@ Take ["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (C
     by: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, pos.z + p.z if p.z?
-      scale = Math.pow 2, pos.z
+      scale = windowScale * Math.pow 2, pos.z
       pos.x = applyLimit limit.x, pos.x + p.x / scale if p.x?
       pos.y = applyLimit limit.y, pos.y + p.y / scale if p.y?
       requestRender()
@@ -99,7 +125,7 @@ Take ["ControlPanel", "Mode", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (C
     at: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, p.z if p.z?
-      scale = Math.pow 2, pos.z
+      scale = windowScale * Math.pow 2, pos.z
       pos.x = applyLimit limit.x, p.x / scale if p.x?
       pos.y = applyLimit limit.y, p.y / scale if p.y?
       requestRender()

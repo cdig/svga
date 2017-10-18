@@ -14,10 +14,15 @@ Take ["Config", "ParentElement"], (Config, ParentElement)->
     else
       Config[name]
   
-  Make "Mode", Mode =
+  Mode =
     get: fetchAttribute
     background: fetchAttribute "background"
     controlPanel: fetchAttribute "controlPanel"
     dev: window.top.location.port?.length >= 4
     nav: fetchAttribute "nav"
     embed: window isnt window.top
+  
+  # We always disallow nav in embed mode
+  Mode.nav = false if Mode.embed
+  
+  Make "Mode", Mode

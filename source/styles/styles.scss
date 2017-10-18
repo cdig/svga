@@ -7,10 +7,12 @@ html, body, #svga {
   overflow: hidden;
 }
 
+// Remember: Keep this in sync with the svga-hud styles in cd-module
 [svga-hud] {
   position: absolute;
   padding: .2em;
   font-family: sans-serif;
+  font-size: 10pt;
   overflow: visible;
   user-select: none;
   cursor: default;

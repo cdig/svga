@@ -7,16 +7,16 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     isActive = false
     highlighting = false
     labelFill = "hsl(227, 16%, 24%)"
-
+    strokeWidth = 2
     
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
     
     
     bg = SVG.create "rect", elm,
-      x: 1
-      y: GUI.pad + 1
-      height: innerHeight - 2
+      x: strokeWidth/2
+      y: strokeWidth/2
+      height: GUI.unit - strokeWidth
     
     label = SVG.create "text", elm,
       y: (props.fontSize or 16) + GUI.unit/5
@@ -34,11 +34,8 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     blueBG = r:183, g:213, b:255
     tickBG = (_curBG)->
       curBG = _curBG
-      if highlighting
-        if isActive
-          SVG.attrs bg, fill: "url(#MidHighlightGradient)"
-        else
-          SVG.attrs bg, fill: "url(#LightHighlightGradient)"
+      if highlighting and isActive
+        SVG.attrs bg, fill: "url(#MidHighlightGradient)"
       else
         SVG.attrs bg, fill: "rgb(#{curBG.r|0},#{curBG.g|0},#{curBG.b|0})"
     tickBG whiteBG
@@ -79,7 +76,7 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       click: attachClick
       
       resize: (width)->
-        SVG.attrs bg, width: width - 2
+        SVG.attrs bg, width: width - strokeWidth
         SVG.attrs label, x: width/2
       
       _highlight: (enable)->

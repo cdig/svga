@@ -29,7 +29,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
   windowScale = 1
   scaleStartPosZ = 0
   tween = null
-  
+  totalSpace = null
   
   render = ()->
     # First, we move SVG.root so the top left corner is in the middle of our available space.
@@ -39,31 +39,16 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{windowScale * Math.pow 2, pos.z}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
   
   
-  # TODO: We need to find a way to delay this until after the ControlPanel is resized
-  # Otherwise, we get inconsistency when near the vertical/horizontal crossover point
-  # As a temporary fix, we call resize() from getPanelLayoutInfo
-  Resize ()->
-    
+  computeResizeInfo = (panelInfo)->
     # Figure out whether to leave room for the panel, or just scale to fit the full window.
     # (Eg: If the panel is in the bottom right corner, then we'll make room for it on the side when vertical, bottom when horizontal.)
     # Note: We look for values greater than 0.9, because there are a lot of modules that used 0.9 (instead of 1) as a way to get rounded corners in v3.
-    panelInfo = ControlPanel.getPanelLayoutInfo()
     panelClaimedW = if Math.abs(panelInfo.signedX) >= 0.9 then panelInfo.w else 0
     panelClaimedH = if Math.abs(panelInfo.signedY) >= 0.9 then panelInfo.h else 0
     
     # If we're in a corner, only make room on whichever edge requires less space
     if panelClaimedW > 0 and panelClaimedH > 0
       if panelClaimedW < panelClaimedH then panelClaimedH = 0 else panelClaimedW = 0
-    
-    # If we're embedded into a cd-module, resize our embedding object so it matches our desired aspect, plus room for the panel
-    if Mode.embed
-      parentRect = ParentElement.getBoundingClientRect()
-      aspectAdjustedHeight = panelClaimedH + contentHeight * (parentRect.width - panelClaimedW) / contentWidth
-      computedHeight = Math.max aspectAdjustedHeight, panelInfo.h
-      ParentElement.style.height = Math.round(computedHeight) + "px"
-    
-    # We need to use getBoundingClientRect() on our full-screen <svg>, because window.innerWidth/Height are sometimes 0 or wrong, depending on where we are in the load/init process.
-    totalSpace = SVG.svg.getBoundingClientRect()
     
     # Figure out how much space is available for our main graphic, and whether it should be shifted away from the top/left to make room for the panel
     availableSpaceW = totalSpace.width - panelClaimedW
@@ -76,11 +61,54 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     hFrac = availableSpaceH / contentHeight
     windowScale = Math.min wFrac, hFrac
     
-    # Before scaling, we need to move the top left corner of the graphic to the center of the available space
-    center.x = availableSpaceX + availableSpaceW/2
-    center.y = availableSpaceY + availableSpaceH/2
+    return resizeInfo =
+      panelClaimedW: panelClaimedW
+      panelClaimedH: panelClaimedH
+      windowScale: windowScale
+      availableSpaceW: availableSpaceW
+      availableSpaceH: availableSpaceH
+      availableSpaceX: availableSpaceX
+      availableSpaceY: availableSpaceY
+  
+  
+  # This function takes two panel layouts and figures out which one leaves more space for our content.
+  horizontalIsBetter = (horizontalPanelInfo, verticalPanelInfo)->
+    horizontalResizeInfo = computeResizeInfo horizontalPanelInfo
+    verticalResizeInfo = computeResizeInfo verticalPanelInfo
+    if Mode.embed
+      # We'd prefer the panel to be on the side, if there's room for it, since putting it on the bottom risks expanding our <object> height to be bigger than the window.
+      return verticalResizeInfo.windowScale < 1 and horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale
+    else
+      return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale
+  
+  
+  Resize ()->
     
-    # After scaling, we need to move the top left corner of the graphic up and left, so the center of the graphic is aligned with the center of the consumed space
+    # We need to use getBoundingClientRect() on our full-screen <svg>, because window.innerWidth/Height are sometimes 0 or wrong, depending on where we are in the load/init process.
+    totalSpace = SVG.svg.getBoundingClientRect()
+    
+    # Force the panel to do a layout.
+    # We pass in a function that takes 2 panel orientations, and figures out which is better.
+    panelInfo = ControlPanel.getPanelLayoutInfo horizontalIsBetter
+    
+    # Based on the panel info, compute what size our content should be.
+    resizeInfo = computeResizeInfo panelInfo
+    
+    # If we're embedded into a cd-module, resize our embedding object so it matches our desired aspect, plus room for the panel
+    if Mode.embed
+      parentRect = ParentElement.getBoundingClientRect()
+      aspectAdjustedHeight = resizeInfo.panelClaimedH + contentHeight * (parentRect.width - resizeInfo.panelClaimedW) / contentWidth
+      computedHeight = Math.max aspectAdjustedHeight, panelInfo.h
+      ParentElement.style.height = Math.round(computedHeight) + "px"
+    
+    # Save our window scale for future nav actions
+    windowScale = resizeInfo.windowScale
+    
+    # Before we do any scale operations, we need to move the top left corner of the graphic to the center of the available space
+    center.x = resizeInfo.availableSpaceX + resizeInfo.availableSpaceW/2
+    center.y = resizeInfo.availableSpaceY + resizeInfo.availableSpaceH/2
+    
+    # After we do any scale operations, we need to move the top left corner of the graphic up and left, so the center of the graphic is aligned with the center of the consumed space
     centerInverse.x = contentWidth/2
     centerInverse.y = contentHeight/2
     

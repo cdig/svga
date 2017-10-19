@@ -802,18 +802,11 @@
   });
 
   Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope", "TRS"], function(ControlPanelLayout, Gradient, GUI, Mode, SVG, Scope, TRS) {
-    var CP, ControlPanel, columnsElm, config, itemScopes, panelBg, panelElm, panelSize, resize, showing, signedXPosition, signedYPosition, vertical;
+    var CP, ControlPanel, columnsElm, config, groups, makePanelInfo, panelBg, panelElm, showing;
     CP = GUI.ControlPanel;
     config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
     showing = false;
-    vertical = true;
-    signedXPosition = 0;
-    signedYPosition = 0;
-    panelSize = {
-      w: 0,
-      h: 0
-    };
-    itemScopes = [];
+    groups = [];
     panelElm = SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 16,
@@ -821,7 +814,7 @@
     });
     panelBg = SVG.create("rect", panelElm, {
       xPanelBg: "",
-      rx: 8,
+      rx: CP.panelBorderRadius,
       fill: "hsl(220, 45%, 45%)"
     });
     columnsElm = SVG.create("g", panelElm, {
@@ -829,62 +822,15 @@
       transform: "translate(" + CP.panelPadding + "," + CP.panelPadding + ")"
     });
     Take("SceneReady", function() {
-      if (showing) {
-        return resize();
-      } else {
+      if (!showing) {
         return GUI.elm.removeChild(panelElm);
       }
     });
-    ControlPanel = Scope(panelElm, function() {
-      return {
-        createItemElement: function(parent, group) {
-          var elm;
-          if (parent == null) {
-            parent = null;
-          }
-          if (group == null) {
-            group = null;
-          }
-          showing = true;
-          return elm = SVG.create("g", parent || columnsElm);
-        },
-        registerItemScope: function(scope) {
-          return itemScopes.push(scope);
-        },
-        getPanelLayoutInfo: function() {
-          resize();
-          return {
-            vertical: vertical,
-            signedX: signedXPosition,
-            signedY: signedYPosition,
-            w: panelSize.w + CP.panelMargin * 2,
-            h: panelSize.h + CP.panelMargin * 2
-          };
-        }
-      };
-    });
-    resize = function() {
-      var marginedViewHeight, marginedViewWidth, normalizedX, normalizedY, outerBounds, view;
-      outerBounds = SVG.svg.getBoundingClientRect();
-      view = {
-        w: outerBounds.width - CP.panelMargin * 2,
-        h: outerBounds.height - CP.panelMargin * 2
-      };
-      vertical = config.vertical != null ? isNaN(parseInt(config.vertical)) ? config.vertical : view.w >= config.vertical : Mode.embed ? view.w >= 800 : view.w >= view.h * 1.3;
-      panelSize = vertical ? ControlPanelLayout.vertical(itemScopes, view, columnsElm) : ControlPanelLayout.horizontal(itemScopes, view, columnsElm);
-      SVG.attrs(panelBg, {
-        width: panelSize.w,
-        height: panelSize.h
-      });
-      if (vertical && (panelSize.w > view.w / 2 || panelSize.h > view.h)) {
-        ControlPanel.scale = Math.min(view.w / panelSize.w / 2, view.h / panelSize.h);
-      } else if (!vertical && (panelSize.h > view.h / 2 || panelSize.w > view.w)) {
-        ControlPanel.scale = Math.min(view.w / panelSize.w, view.h / panelSize.h / 2);
-      } else {
-        ControlPanel.scale = 1;
-      }
-      panelSize.w *= ControlPanel.scale;
-      panelSize.h *= ControlPanel.scale;
+    makePanelInfo = function(vertical, panelSize, view) {
+      var controlPanelScale, controlPanelX, controlPanelY, marginedViewHeight, marginedViewWidth, normalizedX, normalizedY, panelInfo, scaledPanelH, scaledPanelW, signedXPosition, signedYPosition;
+      controlPanelScale = vertical && (panelSize.w > view.w / 2 || panelSize.h > view.h) ? Math.max(0.7, Math.min(view.w / panelSize.w / 2, view.h / panelSize.h)) : !vertical && (panelSize.h > view.h / 2 || panelSize.w > view.w) ? Math.max(0.7, Math.min(view.w / panelSize.w, view.h / panelSize.h / 2)) : 1;
+      scaledPanelW = panelSize.w * controlPanelScale;
+      scaledPanelH = panelSize.h * controlPanelScale;
       if ((config.x != null) || (config.y != null)) {
         signedXPosition = config.x || 0;
         signedYPosition = config.y || 0;
@@ -895,14 +841,70 @@
         signedXPosition = 0;
         signedYPosition = 1;
       }
-      marginedViewWidth = view.w - panelSize.w;
-      marginedViewHeight = view.h - panelSize.h;
+      marginedViewWidth = view.w - scaledPanelW;
+      marginedViewHeight = view.h - scaledPanelH;
       normalizedX = signedXPosition / 2 + 0.5;
       normalizedY = signedYPosition / 2 + 0.5;
-      ControlPanel.x = CP.panelMargin + normalizedX * marginedViewWidth | 0;
-      return ControlPanel.y = CP.panelMargin + normalizedY * marginedViewHeight | 0;
+      controlPanelX = CP.panelMargin + normalizedX * marginedViewWidth | 0;
+      controlPanelY = CP.panelMargin + normalizedY * marginedViewHeight | 0;
+      return panelInfo = {
+        controlPanelScale: controlPanelScale,
+        controlPanelX: controlPanelX,
+        controlPanelY: controlPanelY,
+        vertical: vertical,
+        signedX: signedXPosition,
+        signedY: signedYPosition,
+        w: scaledPanelW + CP.panelMargin * 2,
+        h: scaledPanelH + CP.panelMargin * 2
+      };
     };
-    return Make("ControlPanel", ControlPanel);
+    return Make("ControlPanel", ControlPanel = Scope(panelElm, function() {
+      return {
+        registerGroup: function(group) {
+          return groups.push(group);
+        },
+        createItemElement: function(parent) {
+          showing = true;
+          return SVG.create("g", parent);
+        },
+        getPanelLayoutInfo: function(horizontalIsBetter) {
+          var horizontalPanelInfo, horizontalPanelSize, outerBounds, panelInfo, panelSize, vertical, verticalPanelInfo, verticalPanelSize, view;
+          outerBounds = SVG.svg.getBoundingClientRect();
+          view = {
+            w: outerBounds.width - CP.panelMargin * 2,
+            h: outerBounds.height - CP.panelMargin * 2
+          };
+          if (config.vertical === true) {
+            vertical = true;
+            panelSize = ControlPanelLayout.vertical(groups, view, columnsElm);
+          } else if (config.vertical === false) {
+            vertical = false;
+            panelSize = ControlPanelLayout.horizontal(groups, view, columnsElm);
+          } else {
+            horizontalPanelSize = ControlPanelLayout.horizontal(groups, view, columnsElm);
+            verticalPanelSize = ControlPanelLayout.vertical(groups, view, columnsElm);
+            horizontalPanelInfo = makePanelInfo(false, horizontalPanelSize, view);
+            verticalPanelInfo = makePanelInfo(true, verticalPanelSize, view);
+            if (horizontalIsBetter(horizontalPanelInfo, verticalPanelInfo)) {
+              vertical = false;
+              panelSize = ControlPanelLayout.horizontal(groups, view, columnsElm);
+            } else {
+              vertical = true;
+              panelSize = verticalPanelSize;
+            }
+          }
+          panelInfo = makePanelInfo(vertical, panelSize, view);
+          SVG.attrs(panelBg, {
+            width: panelSize.w,
+            height: panelSize.h
+          });
+          ControlPanel.scale = panelInfo.controlPanelScale;
+          ControlPanel.x = panelInfo.controlPanelX;
+          ControlPanel.y = panelInfo.controlPanelY;
+          return panelInfo;
+        }
+      };
+    }));
   });
 
   Take(["GUI", "Mode", "SVG"], function(arg, Mode, SVG) {
@@ -911,45 +913,47 @@
     columns = [];
     getColumn = function(index, panelElm) {
       return columns[index] != null ? columns[index] : columns[index] = {
-        x: index * (GUI.colInnerWidth + GUI.columnPadding),
-        itemScopes: [],
+        x: index * (GUI.colInnerWidth + GUI.groupPad * 2 + GUI.columnMargin),
+        groups: [],
         height: 0,
+        visible: false,
         element: SVG.create("g", panelElm)
       };
     };
-    performLayout = function(itemScopes, panelElm, desiredColumnHeight) {
-      var c, colIndex, column, i, len, len1, len2, len3, m, n, nVisibleColumns, panelHeight, panelWidth, q, scope, tallestColumnHeight, u, y;
+    performLayout = function(groups, panelElm, desiredColumnHeight) {
+      var column, currentColumnIndex, group, len, len1, len2, len3, m, n, panelHeight, panelWidth, q, tallestColumnHeight, u, y;
       for (m = 0, len = columns.length; m < len; m++) {
         column = columns[m];
-        column.itemScopes = [];
+        column.groups = [];
         column.height = 0;
+        column.visible = false;
       }
-      colIndex = 0;
-      column = getColumn(colIndex, panelElm);
-      for (i = n = 0, len1 = itemScopes.length; n < len1; i = ++n) {
-        scope = itemScopes[i];
-        if (column.height > desiredColumnHeight && column.itemScopes.length > 0) {
-          column = getColumn(++colIndex, panelElm);
+      currentColumnIndex = 0;
+      column = getColumn(currentColumnIndex, panelElm);
+      for (n = 0, len1 = groups.length; n < len1; n++) {
+        group = groups[n];
+        if (column.height > desiredColumnHeight) {
+          column = getColumn(++currentColumnIndex, panelElm);
         }
-        column.itemScopes.push(scope);
-        SVG.append(column.element, scope.element);
-        scope.y = column.height;
-        column.height += scope.height + GUI.itemPad;
+        if (column.groups.length > 0) {
+          column.height += GUI.groupMargin;
+        }
+        column.groups.push(group);
+        SVG.append(column.element, group.scope.element);
+        group.scope.y = column.height;
+        column.height += group.height;
+        column.visible = true;
       }
       tallestColumnHeight = 0;
-      nVisibleColumns = 0;
-      for (c = q = 0, len2 = columns.length; q < len2; c = ++q) {
-        column = columns[c];
-        if (!(column.itemScopes.length > 0)) {
-          continue;
+      for (q = 0, len2 = columns.length; q < len2; q++) {
+        column = columns[q];
+        if (column.visible) {
+          tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
         }
-        nVisibleColumns++;
-        column.height -= GUI.itemPad;
-        tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
       }
       for (u = 0, len3 = columns.length; u < len3; u++) {
         column = columns[u];
-        if (!(column.itemScopes.length > 0)) {
+        if (!column.visible) {
           continue;
         }
         y = tallestColumnHeight / 2 - column.height / 2;
@@ -957,62 +961,69 @@
           transform: "translate(" + column.x + "," + y + ")"
         });
       }
-      panelWidth = GUI.panelPadding * 2 + nVisibleColumns * GUI.colInnerWidth + (nVisibleColumns - 1) * GUI.columnPadding;
-      panelHeight = tallestColumnHeight + GUI.panelPadding * 2;
+      panelWidth = GUI.panelPadding * 2 + (currentColumnIndex + 1) * (GUI.colInnerWidth + GUI.groupPad * 2) + currentColumnIndex * GUI.columnMargin;
+      panelHeight = GUI.panelPadding * 2 + tallestColumnHeight;
       return {
         w: panelWidth,
         h: panelHeight
       };
     };
     Make("ControlPanelLayout", {
-      vertical: function(itemScopes, availableSpace, panelElm) {
-        var desiredColumnHeight, len, m, nColumns, scope, totalHeight;
-        if (!(availableSpace.h > 0 && itemScopes.length > 0)) {
+      vertical: function(groups, availableSpace, panelElm) {
+        var availableSpaceInsidePanel, desiredColumnHeight, group, len, m, nColumns, totalHeight;
+        if (!(availableSpace.h > 0 && groups.length > 0)) {
           return {
             w: 0,
             h: 0
           };
         }
-        totalHeight = GUI.panelPadding * 2;
-        for (m = 0, len = itemScopes.length; m < len; m++) {
-          scope = itemScopes[m];
-          totalHeight += scope.height;
+        totalHeight = 0;
+        for (m = 0, len = groups.length; m < len; m++) {
+          group = groups[m];
+          totalHeight += group.height;
         }
-        totalHeight += GUI.itemPad * (itemScopes.length - 1);
-        nColumns = Mode.embed ? 1 : Math.ceil(totalHeight / availableSpace.h);
-        desiredColumnHeight = Math.ceil(totalHeight / nColumns);
-        return performLayout(itemScopes, panelElm, desiredColumnHeight);
+        totalHeight += GUI.groupMargin * (groups.length - 1);
+        availableSpaceInsidePanel = availableSpace.h - GUI.panelPadding * 2;
+        nColumns = Mode.embed ? 1 : Math.ceil(totalHeight / availableSpaceInsidePanel);
+        desiredColumnHeight = Math.max(GUI.unit, Math.floor(totalHeight / nColumns));
+        return performLayout(groups, panelElm, desiredColumnHeight);
       },
-      horizontal: function(itemScopes, availableSpace, panelElm) {
-        var desiredColumnHeight, len, m, scope;
-        if (!(availableSpace.w > 0 && itemScopes.length > 0)) {
+      horizontal: function(groups, availableSpace, panelElm) {
+        var desiredColumnHeight, group, len, m;
+        if (!(availableSpace.w > 0 && groups.length > 0)) {
           return {
             w: 0,
             h: 0
           };
         }
         desiredColumnHeight = 0;
-        for (m = 0, len = itemScopes.length; m < len; m++) {
-          scope = itemScopes[m];
-          desiredColumnHeight = Math.max(desiredColumnHeight, scope.height);
+        for (m = 0, len = groups.length; m < len; m++) {
+          group = groups[m];
+          desiredColumnHeight = Math.max(desiredColumnHeight, group.height);
         }
-        while (!checkPanelSize(desiredColumnHeight, itemScopes, availableSpace)) {
+        while (!checkPanelSize(desiredColumnHeight, groups, availableSpace)) {
           desiredColumnHeight += GUI.unit / 2;
         }
-        return performLayout(itemScopes, panelElm, desiredColumnHeight);
+        return performLayout(groups, panelElm, desiredColumnHeight);
       }
     });
-    return checkPanelSize = function(columnHeight, itemScopes, availableSpace) {
-      var consumedHeight, consumedWidth, len, m, scope;
+    return checkPanelSize = function(columnHeight, groups, availableSpace) {
+      var consumedHeight, consumedWidth, group, len, m, nthGroupInColumn;
       consumedWidth = GUI.colInnerWidth + GUI.panelPadding * 2;
       consumedHeight = GUI.panelPadding * 2;
-      for (m = 0, len = itemScopes.length; m < len; m++) {
-        scope = itemScopes[m];
+      nthGroupInColumn = 0;
+      for (m = 0, len = groups.length; m < len; m++) {
+        group = groups[m];
         if (consumedHeight > columnHeight) {
-          consumedWidth += GUI.colInnerWidth + GUI.columnPadding;
+          consumedWidth += GUI.colInnerWidth + GUI.columnMargin;
           consumedHeight = GUI.panelPadding * 2;
+          nthGroupInColumn = 0;
         }
-        consumedHeight += scope.height + GUI.itemPad;
+        if (nthGroupInColumn > 0) {
+          consumedHeight += GUI.groupMargin;
+        }
+        consumedHeight += group.height;
+        nthGroupInColumn++;
       }
       return consumedWidth < availableSpace.w || columnHeight > availableSpace.h / 2;
     };
@@ -1022,26 +1033,21 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "button", function(elm, props) {
-      var bg, bgFill, bgc, blocked, blueBG, groupBg, handlers, label, labelFill, lightBG, orangeBG, scope, tickBG, toClicked, toClicking, toHover, toNormal;
+      var bg, bgFill, bgc, blocked, blueBG, handlers, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
       handlers = [];
       bgFill = "hsl(220, 10%, 92%)";
       labelFill = "hsl(227, 16%, 24%)";
+      strokeWidth = 2;
       SVG.attrs(elm, {
         ui: true
       });
-      groupBg = SVG.create("rect", elm, {
-        x: -GUI.groupPad,
-        y: -GUI.groupPad,
-        width: GUI.colInnerWidth + GUI.groupPad * 2,
-        height: GUI.unit + GUI.groupPad * 2,
-        rx: GUI.groupBorderRadius,
-        fill: props.group || "transparent"
-      });
       bg = SVG.create("rect", elm, {
-        width: GUI.colInnerWidth,
-        height: GUI.unit,
+        x: strokeWidth / 2,
+        y: strokeWidth / 2,
+        width: GUI.colInnerWidth - strokeWidth,
+        height: GUI.unit - strokeWidth,
         rx: GUI.borderRadius,
-        strokeWidth: 2,
+        strokeWidth: strokeWidth,
         fill: bgFill
       });
       label = SVG.create("text", elm, {
@@ -1167,18 +1173,10 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "label", function(elm, props) {
-      var groupBg, height, label, labelFill, labelY, scope;
-      labelY = (props.fontSize || 16) * 0.8;
-      height = props.fontSize || 16;
+      var height, label, labelFill, labelY, scope;
+      labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
+      height = GUI.labelPad + (props.fontSize || 16);
       labelFill = "hsl(220, 10%, 92%)";
-      groupBg = SVG.create("rect", elm, {
-        x: -GUI.groupPad,
-        y: -GUI.groupPad,
-        width: GUI.colInnerWidth + GUI.groupPad * 2,
-        height: height + GUI.groupPad * 2,
-        rx: GUI.groupBorderRadius,
-        fill: props.group || "transparent"
-      });
       label = SVG.create("text", elm, {
         textContent: props.name,
         x: GUI.colInnerWidth / 2,
@@ -1198,42 +1196,40 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "pushButton", function(elm, props) {
-      var bg, bgFill, bgc, blueBG, groupBg, height, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, tickBG, toClicking, toHover, toNormal;
+      var bgFill, blueBG, bsc, button, height, hit, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, strokeWidth, tickBG, toClicking, toHover, toNormal;
       onHandlers = [];
       offHandlers = [];
+      strokeWidth = 2;
       radius = GUI.unit * 0.6;
-      height = radius * 2;
+      height = Math.max(radius * 2, props.fontSize || 16);
       bgFill = "hsl(220, 10%, 92%)";
       labelFill = "hsl(220, 10%, 92%)";
       SVG.attrs(elm, {
         ui: true
       });
-      groupBg = SVG.create("rect", elm, {
-        x: -GUI.groupPad,
-        y: -GUI.groupPad,
-        width: GUI.colInnerWidth + GUI.groupPad * 2,
-        height: radius * 2 + GUI.groupPad * 2,
-        rx: GUI.groupBorderRadius,
-        fill: props.group || "transparent"
+      hit = SVG.create("rect", elm, {
+        width: GUI.colInnerWidth,
+        height: height,
+        fill: "transparent"
       });
-      bg = SVG.create("circle", elm, {
+      button = SVG.create("circle", elm, {
         cx: radius,
         cy: radius,
-        r: radius,
-        strokeWidth: 2,
+        r: radius - strokeWidth / 2,
+        strokeWidth: strokeWidth,
         fill: bgFill
       });
       label = SVG.create("text", elm, {
         textContent: props.name,
         x: radius * 2 + 6,
-        y: radius + (props.fontSize || 16) * 0.36,
+        y: radius + (props.fontSize || 16) * 0.375,
         textAnchor: "start",
         fontSize: props.fontSize || 16,
         fontWeight: props.fontWeight || "normal",
         fontStyle: props.fontStyle || "normal",
         fill: labelFill
       });
-      bgc = blueBG = {
+      bsc = blueBG = {
         r: 34,
         g: 46,
         b: 89
@@ -1248,25 +1244,25 @@
         g: 196,
         b: 46
       };
-      tickBG = function(_bgc) {
-        bgc = _bgc;
-        return SVG.attrs(bg, {
-          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+      tickBG = function(_bsc) {
+        bsc = _bsc;
+        return SVG.attrs(button, {
+          stroke: "rgb(" + (bsc.r | 0) + "," + (bsc.g | 0) + "," + (bsc.b | 0) + ")"
         });
       };
       tickBG(blueBG);
       toNormal = function(e, state) {
-        return Tween(bgc, blueBG, .2, {
+        return Tween(bsc, blueBG, .2, {
           tick: tickBG
         });
       };
       toHover = function(e, state) {
-        return Tween(bgc, lightBG, 0, {
+        return Tween(bsc, lightBG, 0, {
           tick: tickBG
         });
       };
       toClicking = function(e, state) {
-        return Tween(bgc, orangeBG, 0, {
+        return Tween(bsc, orangeBG, 0, {
           tick: tickBG
         });
       };
@@ -1313,14 +1309,14 @@
         },
         _highlight: function(enable) {
           if (enable) {
-            SVG.attrs(bg, {
+            SVG.attrs(button, {
               fill: "url(#LightHighlightGradient)"
             });
             return SVG.attrs(label, {
-              fill: "black"
+              fill: "url(#LightHighlightGradient)"
             });
           } else {
-            SVG.attrs(bg, {
+            SVG.attrs(button, {
               fill: bgFill
             });
             return SVG.attrs(label, {
@@ -1337,36 +1333,29 @@
     GUI = arg.ControlPanel;
     idCounter = 0;
     return Registry.set("Control", "selector", function(elm, props) {
-      var activeButton, borderRect, buttons, buttonsContainer, clip, clipRect, groupBg, height, id, label, labelFill, labelHeight, labelY, scope, setActive;
+      var activeButton, borderFill, borderRect, buttons, buttonsContainer, clip, clipRect, height, id, label, labelFill, labelHeight, labelY, scope, setActive;
       id = "Selector" + (idCounter++);
       buttons = [];
       activeButton = null;
       if (props.name != null) {
-        labelY = (props.fontSize || 16) - 6;
-        labelHeight = (props.fontSize || 16) * 1.2;
+        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
+        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
       } else {
         labelHeight = 0;
       }
       height = labelHeight + GUI.unit;
       labelFill = "hsl(220, 10%, 92%)";
-      groupBg = SVG.create("rect", elm, {
-        x: -GUI.groupPad,
-        y: -GUI.groupPad,
-        width: GUI.colInnerWidth + GUI.groupPad * 2,
-        height: height + GUI.groupPad * 2,
-        rx: GUI.groupBorderRadius,
-        fill: props.group || "transparent"
-      });
+      borderFill = "rgb(34, 46, 89)";
       clip = SVG.create("clipPath", SVG.defs, {
         id: id
       });
       clipRect = SVG.create("rect", clip, {
+        x: 2,
+        y: 2,
+        width: GUI.colInnerWidth - 4,
+        height: GUI.unit - 4,
         rx: GUI.borderRadius,
-        fill: "#FFF",
-        x: 1,
-        y: 1,
-        width: GUI.colInnerWidth - 2,
-        height: GUI.unit - 2
+        fill: "#FFF"
       });
       if (props.name != null) {
         label = SVG.create("text", elm, {
@@ -1381,11 +1370,11 @@
       }
       borderRect = SVG.create("rect", elm, {
         rx: GUI.borderRadius + 2,
-        fill: "rgb(34, 46, 89)",
-        x: -1,
-        y: labelHeight - 1,
-        width: GUI.colInnerWidth + 2,
-        height: GUI.unit + 2
+        fill: borderFill,
+        x: 0,
+        y: labelHeight,
+        width: GUI.colInnerWidth,
+        height: GUI.unit
       });
       buttonsContainer = Scope(SVG.create("g", elm, {
         clipPath: "url(#" + id + ")"
@@ -1413,6 +1402,30 @@
             button.x = buttonWidth * i;
           }
           return buttonScope;
+        },
+        _highlight: function(enable) {
+          var button, len, m, results;
+          if (enable) {
+            SVG.attrs(label, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            SVG.attrs(borderRect, {
+              fill: "url(#DarkHighlightGradient)"
+            });
+          } else {
+            SVG.attrs(label, {
+              fill: labelFill
+            });
+            SVG.attrs(borderRect, {
+              fill: borderFill
+            });
+          }
+          results = [];
+          for (m = 0, len = buttons.length; m < len; m++) {
+            button = buttons[m];
+            results.push(button._highlight(enable));
+          }
+          return results;
         }
       };
     });
@@ -1423,18 +1436,19 @@
     GUI = arg.ControlPanel;
     active = null;
     return Make("SelectorButton", function(elm, props) {
-      var attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, lightBG, orangeBG, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
+      var attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
       handlers = [];
       isActive = false;
       highlighting = false;
       labelFill = "hsl(227, 16%, 24%)";
+      strokeWidth = 2;
       SVG.attrs(elm, {
         ui: true
       });
       bg = SVG.create("rect", elm, {
-        x: 1,
-        y: GUI.pad + 1,
-        height: innerHeight - 2
+        x: strokeWidth / 2,
+        y: strokeWidth / 2,
+        height: GUI.unit - strokeWidth
       });
       label = SVG.create("text", elm, {
         y: (props.fontSize || 16) + GUI.unit / 5,
@@ -1466,16 +1480,10 @@
       };
       tickBG = function(_curBG) {
         curBG = _curBG;
-        if (highlighting) {
-          if (isActive) {
-            return SVG.attrs(bg, {
-              fill: "url(#MidHighlightGradient)"
-            });
-          } else {
-            return SVG.attrs(bg, {
-              fill: "url(#LightHighlightGradient)"
-            });
-          }
+        if (highlighting && isActive) {
+          return SVG.attrs(bg, {
+            fill: "url(#MidHighlightGradient)"
+          });
         } else {
           return SVG.attrs(bg, {
             fill: "rgb(" + (curBG.r | 0) + "," + (curBG.g | 0) + "," + (curBG.b | 0) + ")"
@@ -1572,7 +1580,7 @@
         click: attachClick,
         resize: function(width) {
           SVG.attrs(bg, {
-            width: width - 2
+            width: width - strokeWidth
           });
           return SVG.attrs(label, {
             x: width / 2
@@ -1598,12 +1606,17 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, groupBg, handleDrag, handlers, height, label, labelFill, labelHeight, labelY, lightBG, orangeBG, range, scope, startDrag, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
+      var bgc, blueBG, handleDrag, handlers, height, hit, label, labelFill, labelHeight, labelY, lightBG, orangeBG, range, scope, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
       handlers = [];
       v = 0;
       startDrag = 0;
-      labelY = (props.fontSize || 16) - 4;
-      labelHeight = (props.fontSize || 16) * 1.2;
+      strokeWidth = 2;
+      if (props.name != null) {
+        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
+        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
+      } else {
+        labelHeight = 0;
+      }
       thumbSize = GUI.unit - 4;
       height = labelHeight + thumbSize;
       range = GUI.colInnerWidth - thumbSize;
@@ -1613,19 +1626,17 @@
       SVG.attrs(elm, {
         ui: true
       });
-      groupBg = SVG.create("rect", elm, {
-        x: -GUI.groupPad,
-        y: -GUI.groupPad,
-        width: GUI.colInnerWidth + GUI.groupPad * 2,
-        height: height + GUI.groupPad * 2,
-        rx: GUI.groupBorderRadius,
-        fill: props.group || "transparent"
+      hit = SVG.create("rect", elm, {
+        width: GUI.colInnerWidth,
+        height: height,
+        fill: "transparent"
       });
       track = TRS(SVG.create("rect", elm, {
-        y: labelHeight,
-        width: GUI.colInnerWidth,
-        height: thumbSize,
-        strokeWidth: 2,
+        x: strokeWidth / 2,
+        y: labelHeight + strokeWidth / 2,
+        width: GUI.colInnerWidth - strokeWidth,
+        height: thumbSize - strokeWidth,
+        strokeWidth: strokeWidth,
         fill: trackFill,
         stroke: "hsl(227, 45%, 24%)",
         rx: thumbSize / 2
@@ -1633,9 +1644,9 @@
       thumb = TRS(SVG.create("circle", elm, {
         cx: thumbSize / 2,
         cy: labelHeight + thumbSize / 2,
-        strokeWidth: 2,
+        strokeWidth: strokeWidth,
         fill: thumbBGFill,
-        r: thumbSize / 2
+        r: thumbSize / 2 - strokeWidth / 2
       }));
       if (props.name != null) {
         label = SVG.create("text", elm, {
@@ -1752,7 +1763,7 @@
               fill: "url(#LightHighlightGradient)"
             });
             return SVG.attrs(label, {
-              fill: "black"
+              fill: "url(#LightHighlightGradient)"
             });
           } else {
             SVG.attrs(track, {
@@ -1790,25 +1801,25 @@
   });
 
   Take(["SVG", "SVGReady"], function(SVG) {
-    var GUI, colInnerWidth, colUnits, columnPadding, groupBorderRadius, groupPad, itemPad, unit;
+    var GUI, colInnerWidth, colUnits, groupBorderRadius, unit;
     return Make("GUI", GUI = {
       elm: SVG.create("g", SVG.svg, {
         xGui: ""
       }),
       ControlPanel: {
         borderRadius: 4,
-        groupBorderRadius: groupBorderRadius = 4,
+        groupBorderRadius: groupBorderRadius = 6,
+        panelBorderRadius: 8,
         panelMargin: 4,
-        itemPad: itemPad = 16,
-        groupPad: groupPad = itemPad * 2 / 5 + groupBorderRadius * 2 / 3,
+        panelPadding: 3,
+        columnMargin: 6,
+        groupMargin: 3,
+        groupPad: 3,
+        itemMargin: 3,
+        labelPad: 3,
         unit: unit = 32,
         colUnits: colUnits = 5,
-        columnPadding: columnPadding = groupPad * 2 + 8,
-        panelPadding: groupPad + 8,
-        colInnerWidth: colInnerWidth = unit * colUnits,
-        width: 200,
-        pad: 0,
-        colOuterWidth: colInnerWidth
+        colInnerWidth: colInnerWidth = unit * colUnits
       }
     });
   });
@@ -2064,7 +2075,7 @@
   });
 
   Take(["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, contentHeight, contentWidth, dist, distTo, initialRootRect, limit, parentRect, pos, render, requestRender, scaleStartPosZ, tween, windowScale;
+    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentWidth, dist, distTo, horizontalIsBetter, initialRootRect, limit, parentRect, pos, render, requestRender, scaleStartPosZ, totalSpace, tween, windowScale;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
@@ -2108,12 +2119,12 @@
     windowScale = 1;
     scaleStartPosZ = 0;
     tween = null;
+    totalSpace = null;
     render = function() {
       return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + (windowScale * Math.pow(2, pos.z)) + ") translate(" + (pos.x - centerInverse.x) + "," + (pos.y - centerInverse.y) + ")");
     };
-    Resize(function() {
-      var aspectAdjustedHeight, availableSpaceH, availableSpaceW, availableSpaceX, availableSpaceY, computedHeight, hFrac, panelClaimedH, panelClaimedW, panelInfo, totalSpace, wFrac;
-      panelInfo = ControlPanel.getPanelLayoutInfo();
+    computeResizeInfo = function(panelInfo) {
+      var availableSpaceH, availableSpaceW, availableSpaceX, availableSpaceY, hFrac, panelClaimedH, panelClaimedW, resizeInfo, wFrac;
       panelClaimedW = Math.abs(panelInfo.signedX) >= 0.9 ? panelInfo.w : 0;
       panelClaimedH = Math.abs(panelInfo.signedY) >= 0.9 ? panelInfo.h : 0;
       if (panelClaimedW > 0 && panelClaimedH > 0) {
@@ -2123,13 +2134,6 @@
           panelClaimedW = 0;
         }
       }
-      if (Mode.embed) {
-        parentRect = ParentElement.getBoundingClientRect();
-        aspectAdjustedHeight = panelClaimedH + contentHeight * (parentRect.width - panelClaimedW) / contentWidth;
-        computedHeight = Math.max(aspectAdjustedHeight, panelInfo.h);
-        ParentElement.style.height = Math.round(computedHeight) + "px";
-      }
-      totalSpace = SVG.svg.getBoundingClientRect();
       availableSpaceW = totalSpace.width - panelClaimedW;
       availableSpaceH = totalSpace.height - panelClaimedH;
       availableSpaceX = panelInfo.signedX < 0 ? panelInfo.w : 0;
@@ -2137,8 +2141,40 @@
       wFrac = availableSpaceW / contentWidth;
       hFrac = availableSpaceH / contentHeight;
       windowScale = Math.min(wFrac, hFrac);
-      center.x = availableSpaceX + availableSpaceW / 2;
-      center.y = availableSpaceY + availableSpaceH / 2;
+      return resizeInfo = {
+        panelClaimedW: panelClaimedW,
+        panelClaimedH: panelClaimedH,
+        windowScale: windowScale,
+        availableSpaceW: availableSpaceW,
+        availableSpaceH: availableSpaceH,
+        availableSpaceX: availableSpaceX,
+        availableSpaceY: availableSpaceY
+      };
+    };
+    horizontalIsBetter = function(horizontalPanelInfo, verticalPanelInfo) {
+      var horizontalResizeInfo, verticalResizeInfo;
+      horizontalResizeInfo = computeResizeInfo(horizontalPanelInfo);
+      verticalResizeInfo = computeResizeInfo(verticalPanelInfo);
+      if (Mode.embed) {
+        return verticalResizeInfo.windowScale < 1 && horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale;
+      } else {
+        return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale;
+      }
+    };
+    Resize(function() {
+      var aspectAdjustedHeight, computedHeight, panelInfo, resizeInfo;
+      totalSpace = SVG.svg.getBoundingClientRect();
+      panelInfo = ControlPanel.getPanelLayoutInfo(horizontalIsBetter);
+      resizeInfo = computeResizeInfo(panelInfo);
+      if (Mode.embed) {
+        parentRect = ParentElement.getBoundingClientRect();
+        aspectAdjustedHeight = resizeInfo.panelClaimedH + contentHeight * (parentRect.width - resizeInfo.panelClaimedW) / contentWidth;
+        computedHeight = Math.max(aspectAdjustedHeight, panelInfo.h);
+        ParentElement.style.height = Math.round(computedHeight) + "px";
+      }
+      windowScale = resizeInfo.windowScale;
+      center.x = resizeInfo.availableSpaceX + resizeInfo.availableSpaceW / 2;
+      center.y = resizeInfo.availableSpaceY + resizeInfo.availableSpaceH / 2;
       centerInverse.x = contentWidth / 2;
       centerInverse.y = contentHeight / 2;
       return render();
@@ -3219,13 +3255,46 @@
     });
   })();
 
-  Take(["ControlPanel", "ControlPanelLayout", "Registry", "Scope", "ControlReady"], function(ControlPanel, ControlPanelLayout, Registry, Scope) {
-    var Control, defn, instances, ref, setup, type;
+  Take(["ControlPanel", "ControlPanelLayout", "GUI", "Registry", "Scope", "SVG", "ControlReady"], function(ControlPanel, ControlPanelLayout, arg, Registry, Scope, SVG) {
+    var Control, GUI, addItemToGroup, currentGroup, defn, getGroup, instances, ref, setup, type;
+    GUI = arg.ControlPanel;
     Control = {};
     instances = {};
+    currentGroup = null;
+    getGroup = function(color) {
+      var bg, elm;
+      if ((currentGroup == null) || (color == null) || color !== currentGroup.color) {
+        elm = SVG.create("g", null);
+        bg = SVG.create("rect", elm, {
+          width: GUI.colInnerWidth + GUI.groupPad * 2,
+          rx: GUI.groupBorderRadius,
+          fill: color || "transparent"
+        });
+        ControlPanel.registerGroup(currentGroup = {
+          scope: Scope(elm),
+          bg: bg,
+          color: color,
+          itemScopes: [],
+          height: GUI.groupPad * 2
+        });
+      }
+      return currentGroup;
+    };
+    addItemToGroup = function(group, scope) {
+      if (group.itemScopes.length > 0) {
+        group.height += GUI.itemMargin;
+      }
+      scope.x = GUI.groupPad;
+      scope.y = group.height - GUI.groupPad;
+      group.height += scope.height;
+      SVG.attrs(group.bg, {
+        height: group.height
+      });
+      return group.itemScopes.push(scope);
+    };
     setup = function(type, defn) {
       return Control[type] = function(props) {
-        var base1, elm, scope;
+        var base1, elm, group, scope;
         if (props == null) {
           props = {};
         }
@@ -3233,19 +3302,20 @@
           console.log(props);
           throw new Error("Control." + type + "(props) takes a optional props object. Got ^^^, which is not an object.");
         }
-        if (((props != null ? props.id : void 0) != null) && (instances[props.id] != null)) {
+        if ((props.id != null) && (instances[props.id] != null)) {
           if (typeof (base1 = instances[props.id]).attach === "function") {
             base1.attach(props);
           }
           return instances[props.id];
         } else {
-          elm = ControlPanel.createItemElement(props != null ? props.parent : void 0);
+          group = getGroup(props.group);
+          elm = ControlPanel.createItemElement(props.parent || group.scope.element);
           scope = Scope(elm, defn, props);
+          addItemToGroup(group, scope);
           if (typeof scope.attach === "function") {
             scope.attach(props);
           }
-          ControlPanel.registerItemScope(scope);
-          if ((props != null ? props.id : void 0) != null) {
+          if (props.id != null) {
             instances[props.id] = scope;
           }
           return scope;

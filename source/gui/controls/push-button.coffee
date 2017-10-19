@@ -5,8 +5,9 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     onHandlers = []
     offHandlers = []
     
+    strokeWidth = 2
     radius = GUI.unit * 0.6
-    height = radius * 2
+    height = Math.max radius * 2, (props.fontSize or 16)
     
     bgFill = "hsl(220, 10%, 92%)"
     labelFill = "hsl(220, 10%, 92%)"
@@ -14,28 +15,22 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
     
-    # Group background element
-    groupBg = SVG.create "rect", elm,
-      x: -GUI.groupPad
-      y: -GUI.groupPad
-      width: GUI.colInnerWidth + GUI.groupPad*2
-      height: radius*2 + GUI.groupPad*2
-      rx: GUI.groupBorderRadius
-      fill: props.group or "transparent"
+    hit = SVG.create "rect", elm,
+      width: GUI.colInnerWidth
+      height: height
+      fill: "transparent"
     
-    # Button background element
-    bg = SVG.create "circle", elm,
+    button = SVG.create "circle", elm,
       cx: radius
       cy: radius
-      r: radius
-      strokeWidth: 2
+      r: radius - strokeWidth/2
+      strokeWidth: strokeWidth
       fill: bgFill
     
-    # Button text label
     label = SVG.create "text", elm,
       textContent: props.name
       x: radius*2 + 6
-      y: radius + (props.fontSize or 16) * 0.36
+      y: radius + (props.fontSize or 16) * 0.375
       textAnchor: "start"
       fontSize: props.fontSize or 16
       fontWeight: props.fontWeight or "normal"
@@ -43,20 +38,20 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       fill: labelFill
     
     
-    # Setup the bg stroke color for tweening
-    bgc = blueBG = r:34, g:46, b:89
+    # Setup the button stroke color for tweening
+    bsc = blueBG = r:34, g:46, b:89
     lightBG = r:133, g:163, b:224
     orangeBG = r:255, g:196, b:46
-    tickBG = (_bgc)->
-      bgc = _bgc
-      SVG.attrs bg, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
+    tickBG = (_bsc)->
+      bsc = _bsc
+      SVG.attrs button, stroke: "rgb(#{bsc.r|0},#{bsc.g|0},#{bsc.b|0})"
     tickBG blueBG
     
     
     # Input event handling
-    toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
-    toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG
-    toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
+    toNormal   = (e, state)-> Tween bsc, blueBG,  .2, tick:tickBG
+    toHover    = (e, state)-> Tween bsc, lightBG,  0, tick:tickBG
+    toClicking = (e, state)-> Tween bsc, orangeBG, 0, tick:tickBG
     Input elm,
       moveIn: toHover
       down: ()->
@@ -84,8 +79,8 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       
       _highlight: (enable)->
         if enable
-          SVG.attrs bg, fill: "url(#LightHighlightGradient)"
-          SVG.attrs label, fill: "black"
+          SVG.attrs button, fill: "url(#LightHighlightGradient)"
+          SVG.attrs label, fill: "url(#LightHighlightGradient)"
         else
-          SVG.attrs bg, fill: bgFill
+          SVG.attrs button, fill: bgFill
           SVG.attrs label, fill: labelFill

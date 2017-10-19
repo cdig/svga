@@ -8,10 +8,16 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     v = 0
     startDrag = 0
     
-    # Remember: SVG text element position is ALWAYS relative to the text baseline.
-    # So, we position our baseline a certain distance from the top, based on the font size.
-    labelY = (props.fontSize or 16) - 4 # The -4 is how we adjust the visual position of the text block, independent of font size
-    labelHeight = (props.fontSize or 16) * 1.2 # We'll leave a bit of extra room for descenders
+    strokeWidth = 2
+    
+    if props.name?
+      # Remember: SVG text element position is ALWAYS relative to the text baseline.
+      # So, we position our baseline a certain distance from the top, based on the font size.
+      labelY = GUI.labelPad + (props.fontSize or 16) * 0.75 # Lato's baseline is about 75% down from the top of the caps
+      labelHeight = GUI.labelPad + (props.fontSize or 16) * 1.2 # Lato's descenders are about 120% down from the top of the caps
+    else
+      labelHeight = 0
+    
     thumbSize = GUI.unit - 4 # The scroll thumb can be a little smaller than our standard unit size, since the entire track is a big honking touch target
     height = labelHeight + thumbSize
     range = GUI.colInnerWidth - thumbSize
@@ -23,21 +29,18 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
     
-    # Group background element
-    groupBg = SVG.create "rect", elm,
-      x: -GUI.groupPad
-      y: -GUI.groupPad
-      width: GUI.colInnerWidth + GUI.groupPad*2
-      height: height + GUI.groupPad*2
-      rx: GUI.groupBorderRadius
-      fill: props.group or "transparent"
-    
+    hit = SVG.create "rect", elm,
+      width: GUI.colInnerWidth
+      height: height
+      fill: "transparent"
+
     # Slider background element
     track = TRS SVG.create "rect", elm,
-      y: labelHeight
-      width: GUI.colInnerWidth
-      height: thumbSize
-      strokeWidth: 2
+      x: strokeWidth/2
+      y: labelHeight + strokeWidth/2
+      width: GUI.colInnerWidth - strokeWidth
+      height: thumbSize - strokeWidth
+      strokeWidth: strokeWidth
       fill: trackFill
       stroke: "hsl(227, 45%, 24%)"
       rx: thumbSize/2
@@ -46,9 +49,9 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     thumb = TRS SVG.create "circle", elm,
       cx: thumbSize/2
       cy: labelHeight + thumbSize/2
-      strokeWidth: 2
+      strokeWidth: strokeWidth
       fill: thumbBGFill
-      r: thumbSize/2
+      r: thumbSize/2 - strokeWidth/2
     
     # The text label
     if props.name?
@@ -113,7 +116,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
         if enable
           SVG.attrs track, fill: "url(#DarkHighlightGradient)"
           SVG.attrs thumb, fill: "url(#LightHighlightGradient)"
-          SVG.attrs label, fill: "black"
+          SVG.attrs label, fill: "url(#LightHighlightGradient)"
         else
           SVG.attrs track, fill: trackFill
           SVG.attrs thumb, fill: thumbBGFill

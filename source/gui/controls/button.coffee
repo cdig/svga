@@ -7,24 +7,19 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     bgFill = "hsl(220, 10%, 92%)"
     labelFill = "hsl(227, 16%, 24%)"
     
+    strokeWidth = 2
+    
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
     
-    # Group background element
-    groupBg = SVG.create "rect", elm,
-      x: -GUI.groupPad
-      y: -GUI.groupPad
-      width: GUI.colInnerWidth + GUI.groupPad*2
-      height: GUI.unit + GUI.groupPad*2
-      rx: GUI.groupBorderRadius
-      fill: props.group or "transparent"
-    
     # Button background element
     bg = SVG.create "rect", elm,
-      width: GUI.colInnerWidth
-      height: GUI.unit
+      x: strokeWidth/2
+      y: strokeWidth/2
+      width: GUI.colInnerWidth - strokeWidth
+      height: GUI.unit - strokeWidth
       rx: GUI.borderRadius
-      strokeWidth: 2
+      strokeWidth: strokeWidth
       fill: bgFill
     
     # Button text label

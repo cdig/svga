@@ -3,16 +3,15 @@ Take ["SVG", "SVGReady"], (SVG)->
     elm: SVG.create "g", SVG.svg, xGui:""
     ControlPanel:
       borderRadius: 4
-      groupBorderRadius: groupBorderRadius = 4
+      groupBorderRadius: groupBorderRadius = 6
+      panelBorderRadius: 8
       panelMargin: 4 # Space between the panel and the edge of the window
-      itemPad: itemPad = 16 # Vertical space between items in a column
-      groupPad: groupPad = itemPad*2/5 + groupBorderRadius*2/3 # Size of the "group box" around the sides of an item
+      panelPadding: 3 # Padding inside the panel
+      columnMargin: 6 # Horizontal space between two columns
+      groupMargin: 3 # Vertical space between two groups
+      groupPad: 3 # Padding inside groups
+      itemMargin: 3 # Vertical space between two items
+      labelPad: 3 # Padding above text labels
       unit: unit = 32
       colUnits: colUnits = 5
-      columnPadding: columnPadding = groupPad*2 + 8 # Space between columns
-      panelPadding: groupPad + 8 # Space between the items and the panel edge
       colInnerWidth: colInnerWidth = unit * colUnits # Width of items in a column
-      
-      width: 200 # DEPRECATED
-      pad: 0 # DEPRECATED
-      colOuterWidth: colInnerWidth # DEPRECATED

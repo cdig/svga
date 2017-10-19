@@ -6,9 +6,9 @@ Take ["SVG", "SVGReady"], (SVG)->
       groupBorderRadius: groupBorderRadius = 6
       panelBorderRadius: 8
       panelMargin: 4 # Space between the panel and the edge of the window
-      panelPadding: 3 # Padding inside the panel
-      columnMargin: 6 # Horizontal space between two columns
-      groupMargin: 3 # Vertical space between two groups
+      panelPadding: 6 # Padding inside the panel
+      columnMargin: 5 # Horizontal space between two columns
+      groupMargin: 4 # Vertical space between two groups
       groupPad: 3 # Padding inside groups
       itemMargin: 3 # Vertical space between two items
       labelPad: 3 # Padding above text labels

@@ -1,4 +1,9 @@
 Take ["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], (GUI, Mode, Resize, SVG, TRS)->
+  
+  # We're just going to disable this for now,
+  # since keyboard input is not well-known
+  return
+  
   return unless Mode.nav
   
   g = TRS SVG.create "g", GUI.elm

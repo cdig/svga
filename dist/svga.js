@@ -754,6 +754,7 @@
 
   Take(["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], function(GUI, Mode, Resize, SVG, TRS) {
     var g, hide, show;
+    return;
     if (!Mode.nav) {
       return;
     }

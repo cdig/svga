@@ -11,8 +11,10 @@
       Registry.closeRegistration("ScopeProcessor");
       Make("ScopeReady");
       Registry.closeRegistration("Control");
+      Registry.closeRegistration("SettingType");
       Make("ControlReady");
-      Registry.closeRegistration("Symbol");
+      Registry.closeRegistration("Symbols");
+      Registry.closeRegistration("SymbolNames");
       Scene.build(svgData);
       svgData = null;
       Make("SceneReady");
@@ -124,7 +126,7 @@
         props.id = tree.elm.id.replace(/_FL/g, "");
       }
       baseName = (ref = tree.elm.id) != null ? ref.split("_")[0] : void 0;
-      symbol = baseName.indexOf("Line") > -1 || baseName.indexOf("line") === 0 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 || baseName.indexOf("field") === 0 ? Symbol.forSymbolName("HydraulicField") : Symbol.forInstanceName(props.id);
+      symbol = baseName.indexOf("Line") > -1 || baseName.indexOf("line") === 0 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 || baseName.indexOf("field") === 0 ? Symbol.forSymbolName("HydraulicField") : props.id != null ? Symbol.forInstanceName(props.id) : void 0;
       if (symbol == null) {
         symbol = function() {
           return {};
@@ -738,17 +740,20 @@
   });
 
   Take(["Action", "Mode", "ParentElement", "Reaction", "SVG"], function(Action, Mode, ParentElement, Reaction, SVG) {
+    Reaction("Background:Set", function(v) {
+      return SVG.style(ParentElement, "background-color", v);
+    });
+    Reaction("Background:Lightness", function(v) {
+      return Action("Background:Set", "hsl(227, 5%, " + (v * 100 | 0) + "%)");
+    });
     if (typeof Mode.background === "string") {
-      return SVG.style(ParentElement, "background-color", Mode.background);
+      return Action("Background:Set", Mode.background);
     } else if (Mode.background === true) {
-      Reaction("Background:Set", function(v) {
-        return SVG.style(ParentElement, "background-color", "hsl(227, 5%, " + (v * 100) + "%)");
-      });
       return Take("SceneReady", function() {
-        return Action("Background:Set", .70);
+        return Action("Background:Lightness", .7);
       });
     } else {
-      return SVG.style(ParentElement, "background-color", "transparent");
+      return Action("Background:Set", "transparent");
     }
   });
 
@@ -802,7 +807,7 @@
     return hide();
   });
 
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope", "TRS"], function(ControlPanelLayout, Gradient, GUI, Mode, SVG, Scope, TRS) {
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady) {
     var CP, ControlPanel, columnsElm, config, groups, makePanelInfo, panelBg, panelElm, showing;
     CP = GUI.ControlPanel;
     config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
@@ -859,7 +864,7 @@
         h: scaledPanelH + CP.panelMargin * 2
       };
     };
-    return Make("ControlPanel", ControlPanel = Scope(panelElm, function() {
+    Make("ControlPanel", ControlPanel = Scope(panelElm, function() {
       return {
         registerGroup: function(group) {
           return groups.push(group);
@@ -906,6 +911,12 @@
         }
       };
     }));
+    Reaction("ControlPanel:Show", function() {
+      return ControlPanel.show(.7);
+    });
+    return Reaction("ControlPanel:Hide", function() {
+      return ControlPanel.hide(.3);
+    });
   });
 
   Take(["GUI", "Mode", "SVG"], function(arg, Mode, SVG) {
@@ -1055,7 +1066,6 @@
         textContent: props.name,
         x: GUI.colInnerWidth / 2,
         y: (props.fontSize || 16) + GUI.unit / 5,
-        width: GUI.colInnerWidth,
         fontSize: props.fontSize || 16,
         fontWeight: props.fontWeight || "normal",
         fontStyle: props.fontStyle || "normal",
@@ -1821,6 +1831,13 @@
         unit: unit = 32,
         colUnits: colUnits = 5,
         colInnerWidth: colInnerWidth = unit * colUnits
+      },
+      Settings: {
+        unit: 32,
+        itemWidth: 300,
+        itemMargin: 8,
+        panelPad: 8,
+        panelBorderRadius: 24
       }
     });
   });
@@ -1912,10 +1929,343 @@
 
   Take(["Reaction", "SVG", "SceneReady"], function(Reaction, SVG) {
     Reaction("Root:Show", function() {
-      return SVG.root._scope.show(1);
+      return SVG.root._scope.show(.7);
     });
     return Reaction("Root:Hide", function() {
-      return SVG.root._scope.hide(1);
+      return SVG.root._scope.hide(.3);
+    });
+  });
+
+  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
+    var GUI;
+    GUI = arg.Settings;
+    return Registry.set("SettingType", "slider", function(elm, name, initialValue, cb) {
+      var bgc, blueBG, handleDrag, label, labelPad, labelWidth, lightBG, orangeBG, range, startDrag, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackWidth, update, v;
+      v = 0;
+      startDrag = 0;
+      strokeWidth = 2;
+      labelPad = 10;
+      labelWidth = GUI.itemWidth / 2;
+      trackWidth = GUI.itemWidth - labelWidth;
+      thumbSize = GUI.unit;
+      range = trackWidth - thumbSize;
+      SVG.attrs(elm, {
+        ui: true
+      });
+      track = SVG.create("rect", elm, {
+        x: strokeWidth / 2 + labelWidth,
+        y: strokeWidth / 2,
+        width: trackWidth - strokeWidth,
+        height: thumbSize - strokeWidth,
+        strokeWidth: strokeWidth,
+        fill: "hsl(227, 45%, 24%)",
+        stroke: "hsl(227, 45%, 24%)",
+        rx: thumbSize / 2
+      });
+      thumb = TRS(SVG.create("circle", elm, {
+        cx: thumbSize / 2 + labelWidth,
+        cy: thumbSize / 2,
+        strokeWidth: strokeWidth,
+        fill: "hsl(220, 10%, 92%)",
+        r: thumbSize / 2 - strokeWidth / 2
+      }));
+      label = SVG.create("text", elm, {
+        textContent: name,
+        x: labelWidth - labelPad,
+        y: 21,
+        textAnchor: "end",
+        fill: "hsl(220, 10%, 92%)"
+      });
+      bgc = blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      tickBG = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(thumb, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+        });
+      };
+      tickBG(blueBG);
+      update = function(V) {
+        if (V != null) {
+          v = Math.max(0, Math.min(1, V));
+        }
+        return TRS.abs(thumb, {
+          x: v * range
+        });
+      };
+      toNormal = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(bgc, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toClicked = function(e, state) {
+        return Tween(bgc, lightBG, .2, {
+          tick: tickBG
+        });
+      };
+      toMissed = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      handleDrag = function(e, state) {
+        if (state.clicking) {
+          update(e.clientX / range - startDrag);
+          cb(v);
+          return void 0;
+        }
+      };
+      Input(elm, {
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
+        },
+        down: function(e) {
+          toClicking();
+          return startDrag = e.clientX / range - v;
+        },
+        moveOut: toNormal,
+        miss: toMissed,
+        drag: handleDrag,
+        dragOther: handleDrag,
+        click: toClicked
+      });
+      return update(initialValue);
+    });
+  });
+
+  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
+    var GUI;
+    GUI = arg.Settings;
+    return Registry.set("SettingType", "switch", function(elm, name, initialValue, cb) {
+      var active, bgc, blocked, blueBG, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, v;
+      v = 0;
+      strokeWidth = 2;
+      labelPad = 10;
+      labelWidth = GUI.itemWidth / 2;
+      thumbSize = GUI.unit;
+      active = false;
+      normalTrack = "hsl(227, 45%, 24%)";
+      lightTrack = "hsl(220, 10%, 92%)";
+      SVG.attrs(elm, {
+        ui: true
+      });
+      track = SVG.create("rect", elm, {
+        x: strokeWidth / 2 + labelWidth,
+        y: strokeWidth / 2,
+        width: thumbSize * 2 - strokeWidth,
+        height: thumbSize - strokeWidth,
+        strokeWidth: strokeWidth,
+        fill: normalTrack,
+        stroke: normalTrack,
+        rx: thumbSize / 2
+      });
+      thumb = TRS(SVG.create("circle", elm, {
+        cx: thumbSize / 2 + labelWidth,
+        cy: thumbSize / 2,
+        strokeWidth: strokeWidth,
+        fill: lightTrack,
+        r: thumbSize / 2 - strokeWidth / 2
+      }));
+      label = SVG.create("text", elm, {
+        textContent: name,
+        x: labelWidth - labelPad,
+        y: 21,
+        textAnchor: "end",
+        fill: "hsl(220, 10%, 92%)"
+      });
+      toggle = function() {
+        active = !active;
+        TRS.abs(thumb, {
+          x: active ? thumbSize : 0
+        });
+        SVG.attrs(track, {
+          fill: active ? lightTrack : normalTrack
+        });
+        return cb(active);
+      };
+      bgc = blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      tickBG = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(thumb, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+        });
+      };
+      tickBG(blueBG);
+      blocked = false;
+      toNormal = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(bgc, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toClicked = function(e, state) {
+        return Tween(bgc, lightBG, .2, {
+          tick: tickBG
+        });
+      };
+      Input(elm, {
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
+        },
+        down: toClicking,
+        up: toHover,
+        moveOut: toNormal,
+        dragOut: toNormal,
+        click: function() {
+          if (blocked) {
+            return;
+          }
+          blocked = true;
+          setTimeout((function() {
+            return blocked = false;
+          }), 100);
+          toClicked();
+          toggle();
+          return void 0;
+        }
+      });
+      if (initialValue) {
+        return toggle();
+      }
+    });
+  });
+
+  Take(["GUI", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(GUI, Reaction, Registry, Resize, Scope, SVG) {
+    var Settings, bg, elm, height, items, panelWidth;
+    height = 0;
+    panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
+    elm = SVG.create("g", GUI.elm);
+    bg = SVG.create("rect", elm, {
+      width: panelWidth,
+      rx: GUI.Settings.panelBorderRadius,
+      fill: "hsl(220, 45%, 45%)"
+    });
+    items = SVG.create("g", elm, {
+      transform: "translate(" + GUI.Settings.panelPad + "," + GUI.Settings.panelPad + ")"
+    });
+    Settings = Scope(elm, function() {
+      return {
+        addSetting: function(name, type, initialValue, cb) {
+          var builder, instance;
+          instance = Scope(SVG.create("g", items));
+          builder = Registry.get("SettingType", type);
+          builder(instance.element, name, initialValue, cb);
+          instance.y = height;
+          height += GUI.Settings.unit + GUI.Settings.itemMargin;
+          return SVG.attrs(bg, {
+            height: height + GUI.Settings.panelPad * 2 - GUI.Settings.itemMargin
+          });
+        }
+      };
+    });
+    Settings.hide(0);
+    Make("Settings", Settings);
+    Resize(function() {
+      var svgRect;
+      svgRect = SVG.svg.getBoundingClientRect();
+      Settings.x = svgRect.width / 2 - panelWidth / 2;
+      return Settings.y = 60;
+    });
+    Reaction("Settings:Show", function() {
+      return Settings.show(.7);
+    });
+    return Reaction("Settings:Hide", function() {
+      return Settings.hide(.3);
+    });
+  });
+
+  Take(["Action", "GUI", "Input", "Reaction", "Resize", "Scope", "SVG", "ScopeReady"], function(Action, GUI, Input, Reaction, Resize, Scope, SVG) {
+    var bg, elm, label, scope;
+    elm = SVG.create("g", GUI.elm, {
+      ui: true
+    });
+    scope = Scope(elm);
+    bg = SVG.create("rect", elm, {
+      x: GUI.ControlPanel.panelMargin,
+      y: GUI.ControlPanel.panelMargin,
+      width: 72,
+      height: 30,
+      rx: 4,
+      fill: "hsl(220, 45%, 45%)"
+    });
+    label = SVG.create("text", elm, {
+      textContent: "Settings",
+      x: 36 + GUI.ControlPanel.panelMargin,
+      y: 25,
+      fontSize: 16,
+      textAnchor: "middle",
+      fill: "hsl(220, 10%, 92%)"
+    });
+    Input(elm, {
+      click: function() {
+        return Action("Settings:Toggle");
+      }
+    });
+    Reaction("Settings:Hide", function() {
+      return SVG.attrs(label, {
+        textContent: "Settings"
+      });
+    });
+    return Reaction("Settings:Show", function() {
+      return SVG.attrs(label, {
+        textContent: "Back"
+      });
     });
   });
 
@@ -2378,8 +2728,6 @@
     var root, schematic, update;
     root = true;
     schematic = false;
-    Reaction("ControlPanel:Hide", ControlPanel.hide);
-    Reaction("ControlPanel:Hide", ControlPanel.show);
     update = function() {
       if (root && !schematic) {
         return Action("ControlPanel:Show");
@@ -2421,23 +2769,6 @@
   Take(["Action", "Reaction"], function(Action, Reaction) {
     var showing;
     showing = false;
-    Reaction("Help:Hide", function() {
-      return showing = false;
-    });
-    Reaction("Help:Show", function() {
-      return showing = true;
-    });
-    Reaction("Help:Toggle", function() {
-      return Action(showing ? "Help:Hide" : "Help:Show");
-    });
-    return Reaction("Settings:Show", function() {
-      return Action("Help:Hide");
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
     Reaction("Labels:Hide", function() {
       return showing = false;
     });
@@ -2460,12 +2791,6 @@
         return Action("Root:Show");
       }
     };
-    Reaction("Help:Show", function() {
-      return update(help = true);
-    });
-    Reaction("Help:Hide", function() {
-      return update(help = false);
-    });
     Reaction("Settings:Show", function() {
       return update(settings = true);
     });
@@ -2500,11 +2825,8 @@
     Reaction("Settings:Show", function() {
       return showing = true;
     });
-    Reaction("Settings:Toggle", function() {
+    return Reaction("Settings:Toggle", function() {
       return Action(showing ? "Settings:Hide" : "Settings:Show");
-    });
-    return Reaction("Help:Show", function() {
-      return Action("Settings:Hide");
     });
   });
 
@@ -3066,6 +3388,18 @@
     });
   });
 
+  Take(["Action", "Settings"], function(Action, Settings) {
+    return Settings.addSetting("Background", "slider", .7, function(v) {
+      return Action("Background:Lightness", v);
+    });
+  });
+
+  Take(["Action", "Settings"], function(Action, Settings) {
+    return Settings.addSetting("Highlights", "switch", true, function(active) {
+      return Action("Highlights:Set", active);
+    });
+  });
+
   Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
     return Symbol("HydraulicField", [], function(svgElement) {
       var scope;
@@ -3240,7 +3574,11 @@
     var cbs;
     cbs = [];
     Make("Reaction", function(name, cb) {
-      return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
+      if (cb != null) {
+        return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
+      } else {
+        throw "Null reference passed to Reaction() with name: " + name;
+      }
     });
     return Make("Action", function() {
       var args, cb, len, m, name, ref;
@@ -3607,8 +3945,9 @@
     });
   });
 
-  Take(["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], function(Ease, FPS, Gradient, Input, RAF, SVG, Tick) {
-    var activeHighlight, counter, dgradient, lgradient, mgradient, tgradient;
+  Take(["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"], function(Ease, FPS, Gradient, Input, RAF, Reaction, SVG, Tick) {
+    var activeHighlight, counter, dgradient, enabled, lgradient, mgradient, tgradient;
+    enabled = true;
     activeHighlight = null;
     counter = 0;
     lgradient = Gradient.linear("LightHighlightGradient", {
@@ -3640,7 +3979,7 @@
         }
       }
     });
-    return Make("Highlight", function() {
+    Make("Highlight", function() {
       var activate, active, deactivate, highlights, setup, targets, timeout;
       targets = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       highlights = [];
@@ -3686,6 +4025,9 @@
       };
       activate = function() {
         var h, len, m;
+        if (!enabled) {
+          return;
+        }
         if (!active) {
           active = true;
           if (typeof activeHighlight === "function") {
@@ -3795,6 +4137,9 @@
         }
         return void 0;
       });
+    });
+    return Reaction("Highlights:Set", function(v) {
+      return enabled = v;
     });
   });
 
@@ -4349,6 +4694,9 @@
         if (byName == null) {
           byName = false;
         }
+        if (!closed[type]) {
+          throw new Error("Registry.all(" + type + ", " + byName + ") was called before registration closed.");
+        }
         if (byName) {
           return named[type];
         } else {
@@ -4368,8 +4716,10 @@
         return (named[type] != null ? named[type] : named[type] = {})[name] = item;
       },
       get: function(type, name) {
-        var ref;
-        return (ref = named[type]) != null ? ref[name] : void 0;
+        if (!closed[type]) {
+          throw new Error("Registry.get(" + type + ", " + name + ") was called before registration closed.");
+        }
+        return named[type][name];
       },
       closeRegistration: function(type) {
         return closed[type] = true;

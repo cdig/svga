@@ -1,4 +1,4 @@
-Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope", "TRS"], (ControlPanelLayout, Gradient, GUI, Mode, SVG, Scope, TRS)->
+Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], (ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady)->
   
   # Aliases
   CP = GUI.ControlPanel
@@ -129,3 +129,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "SVG", "Scope", "TRS"], (
       ControlPanel.y = panelInfo.controlPanelY
       
       return panelInfo
+  
+  
+  Reaction "ControlPanel:Show", ()-> ControlPanel.show .7
+  Reaction "ControlPanel:Hide", ()-> ControlPanel.hide .3

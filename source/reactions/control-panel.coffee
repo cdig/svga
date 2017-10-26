@@ -2,9 +2,6 @@ Take ["Action", "ControlPanel", "Reaction"], (Action, ControlPanel, Reaction)->
   root = true
   schematic = false
   
-  Reaction "ControlPanel:Hide", ControlPanel.hide
-  Reaction "ControlPanel:Hide", ControlPanel.show
-  
   update = ()->
     if root and not schematic
       Action "ControlPanel:Show"

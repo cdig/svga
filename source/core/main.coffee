@@ -17,14 +17,16 @@ Take ["Registry", "Scene", "SVG"], (Registry, Scene, SVG)->
     # Inform all systems that it's now safe to use Scope.
     Make "ScopeReady"
     
-    # By now, we're assuming all Controls are ready.
+    # By now, we're assuming all Controls & Settings are ready.
     Registry.closeRegistration "Control"
+    Registry.closeRegistration "SettingType"
     
     # Inform all systems that we've just finished setting up Controls.
     Make "ControlReady"
     
     # By now, we're assuming all Symbols are ready.
-    Registry.closeRegistration "Symbol"
+    Registry.closeRegistration "Symbols"
+    Registry.closeRegistration "SymbolNames"
     
     # Use the DOM references collected earlier to build our Scene tree.
     Scene.build svgData

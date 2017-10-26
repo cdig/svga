@@ -6,6 +6,3 @@ Take ["Action", "Reaction"], (Action, Reaction)->
   
   Reaction "Settings:Toggle", ()->
     Action if showing then "Settings:Hide" else "Settings:Show"
-  
-  Reaction "Help:Show", ()->
-    Action "Settings:Hide"

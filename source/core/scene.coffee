@@ -91,7 +91,7 @@ Take ["Mode", "Scope", "SVG", "Symbol"], (Mode, Scope, SVG, Symbol)->
       Symbol.forSymbolName "HydraulicLine"
     else if baseName.indexOf("Field") > -1 or baseName.indexOf("field") is 0
       Symbol.forSymbolName "HydraulicField"
-    else
+    else if props.id?
       Symbol.forInstanceName props.id
     
     symbol ?= ()-> {}

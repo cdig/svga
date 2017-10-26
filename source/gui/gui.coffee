@@ -15,3 +15,9 @@ Take ["SVG", "SVGReady"], (SVG)->
       unit: unit = 32
       colUnits: colUnits = 5
       colInnerWidth: colInnerWidth = unit * colUnits # Width of items in a column
+    Settings:
+      unit: 32
+      itemWidth: 300
+      itemMargin: 8 # Vertical space between two items
+      panelPad: 8
+      panelBorderRadius: 24

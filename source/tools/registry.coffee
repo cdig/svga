@@ -1,3 +1,8 @@
+# The Registry allows us to advertise the existence of global maps and arrays of stuff,
+# with explicit control over when things can be registered and when they can be requested.
+# If you register something after registration closes, or request something before it closes,
+# you get slapped on the wrist.
+
 do ()->
   named = {}
   unnamed = {}
@@ -9,6 +14,7 @@ do ()->
       (unnamed[type] ?= []).push item
     
     all: (type, byName = false)->
+      if not closed[type] then throw new Error "Registry.all(#{type}, #{byName}) was called before registration closed."
       if byName
         named[type]
       else
@@ -20,7 +26,8 @@ do ()->
       (named[type] ?= {})[name] = item
     
     get: (type, name)->
-      named[type]?[name]
+      if not closed[type] then throw new Error "Registry.get(#{type}, #{name}) was called before registration closed."
+      named[type][name]
     
     closeRegistration: (type)->
       closed[type] = true

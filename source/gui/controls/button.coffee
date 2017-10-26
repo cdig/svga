@@ -27,7 +27,6 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       textContent: props.name
       x: GUI.colInnerWidth / 2
       y: (props.fontSize or 16) + GUI.unit/5
-      width: GUI.colInnerWidth
       fontSize: props.fontSize or 16
       fontWeight: props.fontWeight or "normal"
       fontStyle: props.fontStyle or "normal"

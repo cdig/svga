@@ -1,14 +1,15 @@
 Take ["Action", "Mode", "ParentElement", "Reaction", "SVG"], (Action, Mode, ParentElement, Reaction, SVG)->
   
-  # Set to a specific color
+  Reaction "Background:Set", (v)->
+    SVG.style ParentElement, "background-color", v
+  
+  Reaction "Background:Lightness", (v)->
+    Action "Background:Set", "hsl(227, 5%, #{v*100|0}%)"
+  
+  # Set up the initial background
   if typeof Mode.background is "string"
-    SVG.style ParentElement, "background-color", Mode.background
-  
-  # Allow adjustment, default to grey
+    Action "Background:Set", Mode.background
   else if Mode.background is true
-    Reaction "Background:Set", (v)-> SVG.style ParentElement, "background-color", "hsl(227, 5%, #{v*100}%)"
-    Take "SceneReady", ()-> Action "Background:Set", .70
-  
-  # No background
+    Take "SceneReady", ()-> Action "Background:Lightness", .7
   else
-    SVG.style ParentElement, "background-color", "transparent"
+    Action "Background:Set", "transparent"

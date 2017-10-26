@@ -1,11 +1,13 @@
-Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ease, FPS, Gradient, Input, RAF, SVG, Tick)->
+Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"], (Ease, FPS, Gradient, Input, RAF, Reaction, SVG, Tick)->
   
+  enabled = true
   activeHighlight = null
   counter = 0
   lgradient = Gradient.linear "LightHighlightGradient", gradientUnits: "userSpaceOnUse", "#9FC", "#FF8", "#FD8"
   mgradient = Gradient.linear "MidHighlightGradient",   gradientUnits: "userSpaceOnUse", "#2F6", "#FF2", "#F72"
   dgradient = Gradient.linear "DarkHighlightGradient",  gradientUnits: "userSpaceOnUse", "#0B3", "#DD0", "#D50"
   tgradient = Gradient.linear "TextHighlightGradient",  gradientUnits: "userSpaceOnUse", "#091", "#BB0", "#B30"
+  
   
   Tick (time)->
     if activeHighlight? and FPS() > 20
@@ -48,6 +50,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ea
     
     
     activate = ()->
+      return unless enabled
       if not active
         active = true
         activeHighlight?() # Deactivate any active highlight
@@ -115,3 +118,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "SVG", "Tick", "SVGReady"], (Ea
           Input t, mouseProps, true, false
           Input t, touchProps, false, true
       undefined
+  
+  
+  Reaction "Highlights:Set", (v)->
+    enabled = v

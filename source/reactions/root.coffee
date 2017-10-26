@@ -8,7 +8,5 @@ Take ["Action", "Reaction"], (Action, Reaction)->
     else
       Action "Root:Show"
   
-  Reaction "Help:Show", ()-> update help = true
-  Reaction "Help:Hide", ()-> update help = false
   Reaction "Settings:Show", ()-> update settings = true
   Reaction "Settings:Hide", ()-> update settings = false

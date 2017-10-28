@@ -1,4 +1,7 @@
 Take ["Action", "Settings"], (Action, Settings)->
   
-  Settings.addSetting "Background", "slider", .7, (v)->
-    Action "Background:Lightness", v
+  Settings.addSetting "slider",
+    name: "Background"
+    value: .7
+    snaps: [.7]
+    update: (v)-> Action "Background:Lightness", v

@@ -29,7 +29,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     
     label = SVG.create "text", elm,
       textContent: props.name
-      x: radius*2 + 6
+      x: radius*2 + GUI.labelMargin
       y: radius + (props.fontSize or 16) * 0.375
       textAnchor: "start"
       fontSize: props.fontSize or 16

@@ -1,4 +1,6 @@
 Take ["Action", "Settings"], (Action, Settings)->
   
-  Settings.addSetting "Highlights", "switch", true, (active)->
-    Action "Highlights:Set", active
+  Settings.addSetting "switch",
+    name: "Highlights"
+    value: true
+    update: (active)-> Action "Highlights:Set", active

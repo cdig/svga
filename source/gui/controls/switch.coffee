@@ -1,20 +1,23 @@
-Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:GUI}, Input, SVG, TRS, Tween)->
-  Registry.set "SettingType", "switch", (elm, props)->
+Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPanel:GUI}, Input, SVG, TRS, Tween)->
+  Registry.set "Control", "switch", (elm, props)->
     
+    # An array to hold all the change functions that have been attached to this slider
+    handlers = []
     strokeWidth = 2
-    labelPad = 10
-    labelWidth = GUI.itemWidth/2
-    thumbSize = GUI.unit
+    thumbSize = GUI.thumbSize
+    trackWidth = thumbSize * 2
     active = false
+    height = thumbSize
+    
     normalTrack = "hsl(227, 45%, 24%)"
     lightTrack = "hsl(92, 46%, 57%)"
     
     SVG.attrs elm, ui: true
     
     track = SVG.create "rect", elm,
-      x: strokeWidth/2 + labelWidth
+      x: strokeWidth/2
       y: strokeWidth/2
-      width: thumbSize * 2 - strokeWidth
+      width: trackWidth - strokeWidth
       height: thumbSize - strokeWidth
       strokeWidth: strokeWidth
       fill: normalTrack
@@ -22,7 +25,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:G
       rx: thumbSize/2
     
     thumb = TRS SVG.create "circle", elm,
-      cx: thumbSize/2 + labelWidth
+      cx: thumbSize/2
       cy: thumbSize/2
       strokeWidth: strokeWidth
       fill: "hsl(220, 10%, 92%)"
@@ -30,18 +33,17 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:G
     
     label = SVG.create "text", elm,
       textContent: props.name
-      x: labelWidth - labelPad
+      x: trackWidth + GUI.labelMargin
       y: 21
-      textAnchor: "end"
+      textAnchor: "start"
       fill: "hsl(220, 10%, 92%)"
     
-
     
     toggle = ()->
       active = !active
       TRS.abs thumb, x: if active then thumbSize else 0
       SVG.attrs track, fill: if active then lightTrack else normalTrack
-      props.update active
+      cb active
     
     
     # Setup the thumb stroke color for tweening
@@ -75,6 +77,20 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:G
         toClicked()
         toggle()
         undefined
-  
-    # Init
-    toggle() if props.value
+    
+    return scope =
+      height: height
+      
+      attach: (props)->
+        handlers.push props.change if props.change?
+        toggle() if props.active
+      
+      # _highlight: (enable)->
+      #   if enable
+      #     SVG.attrs track, fill: "url(#DarkHighlightGradient)"
+      #     SVG.attrs thumb, fill: "url(#LightHighlightGradient)"
+      #     SVG.attrs label, fill: "url(#LightHighlightGradient)"
+      #   else
+      #     SVG.attrs track, fill: trackFill
+      #     SVG.attrs thumb, fill: thumbBGFill
+      #     SVG.attrs label, fill: labelFill

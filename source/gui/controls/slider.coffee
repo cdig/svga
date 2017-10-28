@@ -4,11 +4,14 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     # An array to hold all the change functions that have been attached to this slider
     handlers = []
     
+    snapElms = []
+    
     # Some local variables used to manage the slider position
     v = 0
     startDrag = 0
     
     strokeWidth = 2
+    snapTolerance = 0.05
     
     if props.name?
       # Remember: SVG text element position is ALWAYS relative to the text baseline.
@@ -18,13 +21,15 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     else
       labelHeight = 0
     
-    thumbSize = GUI.unit - 4 # The scroll thumb can be a little smaller than our standard unit size, since the entire track is a big honking touch target
+    thumbSize = GUI.thumbSize
     height = labelHeight + thumbSize
     range = GUI.colInnerWidth - thumbSize
     
     trackFill = "hsl(227, 45%, 24%)"
     thumbBGFill = "hsl(220, 10%, 92%)"
     labelFill = "hsl(220, 10%, 92%)"
+    lightDot = "hsl(92, 46%, 57%)"
+    normalDot = "hsl(220, 10%, 92%)"
     
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
@@ -44,7 +49,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       fill: trackFill
       stroke: "hsl(227, 45%, 24%)"
       rx: thumbSize/2
-    
+
     # The thumb graphic
     thumb = TRS SVG.create "circle", elm,
       cx: thumbSize/2
@@ -52,7 +57,15 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       strokeWidth: strokeWidth
       fill: thumbBGFill
       r: thumbSize/2 - strokeWidth/2
-    
+
+    if props.snaps?
+      snapElms = for snap in props.snaps
+        SVG.create "circle", elm,
+          cx: thumbSize/2 + (GUI.colInnerWidth - thumbSize) * snap
+          cy: labelHeight + thumbSize/2
+          fill: "transparent"
+          strokeWidth: 4
+            
     # The text label
     if props.name?
       label = SVG.create "text", elm,
@@ -63,7 +76,6 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
         fontWeight: props.fontWeight or "normal"
         fontStyle: props.fontStyle or "normal"
         fill: labelFill
-    
     
     # Setup the thumb stroke color for tweening
     bgc = blueBG = r:34, g:46, b:89
@@ -78,8 +90,16 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     # Update and save the thumb position
     update = (V)->
       v = Math.max 0, Math.min 1, V if V?
+      if props.snaps?
+        for snap, i in props.snaps
+          if v > snap - snapTolerance and v < snap + snapTolerance
+            v = snap
+            SVG.attrs snapElms[i], r: 3, stroke: lightDot
+          else
+            SVG.attrs snapElms[i], r: 2, stroke: normalDot
       TRS.abs thumb, x: v * range
     
+    update props.value or 0
     
     # Input event handling
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG

@@ -14,10 +14,10 @@ Take ["GUI", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], 
     transform: "translate(#{GUI.Settings.panelPad},#{GUI.Settings.panelPad})"
   
   Settings = Scope elm, ()->
-    addSetting: (name, type, initialValue, cb)->
+    addSetting: (type, props)->
       instance = Scope SVG.create "g", items
       builder = Registry.get "SettingType", type
-      builder instance.element, name, initialValue, cb
+      builder instance.element, props
       instance.y = height
       height += GUI.Settings.unit + GUI.Settings.itemMargin
       SVG.attrs bg, height: height + GUI.Settings.panelPad*2 - GUI.Settings.itemMargin

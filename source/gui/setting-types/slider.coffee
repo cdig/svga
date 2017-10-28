@@ -1,14 +1,21 @@
 Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:GUI}, Input, SVG, TRS, Tween)->
-  Registry.set "SettingType", "slider", (elm, name, initialValue, cb)->
+  Registry.set "SettingType", "slider", (elm, props)->
+
+    snapElms = []
     
     v = 0
     startDrag = 0
     strokeWidth = 2
+    snapTolerance = 0.05
     labelPad = 10
+    
     labelWidth = GUI.itemWidth/2
     trackWidth = GUI.itemWidth - labelWidth
     thumbSize = GUI.unit
     range = trackWidth - thumbSize
+
+    lightDot = "hsl(92, 46%, 57%)"
+    normalDot = "hsl(220, 10%, 92%)"
     
     SVG.attrs elm, ui: true
     
@@ -29,8 +36,16 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:G
       fill: "hsl(220, 10%, 92%)"
       r: thumbSize/2 - strokeWidth/2
     
+    if props.snaps?
+      snapElms = for snap in props.snaps
+        SVG.create "circle", elm,
+          cx: thumbSize/2 + labelWidth + (trackWidth - thumbSize) * snap
+          cy: thumbSize/2
+          fill: "transparent"
+          strokeWidth: 4
+
     label = SVG.create "text", elm,
-      textContent: name
+      textContent: props.name
       x: labelWidth - labelPad
       y: 21
       textAnchor: "end"
@@ -49,9 +64,15 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:G
     
     update = (V)->
       v = Math.max 0, Math.min 1, V if V?
+      if props.snaps?
+        for snap, i in props.snaps
+          if v > snap - snapTolerance and v < snap + snapTolerance
+            v = snap
+            SVG.attrs snapElms[i], r: 3, stroke: lightDot
+          else
+            SVG.attrs snapElms[i], r: 2, stroke: normalDot
       TRS.abs thumb, x: v * range
-    
-    
+        
     # Input event handling
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
@@ -61,7 +82,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:G
     handleDrag = (e, state)->
       if state.clicking
         update e.clientX/range - startDrag
-        cb v
+        props.update v
         undefined
     Input elm,
       moveIn: toHover
@@ -76,4 +97,4 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:G
       click: toClicked
   
     # Init
-    update initialValue
+    update props.value or 0

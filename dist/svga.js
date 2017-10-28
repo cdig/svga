@@ -1232,7 +1232,7 @@
       });
       label = SVG.create("text", elm, {
         textContent: props.name,
-        x: radius * 2 + 6,
+        x: radius * 2 + GUI.labelMargin,
         y: radius + (props.fontSize || 16) * 0.375,
         textAnchor: "start",
         fontSize: props.fontSize || 16,
@@ -1617,23 +1617,27 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, handlers, height, hit, label, labelFill, labelHeight, labelY, lightBG, orangeBG, range, scope, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
+      var bgc, blueBG, handleDrag, handlers, height, hit, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
       handlers = [];
+      snapElms = [];
       v = 0;
       startDrag = 0;
       strokeWidth = 2;
+      snapTolerance = 0.05;
       if (props.name != null) {
         labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
         labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
       } else {
         labelHeight = 0;
       }
-      thumbSize = GUI.unit - 4;
+      thumbSize = GUI.thumbSize;
       height = labelHeight + thumbSize;
       range = GUI.colInnerWidth - thumbSize;
       trackFill = "hsl(227, 45%, 24%)";
       thumbBGFill = "hsl(220, 10%, 92%)";
       labelFill = "hsl(220, 10%, 92%)";
+      lightDot = "hsl(92, 46%, 57%)";
+      normalDot = "hsl(220, 10%, 92%)";
       SVG.attrs(elm, {
         ui: true
       });
@@ -1659,6 +1663,23 @@
         fill: thumbBGFill,
         r: thumbSize / 2 - strokeWidth / 2
       }));
+      if (props.snaps != null) {
+        snapElms = (function() {
+          var len, m, ref, results;
+          ref = props.snaps;
+          results = [];
+          for (m = 0, len = ref.length; m < len; m++) {
+            snap = ref[m];
+            results.push(SVG.create("circle", elm, {
+              cx: thumbSize / 2 + (GUI.colInnerWidth - thumbSize) * snap,
+              cy: labelHeight + thumbSize / 2,
+              fill: "transparent",
+              strokeWidth: 4
+            }));
+          }
+          return results;
+        })();
+      }
       if (props.name != null) {
         label = SVG.create("text", elm, {
           textContent: props.name,
@@ -1693,13 +1714,33 @@
       };
       tickBG(blueBG);
       update = function(V) {
+        var i, len, m, ref;
         if (V != null) {
           v = Math.max(0, Math.min(1, V));
+        }
+        if (props.snaps != null) {
+          ref = props.snaps;
+          for (i = m = 0, len = ref.length; m < len; i = ++m) {
+            snap = ref[i];
+            if (v > snap - snapTolerance && v < snap + snapTolerance) {
+              v = snap;
+              SVG.attrs(snapElms[i], {
+                r: 3,
+                stroke: lightDot
+              });
+            } else {
+              SVG.attrs(snapElms[i], {
+                r: 2,
+                stroke: normalDot
+              });
+            }
+          }
         }
         return TRS.abs(thumb, {
           x: v * range
         });
       };
+      update(props.value || 0);
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -1792,6 +1833,139 @@
     });
   });
 
+  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Registry.set("Control", "switch", function(elm, props) {
+      var active, bgc, blocked, blueBG, handlers, height, label, lightBG, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
+      handlers = [];
+      strokeWidth = 2;
+      thumbSize = GUI.thumbSize;
+      trackWidth = thumbSize * 2;
+      active = false;
+      height = thumbSize;
+      normalTrack = "hsl(227, 45%, 24%)";
+      lightTrack = "hsl(92, 46%, 57%)";
+      SVG.attrs(elm, {
+        ui: true
+      });
+      track = SVG.create("rect", elm, {
+        x: strokeWidth / 2,
+        y: strokeWidth / 2,
+        width: trackWidth - strokeWidth,
+        height: thumbSize - strokeWidth,
+        strokeWidth: strokeWidth,
+        fill: normalTrack,
+        stroke: normalTrack,
+        rx: thumbSize / 2
+      });
+      thumb = TRS(SVG.create("circle", elm, {
+        cx: thumbSize / 2,
+        cy: thumbSize / 2,
+        strokeWidth: strokeWidth,
+        fill: "hsl(220, 10%, 92%)",
+        r: thumbSize / 2 - strokeWidth / 2
+      }));
+      label = SVG.create("text", elm, {
+        textContent: props.name,
+        x: trackWidth + GUI.labelMargin,
+        y: 21,
+        textAnchor: "start",
+        fill: "hsl(220, 10%, 92%)"
+      });
+      toggle = function() {
+        active = !active;
+        TRS.abs(thumb, {
+          x: active ? thumbSize : 0
+        });
+        SVG.attrs(track, {
+          fill: active ? lightTrack : normalTrack
+        });
+        return cb(active);
+      };
+      bgc = blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      tickBG = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(thumb, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+        });
+      };
+      tickBG(blueBG);
+      blocked = false;
+      toNormal = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(bgc, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toClicked = function(e, state) {
+        return Tween(bgc, lightBG, .2, {
+          tick: tickBG
+        });
+      };
+      Input(elm, {
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
+        },
+        down: toClicking,
+        up: toHover,
+        moveOut: toNormal,
+        dragOut: toNormal,
+        click: function() {
+          if (blocked) {
+            return;
+          }
+          blocked = true;
+          setTimeout((function() {
+            return blocked = false;
+          }), 100);
+          toClicked();
+          toggle();
+          return void 0;
+        }
+      });
+      return scope = {
+        height: height,
+        attach: function(props) {
+          if (props.change != null) {
+            handlers.push(props.change);
+          }
+          if (props.active) {
+            return toggle();
+          }
+        }
+      };
+    });
+  });
+
   Take(["Mode"], function(Mode) {
     if (!Mode.dev) {
       window.addEventListener("contextmenu", function(e) {
@@ -1828,7 +2002,9 @@
         groupPad: 3,
         itemMargin: 3,
         labelPad: 3,
+        labelMargin: 6,
         unit: unit = 32,
+        thumbSize: unit - 4,
         colUnits: colUnits = 5,
         colInnerWidth: colInnerWidth = unit * colUnits
       },
@@ -1939,16 +2115,20 @@
   Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
     var GUI;
     GUI = arg.Settings;
-    return Registry.set("SettingType", "slider", function(elm, name, initialValue, cb) {
-      var bgc, blueBG, handleDrag, label, labelPad, labelWidth, lightBG, orangeBG, range, startDrag, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackWidth, update, v;
+    return Registry.set("SettingType", "slider", function(elm, props) {
+      var bgc, blueBG, handleDrag, label, labelPad, labelWidth, lightBG, lightDot, normalDot, orangeBG, range, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackWidth, update, v;
+      snapElms = [];
       v = 0;
       startDrag = 0;
       strokeWidth = 2;
+      snapTolerance = 0.05;
       labelPad = 10;
       labelWidth = GUI.itemWidth / 2;
       trackWidth = GUI.itemWidth - labelWidth;
       thumbSize = GUI.unit;
       range = trackWidth - thumbSize;
+      lightDot = "hsl(92, 46%, 57%)";
+      normalDot = "hsl(220, 10%, 92%)";
       SVG.attrs(elm, {
         ui: true
       });
@@ -1969,8 +2149,25 @@
         fill: "hsl(220, 10%, 92%)",
         r: thumbSize / 2 - strokeWidth / 2
       }));
+      if (props.snaps != null) {
+        snapElms = (function() {
+          var len, m, ref, results;
+          ref = props.snaps;
+          results = [];
+          for (m = 0, len = ref.length; m < len; m++) {
+            snap = ref[m];
+            results.push(SVG.create("circle", elm, {
+              cx: thumbSize / 2 + labelWidth + (trackWidth - thumbSize) * snap,
+              cy: thumbSize / 2,
+              fill: "transparent",
+              strokeWidth: 4
+            }));
+          }
+          return results;
+        })();
+      }
       label = SVG.create("text", elm, {
-        textContent: name,
+        textContent: props.name,
         x: labelWidth - labelPad,
         y: 21,
         textAnchor: "end",
@@ -1999,8 +2196,27 @@
       };
       tickBG(blueBG);
       update = function(V) {
+        var i, len, m, ref;
         if (V != null) {
           v = Math.max(0, Math.min(1, V));
+        }
+        if (props.snaps != null) {
+          ref = props.snaps;
+          for (i = m = 0, len = ref.length; m < len; i = ++m) {
+            snap = ref[i];
+            if (v > snap - snapTolerance && v < snap + snapTolerance) {
+              v = snap;
+              SVG.attrs(snapElms[i], {
+                r: 3,
+                stroke: lightDot
+              });
+            } else {
+              SVG.attrs(snapElms[i], {
+                r: 2,
+                stroke: normalDot
+              });
+            }
+          }
         }
         return TRS.abs(thumb, {
           x: v * range
@@ -2036,7 +2252,7 @@
       handleDrag = function(e, state) {
         if (state.clicking) {
           update(e.clientX / range - startDrag);
-          cb(v);
+          props.update(v);
           return void 0;
         }
       };
@@ -2057,23 +2273,22 @@
         dragOther: handleDrag,
         click: toClicked
       });
-      return update(initialValue);
+      return update(props.value || 0);
     });
   });
 
   Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
     var GUI;
     GUI = arg.Settings;
-    return Registry.set("SettingType", "switch", function(elm, name, initialValue, cb) {
-      var active, bgc, blocked, blueBG, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, v;
-      v = 0;
+    return Registry.set("SettingType", "switch", function(elm, props) {
+      var active, bgc, blocked, blueBG, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track;
       strokeWidth = 2;
       labelPad = 10;
       labelWidth = GUI.itemWidth / 2;
       thumbSize = GUI.unit;
       active = false;
       normalTrack = "hsl(227, 45%, 24%)";
-      lightTrack = "hsl(220, 10%, 92%)";
+      lightTrack = "hsl(92, 46%, 57%)";
       SVG.attrs(elm, {
         ui: true
       });
@@ -2091,11 +2306,11 @@
         cx: thumbSize / 2 + labelWidth,
         cy: thumbSize / 2,
         strokeWidth: strokeWidth,
-        fill: lightTrack,
+        fill: "hsl(220, 10%, 92%)",
         r: thumbSize / 2 - strokeWidth / 2
       }));
       label = SVG.create("text", elm, {
-        textContent: name,
+        textContent: props.name,
         x: labelWidth - labelPad,
         y: 21,
         textAnchor: "end",
@@ -2109,7 +2324,7 @@
         SVG.attrs(track, {
           fill: active ? lightTrack : normalTrack
         });
-        return cb(active);
+        return props.update(active);
       };
       bgc = blueBG = {
         r: 34,
@@ -2180,7 +2395,7 @@
           return void 0;
         }
       });
-      if (initialValue) {
+      if (props.value) {
         return toggle();
       }
     });
@@ -2201,11 +2416,11 @@
     });
     Settings = Scope(elm, function() {
       return {
-        addSetting: function(name, type, initialValue, cb) {
+        addSetting: function(type, props) {
           var builder, instance;
           instance = Scope(SVG.create("g", items));
           builder = Registry.get("SettingType", type);
-          builder(instance.element, name, initialValue, cb);
+          builder(instance.element, props);
           instance.y = height;
           height += GUI.Settings.unit + GUI.Settings.itemMargin;
           return SVG.attrs(bg, {
@@ -3041,20 +3256,24 @@
 
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var childPathFill, childPathStroke, fill, stroke;
+      var childPathFills, childPathStrokes, fill, stroke;
       ScopeCheck(scope, "stroke", "fill");
-      childPathStroke = childPathFill = scope.element.querySelector("path");
+      childPathStrokes = childPathFills = scope.element.querySelectorAll("path");
       stroke = null;
       Object.defineProperty(scope, 'stroke', {
         get: function() {
           return stroke;
         },
         set: function(val) {
+          var childPathStroke, len, m;
           if (stroke !== val) {
             SVG.attr(scope.element, "stroke", stroke = val);
-            if (childPathStroke != null) {
-              SVG.attr(childPathStroke, "stroke", null);
-              return childPathStroke = null;
+            if (childPathStrokes.length > 0) {
+              for (m = 0, len = childPathStrokes.length; m < len; m++) {
+                childPathStroke = childPathStrokes[m];
+                SVG.attr(childPathStroke, "stroke", null);
+              }
+              return childPathStrokes = [];
             }
           }
         }
@@ -3065,11 +3284,15 @@
           return fill;
         },
         set: function(val) {
+          var childPathFill, len, m;
           if (fill !== val) {
             SVG.attr(scope.element, "fill", fill = val);
-            if (childPathFill != null) {
-              SVG.attr(childPathFill, "fill", null);
-              return childPathFill = null;
+            if (childPathFills.length > 0) {
+              for (m = 0, len = childPathFills.length; m < len; m++) {
+                childPathFill = childPathFills[m];
+                SVG.attr(childPathFill, "fill", null);
+              }
+              return childPathFills = [];
             }
           }
         }
@@ -3389,14 +3612,23 @@
   });
 
   Take(["Action", "Settings"], function(Action, Settings) {
-    return Settings.addSetting("Background", "slider", .7, function(v) {
-      return Action("Background:Lightness", v);
+    return Settings.addSetting("slider", {
+      name: "Background",
+      value: .7,
+      snaps: [.7],
+      update: function(v) {
+        return Action("Background:Lightness", v);
+      }
     });
   });
 
   Take(["Action", "Settings"], function(Action, Settings) {
-    return Settings.addSetting("Highlights", "switch", true, function(active) {
-      return Action("Highlights:Set", active);
+    return Settings.addSetting("switch", {
+      name: "Highlights",
+      value: true,
+      update: function(active) {
+        return Action("Highlights:Set", active);
+      }
     });
   });
 

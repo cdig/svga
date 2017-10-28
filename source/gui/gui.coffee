@@ -12,7 +12,9 @@ Take ["SVG", "SVGReady"], (SVG)->
       groupPad: 3 # Padding inside groups
       itemMargin: 3 # Vertical space between two items
       labelPad: 3 # Padding above text labels
+      labelMargin: 6 # Horizontal space around labels for push buttons and switches
       unit: unit = 32
+      thumbSize: unit - 4
       colUnits: colUnits = 5
       colInnerWidth: colInnerWidth = unit * colUnits # Width of items in a column
     Settings:

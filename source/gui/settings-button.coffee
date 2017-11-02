@@ -1,4 +1,4 @@
-Take ["Action", "GUI", "Input", "Reaction", "Resize", "Scope", "SVG", "ScopeReady"], (Action, GUI, Input, Reaction, Resize, Scope, SVG)->
+Take ["Action", "GUI", "Input", "Reaction", "Scope", "SVG", "ScopeReady"], (Action, GUI, Input, Reaction, Scope, SVG)->
   
   elm = SVG.create "g", GUI.elm, ui: true
   scope = Scope elm

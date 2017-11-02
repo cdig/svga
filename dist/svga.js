@@ -1203,6 +1203,426 @@
     });
   });
 
+  Take(["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SVG", "Tween"], function(arg, Input, PopoverButton, RAF, Registry, Resize, Scope, SVG, Tween) {
+    var GUI;
+    GUI = arg.ControlPanel;
+    return Registry.set("Control", "popover", function(elm, props) {
+      var activeButtonCancelCb, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, height, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update;
+      labelFill = "hsl(220, 10%, 92%)";
+      rectFill = "hsl(227, 45%, 25%)";
+      triangleFill = "hsl(215, 45%, 88%)";
+      triangleSize = 24;
+      strokeWidth = 2;
+      showing = false;
+      panelIsVertical = true;
+      buttons = [];
+      nextButtonOffsetY = 0;
+      activeButtonCancelCb = null;
+      labelY = 0;
+      labelHeight = 0;
+      height = 0;
+      if (props.name != null) {
+        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
+        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
+      } else {
+        labelHeight = 0;
+      }
+      height = labelHeight + GUI.unit;
+      itemElm = SVG.create("g", elm, {
+        ui: true
+      });
+      if (props.name != null) {
+        label = SVG.create("text", itemElm, {
+          textContent: props.name,
+          x: GUI.colInnerWidth / 2,
+          y: labelY,
+          fontSize: props.fontSize || 16,
+          fontWeight: props.fontWeight || "normal",
+          fontStyle: props.fontStyle || "normal",
+          fill: labelFill
+        });
+      }
+      rect = SVG.create("rect", itemElm, {
+        rx: GUI.borderRadius + 2,
+        fill: rectFill,
+        x: 0,
+        y: labelHeight,
+        width: GUI.colInnerWidth,
+        height: GUI.unit,
+        strokeWidth: strokeWidth
+      });
+      activeLabel = SVG.create("text", itemElm, {
+        y: labelHeight + 21,
+        fill: "hsl(92, 46%, 57%)"
+      });
+      labelTriangle = SVG.create("polyline", itemElm, {
+        points: "6,-6 13,0 6,6",
+        transform: "translate(0, " + (labelHeight + GUI.unit / 2) + ")",
+        stroke: triangleFill,
+        strokeWidth: 4,
+        strokeLinecap: "round",
+        fill: "none"
+      });
+      panel = Scope(SVG.create("g", elm));
+      panel.hide(0);
+      panelTriangle = SVG.create("polyline", panel.element, {
+        points: (7 - triangleSize * 4 / 7) + "," + (labelHeight + GUI.unit / 2 - triangleSize / 2) + " 7," + (labelHeight + GUI.unit / 2) + " " + (7 - triangleSize * 4 / 7) + "," + (labelHeight + GUI.unit / 2 + triangleSize / 2),
+        fill: triangleFill
+      });
+      panelInner = SVG.create("g", panel.element);
+      panelRect = SVG.create("rect", panelInner, {
+        width: GUI.colInnerWidth,
+        rx: GUI.panelBorderRadius,
+        fill: triangleFill
+      });
+      buttonContainer = SVG.create("g", panelInner, {
+        transform: "translate(" + GUI.panelPadding + "," + GUI.panelPadding + ")"
+      });
+      resize = function(force) {
+        if (force == null) {
+          force = false;
+        }
+        if (!(showing || force)) {
+          return;
+        }
+        if (panelIsVertical) {
+          panel.x = -GUI.colInnerWidth - 6;
+          panel.y = labelHeight + GUI.unit / 2 - nextButtonOffsetY / 2;
+          SVG.attrs(panelTriangle, {
+            transform: "translate(4,0)"
+          });
+        } else {
+          panel.x = 0;
+          panel.y = -nextButtonOffsetY - triangleSize;
+          SVG.attrs(panelTriangle, {
+            transform: "translate(" + (GUI.colInnerWidth / 2) + ",0) rotate(90)"
+          });
+        }
+        SVG.attrs(panelInner, {
+          transform: "translate(0,0)"
+        });
+        return RAF(requestReposition, true);
+      };
+      requestReposition = function() {
+        return RAF(reposition, true);
+      };
+      reposition = function() {
+        var bounds;
+        bounds = panelInner.getBoundingClientRect();
+        if (bounds.top < GUI.panelMargin) {
+          console.log(bounds.top - GUI.panelMargin);
+          return SVG.attrs(panelInner, {
+            transform: "translate(0," + (-bounds.top + GUI.panelMargin) + ")"
+          });
+        }
+      };
+      setActive = function(name, unclick) {
+        SVG.attrs(activeLabel, {
+          textContent: name,
+          x: GUI.colInnerWidth / 2 + (name.length > 14 ? 6 : 0)
+        });
+        if (typeof activeButtonCancelCb === "function") {
+          activeButtonCancelCb();
+        }
+        activeButtonCancelCb = unclick;
+        if (showing) {
+          showing = false;
+          return update();
+        }
+      };
+      bgc = blueBG = {
+        r: 34,
+        g: 46,
+        b: 89
+      };
+      lightBG = {
+        r: 133,
+        g: 163,
+        b: 224
+      };
+      orangeBG = {
+        r: 255,
+        g: 196,
+        b: 46
+      };
+      tickBG = function(_bgc) {
+        bgc = _bgc;
+        return SVG.attrs(rect, {
+          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+        });
+      };
+      tickBG(blueBG);
+      update = function() {
+        if (showing) {
+          panel.show(0);
+          return resize(true);
+        } else {
+          return panel.hide(0.2);
+        }
+      };
+      blocked = false;
+      toNormal = function(e, state) {
+        return Tween(bgc, blueBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch) {
+          return Tween(bgc, lightBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(bgc, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toClicked = function(e, state) {
+        return Tween(bgc, lightBG, .2, {
+          tick: tickBG
+        });
+      };
+      Input(itemElm, {
+        moveIn: toHover,
+        dragIn: function(e, state) {
+          if (state.clicking) {
+            return toClicking();
+          }
+        },
+        down: toClicking,
+        up: toHover,
+        moveOut: toNormal,
+        dragOut: toNormal,
+        upOther: function(e, state) {
+          if (showing) {
+            showing = false;
+            return update();
+          }
+        },
+        click: function() {
+          if (blocked) {
+            return;
+          }
+          blocked = true;
+          setTimeout((function() {
+            return blocked = false;
+          }), 100);
+          showing = !showing;
+          return update();
+        }
+      });
+      Resize(function(info) {
+        panelIsVertical = info.panel.vertical;
+        return resize();
+      });
+      return scope = {
+        height: height,
+        button: function(props) {
+          var buttonElm, buttonScope;
+          props.setActive = setActive;
+          buttonElm = SVG.create("g", buttonContainer);
+          buttonScope = Scope(buttonElm, PopoverButton, props);
+          buttons.push(buttonScope);
+          buttonScope.y = nextButtonOffsetY;
+          nextButtonOffsetY += GUI.unit + GUI.itemMargin;
+          SVG.attrs(panelRect, {
+            height: nextButtonOffsetY + GUI.panelPadding * 2 - GUI.itemMargin
+          });
+          return buttonScope;
+        },
+        _highlight: function(enable) {
+          var button, len, m, results;
+          if (enable) {
+            SVG.attrs(label, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            SVG.attrs(rect, {
+              fill: "url(#DarkHighlightGradient)"
+            });
+          } else {
+            SVG.attrs(label, {
+              fill: labelFill
+            });
+            SVG.attrs(rect, {
+              fill: rectFill
+            });
+          }
+          results = [];
+          for (m = 0, len = buttons.length; m < len; m++) {
+            button = buttons[m];
+            results.push(button._highlight(enable));
+          }
+          return results;
+        }
+      };
+    });
+  });
+
+  Take(["GUI", "Input", "SVG", "Tween"], function(arg, Input, SVG, Tween) {
+    var GUI, active;
+    GUI = arg.ControlPanel;
+    active = null;
+    return Make("PopoverButton", function(elm, props) {
+      var activeBG, attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, orangeBG, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
+      handlers = [];
+      isActive = false;
+      highlighting = false;
+      labelFill = "hsl(227, 16%, 24%)";
+      SVG.attrs(elm, {
+        ui: true
+      });
+      bg = SVG.create("rect", elm, {
+        width: GUI.colInnerWidth - GUI.panelPadding * 2,
+        height: GUI.unit,
+        rx: GUI.groupBorderRadius
+      });
+      label = SVG.create("text", elm, {
+        x: GUI.colInnerWidth / 2 - GUI.panelPadding,
+        y: (props.fontSize || 16) + GUI.unit / 5,
+        textContent: props.name,
+        fill: labelFill,
+        fontSize: props.fontSize || 16,
+        fontWeight: props.fontWeight || "normal",
+        fontStyle: props.fontStyle || "normal"
+      });
+      curBG = null;
+      whiteBG = {
+        h: 220,
+        s: 10,
+        l: 92
+      };
+      blueBG = {
+        h: 215,
+        s: 100,
+        l: 86
+      };
+      orangeBG = {
+        h: 43,
+        s: 100,
+        l: 59
+      };
+      activeBG = {
+        h: 92,
+        s: 46,
+        l: 57
+      };
+      tickBG = function(_curBG) {
+        curBG = _curBG;
+        if (highlighting && isActive) {
+          return SVG.attrs(bg, {
+            fill: "url(#MidHighlightGradient)"
+          });
+        } else {
+          return SVG.attrs(bg, {
+            fill: "hsl(" + (curBG.h | 0) + "," + (curBG.s | 0) + "%," + (curBG.l | 0) + "%)"
+          });
+        }
+      };
+      tickBG(whiteBG);
+      toNormal = function(e, state) {
+        return Tween(curBG, whiteBG, .2, {
+          tick: tickBG
+        });
+      };
+      toHover = function(e, state) {
+        if (!state.touch && !isActive) {
+          return Tween(curBG, blueBG, 0, {
+            tick: tickBG
+          });
+        }
+      };
+      toClicking = function(e, state) {
+        return Tween(curBG, orangeBG, 0, {
+          tick: tickBG
+        });
+      };
+      toActive = function(e, state) {
+        return Tween(curBG, activeBG, .2, {
+          tick: tickBG
+        });
+      };
+      unclick = function() {
+        toNormal();
+        return isActive = false;
+      };
+      click = function(e, state) {
+        var handler, len, m;
+        props.setActive(props.name, unclick);
+        isActive = true;
+        toActive();
+        for (m = 0, len = handlers.length; m < len; m++) {
+          handler = handlers[m];
+          handler();
+        }
+        return void 0;
+      };
+      Input(elm, {
+        moveIn: function(e, state) {
+          if (!isActive) {
+            return toHover(e, state);
+          }
+        },
+        dragIn: function(e, state) {
+          if (state.clicking && !isActive) {
+            return toClicking(e, state);
+          }
+        },
+        down: function(e, state) {
+          if (!isActive) {
+            return toClicking(e, state);
+          }
+        },
+        up: function(e, state) {
+          if (!isActive) {
+            return toHover(e, state);
+          }
+        },
+        moveOut: function(e, state) {
+          if (!isActive) {
+            return toNormal(e, state);
+          }
+        },
+        dragOut: function(e, state) {
+          if (!isActive) {
+            return toNormal(e, state);
+          }
+        },
+        click: function(e, state) {
+          if (!isActive) {
+            return click(e, state);
+          }
+        }
+      });
+      attachClick = function(cb) {
+        return handlers.push(cb);
+      };
+      if (props.click != null) {
+        attachClick(props.click);
+      }
+      Take("SceneReady", function() {
+        if (props.active) {
+          return click();
+        }
+      });
+      return scope = {
+        click: attachClick,
+        _highlight: function(enable) {
+          if (highlighting = enable) {
+            SVG.attrs(label, {
+              fill: "black"
+            });
+          } else {
+            SVG.attrs(label, {
+              fill: labelFill
+            });
+          }
+          return tickBG(curBG);
+        }
+      };
+    });
+  });
+
   Take(["GUI", "Input", "Registry", "SVG", "Tween"], function(arg, Input, Registry, SVG, Tween) {
     var GUI;
     GUI = arg.ControlPanel;
@@ -1881,7 +2301,7 @@
         SVG.attrs(track, {
           fill: active ? lightTrack : normalTrack
         });
-        return cb(active);
+        return props.click(active);
       };
       bgc = blueBG = {
         r: 34,
@@ -2445,7 +2865,7 @@
     });
   });
 
-  Take(["Action", "GUI", "Input", "Reaction", "Resize", "Scope", "SVG", "ScopeReady"], function(Action, GUI, Input, Reaction, Resize, Scope, SVG) {
+  Take(["Action", "GUI", "Input", "Reaction", "Scope", "SVG", "ScopeReady"], function(Action, GUI, Input, Reaction, Scope, SVG) {
     var bg, elm, label, scope;
     elm = SVG.create("g", GUI.elm, {
       ui: true
@@ -2641,7 +3061,7 @@
   });
 
   Take(["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentWidth, dist, distTo, horizontalIsBetter, initialRootRect, limit, parentRect, pos, render, requestRender, scaleStartPosZ, totalSpace, tween, windowScale;
+    var Nav, applyLimit, center, centerInverse, checkHorizontalIsBetter, computeResizeInfo, contentHeight, contentWidth, dist, distTo, initialRootRect, limit, parentRect, pos, render, requestRender, resize, scaleStartPosZ, totalSpace, tween, windowScale;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
@@ -2717,7 +3137,7 @@
         availableSpaceY: availableSpaceY
       };
     };
-    horizontalIsBetter = function(horizontalPanelInfo, verticalPanelInfo) {
+    checkHorizontalIsBetter = function(horizontalPanelInfo, verticalPanelInfo) {
       var horizontalResizeInfo, verticalResizeInfo;
       horizontalResizeInfo = computeResizeInfo(horizontalPanelInfo);
       verticalResizeInfo = computeResizeInfo(verticalPanelInfo);
@@ -2727,10 +3147,10 @@
         return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale;
       }
     };
-    Resize(function() {
+    resize = function() {
       var aspectAdjustedHeight, computedHeight, panelInfo, resizeInfo;
       totalSpace = SVG.svg.getBoundingClientRect();
-      panelInfo = ControlPanel.getPanelLayoutInfo(horizontalIsBetter);
+      panelInfo = ControlPanel.getPanelLayoutInfo(checkHorizontalIsBetter);
       resizeInfo = computeResizeInfo(panelInfo);
       if (Mode.embed) {
         parentRect = ParentElement.getBoundingClientRect();
@@ -2743,7 +3163,27 @@
       center.y = resizeInfo.availableSpaceY + resizeInfo.availableSpaceH / 2;
       centerInverse.x = contentWidth / 2;
       centerInverse.y = contentHeight / 2;
-      return render();
+      render();
+      return Resize._fire({
+        window: totalSpace,
+        panel: {
+          vertical: panelInfo.vertical,
+          x: panelInfo.controlPanelX,
+          y: panelInfo.controlPanelY,
+          w: panelInfo.w,
+          h: panelInfo.h
+        },
+        content: {
+          w: contentWidth,
+          h: contentHeight
+        }
+      });
+    };
+    window.addEventListener("resize", function() {
+      return RAF(resize, true);
+    });
+    Take("AllReady", function() {
+      return RAF(resize, true);
     });
     if (!Mode.nav) {
       Make("Nav", false);
@@ -2860,6 +3300,23 @@
       }
     });
   });
+
+  (function() {
+    var Resize, cbs;
+    cbs = [];
+    Resize = function(cb) {
+      return cbs.push(cb);
+    };
+    Resize._fire = function(info) {
+      var cb, len, m;
+      for (m = 0, len = cbs.length; m < len; m++) {
+        cb = cbs[m];
+        cb(info);
+      }
+      return void 0;
+    };
+    return Make("Resize", Resize);
+  })();
 
   Take(["Mode", "Nav"], function(Mode, Nav) {
     var cloneTouches, distTouches, lastTouches, touchMove, touchStart;
@@ -4862,14 +5319,14 @@
     requested = false;
     callbacksByPriority = [[], []];
     run = function(time) {
-      var callbacks, cb, len, len1, m, n, p;
+      var callbacks, cb, len, len1, m, n, priority;
       requested = false;
-      for (p = m = 0, len = callbacksByPriority.length; m < len; p = ++m) {
-        callbacks = callbacksByPriority[p];
+      for (priority = m = 0, len = callbacksByPriority.length; m < len; priority = ++m) {
+        callbacks = callbacksByPriority[priority];
         if (!(callbacks != null)) {
           continue;
         }
-        callbacksByPriority[p] = [];
+        callbacksByPriority[priority] = [];
         for (n = 0, len1 = callbacks.length; n < len1; n++) {
           cb = callbacks[n];
           cb(time);
@@ -4877,18 +5334,18 @@
       }
       return void 0;
     };
-    return Make("RAF", function(cb, ignoreDuplicates, p) {
+    return Make("RAF", function(cb, ignoreDuplicates, priority) {
       var c, len, m, ref;
       if (ignoreDuplicates == null) {
         ignoreDuplicates = false;
       }
-      if (p == null) {
-        p = 0;
+      if (priority == null) {
+        priority = 0;
       }
       if (cb == null) {
         throw new Error("RAF(null)");
       }
-      ref = callbacksByPriority[p];
+      ref = callbacksByPriority[priority];
       for (m = 0, len = ref.length; m < len; m++) {
         c = ref[m];
         if (!(c === cb)) {
@@ -4900,7 +5357,7 @@
         console.log(cb);
         throw new Error("^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error.");
       }
-      (callbacksByPriority[p] != null ? callbacksByPriority[p] : callbacksByPriority[p] = []).push(cb);
+      (callbacksByPriority[priority] != null ? callbacksByPriority[priority] : callbacksByPriority[priority] = []).push(cb);
       if (!requested) {
         requested = true;
         requestAnimationFrame(run);
@@ -4958,42 +5415,6 @@
       }
     });
   })();
-
-  Take(["RAF"], function(RAF) {
-    return Make("Resize", function(cb, now) {
-      var r;
-      if (now == null) {
-        now = false;
-      }
-      r = function() {
-        return RAF(cb, true);
-      };
-      if (now) {
-        cb();
-      } else {
-        r();
-      }
-      window.addEventListener("resize", r);
-      Take("AllReady", r);
-      return Take("load", function() {
-        r();
-        setTimeout(r, 1000);
-        setTimeout(r, 1010);
-        setTimeout(r, 3000);
-        setTimeout(r, 3010);
-        setTimeout(r, 5000);
-        setTimeout(r, 5010);
-        setTimeout(r, 7500);
-        setTimeout(r, 7510);
-        setTimeout(r, 10000);
-        setTimeout(r, 10010);
-        setTimeout(r, 20000);
-        setTimeout(r, 20010);
-        setTimeout(r, 60000);
-        return setTimeout(r, 60010);
-      });
-    });
-  });
 
   Make("ScopeCheck", function() {
     var len, m, prop, props, scope;

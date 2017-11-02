@@ -9,22 +9,22 @@ do ()->
   run = (time)->
     requested = false
     
-    for callbacks, p in callbacksByPriority when callbacks?
-      callbacksByPriority[p] = []
+    for callbacks, priority in callbacksByPriority when callbacks?
+      callbacksByPriority[priority] = []
       cb time for cb in callbacks
     
     undefined
   
   
-  Make "RAF", (cb, ignoreDuplicates = false, p = 0)->
+  Make "RAF", (cb, ignoreDuplicates = false, priority = 0)->
     throw new Error "RAF(null)" unless cb?
     
-    for c in callbacksByPriority[p] when c is cb
+    for c in callbacksByPriority[priority] when c is cb
       return if ignoreDuplicates
       console.log cb
       throw new Error "^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error."
     
-    (callbacksByPriority[p] ?= []).push cb
+    (callbacksByPriority[priority] ?= []).push cb
     
     if not requested
       requested = true

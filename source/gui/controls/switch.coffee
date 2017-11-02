@@ -43,7 +43,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       active = !active
       TRS.abs thumb, x: if active then thumbSize else 0
       SVG.attrs track, fill: if active then lightTrack else normalTrack
-      cb active
+      props.click active
     
     
     # Setup the thumb stroke color for tweening

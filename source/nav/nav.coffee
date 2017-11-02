@@ -72,7 +72,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
   
   
   # This function takes two panel layouts and figures out which one leaves more space for our content.
-  horizontalIsBetter = (horizontalPanelInfo, verticalPanelInfo)->
+  checkHorizontalIsBetter = (horizontalPanelInfo, verticalPanelInfo)->
     horizontalResizeInfo = computeResizeInfo horizontalPanelInfo
     verticalResizeInfo = computeResizeInfo verticalPanelInfo
     if Mode.embed
@@ -82,14 +82,14 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
       return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale
   
   
-  Resize ()->
+  resize = ()->
     
     # We need to use getBoundingClientRect() on our full-screen <svg>, because window.innerWidth/Height are sometimes 0 or wrong, depending on where we are in the load/init process.
     totalSpace = SVG.svg.getBoundingClientRect()
     
     # Force the panel to do a layout.
     # We pass in a function that takes 2 panel orientations, and figures out which is better.
-    panelInfo = ControlPanel.getPanelLayoutInfo horizontalIsBetter
+    panelInfo = ControlPanel.getPanelLayoutInfo checkHorizontalIsBetter
     
     # Based on the panel info, compute what size our content should be.
     resizeInfo = computeResizeInfo panelInfo
@@ -100,6 +100,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
       aspectAdjustedHeight = resizeInfo.panelClaimedH + contentHeight * (parentRect.width - resizeInfo.panelClaimedW) / contentWidth
       computedHeight = Math.max aspectAdjustedHeight, panelInfo.h
       ParentElement.style.height = Math.round(computedHeight) + "px"
+      # TODO: Has totalSpace changed?
     
     # Save our window scale for future nav actions
     windowScale = resizeInfo.windowScale
@@ -118,8 +119,24 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     # SVG.attrs debugBox,
     #   width: contentWidth
     #   height: contentHeight
-      
     
+    Resize._fire
+      window: totalSpace
+      panel:
+        vertical: panelInfo.vertical
+        x: panelInfo.controlPanelX
+        y: panelInfo.controlPanelY
+        w: panelInfo.w
+        h: panelInfo.h
+      content:
+        w: contentWidth
+        h: contentHeight
+      
+  
+  # Init resizing, and fire an initial resize when everything is ready
+  window.addEventListener "resize", ()-> RAF resize, true
+  Take "AllReady", ()-> RAF resize, true
+  
   
   # BAIL IF WE'RE NOT NAV-ING
   unless Mode.nav

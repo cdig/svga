@@ -123,14 +123,15 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     Resize._fire
       window: totalSpace
       panel:
+        scale: panelInfo.controlPanelScale
         vertical: panelInfo.vertical
         x: panelInfo.controlPanelX
         y: panelInfo.controlPanelY
-        w: panelInfo.w
-        h: panelInfo.h
+        width: panelInfo.w
+        height: panelInfo.h
       content:
-        w: contentWidth
-        h: contentHeight
+        width: contentWidth
+        height: contentHeight
       
   
   # Init resizing, and fire an initial resize when everything is ready

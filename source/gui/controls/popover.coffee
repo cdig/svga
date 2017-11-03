@@ -4,7 +4,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     # Config
     labelFill = "hsl(220, 10%, 92%)"
     rectFill = "hsl(227, 45%, 25%)"
-    triangleFill = "hsl(215, 45%, 88%)"
+    triangleFill = "hsl(220, 35%, 80%)" # Todo: Try $silver
     triangleSize = 24
     strokeWidth = 2
     
@@ -17,6 +17,10 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     labelY = 0
     labelHeight = 0
     height = 0
+    desiredPanelX = null
+    desiredPanelY = null
+    controlPanelScale = null
+    windowHeight = null
     
     
     # Init label size values
@@ -67,7 +71,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     panel.hide 0
     
     panelTriangle = SVG.create "polyline", panel.element,
-      points: "#{7 - triangleSize*4/7},#{labelHeight+GUI.unit/2-triangleSize/2} 7,#{labelHeight+GUI.unit/2} #{7 - triangleSize*4/7},#{labelHeight+GUI.unit/2+triangleSize/2}"
+      points: "0,#{-triangleSize/2} #{triangleSize*4/7},0 0,#{triangleSize/2}"
       fill: triangleFill
     
     panelInner = SVG.create "g", panel.element
@@ -79,37 +83,57 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     
     buttonContainer = SVG.create "g", panelInner,
       transform: "translate(#{GUI.panelPadding},#{GUI.panelPadding})"
-    
-    resize = (force = false)->
-      return unless showing or force
-      
-      if panelIsVertical
-        panel.x = - GUI.colInnerWidth - 6
-        panel.y = labelHeight + GUI.unit/2 - nextButtonOffsetY/2
-        SVG.attrs panelTriangle, transform: "translate(4,0)"
-      else
-        panel.x = 0
-        panel.y = - nextButtonOffsetY - triangleSize
-        SVG.attrs panelTriangle, transform: "translate(#{GUI.colInnerWidth/2},0) rotate(90)"
-      
-      SVG.attrs panelInner, transform: "translate(0,0)"
-      
-      RAF requestReposition, true
         
+    resize = ()->
+      if panelIsVertical
+        desiredPanelX = - GUI.colInnerWidth - 6
+        desiredPanelY = labelHeight + GUI.unit/2 - nextButtonOffsetY/2
+        SVG.attrs panelTriangle, transform: "translate(-7,#{labelHeight + GUI.unit/2})"
+      else
+        desiredPanelX = 0
+        desiredPanelY = panelInner.y = - nextButtonOffsetY - triangleSize + labelHeight + 9
+        SVG.attrs panelTriangle, transform: "translate(#{GUI.colInnerWidth/2},#{labelHeight-7}) rotate(90)"
+      
+      SVG.attrs panelInner, transform: "translate(#{desiredPanelX}, #{desiredPanelY})"
+      
+      # We have to wait 1 tick for a layout operation to happen.
+      # This causes some flickering, but I can't find a way to avoid that.
+      requestReposition()
+    
+    
     requestReposition = ()->
       RAF reposition, true
       
     reposition = ()->
       bounds = panelInner.getBoundingClientRect()
-      if bounds.top < GUI.panelMargin
-        console.log bounds.top - GUI.panelMargin
-        SVG.attrs panelInner, transform: "translate(0,#{-bounds.top + GUI.panelMargin})"
+      
+      tooTall = bounds.height > windowHeight - GUI.panelMargin*2
+      offTop = bounds.top / controlPanelScale < GUI.panelMargin
+      offBottom = bounds.bottom / controlPanelScale > windowHeight - GUI.panelMargin
+      
+      moveToTop = desiredPanelY - bounds.top / controlPanelScale + GUI.panelMargin
+      moveToBottom = desiredPanelY - (bounds.bottom / controlPanelScale) / controlPanelScale + (windowHeight - GUI.panelMargin)
+      
+      if tooTall
+        panelScale = Math.min 1, (windowHeight - GUI.panelMargin*2) / bounds.height
+        newPanelY = moveToTop
+      else if offTop
+        newPanelY = moveToTop
+        panelScale = 1
+      else if offBottom
+        newPanelY = moveToBottom
+        panelScale = 1
+      else
+        newPanelY = desiredPanelY
+        panelScale = 1
+      
+      SVG.attrs panelInner, transform: "translate(#{desiredPanelX * panelScale}, #{newPanelY}) scale(#{panelScale})"
     
     
     setActive = (name, unclick)->
       SVG.attrs activeLabel,
         textContent: name
-        x: GUI.colInnerWidth/2 + (if name.length > 14 then 6 else 0)
+        x: GUI.colInnerWidth/2 + (if name.length > 14 then 8 else 0)
       activeButtonCancelCb?()
       activeButtonCancelCb = unclick
       if showing
@@ -128,7 +152,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     update = ()->
       if showing
         panel.show 0
-        resize true
+        resize()
       else
         panel.hide 0.2
     
@@ -158,7 +182,10 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
         update()
     
     Resize (info)->
+      windowHeight = info.window.height
+      controlPanelScale = info.panel.scale
       panelIsVertical = info.panel.vertical
+      desiredPanelY = null
       resize()
     
     return scope =

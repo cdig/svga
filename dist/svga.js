@@ -1207,10 +1207,10 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "popover", function(elm, props) {
-      var activeButtonCancelCb, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, height, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update;
+      var activeButtonCancelCb, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
       labelFill = "hsl(220, 10%, 92%)";
       rectFill = "hsl(227, 45%, 25%)";
-      triangleFill = "hsl(215, 45%, 88%)";
+      triangleFill = "hsl(220, 35%, 80%)";
       triangleSize = 24;
       strokeWidth = 2;
       showing = false;
@@ -1221,6 +1221,10 @@
       labelY = 0;
       labelHeight = 0;
       height = 0;
+      desiredPanelX = null;
+      desiredPanelY = null;
+      controlPanelScale = null;
+      windowHeight = null;
       if (props.name != null) {
         labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
         labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
@@ -1266,7 +1270,7 @@
       panel = Scope(SVG.create("g", elm));
       panel.hide(0);
       panelTriangle = SVG.create("polyline", panel.element, {
-        points: (7 - triangleSize * 4 / 7) + "," + (labelHeight + GUI.unit / 2 - triangleSize / 2) + " 7," + (labelHeight + GUI.unit / 2) + " " + (7 - triangleSize * 4 / 7) + "," + (labelHeight + GUI.unit / 2 + triangleSize / 2),
+        points: "0," + (-triangleSize / 2) + " " + (triangleSize * 4 / 7) + ",0 0," + (triangleSize / 2),
         fill: triangleFill
       });
       panelInner = SVG.create("g", panel.element);
@@ -1278,48 +1282,57 @@
       buttonContainer = SVG.create("g", panelInner, {
         transform: "translate(" + GUI.panelPadding + "," + GUI.panelPadding + ")"
       });
-      resize = function(force) {
-        if (force == null) {
-          force = false;
-        }
-        if (!(showing || force)) {
-          return;
-        }
+      resize = function() {
         if (panelIsVertical) {
-          panel.x = -GUI.colInnerWidth - 6;
-          panel.y = labelHeight + GUI.unit / 2 - nextButtonOffsetY / 2;
+          desiredPanelX = -GUI.colInnerWidth - 6;
+          desiredPanelY = labelHeight + GUI.unit / 2 - nextButtonOffsetY / 2;
           SVG.attrs(panelTriangle, {
-            transform: "translate(4,0)"
+            transform: "translate(-7," + (labelHeight + GUI.unit / 2) + ")"
           });
         } else {
-          panel.x = 0;
-          panel.y = -nextButtonOffsetY - triangleSize;
+          desiredPanelX = 0;
+          desiredPanelY = panelInner.y = -nextButtonOffsetY - triangleSize + labelHeight + 9;
           SVG.attrs(panelTriangle, {
-            transform: "translate(" + (GUI.colInnerWidth / 2) + ",0) rotate(90)"
+            transform: "translate(" + (GUI.colInnerWidth / 2) + "," + (labelHeight - 7) + ") rotate(90)"
           });
         }
         SVG.attrs(panelInner, {
-          transform: "translate(0,0)"
+          transform: "translate(" + desiredPanelX + ", " + desiredPanelY + ")"
         });
-        return RAF(requestReposition, true);
+        return requestReposition();
       };
       requestReposition = function() {
         return RAF(reposition, true);
       };
       reposition = function() {
-        var bounds;
+        var bounds, moveToBottom, moveToTop, newPanelY, offBottom, offTop, panelScale, tooTall;
         bounds = panelInner.getBoundingClientRect();
-        if (bounds.top < GUI.panelMargin) {
-          console.log(bounds.top - GUI.panelMargin);
-          return SVG.attrs(panelInner, {
-            transform: "translate(0," + (-bounds.top + GUI.panelMargin) + ")"
-          });
+        tooTall = bounds.height > windowHeight - GUI.panelMargin * 2;
+        offTop = bounds.top / controlPanelScale < GUI.panelMargin;
+        offBottom = bounds.bottom / controlPanelScale > windowHeight - GUI.panelMargin;
+        moveToTop = desiredPanelY - bounds.top / controlPanelScale + GUI.panelMargin;
+        moveToBottom = desiredPanelY - (bounds.bottom / controlPanelScale) / controlPanelScale + (windowHeight - GUI.panelMargin);
+        if (tooTall) {
+          panelScale = Math.min(1, (windowHeight - GUI.panelMargin * 2) / bounds.height);
+          newPanelY = moveToTop;
+        } else if (offTop) {
+          newPanelY = moveToTop;
+          panelScale = 1;
+        } else if (offBottom) {
+          newPanelY = moveToBottom;
+          panelScale = 1;
+        } else {
+          newPanelY = desiredPanelY;
+          panelScale = 1;
         }
+        return SVG.attrs(panelInner, {
+          transform: "translate(" + (desiredPanelX * panelScale) + ", " + newPanelY + ") scale(" + panelScale + ")"
+        });
       };
       setActive = function(name, unclick) {
         SVG.attrs(activeLabel, {
           textContent: name,
-          x: GUI.colInnerWidth / 2 + (name.length > 14 ? 6 : 0)
+          x: GUI.colInnerWidth / 2 + (name.length > 14 ? 8 : 0)
         });
         if (typeof activeButtonCancelCb === "function") {
           activeButtonCancelCb();
@@ -1355,7 +1368,7 @@
       update = function() {
         if (showing) {
           panel.show(0);
-          return resize(true);
+          return resize();
         } else {
           return panel.hide(0.2);
         }
@@ -1413,7 +1426,10 @@
         }
       });
       Resize(function(info) {
+        windowHeight = info.window.height;
+        controlPanelScale = info.panel.scale;
         panelIsVertical = info.panel.vertical;
+        desiredPanelY = null;
         return resize();
       });
       return scope = {
@@ -3167,15 +3183,16 @@
       return Resize._fire({
         window: totalSpace,
         panel: {
+          scale: panelInfo.controlPanelScale,
           vertical: panelInfo.vertical,
           x: panelInfo.controlPanelX,
           y: panelInfo.controlPanelY,
-          w: panelInfo.w,
-          h: panelInfo.h
+          width: panelInfo.w,
+          height: panelInfo.h
         },
         content: {
-          w: contentWidth,
-          h: contentHeight
+          width: contentWidth,
+          height: contentHeight
         }
       });
     };

@@ -37,11 +37,13 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
       doFunction = elm._scope?._highlight?
       if doFunction
         highlights.push e = elm: elm, function: elm._scope._highlight
+        e.dontHighlightOnHover = elm._scope?._dontHighlightOnHover?
       else if doFill or doStroke
         highlights.push e = elm: elm, attrs: {}
         e.attrs.fill = fill if doFill
         e.attrs.stroke = stroke if doStroke
         e.attrs.strokeWidth = width if doStroke and (width = SVG.attr elm, "stroke-width")?
+        e.dontHighlightOnHover = elm._scope?._dontHighlightOnHover?
       if not doFunction
         for elm in elm.childNodes
           if elm.tagName is "g" or elm.tagName is "path" or elm.tagName is "text" or elm.tagName is "tspan" or elm.tagName is "rect" or elm.tagName is "circle"
@@ -49,36 +51,37 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
       undefined
     
     
-    activate = ()->
-      return unless enabled
-      if not active
-        active = true
-        activeHighlight?() # Deactivate any active highlight
-        activeHighlight = deactivate # Set this to be the new active highlight
-        for h in highlights
-          if h.function?
-            h.function true
-          else
-            if h.attrs.stroke?
-              if h.elm.tagName is "text" or h.elm.tagName is "tspan"
-                SVG.attrs h.elm, stroke: "url(#TextHighlightGradient)", strokeWidth: 3
-              else if h.attrs.stroke is "#FFF" or h.attrs.stroke is "white"
-                SVG.attrs h.elm, stroke: "url(#LightHighlightGradient)", strokeWidth: 3
-              else if h.attrs.stroke is "#000" or h.attrs.stroke is "black"
-                SVG.attrs h.elm, stroke: "url(#DarkHighlightGradient)", strokeWidth: 3
-              else
-                SVG.attrs h.elm, stroke: "url(#MidHighlightGradient)", strokeWidth: 3
-            if h.attrs.fill?
-              if h.elm.tagName is "text" or h.elm.tagName is "tspan"
-                SVG.attrs h.elm, fill: "url(#TextHighlightGradient)"
-              else if h.attrs.fill is "#FFF" or h.attrs.fill is "white"
-                SVG.attrs h.elm, fill: "url(#LightHighlightGradient)"
-              else if h.attrs.fill is "#000" or h.attrs.fill is "black"
-                SVG.attrs h.elm, fill: "url(#DarkHighlightGradient)"
-              else
-                SVG.attrs h.elm, fill: "url(#MidHighlightGradient)"
-        timeout = setTimeout deactivate, 4000
-    
+    activate = (currentTarget)-> ()->
+      return if active or not enabled
+      active = true
+      activeHighlight?() # Deactivate any active highlight
+      activeHighlight = deactivate # Set this to be the new active highlight
+      timeout = setTimeout deactivate, 4000
+      for h in highlights
+        if h.dontHighlightOnHover and currentTarget.element is h.elm
+          # skip
+        else if h.function?
+          h.function true
+        else
+          if h.attrs.stroke?
+            if h.elm.tagName is "text" or h.elm.tagName is "tspan"
+              SVG.attrs h.elm, stroke: "url(#TextHighlightGradient)", strokeWidth: 3
+            else if h.attrs.stroke is "#FFF" or h.attrs.stroke is "white"
+              SVG.attrs h.elm, stroke: "url(#LightHighlightGradient)", strokeWidth: 3
+            else if h.attrs.stroke is "#000" or h.attrs.stroke is "black"
+              SVG.attrs h.elm, stroke: "url(#DarkHighlightGradient)", strokeWidth: 3
+            else
+              SVG.attrs h.elm, stroke: "url(#MidHighlightGradient)", strokeWidth: 3
+          if h.attrs.fill?
+            if h.elm.tagName is "text" or h.elm.tagName is "tspan"
+              SVG.attrs h.elm, fill: "url(#TextHighlightGradient)"
+            else if h.attrs.fill is "#FFF" or h.attrs.fill is "white"
+              SVG.attrs h.elm, fill: "url(#LightHighlightGradient)"
+            else if h.attrs.fill is "#000" or h.attrs.fill is "black"
+              SVG.attrs h.elm, fill: "url(#DarkHighlightGradient)"
+            else
+              SVG.attrs h.elm, fill: "url(#MidHighlightGradient)"
+      undefined
     
     deactivate = ()->
       if active
@@ -108,15 +111,15 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
         unless t._Highlighter
           t._Highlighter = true
           
-          # Handle Mouse and Touch differently, for better perf
+          # Handle Mouse and Touch separately, for better perf
           mouseProps =
-            moveIn: activate
+            moveIn: activate target
             moveOut: deactivate
           touchProps =
-            down: activate
-          
+            down: activate target
           Input t, mouseProps, true, false
           Input t, touchProps, false, true
+          
       undefined
   
   

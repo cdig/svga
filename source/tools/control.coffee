@@ -46,6 +46,10 @@ Take ["ControlPanel", "ControlPanelLayout", "GUI", "Registry", "Scope", "SVG", "
         # We'll always do the attaching, for consistency sake.
         scope.attach? props
         
+        # We don't want controls to highlight when they're hovered over,
+        # so we flag them in a way that highlight can see.
+        scope._dontHighlightOnHover = true
+        
         instances[props.id] = scope if props.id?
         return scope
   

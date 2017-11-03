@@ -4360,6 +4360,7 @@
           if (typeof scope.attach === "function") {
             scope.attach(props);
           }
+          scope._dontHighlightOnHover = true;
           if (props.id != null) {
             instances[props.id] = scope;
           }
@@ -4692,7 +4693,7 @@
       active = false;
       timeout = null;
       setup = function(elm) {
-        var doFill, doFunction, doStroke, e, fill, len, m, ref, ref1, stroke, width;
+        var doFill, doFunction, doStroke, e, fill, len, m, ref, ref1, ref2, ref3, stroke, width;
         fill = SVG.attr(elm, "fill");
         stroke = SVG.attr(elm, "stroke");
         doFill = (fill != null) && fill !== "none" && fill !== "transparent";
@@ -4703,6 +4704,7 @@
             elm: elm,
             "function": elm._scope._highlight
           });
+          e.dontHighlightOnHover = ((ref1 = elm._scope) != null ? ref1._dontHighlightOnHover : void 0) != null;
         } else if (doFill || doStroke) {
           highlights.push(e = {
             elm: elm,
@@ -4717,11 +4719,12 @@
           if (doStroke && ((width = SVG.attr(elm, "stroke-width")) != null)) {
             e.attrs.strokeWidth = width;
           }
+          e.dontHighlightOnHover = ((ref2 = elm._scope) != null ? ref2._dontHighlightOnHover : void 0) != null;
         }
         if (!doFunction) {
-          ref1 = elm.childNodes;
-          for (m = 0, len = ref1.length; m < len; m++) {
-            elm = ref1[m];
+          ref3 = elm.childNodes;
+          for (m = 0, len = ref3.length; m < len; m++) {
+            elm = ref3[m];
             if (elm.tagName === "g" || elm.tagName === "path" || elm.tagName === "text" || elm.tagName === "tspan" || elm.tagName === "rect" || elm.tagName === "circle") {
               setup(elm);
             }
@@ -4729,20 +4732,23 @@
         }
         return void 0;
       };
-      activate = function() {
-        var h, len, m;
-        if (!enabled) {
-          return;
-        }
-        if (!active) {
+      activate = function(currentTarget) {
+        return function() {
+          var h, len, m;
+          if (active || !enabled) {
+            return;
+          }
           active = true;
           if (typeof activeHighlight === "function") {
             activeHighlight();
           }
           activeHighlight = deactivate;
+          timeout = setTimeout(deactivate, 4000);
           for (m = 0, len = highlights.length; m < len; m++) {
             h = highlights[m];
-            if (h["function"] != null) {
+            if (h.dontHighlightOnHover && currentTarget.element === h.elm) {
+
+            } else if (h["function"] != null) {
               h["function"](true);
             } else {
               if (h.attrs.stroke != null) {
@@ -4789,8 +4795,8 @@
               }
             }
           }
-          return timeout = setTimeout(deactivate, 4000);
-        }
+          return void 0;
+        };
       };
       deactivate = function() {
         var h, len, m;
@@ -4831,11 +4837,11 @@
           if (!t._Highlighter) {
             t._Highlighter = true;
             mouseProps = {
-              moveIn: activate,
+              moveIn: activate(target),
               moveOut: deactivate
             };
             touchProps = {
-              down: activate
+              down: activate(target)
             };
             Input(t, mouseProps, true, false);
             Input(t, touchProps, false, true);

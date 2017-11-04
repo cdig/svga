@@ -4244,8 +4244,10 @@
             return scope.alpha = true;
           });
           return Reaction("Background:Set", function(v) {
-            var l;
-            l = (v / 2 + .8) % 1;
+            var l, ref1;
+            l = (ref1 = v.split(", ")[2]) != null ? ref1.split("%")[0] : void 0;
+            l /= 100;
+            l = (l / 2 + .8) % 1;
             return SVG.attr(svgElement, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
           });
         }

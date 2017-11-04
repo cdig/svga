@@ -1,4 +1,4 @@
-Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPanel:GUI}, Input, SVG, TRS, Tween)->
+Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {ControlPanel:GUI}, Input, RAF, SVG, TRS, Tween)->
   Registry.set "Control", "switch", (elm, props)->
     
     # An array to hold all the change functions that have been attached to this slider
@@ -85,7 +85,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       
       attach: (props)->
         handlers.push props.change if props.change?
-        toggle() if props.active
+        RAF toggle, true if props.active
       
       _highlight: (enable)->
         if enable

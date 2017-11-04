@@ -2293,7 +2293,7 @@
     });
   });
 
-  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
+  Take(["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], function(Registry, arg, Input, RAF, SVG, TRS, Tween) {
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "switch", function(elm, props) {
@@ -2421,7 +2421,7 @@
             handlers.push(props.change);
           }
           if (props.active) {
-            return toggle();
+            return RAF(toggle, true);
           }
         },
         _highlight: function(enable) {

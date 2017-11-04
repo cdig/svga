@@ -3744,32 +3744,6 @@
     });
   });
 
-  Take(["Registry"], function(Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      scope.getPressureColor = function() {
-        throw new Error("@getPressureColor() has been removed. Please Take and use Pressure() instead.");
-      };
-      scope.setText = function() {
-        throw new Error("@setText(x) has been removed. Please @text = x instead.");
-      };
-      Object.defineProperty(scope, "cx", {
-        get: function() {
-          throw new Error("cx has been removed.");
-        }
-      });
-      Object.defineProperty(scope, "cy", {
-        get: function() {
-          throw new Error("cy has been removed.");
-        }
-      });
-      return Object.defineProperty(scope, "turns", {
-        get: function() {
-          throw new Error("turns has been removed. Please use @rotation instead.");
-        }
-      });
-    });
-  });
-
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var childPathFills, childPathStrokes, fill, stroke;

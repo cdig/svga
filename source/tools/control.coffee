@@ -39,6 +39,10 @@ Take ["ControlPanel", "ControlPanelLayout", "GUI", "Registry", "Scope", "SVG", "
       else
         group = getGroup props.group
         elm = ControlPanel.createItemElement props.parent or group.scope.element
+        
+        # We check for this property in some control-specific scope-processors
+        props._isControl = true
+        
         scope = Scope elm, defn, props
         addItemToGroup group, scope
         

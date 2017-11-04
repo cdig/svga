@@ -52,7 +52,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     toNormal   = (e, state)-> Tween bsc, blueBG,  .2, tick:tickBG
     toHover    = (e, state)-> Tween bsc, lightBG,  0, tick:tickBG
     toClicking = (e, state)-> Tween bsc, orangeBG, 0, tick:tickBG
-    Input elm,
+    input = Input elm,
       moveIn: toHover
       down: ()->
         toClicking()
@@ -72,6 +72,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
       height: height
+      input: input
       
       attach: (props)->
         onHandlers.push props.on if props.on?

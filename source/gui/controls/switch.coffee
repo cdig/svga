@@ -62,7 +62,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
     toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:tickBG
-    Input elm,
+    input = Input elm,
       moveIn: toHover
       dragIn: (e, state)-> toClicking() if state.clicking
       down: toClicking
@@ -81,6 +81,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     
     return scope =
       height: height
+      input: input
       
       attach: (props)->
         handlers.push props.change if props.change?

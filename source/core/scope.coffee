@@ -46,7 +46,7 @@ Take ["Mode", "Registry", "ScopeCheck", "Symbol"], (Mode, Registry, ScopeCheck, 
     window.getComputedStyle element
       
     # Run this scope through all the processors, which add special properties, callbacks, and other fanciness
-    scopeProcessor scope for scopeProcessor in Registry.all "ScopeProcessor"
+    scopeProcessor scope, props for scopeProcessor in Registry.all "ScopeProcessor"
     
     return scope
   

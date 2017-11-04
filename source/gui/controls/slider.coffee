@@ -112,7 +112,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
         update e.clientX/range - startDrag
         handler v for handler in handlers
         undefined
-    Input elm,
+    input = Input elm,
       moveIn: toHover
       dragIn: (e, state)-> toClicking() if state.clicking
       down: (e)->
@@ -127,6 +127,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     
     return scope =
       height: height
+      input: input
       
       attach: (props)->
         handlers.push props.change if props.change?

@@ -29,8 +29,12 @@ html, body, #svga {
     touch-action: manipulation; // Safari
     touch-action: none; // Chrome
   }
-
+  
   .ui, .ui *, [ui], [ui] * {
     cursor: pointer;
+
+    &[disabled], &[disabled] * {
+      cursor: default;
+    }
   }
 }

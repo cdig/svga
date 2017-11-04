@@ -32,3 +32,5 @@ html, body, #svga {
     touch-action: none; }
   #svga .ui, #svga .ui *, #svga [ui], #svga [ui] * {
     cursor: pointer; }
+    #svga .ui[disabled], #svga .ui[disabled] *, #svga .ui *[disabled], #svga .ui *[disabled] *, #svga [ui][disabled], #svga [ui][disabled] *, #svga [ui] *[disabled], #svga [ui] *[disabled] * {
+      cursor: default; }

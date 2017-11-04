@@ -55,7 +55,7 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       toActive()
       handler() for handler in handlers
       undefined
-    Input elm,
+    input = Input elm,
       moveIn:  (e, state)->    toHover e, state unless isActive
       dragIn:  (e, state)-> toClicking e, state if state.clicking and !isActive
       down:    (e, state)-> toClicking e, state unless isActive
@@ -74,6 +74,7 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     
     return scope =
       click: attachClick
+      input: input
       
       resize: (width)->
         SVG.attrs bg, width: width - strokeWidth

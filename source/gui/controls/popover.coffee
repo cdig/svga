@@ -163,7 +163,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
     toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:tickBG
-    Input itemElm,
+    input = Input itemElm,
       moveIn: toHover
       dragIn: (e, state)-> toClicking() if state.clicking
       down: toClicking
@@ -191,6 +191,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     
     return scope =
       height: height
+      input: input
       
       button: (props)->
         props.setActive = setActive

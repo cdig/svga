@@ -208,7 +208,7 @@
       ref = Registry.all("ScopeProcessor");
       for (n = 0, len1 = ref.length; n < len1; n++) {
         scopeProcessor = ref[n];
-        scopeProcessor(scope);
+        scopeProcessor(scope, props);
       }
       return scope;
     });
@@ -1045,7 +1045,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "button", function(elm, props) {
-      var bg, bgFill, bgc, blocked, blueBG, handlers, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
+      var bg, bgFill, bgc, blocked, blueBG, handlers, input, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
       handlers = [];
       bgFill = "hsl(220, 10%, 92%)";
       labelFill = "hsl(227, 16%, 24%)";
@@ -1116,7 +1116,7 @@
           tick: tickBG
         });
       };
-      Input(elm, {
+      input = Input(elm, {
         moveIn: toHover,
         dragIn: function(e, state) {
           if (state.clicking) {
@@ -1146,6 +1146,7 @@
       });
       return scope = {
         height: GUI.unit,
+        input: input,
         attach: function(props) {
           if (props.click != null) {
             return handlers.push(props.click);
@@ -1207,7 +1208,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "popover", function(elm, props) {
-      var activeButtonCancelCb, activeFill, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
+      var activeButtonCancelCb, activeFill, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, input, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
       labelFill = "hsl(220, 10%, 92%)";
       rectFill = "hsl(227, 45%, 25%)";
       triangleFill = "hsl(220, 35%, 80%)";
@@ -1397,7 +1398,7 @@
           tick: tickBG
         });
       };
-      Input(itemElm, {
+      input = Input(itemElm, {
         moveIn: toHover,
         dragIn: function(e, state) {
           if (state.clicking) {
@@ -1435,6 +1436,7 @@
       });
       return scope = {
         height: height,
+        input: input,
         button: function(props) {
           var buttonElm, buttonScope;
           props.setActive = setActive;
@@ -1498,7 +1500,7 @@
     GUI = arg.ControlPanel;
     active = null;
     return Make("PopoverButton", function(elm, props) {
-      var activeBG, attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, orangeBG, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
+      var activeBG, attachClick, bg, blueBG, click, curBG, handlers, highlighting, input, isActive, label, labelFill, orangeBG, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
       handlers = [];
       isActive = false;
       highlighting = false;
@@ -1591,7 +1593,7 @@
         }
         return void 0;
       };
-      Input(elm, {
+      input = Input(elm, {
         moveIn: function(e, state) {
           if (!isActive) {
             return toHover(e, state);
@@ -1641,6 +1643,7 @@
       });
       return scope = {
         click: attachClick,
+        input: input,
         _highlight: function(enable) {
           if (highlighting = enable) {
             SVG.attrs(label, {
@@ -1661,7 +1664,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "pushButton", function(elm, props) {
-      var bgFill, blueBG, bsc, button, height, hit, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, strokeWidth, tickBG, toClicking, toHover, toNormal;
+      var bgFill, blueBG, bsc, button, height, hit, input, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, strokeWidth, tickBG, toClicking, toHover, toNormal;
       onHandlers = [];
       offHandlers = [];
       strokeWidth = 2;
@@ -1731,7 +1734,7 @@
           tick: tickBG
         });
       };
-      Input(elm, {
+      input = Input(elm, {
         moveIn: toHover,
         down: function() {
           var len, m, onHandler;
@@ -1764,6 +1767,7 @@
       });
       return scope = {
         height: height,
+        input: input,
         attach: function(props) {
           if (props.on != null) {
             onHandlers.push(props.on);
@@ -1901,7 +1905,7 @@
     GUI = arg.ControlPanel;
     active = null;
     return Make("SelectorButton", function(elm, props) {
-      var attachClick, bg, blueBG, click, curBG, handlers, highlighting, isActive, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
+      var attachClick, bg, blueBG, click, curBG, handlers, highlighting, input, isActive, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
       handlers = [];
       isActive = false;
       highlighting = false;
@@ -1993,7 +1997,7 @@
         }
         return void 0;
       };
-      Input(elm, {
+      input = Input(elm, {
         moveIn: function(e, state) {
           if (!isActive) {
             return toHover(e, state);
@@ -2043,6 +2047,7 @@
       });
       return scope = {
         click: attachClick,
+        input: input,
         resize: function(width) {
           SVG.attrs(bg, {
             width: width - strokeWidth
@@ -2071,7 +2076,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, handlers, height, hit, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
+      var bgc, blueBG, handleDrag, handlers, height, hit, input, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
       handlers = [];
       snapElms = [];
       v = 0;
@@ -2233,7 +2238,7 @@
           return void 0;
         }
       };
-      Input(elm, {
+      input = Input(elm, {
         moveIn: toHover,
         dragIn: function(e, state) {
           if (state.clicking) {
@@ -2252,6 +2257,7 @@
       });
       return scope = {
         height: height,
+        input: input,
         attach: function(props) {
           if (props.change != null) {
             handlers.push(props.change);
@@ -2291,7 +2297,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "switch", function(elm, props) {
-      var active, bgc, blocked, blueBG, handlers, height, label, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
+      var active, bgc, blocked, blueBG, handlers, height, input, label, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
       handlers = [];
       strokeWidth = 2;
       thumbSize = GUI.thumbSize;
@@ -2383,7 +2389,7 @@
           tick: tickBG
         });
       };
-      Input(elm, {
+      input = Input(elm, {
         moveIn: toHover,
         dragIn: function(e, state) {
           if (state.clicking) {
@@ -2409,6 +2415,7 @@
       });
       return scope = {
         height: height,
+        input: input,
         attach: function(props) {
           if (props.change != null) {
             handlers.push(props.change);
@@ -3745,6 +3752,46 @@
   });
 
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope, props) {
+      var enabled;
+      if (!props._isControl) {
+        return;
+      }
+      ScopeCheck(scope, "enabled");
+      enabled = true;
+      Object.defineProperty(scope, 'enabled', {
+        get: function() {
+          return enabled;
+        },
+        set: function(val) {
+          var ref;
+          if (enabled !== val) {
+            enabled = val;
+            if ((ref = scope.input) != null) {
+              ref.enable(enabled);
+            }
+            console.log(scope.input);
+            if (enabled) {
+              scope.alpha = 1;
+              return SVG.attrs(scope.element, {
+                disabled: null
+              });
+            } else {
+              scope.alpha = 0.3;
+              return SVG.attrs(scope.element, {
+                disabled: ""
+              });
+            }
+          }
+        }
+      });
+      if (props.enabled === false) {
+        return scope.enabled = false;
+      }
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var childPathFills, childPathStrokes, fill, stroke;
       ScopeCheck(scope, "stroke", "fill");
@@ -4386,6 +4433,7 @@
         } else {
           group = getGroup(props.group);
           elm = ControlPanel.createItemElement(props.parent || group.scope.element);
+          props._isControl = true;
           scope = Scope(elm, defn, props);
           addItemToGroup(group, scope);
           if (typeof scope.attach === "function") {
@@ -4887,24 +4935,29 @@
   });
 
   Make("Input", function(elm, calls, mouse, touch) {
-    var down, move, out, over, prepTouchEvent, state, up;
+    var api, down, enabled, move, out, over, prepTouchEvent, resetState, state, up;
     if (mouse == null) {
       mouse = true;
     }
     if (touch == null) {
       touch = true;
     }
-    state = {
-      down: false,
-      over: false,
-      touch: false,
-      clicking: false,
-      captured: false,
-      deltaX: 0,
-      deltaY: 0,
-      lastX: 0,
-      lastY: 0
+    enabled = true;
+    state = null;
+    resetState = function() {
+      return state = {
+        down: false,
+        over: false,
+        touch: false,
+        clicking: false,
+        captured: false,
+        deltaX: 0,
+        deltaY: 0,
+        lastX: 0,
+        lastY: 0
+      };
     };
+    resetState();
     down = function(e) {
       state.lastX = e.clientX;
       state.lastY = e.clientY;
@@ -4996,6 +5049,9 @@
     };
     if (mouse) {
       document.addEventListener("mousedown", function(e) {
+        if (!enabled) {
+          return;
+        }
         if (e.button !== 0) {
           return;
         }
@@ -5006,6 +5062,9 @@
       });
       if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
         document.addEventListener("mousemove", function(e) {
+          if (!enabled) {
+            return;
+          }
           if (state.touch) {
             return;
           }
@@ -5013,6 +5072,9 @@
         });
       }
       document.addEventListener("mouseup", function(e) {
+        if (!enabled) {
+          return;
+        }
         if (e.button !== 0) {
           return;
         }
@@ -5023,6 +5085,9 @@
       });
       if (elm != null) {
         elm.addEventListener("mouseleave", function(e) {
+          if (!enabled) {
+            return;
+          }
           if (state.touch) {
             return;
           }
@@ -5031,6 +5096,9 @@
       }
       if (elm != null) {
         elm.addEventListener("mouseenter", function(e) {
+          if (!enabled) {
+            return;
+          }
           if (state.touch) {
             return;
           }
@@ -5062,27 +5130,47 @@
         return state.captured != null ? state.captured : state.captured = false;
       };
       document.addEventListener("touchstart", function(e) {
+        if (!enabled) {
+          return;
+        }
         state.captured = null;
         prepTouchEvent(e);
         return down(e);
       });
       if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
         document.addEventListener("touchmove", function(e) {
+          if (!enabled) {
+            return;
+          }
           prepTouchEvent(e);
           return move(e);
         });
       }
       document.addEventListener("touchend", function(e) {
+        if (!enabled) {
+          return;
+        }
         prepTouchEvent(e);
         up(e);
         return state.touch = false;
       });
-      return document.addEventListener("touchcancel", function(e) {
+      document.addEventListener("touchcancel", function(e) {
+        if (!enabled) {
+          return;
+        }
         prepTouchEvent(e);
         up(e);
         return state.touch = false;
       });
     }
+    return api = {
+      enable: function(_enabled) {
+        enabled = _enabled;
+        if (!enabled) {
+          return resetState();
+        }
+      }
+    };
   });
 
   (function() {

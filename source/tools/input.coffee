@@ -1,15 +1,20 @@
 Make "Input", (elm, calls, mouse = true, touch = true)->
-  state =
-    down: false
-    over: false
-    touch: false
-    clicking: false
-    captured: false
-    deltaX: 0
-    deltaY: 0
-    lastX: 0 # These are used to compute deltas..
-    lastY: 0 # and to avoid repeat unchanged move events on IE
+  enabled = true
+  state = null
   
+  resetState = ()->
+    state =
+      down: false
+      over: false
+      touch: false
+      clicking: false
+      captured: false
+      deltaX: 0
+      deltaY: 0
+      lastX: 0 # These are used to compute deltas..
+      lastY: 0 # and to avoid repeat unchanged move events on IE
+  
+  resetState()
   
   down = (e)->
     state.lastX = e.clientX
@@ -79,6 +84,7 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
   if mouse
   
     document.addEventListener "mousedown", (e)->
+      return unless enabled
       return unless e.button is 0
       return if state.touch
       down e
@@ -87,21 +93,25 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
     # Only add the move listener if we need it, to avoid the perf cost
     if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther?
       document.addEventListener "mousemove", (e)->
+        return unless enabled
         return if state.touch
         move e
   
     document.addEventListener "mouseup", (e)->
+      return unless enabled
       return unless e.button is 0
       return if state.touch
       up e
   
     if elm?
       elm.addEventListener "mouseleave", (e)->
+        return unless enabled
         return if state.touch
         out e
   
     if elm?
       elm.addEventListener "mouseenter", (e)->
+        return unless enabled
         return if state.touch
         over e
   
@@ -128,6 +138,7 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
       state.captured ?= false
   
     document.addEventListener "touchstart", (e)->
+      return unless enabled
       state.captured = null
       prepTouchEvent e
       down e
@@ -136,15 +147,25 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
     # Only add the move listener if we need it, to avoid the perf cost
     if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther? or calls.moveIn? or calls.dragIn? or calls.moveOut? or calls.dragOut?
       document.addEventListener "touchmove", (e)->
+        return unless enabled
         prepTouchEvent e
         move e
   
     document.addEventListener "touchend", (e)->
+      return unless enabled
       prepTouchEvent e
       up e
       state.touch = false
   
     document.addEventListener "touchcancel", (e)->
+      return unless enabled
       prepTouchEvent e
       up e
       state.touch = false
+
+
+  return api =
+    enable: (_enabled)->
+      enabled = _enabled
+      resetState() if !enabled
+      

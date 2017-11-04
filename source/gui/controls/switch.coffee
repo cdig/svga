@@ -11,6 +11,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     
     normalTrack = "hsl(227, 45%, 24%)"
     lightTrack = "hsl(92, 46%, 57%)"
+    lightFill = "hsl(220, 10%, 92%)"
     
     SVG.attrs elm, ui: true
     
@@ -28,7 +29,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       cx: thumbSize/2
       cy: thumbSize/2
       strokeWidth: strokeWidth
-      fill: "hsl(220, 10%, 92%)"
+      fill: lightFill
       r: thumbSize/2 - strokeWidth/2
     
     label = SVG.create "text", elm,
@@ -36,7 +37,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
       x: trackWidth + GUI.labelMargin
       y: 21
       textAnchor: "start"
-      fill: "hsl(220, 10%, 92%)"
+      fill: lightFill
     
     
     toggle = ()->
@@ -85,12 +86,12 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
         handlers.push props.change if props.change?
         toggle() if props.active
       
-      # _highlight: (enable)->
-      #   if enable
-      #     SVG.attrs track, fill: "url(#DarkHighlightGradient)"
-      #     SVG.attrs thumb, fill: "url(#LightHighlightGradient)"
-      #     SVG.attrs label, fill: "url(#LightHighlightGradient)"
-      #   else
-      #     SVG.attrs track, fill: trackFill
-      #     SVG.attrs thumb, fill: thumbBGFill
-      #     SVG.attrs label, fill: labelFill
+      _highlight: (enable)->
+        if enable
+          SVG.attrs track, fill: if active then "url(#MidHighlightGradient)" else "url(#DarkHighlightGradient)"
+          SVG.attrs thumb, fill: "url(#LightHighlightGradient)"
+          SVG.attrs label, fill: "url(#LightHighlightGradient)"
+        else
+          SVG.attrs track, fill: if active then lightTrack else normalTrack
+          SVG.attrs thumb, fill: lightFill
+          SVG.attrs label, fill: lightFill

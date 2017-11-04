@@ -2291,7 +2291,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "switch", function(elm, props) {
-      var active, bgc, blocked, blueBG, handlers, height, label, lightBG, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
+      var active, bgc, blocked, blueBG, handlers, height, label, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
       handlers = [];
       strokeWidth = 2;
       thumbSize = GUI.thumbSize;
@@ -2300,6 +2300,7 @@
       height = thumbSize;
       normalTrack = "hsl(227, 45%, 24%)";
       lightTrack = "hsl(92, 46%, 57%)";
+      lightFill = "hsl(220, 10%, 92%)";
       SVG.attrs(elm, {
         ui: true
       });
@@ -2317,7 +2318,7 @@
         cx: thumbSize / 2,
         cy: thumbSize / 2,
         strokeWidth: strokeWidth,
-        fill: "hsl(220, 10%, 92%)",
+        fill: lightFill,
         r: thumbSize / 2 - strokeWidth / 2
       }));
       label = SVG.create("text", elm, {
@@ -2325,7 +2326,7 @@
         x: trackWidth + GUI.labelMargin,
         y: 21,
         textAnchor: "start",
-        fill: "hsl(220, 10%, 92%)"
+        fill: lightFill
       });
       toggle = function() {
         active = !active;
@@ -2414,6 +2415,29 @@
           }
           if (props.active) {
             return toggle();
+          }
+        },
+        _highlight: function(enable) {
+          if (enable) {
+            SVG.attrs(track, {
+              fill: active ? "url(#MidHighlightGradient)" : "url(#DarkHighlightGradient)"
+            });
+            SVG.attrs(thumb, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            return SVG.attrs(label, {
+              fill: "url(#LightHighlightGradient)"
+            });
+          } else {
+            SVG.attrs(track, {
+              fill: active ? lightTrack : normalTrack
+            });
+            SVG.attrs(thumb, {
+              fill: lightFill
+            });
+            return SVG.attrs(label, {
+              fill: lightFill
+            });
           }
         }
       };

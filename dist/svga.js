@@ -126,7 +126,7 @@
         props.id = tree.elm.id.replace(/_FL/g, "");
       }
       baseName = (ref = tree.elm.id) != null ? ref.split("_")[0] : void 0;
-      symbol = baseName.indexOf("Line") > -1 || baseName.indexOf("line") === 0 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 || baseName.indexOf("field") === 0 ? Symbol.forSymbolName("HydraulicField") : props.id != null ? Symbol.forInstanceName(props.id) : void 0;
+      symbol = baseName.indexOf("Line") > -1 || baseName.indexOf("line") === 0 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 || baseName.indexOf("field") === 0 ? Symbol.forSymbolName("HydraulicField") : baseName.indexOf("BackgroundCover") > -1 ? Symbol.forSymbolName("BackgroundCover") : props.id != null ? Symbol.forInstanceName(props.id) : void 0;
       if (symbol == null) {
         symbol = function() {
           return {};
@@ -4119,6 +4119,19 @@
       update: function(active) {
         return Action("Highlights:Set", active);
       }
+    });
+  });
+
+  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
+    return Symbol("BackgroundCover", [], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          return Reaction("Background:Set", function(v) {
+            return scope.fill = v;
+          });
+        }
+      };
     });
   });
 

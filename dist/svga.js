@@ -1207,10 +1207,11 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "popover", function(elm, props) {
-      var activeButtonCancelCb, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
+      var activeButtonCancelCb, activeFill, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
       labelFill = "hsl(220, 10%, 92%)";
       rectFill = "hsl(227, 45%, 25%)";
       triangleFill = "hsl(220, 35%, 80%)";
+      activeFill = "hsl(92, 46%, 57%)";
       triangleSize = 24;
       strokeWidth = 2;
       showing = false;
@@ -1257,7 +1258,7 @@
       });
       activeLabel = SVG.create("text", itemElm, {
         y: labelHeight + 21,
-        fill: "hsl(92, 46%, 57%)"
+        fill: activeFill
       });
       labelTriangle = SVG.create("polyline", itemElm, {
         points: "6,-6 13,0 6,6",
@@ -1448,28 +1449,45 @@
           return buttonScope;
         },
         _highlight: function(enable) {
-          var button, len, m, results;
           if (enable) {
             SVG.attrs(label, {
               fill: "url(#LightHighlightGradient)"
             });
-            SVG.attrs(rect, {
+            SVG.attrs(activeLabel, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            SVG.attrs(labelTriangle, {
+              stroke: "url(#LightHighlightGradient)"
+            });
+            SVG.attrs(panelTriangle, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            SVG.attrs(panelRect, {
+              fill: "url(#LightHighlightGradient)"
+            });
+            return SVG.attrs(rect, {
               fill: "url(#DarkHighlightGradient)"
             });
           } else {
             SVG.attrs(label, {
               fill: labelFill
             });
-            SVG.attrs(rect, {
+            SVG.attrs(activeLabel, {
+              fill: activeFill
+            });
+            SVG.attrs(labelTriangle, {
+              stroke: triangleFill
+            });
+            SVG.attrs(panelTriangle, {
+              fill: triangleFill
+            });
+            SVG.attrs(panelRect, {
+              fill: triangleFill
+            });
+            return SVG.attrs(rect, {
               fill: rectFill
             });
           }
-          results = [];
-          for (m = 0, len = buttons.length; m < len; m++) {
-            button = buttons[m];
-            results.push(button._highlight(enable));
-          }
-          return results;
         }
       };
     });

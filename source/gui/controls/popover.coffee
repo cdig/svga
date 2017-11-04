@@ -5,6 +5,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     labelFill = "hsl(220, 10%, 92%)"
     rectFill = "hsl(227, 45%, 25%)"
     triangleFill = "hsl(220, 35%, 80%)" # Todo: Try $silver
+    activeFill = "hsl(92, 46%, 57%)"
     triangleSize = 24
     strokeWidth = 2
     
@@ -56,7 +57,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     
     activeLabel = SVG.create "text", itemElm,
       y: labelHeight + 21
-      fill: "hsl(92, 46%, 57%)"
+      fill: activeFill
     
     labelTriangle = SVG.create "polyline", itemElm,
       points: "6,-6 13,0 6,6"
@@ -205,8 +206,15 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       _highlight: (enable)->
         if enable
           SVG.attrs label, fill: "url(#LightHighlightGradient)"
+          SVG.attrs activeLabel, fill: "url(#LightHighlightGradient)"
+          SVG.attrs labelTriangle, stroke: "url(#LightHighlightGradient)"
+          SVG.attrs panelTriangle, fill: "url(#LightHighlightGradient)"
+          SVG.attrs panelRect, fill: "url(#LightHighlightGradient)"
           SVG.attrs rect, fill: "url(#DarkHighlightGradient)"
         else
           SVG.attrs label, fill: labelFill
+          SVG.attrs activeLabel, fill: activeFill
+          SVG.attrs labelTriangle, stroke: triangleFill
+          SVG.attrs panelTriangle, fill: triangleFill
+          SVG.attrs panelRect, fill: triangleFill
           SVG.attrs rect, fill: rectFill
-        button._highlight enable for button in buttons

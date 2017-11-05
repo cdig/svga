@@ -21,6 +21,7 @@ Take ["Config", "ParentElement"], (Config, ParentElement)->
     dev: window.top.location.port?.length >= 4
     nav: fetchAttribute "nav"
     embed: window isnt window.top
+    title: fetchAttribute("title") or (if window is window.top then document.title.replace("| LunchBox Sessions", "") else "")
   
   # We always disallow nav in embed mode
   Mode.nav = false if Mode.embed

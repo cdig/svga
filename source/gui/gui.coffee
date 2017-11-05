@@ -22,4 +22,4 @@ Take ["SVG", "SVGReady"], (SVG)->
       itemWidth: 300
       itemMargin: 8 # Vertical space between two items
       panelPad: 8
-      panelBorderRadius: 24
+      panelBorderRadius: 8

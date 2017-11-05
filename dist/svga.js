@@ -2498,7 +2498,7 @@
         itemWidth: 300,
         itemMargin: 8,
         panelPad: 8,
-        panelBorderRadius: 24
+        panelBorderRadius: 8
       }
     });
   });
@@ -2886,11 +2886,56 @@
     });
   });
 
-  Take(["Action", "GUI", "Input", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, GUI, Input, Reaction, Registry, Resize, Scope, SVG) {
-    var Settings, bg, close, closeCircle, closeText, elm, height, items, panelWidth;
+  Take(["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG) {
+    var Settings, bg, close, closeCircle, closeText, elm, height, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelWidth, ref, ref1, ref2, ref3;
     height = 0;
     panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
     elm = SVG.create("g", GUI.elm);
+    metaBoxHeight = 30;
+    metaBoxElm = SVG.create("g", elm);
+    metaBox = Scope(metaBoxElm);
+    metaBoxRect = SVG.create("rect", metaBoxElm, {
+      width: panelWidth,
+      fill: "hsl(227, 45%, 35%)",
+      rx: GUI.Settings.panelBorderRadius
+    });
+    ref1 = (ref = Mode.get("meta")) != null ? ref.title : void 0;
+    for (m = 0, len = ref1.length; m < len; m++) {
+      line = ref1[m];
+      SVG.create("text", metaBoxElm, {
+        x: panelWidth / 2,
+        y: metaBoxHeight,
+        textContent: line,
+        textAnchor: "middle",
+        fontSize: 18,
+        fontWeight: "bold",
+        fill: "#FFF"
+      });
+      metaBoxHeight += 24;
+    }
+    metaBoxHeight += 10;
+    ref3 = (ref2 = Mode.get("meta")) != null ? ref2.info : void 0;
+    for (n = 0, len1 = ref3.length; n < len1; n++) {
+      line = ref3[n];
+      SVG.create("text", metaBoxElm, {
+        x: panelWidth / 2,
+        y: metaBoxHeight,
+        textContent: line,
+        textAnchor: "middle",
+        fill: "#FFF"
+      });
+      metaBoxHeight += 20;
+    }
+    metaBoxHeight += 10;
+    SVG.create("text", metaBoxElm, {
+      x: panelWidth / 2,
+      y: metaBoxHeight,
+      textContent: "© CD Industrial Group Inc.",
+      textAnchor: "middle",
+      fontSize: "12",
+      fill: "#FFF"
+    });
+    metaBoxHeight += 10;
     bg = SVG.create("rect", elm, {
       width: panelWidth,
       rx: GUI.Settings.panelBorderRadius,
@@ -2921,15 +2966,21 @@
     Settings = Scope(elm, function() {
       return {
         addSetting: function(type, props) {
-          var builder, instance;
+          var bgHeight, builder, instance;
           instance = Scope(SVG.create("g", items));
           builder = Registry.get("SettingType", type);
           builder(instance.element, props);
           instance.y = height;
           height += GUI.Settings.unit + GUI.Settings.itemMargin;
-          return SVG.attrs(bg, {
-            height: height + GUI.Settings.panelPad * 2 - GUI.Settings.itemMargin
+          bgHeight = height + GUI.Settings.panelPad * 2 - GUI.Settings.itemMargin;
+          SVG.attrs(bg, {
+            height: bgHeight
           });
+          SVG.attrs(metaBoxRect, {
+            y: -bgHeight,
+            height: bgHeight + metaBoxHeight
+          });
+          return metaBox.y = bgHeight;
         }
       };
     });
@@ -4141,14 +4192,24 @@
     });
   });
 
-  Take(["Action", "Settings"], function(Action, Settings) {
-    return Settings.addSetting("slider", {
+  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+    var init, update;
+    init = +window.localStorage["SVGA-Background"];
+    if (isNaN(init)) {
+      init = .7;
+    }
+    update = function(v) {
+      Action("Background:Lightness", v);
+      return window.localStorage["SVGA-Background"] = v.toString();
+    };
+    Settings.addSetting("slider", {
       name: "Background",
-      value: .7,
+      value: init,
       snaps: [.7],
-      update: function(v) {
-        return Action("Background:Lightness", v);
-      }
+      update: update
+    });
+    return Take("AllReady", function() {
+      return update(init);
     });
   });
 
@@ -4174,13 +4235,20 @@
     });
   });
 
-  Take(["Action", "Settings"], function(Action, Settings) {
-    return Settings.addSetting("switch", {
+  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+    var init, update;
+    init = window.localStorage["SVGA-Highlights"] === "false" ? false : true;
+    update = function(active) {
+      Action("Highlights:Set", active);
+      return window.localStorage["SVGA-Highlights"] = active.toString();
+    };
+    Settings.addSetting("switch", {
       name: "Highlights",
-      value: true,
-      update: function(active) {
-        return Action("Highlights:Set", active);
-      }
+      value: init,
+      update: update
+    });
+    return Take("AllReady", function() {
+      return update(init);
     });
   });
 
@@ -4366,7 +4434,8 @@
       controlPanel: fetchAttribute("controlPanel"),
       dev: ((ref = window.top.location.port) != null ? ref.length : void 0) >= 4,
       nav: fetchAttribute("nav"),
-      embed: window !== window.top
+      embed: window !== window.top,
+      title: fetchAttribute("title") || (window === window.top ? document.title.replace("| LunchBox Sessions", "") : "")
     };
     if (Mode.embed) {
       Mode.nav = false;

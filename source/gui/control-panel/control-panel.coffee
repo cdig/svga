@@ -131,5 +131,5 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope
       return panelInfo
   
   
-  Reaction "ControlPanel:Show", ()-> ControlPanel.show .7
-  Reaction "ControlPanel:Hide", ()-> ControlPanel.hide .3
+  Reaction "ControlPanel:Show", ()-> ControlPanel.show .5
+  Reaction "ControlPanel:Hide", ()-> ControlPanel.hide .5

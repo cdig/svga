@@ -912,10 +912,10 @@
       };
     }));
     Reaction("ControlPanel:Show", function() {
-      return ControlPanel.show(.7);
+      return ControlPanel.show(.5);
     });
     return Reaction("ControlPanel:Hide", function() {
-      return ControlPanel.hide(.3);
+      return ControlPanel.hide(.5);
     });
   });
 
@@ -2590,10 +2590,10 @@
 
   Take(["Reaction", "SVG", "SceneReady"], function(Reaction, SVG) {
     Reaction("Root:Show", function() {
-      return SVG.root._scope.show(.7);
+      return SVG.root._scope.show(.5);
     });
     return Reaction("Root:Hide", function() {
-      return SVG.root._scope.hide(.3);
+      return SVG.root._scope.hide(.5, .2);
     });
   });
 
@@ -2886,8 +2886,8 @@
     });
   });
 
-  Take(["GUI", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(GUI, Reaction, Registry, Resize, Scope, SVG) {
-    var Settings, bg, elm, height, items, panelWidth;
+  Take(["Action", "GUI", "Input", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, GUI, Input, Reaction, Registry, Resize, Scope, SVG) {
+    var Settings, bg, close, closeCircle, closeText, elm, height, items, panelWidth;
     height = 0;
     panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
     elm = SVG.create("g", GUI.elm);
@@ -2898,6 +2898,25 @@
     });
     items = SVG.create("g", elm, {
       transform: "translate(" + GUI.Settings.panelPad + "," + GUI.Settings.panelPad + ")"
+    });
+    close = SVG.create("g", elm, {
+      ui: true,
+      transform: "translate(8,8)"
+    });
+    closeCircle = SVG.create("circle", close, {
+      r: 16,
+      fill: "#F00"
+    });
+    closeText = SVG.create("text", close, {
+      dy: 4,
+      textContent: "x",
+      textAnchor: "middle",
+      fill: "#FFF"
+    });
+    Input(close, {
+      click: function() {
+        return Action("Settings:Toggle");
+      }
     });
     Settings = Scope(elm, function() {
       return {
@@ -2923,7 +2942,7 @@
       return Settings.y = 60;
     });
     Reaction("Settings:Show", function() {
-      return Settings.show(.7);
+      return Settings.show(.3);
     });
     return Reaction("Settings:Hide", function() {
       return Settings.hide(.3);
@@ -2931,41 +2950,40 @@
   });
 
   Take(["Action", "GUI", "Input", "Reaction", "Scope", "SVG", "ScopeReady"], function(Action, GUI, Input, Reaction, Scope, SVG) {
-    var bg, elm, label, scope;
+    var bg, elm, height, hit, label, scope, width;
     elm = SVG.create("g", GUI.elm, {
       ui: true
     });
     scope = Scope(elm);
+    scope.x = GUI.ControlPanel.panelMargin;
+    scope.y = GUI.ControlPanel.panelMargin;
+    width = 56;
+    height = 20;
+    hit = SVG.create("rect", elm, {
+      x: -GUI.ControlPanel.panelMargin,
+      y: -GUI.ControlPanel.panelMargin,
+      width: width + GUI.ControlPanel.panelMargin * 2,
+      height: height + GUI.ControlPanel.panelMargin * 2,
+      fill: "transparent"
+    });
     bg = SVG.create("rect", elm, {
-      x: GUI.ControlPanel.panelMargin,
-      y: GUI.ControlPanel.panelMargin,
-      width: 72,
-      height: 30,
-      rx: 4,
+      width: width,
+      height: height,
+      rx: 3,
       fill: "hsl(220, 45%, 45%)"
     });
     label = SVG.create("text", elm, {
       textContent: "Settings",
-      x: 36 + GUI.ControlPanel.panelMargin,
-      y: 25,
-      fontSize: 16,
+      x: width / 2,
+      y: height * 0.66,
+      fontSize: 13,
       textAnchor: "middle",
       fill: "hsl(220, 10%, 92%)"
     });
-    Input(elm, {
+    return Input(elm, {
       click: function() {
         return Action("Settings:Toggle");
       }
-    });
-    Reaction("Settings:Hide", function() {
-      return SVG.attrs(label, {
-        textContent: "Settings"
-      });
-    });
-    return Reaction("Settings:Show", function() {
-      return SVG.attrs(label, {
-        textContent: "Back"
-      });
     });
   });
 
@@ -3488,37 +3506,6 @@
   });
 
   Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Reaction("FlowArrows:Hide", function() {
-      return showing = false;
-    });
-    Reaction("FlowArrows:Show", function() {
-      return showing = true;
-    });
-    Reaction("FlowArrows:Toggle", function() {
-      return Action(showing ? "FlowArrows:Hide" : "FlowArrows:Show");
-    });
-    return Take("AllReady", function() {
-      return Action("FlowArrows:Show");
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Reaction("Labels:Hide", function() {
-      return showing = false;
-    });
-    Reaction("Labels:Show", function() {
-      return showing = true;
-    });
-    return Reaction("Labels:Toggle", function() {
-      return Action(showing ? "Labels:Hide" : "Labels:Show");
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
     var help, settings, update;
     help = false;
     settings = false;
@@ -3941,20 +3928,26 @@
       tick = function(v) {
         return scope.alpha = v;
       };
-      scope.show = function(d) {
-        if (d == null) {
-          d = 1;
+      scope.show = function(duration, target) {
+        if (duration == null) {
+          duration = 1;
         }
-        return Tween(scope.alpha, 1, d, {
+        if (target == null) {
+          target = 1;
+        }
+        return Tween(scope.alpha, target, duration, {
           tick: tick,
           ease: "linear"
         });
       };
-      return scope.hide = function(d) {
-        if (d == null) {
-          d = 1;
+      return scope.hide = function(duration, target) {
+        if (duration == null) {
+          duration = 1;
         }
-        return Tween(scope.alpha, 0, d, {
+        if (target == null) {
+          target = 0;
+        }
+        return Tween(scope.alpha, target, duration, {
           tick: tick,
           ease: "linear"
         });
@@ -4159,13 +4152,25 @@
     });
   });
 
-  Take(["Action", "Settings"], function(Action, Settings) {
-    return Settings.addSetting("switch", {
-      name: "Flow Arrows",
-      value: true,
-      update: function(active) {
-        return Action(active ? "FlowArrows:Show" : "FlowArrows:Hide");
+  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+    var arrowsSwitch, enabled, update;
+    enabled = window.localStorage["SVGA-FlowArrows"] === "false" ? false : true;
+    update = function(active) {
+      if (active) {
+        Action("FlowArrows:Show");
+        return window.localStorage["SVGA-FlowArrows"] = "true";
+      } else {
+        Action("FlowArrows:Hide");
+        return window.localStorage["SVGA-FlowArrows"] = "false";
       }
+    };
+    arrowsSwitch = Settings.addSetting("switch", {
+      name: "Flow Arrows",
+      value: enabled,
+      update: update
+    });
+    return Take("AllReady", function() {
+      return update(enabled);
     });
   });
 
@@ -4176,6 +4181,28 @@
       update: function(active) {
         return Action("Highlights:Set", active);
       }
+    });
+  });
+
+  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+    var arrowsSwitch, enabled, update;
+    enabled = window.localStorage["SVGA-Labels"] === "false" ? false : true;
+    update = function(active) {
+      if (active) {
+        Action("Labels:Show");
+        return window.localStorage["SVGA-Labels"] = "true";
+      } else {
+        Action("Labels:Hide");
+        return window.localStorage["SVGA-Labels"] = "false";
+      }
+    };
+    arrowsSwitch = Settings.addSetting("switch", {
+      name: "Labels",
+      value: enabled,
+      update: update
+    });
+    return Take("AllReady", function() {
+      return update(enabled);
     });
   });
 

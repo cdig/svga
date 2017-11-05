@@ -1,6 +1,19 @@
-Take ["Action", "Settings"], (Action, Settings)->
+Take ["Action", "Reaction", "Settings"], (Action, Reaction, Settings)->
   
-  Settings.addSetting "switch",
+  enabled = if window.localStorage["SVGA-FlowArrows"] is "false" then false else true
+  
+  update = (active)->
+    if active
+      Action "FlowArrows:Show"
+      window.localStorage["SVGA-FlowArrows"] = "true"
+    else
+      Action "FlowArrows:Hide"
+      window.localStorage["SVGA-FlowArrows"] = "false"
+  
+  arrowsSwitch = Settings.addSetting "switch",
     name: "Flow Arrows"
-    value: true
-    update: (active)-> Action if active then "FlowArrows:Show" else "FlowArrows:Hide"
+    value: enabled
+    update: update
+  
+  Take "AllReady", ()->
+    update enabled

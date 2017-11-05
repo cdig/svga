@@ -5,5 +5,5 @@ Take ["Registry", "ScopeCheck", "Tween"], (Registry, ScopeCheck, Tween)->
     ScopeCheck scope, "show", "hide"
     
     tick = (v)-> scope.alpha = v
-    scope.show = (d = 1)-> Tween scope.alpha, 1, d, tick:tick, ease:"linear"
-    scope.hide = (d = 1)-> Tween scope.alpha, 0, d, tick:tick, ease:"linear"
+    scope.show = (duration = 1, target = 1)-> Tween scope.alpha, target, duration, tick:tick, ease:"linear"
+    scope.hide = (duration = 1, target = 0)-> Tween scope.alpha, target, duration, tick:tick, ease:"linear"

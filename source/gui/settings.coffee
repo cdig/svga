@@ -1,4 +1,4 @@
-Take ["GUI", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], (GUI, Reaction, Registry, Resize, Scope, SVG)->
+Take ["Action", "GUI", "Input", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], (Action, GUI, Input, Reaction, Registry, Resize, Scope, SVG)->
   
   height = 0
   panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2
@@ -12,6 +12,26 @@ Take ["GUI", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], 
   
   items = SVG.create "g", elm,
     transform: "translate(#{GUI.Settings.panelPad},#{GUI.Settings.panelPad})"
+  
+  # Close Button
+  
+  close = SVG.create "g", elm,
+    ui: true
+    transform: "translate(8,8)"
+
+  closeCircle = SVG.create "circle", close,
+    r: 16
+    fill: "#F00"
+  
+  closeText = SVG.create "text", close,
+    dy: 4
+    textContent: "x"
+    textAnchor: "middle"
+    fill: "#FFF"
+  
+  # Finish Setup
+  
+  Input close, click: ()-> Action "Settings:Toggle"
   
   Settings = Scope elm, ()->
     addSetting: (type, props)->
@@ -31,5 +51,5 @@ Take ["GUI", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], 
     Settings.x = svgRect.width/2 - panelWidth/2
     Settings.y = 60
   
-  Reaction "Settings:Show", ()-> Settings.show .7
+  Reaction "Settings:Show", ()-> Settings.show .3
   Reaction "Settings:Hide", ()-> Settings.hide .3

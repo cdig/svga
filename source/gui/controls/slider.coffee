@@ -1,4 +1,4 @@
-Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPanel:GUI}, Input, SVG, TRS, Tween)->
+Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {ControlPanel:GUI}, Input, Registry, SVG, TRS, Tween)->
   Registry.set "Control", "slider", (elm, props)->
     
     # An array to hold all the change functions that have been attached to this slider
@@ -11,7 +11,7 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     startDrag = 0
     
     strokeWidth = 2
-    snapTolerance = 0.05
+    snapTolerance = 0.033
     
     if props.name?
       # Remember: SVG text element position is ALWAYS relative to the text baseline.
@@ -87,17 +87,44 @@ Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {ControlPan
     tickBG blueBG
     
     
+    updateSnaps = (input)->
+      # Reset all snaps
+      for snap, i in props.snaps
+        SVG.attrs snapElms[i], r: 2, stroke: normalDot
+      
+      # Map our input to the right position, move the slider, and highlight the proper dot if needed
+      for snap, i in props.snaps
+        
+        # Input is inside this snap point
+        if input >= snap - snapTolerance and input <= snap + snapTolerance
+          SVG.attrs snapElms[i], r: 3, stroke: lightDot
+          TRS.abs thumb, x: snap * range
+          return snap
+        
+        # Input is below this snap point
+        else if input < snap - snapTolerance
+          TRS.abs thumb, x: input * range
+          inMin = if i > 0 then props.snaps[i-1] + snapTolerance else 0
+          inMax = snap - snapTolerance
+          outMin = if i > 0 then props.snaps[i-1] else 0
+          outMax = snap
+          return Ease.linear input, inMin, inMax, outMin, outMax
+      
+      # Snap is above the last snap point
+      TRS.abs thumb, x: input * range
+      inMin = props.snaps[props.snaps.length-1] + snapTolerance
+      inMax = 1
+      outMin = props.snaps[props.snaps.length-1]
+      outMax = 1
+      return Ease.linear input, inMin, inMax, outMin, outMax
+    
     # Update and save the thumb position
     update = (V)->
       v = Math.max 0, Math.min 1, V if V?
       if props.snaps?
-        for snap, i in props.snaps
-          if v > snap - snapTolerance and v < snap + snapTolerance
-            v = snap
-            SVG.attrs snapElms[i], r: 3, stroke: lightDot
-          else
-            SVG.attrs snapElms[i], r: 2, stroke: normalDot
-      TRS.abs thumb, x: v * range
+        v = updateSnaps v
+      else
+        TRS.abs thumb, x: v * range
     
     update props.value or 0
     

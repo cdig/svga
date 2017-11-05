@@ -2072,17 +2072,17 @@
     });
   });
 
-  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
+  Take(["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], function(Ease, arg, Input, Registry, SVG, TRS, Tween) {
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, handlers, height, hit, input, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, v;
+      var bgc, blueBG, handleDrag, handlers, height, hit, input, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, updateSnaps, v;
       handlers = [];
       snapElms = [];
       v = 0;
       startDrag = 0;
       strokeWidth = 2;
-      snapTolerance = 0.05;
+      snapTolerance = 0.033;
       if (props.name != null) {
         labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
         labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
@@ -2172,32 +2172,59 @@
         });
       };
       tickBG(blueBG);
+      updateSnaps = function(input) {
+        var i, inMax, inMin, len, len1, m, n, outMax, outMin, ref, ref1;
+        ref = props.snaps;
+        for (i = m = 0, len = ref.length; m < len; i = ++m) {
+          snap = ref[i];
+          SVG.attrs(snapElms[i], {
+            r: 2,
+            stroke: normalDot
+          });
+        }
+        ref1 = props.snaps;
+        for (i = n = 0, len1 = ref1.length; n < len1; i = ++n) {
+          snap = ref1[i];
+          if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
+            SVG.attrs(snapElms[i], {
+              r: 3,
+              stroke: lightDot
+            });
+            TRS.abs(thumb, {
+              x: snap * range
+            });
+            return snap;
+          } else if (input < snap - snapTolerance) {
+            TRS.abs(thumb, {
+              x: input * range
+            });
+            inMin = i > 0 ? props.snaps[i - 1] + snapTolerance : 0;
+            inMax = snap - snapTolerance;
+            outMin = i > 0 ? props.snaps[i - 1] : 0;
+            outMax = snap;
+            return Ease.linear(input, inMin, inMax, outMin, outMax);
+          }
+        }
+        TRS.abs(thumb, {
+          x: input * range
+        });
+        inMin = props.snaps[props.snaps.length - 1] + snapTolerance;
+        inMax = 1;
+        outMin = props.snaps[props.snaps.length - 1];
+        outMax = 1;
+        return Ease.linear(input, inMin, inMax, outMin, outMax);
+      };
       update = function(V) {
-        var i, len, m, ref;
         if (V != null) {
           v = Math.max(0, Math.min(1, V));
         }
         if (props.snaps != null) {
-          ref = props.snaps;
-          for (i = m = 0, len = ref.length; m < len; i = ++m) {
-            snap = ref[i];
-            if (v > snap - snapTolerance && v < snap + snapTolerance) {
-              v = snap;
-              SVG.attrs(snapElms[i], {
-                r: 3,
-                stroke: lightDot
-              });
-            } else {
-              SVG.attrs(snapElms[i], {
-                r: 2,
-                stroke: normalDot
-              });
-            }
-          }
+          return v = updateSnaps(v);
+        } else {
+          return TRS.abs(thumb, {
+            x: v * range
+          });
         }
-        return TRS.abs(thumb, {
-          x: v * range
-        });
       };
       update(props.value || 0);
       toNormal = function(e, state) {

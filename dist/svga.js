@@ -4161,6 +4161,16 @@
 
   Take(["Action", "Settings"], function(Action, Settings) {
     return Settings.addSetting("switch", {
+      name: "Flow Arrows",
+      value: true,
+      update: function(active) {
+        return Action(active ? "FlowArrows:Show" : "FlowArrows:Hide");
+      }
+    });
+  });
+
+  Take(["Action", "Settings"], function(Action, Settings) {
+    return Settings.addSetting("switch", {
       name: "Highlights",
       value: true,
       update: function(active) {

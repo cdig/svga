@@ -7,7 +7,7 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
   
   # Meta Info
   
-  metaBoxHeight = 30
+  metaBoxHeight = 20
   
   metaBoxElm = SVG.create "g", elm
   metaBox = Scope metaBoxElm
@@ -17,7 +17,18 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
     fill: "hsl(227, 45%, 35%)"
     rx: GUI.Settings.panelBorderRadius
   
-  for line in Mode.get("meta")?.title
+  titleLines = Mode.get("meta")?.title
+  if not titleLines?
+    titleLines = []
+  if not Mode.embed and titleLines.length is 0
+    titleLines = document.title.replace("| LunchBox Sessions", "")
+  
+  infoLines = Mode.get("meta")?.info
+  infoLines = [] if not infoLines?
+  
+  metaBoxHeight += 10 if titleLines.length > 0 or infoLines.length > 0
+  
+  for line in titleLines
     SVG.create "text", metaBoxElm,
       x: panelWidth/2
       y: metaBoxHeight
@@ -28,9 +39,9 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
       fill: "#FFF"
     metaBoxHeight += 24
   
-  metaBoxHeight += 10
+  metaBoxHeight += 10 if titleLines.length > 0
   
-  for line in Mode.get("meta")?.info
+  for line in infoLines
     SVG.create "text", metaBoxElm,
       x: panelWidth/2
       y: metaBoxHeight
@@ -39,7 +50,8 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
       fill: "#FFF"
     metaBoxHeight += 20
   
-  metaBoxHeight += 10
+  metaBoxHeight += 10 if infoLines.length > 0
+  
   SVG.create "text", metaBoxElm,
     x: panelWidth/2
     y: metaBoxHeight
@@ -47,6 +59,7 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
     textAnchor: "middle"
     fontSize: "12"
     fill: "#FFF"
+  
   metaBoxHeight += 10
     
   # Main Settings Panel
@@ -69,11 +82,11 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
     r: 16
     fill: "#F00"
   
-  closeText = SVG.create "text", close,
-    dy: 4
-    textContent: "x"
-    textAnchor: "middle"
-    fill: "#FFF"
+  closeX = SVG.create "path", close,
+    d: "M-6,-6 L6,6 M6,-6 L-6,6"
+    strokeWidth: 3
+    strokeLinecap: "round"
+    stroke: "#FFF"
   
   # Finish Setup
   

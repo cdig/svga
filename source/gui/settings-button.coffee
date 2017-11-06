@@ -1,4 +1,6 @@
-Take ["Action", "GUI", "Input", "Reaction", "Scope", "SVG", "ScopeReady"], (Action, GUI, Input, Reaction, Scope, SVG)->
+Take ["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"], (Action, GUI, Input, Mode, Reaction, Scope, SVG)->
+  
+  return unless Mode.settings
   
   elm = SVG.create "g", GUI.elm, ui: true
   scope = Scope elm

@@ -739,22 +739,13 @@
     });
   });
 
-  Take(["Action", "Mode", "ParentElement", "Reaction", "SVG"], function(Action, Mode, ParentElement, Reaction, SVG) {
+  Take(["Action", "ParentElement", "Reaction", "SVG"], function(Action, ParentElement, Reaction, SVG) {
     Reaction("Background:Set", function(v) {
       return SVG.style(ParentElement, "background-color", v);
     });
-    Reaction("Background:Lightness", function(v) {
+    return Reaction("Background:Lightness", function(v) {
       return Action("Background:Set", "hsl(227, 5%, " + (v * 100 | 0) + "%)");
     });
-    if (typeof Mode.background === "string") {
-      return Action("Background:Set", Mode.background);
-    } else if (Mode.background === true) {
-      return Take("SceneReady", function() {
-        return Action("Background:Lightness", .7);
-      });
-    } else {
-      return Action("Background:Set", "transparent");
-    }
   });
 
   Take(["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], function(GUI, Mode, Resize, SVG, TRS) {
@@ -2914,11 +2905,11 @@
   });
 
   Take(["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG) {
-    var Settings, bg, close, closeCircle, closeText, elm, height, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelWidth, ref, ref1, ref2, ref3;
+    var Settings, bg, close, closeCircle, closeX, elm, height, infoLines, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelWidth, ref, ref1, titleLines;
     height = 0;
     panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
     elm = SVG.create("g", GUI.elm);
-    metaBoxHeight = 30;
+    metaBoxHeight = 20;
     metaBoxElm = SVG.create("g", elm);
     metaBox = Scope(metaBoxElm);
     metaBoxRect = SVG.create("rect", metaBoxElm, {
@@ -2926,9 +2917,22 @@
       fill: "hsl(227, 45%, 35%)",
       rx: GUI.Settings.panelBorderRadius
     });
-    ref1 = (ref = Mode.get("meta")) != null ? ref.title : void 0;
-    for (m = 0, len = ref1.length; m < len; m++) {
-      line = ref1[m];
+    titleLines = (ref = Mode.get("meta")) != null ? ref.title : void 0;
+    if (titleLines == null) {
+      titleLines = [];
+    }
+    if (!Mode.embed && titleLines.length === 0) {
+      titleLines = document.title.replace("| LunchBox Sessions", "");
+    }
+    infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0;
+    if (infoLines == null) {
+      infoLines = [];
+    }
+    if (titleLines.length > 0 || infoLines.length > 0) {
+      metaBoxHeight += 10;
+    }
+    for (m = 0, len = titleLines.length; m < len; m++) {
+      line = titleLines[m];
       SVG.create("text", metaBoxElm, {
         x: panelWidth / 2,
         y: metaBoxHeight,
@@ -2940,10 +2944,11 @@
       });
       metaBoxHeight += 24;
     }
-    metaBoxHeight += 10;
-    ref3 = (ref2 = Mode.get("meta")) != null ? ref2.info : void 0;
-    for (n = 0, len1 = ref3.length; n < len1; n++) {
-      line = ref3[n];
+    if (titleLines.length > 0) {
+      metaBoxHeight += 10;
+    }
+    for (n = 0, len1 = infoLines.length; n < len1; n++) {
+      line = infoLines[n];
       SVG.create("text", metaBoxElm, {
         x: panelWidth / 2,
         y: metaBoxHeight,
@@ -2953,7 +2958,9 @@
       });
       metaBoxHeight += 20;
     }
-    metaBoxHeight += 10;
+    if (infoLines.length > 0) {
+      metaBoxHeight += 10;
+    }
     SVG.create("text", metaBoxElm, {
       x: panelWidth / 2,
       y: metaBoxHeight,
@@ -2979,11 +2986,11 @@
       r: 16,
       fill: "#F00"
     });
-    closeText = SVG.create("text", close, {
-      dy: 4,
-      textContent: "x",
-      textAnchor: "middle",
-      fill: "#FFF"
+    closeX = SVG.create("path", close, {
+      d: "M-6,-6 L6,6 M6,-6 L-6,6",
+      strokeWidth: 3,
+      strokeLinecap: "round",
+      stroke: "#FFF"
     });
     Input(close, {
       click: function() {
@@ -3027,8 +3034,11 @@
     });
   });
 
-  Take(["Action", "GUI", "Input", "Reaction", "Scope", "SVG", "ScopeReady"], function(Action, GUI, Input, Reaction, Scope, SVG) {
+  Take(["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"], function(Action, GUI, Input, Mode, Reaction, Scope, SVG) {
     var bg, elm, height, hit, label, scope, width;
+    if (!Mode.settings) {
+      return;
+    }
     elm = SVG.create("g", GUI.elm, {
       ui: true
     });
@@ -4219,25 +4229,33 @@
     });
   });
 
-  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+  Take(["Action", "Mode", "Reaction", "Settings"], function(Action, Mode, Reaction, Settings) {
     var init, update;
-    init = +window.localStorage["SVGA-Background"];
-    if (isNaN(init)) {
-      init = .7;
+    if (typeof Mode.background === "string") {
+      return Action("Background:Set", Mode.background);
+    } else if (Mode.background === true) {
+      init = +window.localStorage["SVGA-Background"];
+      if (isNaN(init)) {
+        init = .7;
+      }
+      update = function(v) {
+        Action("Background:Lightness", v);
+        return window.localStorage["SVGA-Background"] = v.toString();
+      };
+      if (Mode.background === true) {
+        Settings.addSetting("slider", {
+          name: "Background",
+          value: init,
+          snaps: [.7],
+          update: update
+        });
+      }
+      return Take("SceneReady", function() {
+        return update(init);
+      });
+    } else {
+      return Action("Background:Set", "transparent");
     }
-    update = function(v) {
-      Action("Background:Lightness", v);
-      return window.localStorage["SVGA-Background"] = v.toString();
-    };
-    Settings.addSetting("slider", {
-      name: "Background",
-      value: init,
-      snaps: [.7],
-      update: update
-    });
-    return Take("AllReady", function() {
-      return update(init);
-    });
   });
 
   Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
@@ -4462,7 +4480,7 @@
       dev: ((ref = window.top.location.port) != null ? ref.length : void 0) >= 4,
       nav: fetchAttribute("nav"),
       embed: window !== window.top,
-      title: fetchAttribute("title") || (window === window.top ? document.title.replace("| LunchBox Sessions", "") : "")
+      settings: fetchAttribute("settings")
     };
     if (Mode.embed) {
       Mode.nav = false;

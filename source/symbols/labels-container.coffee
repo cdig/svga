@@ -3,6 +3,9 @@ Take ["Reaction", "Symbol", "SVG"], (Reaction, Symbol, SVG)->
     for c in svgElement.querySelectorAll "[fill]"
       c.removeAttributeNS null, "fill"
     
+    for c in svgElement.querySelectorAll "[stroke]"
+      c.removeAttributeNS null, "stroke"
+    
     return scope =
       setup: ()->
         Reaction "Labels:Hide", ()-> scope.alpha = false
@@ -12,4 +15,4 @@ Take ["Reaction", "Symbol", "SVG"], (Reaction, Symbol, SVG)->
           l /= 100
           l = (l/2 + .8) % 1
           SVG.attr svgElement, "fill", "hsl(227, 4%, #{l*100}%)"
-            
+          SVG.attr svgElement, "stroke", "hsl(227, 4%, #{l*100}%)"

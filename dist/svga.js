@@ -4429,17 +4429,7 @@
 
   Take(["Reaction", "Symbol", "SVG"], function(Reaction, Symbol, SVG) {
     return Symbol("Labels", ["labelsContainer"], function(svgElement) {
-      var c, len, len1, m, n, ref, ref1, scope;
-      ref = svgElement.querySelectorAll("[fill]");
-      for (m = 0, len = ref.length; m < len; m++) {
-        c = ref[m];
-        c.removeAttributeNS(null, "fill");
-      }
-      ref1 = svgElement.querySelectorAll("[stroke]");
-      for (n = 0, len1 = ref1.length; n < len1; n++) {
-        c = ref1[n];
-        c.removeAttributeNS(null, "stroke");
-      }
+      var scope;
       return scope = {
         setup: function() {
           Reaction("Labels:Hide", function() {
@@ -4449,12 +4439,22 @@
             return scope.alpha = true;
           });
           return Reaction("Background:Set", function(v) {
-            var l, ref2;
-            l = (ref2 = v.split(", ")[2]) != null ? ref2.split("%")[0] : void 0;
+            var c, l, len, len1, m, n, ref, ref1, ref2, results;
+            l = (ref = v.split(", ")[2]) != null ? ref.split("%")[0] : void 0;
             l /= 100;
             l = (l / 2 + .8) % 1;
-            SVG.attr(svgElement, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
-            return SVG.attr(svgElement, "stroke", "hsl(227, 4%, " + (l * 100) + "%)");
+            ref1 = svgElement.querySelectorAll("[fill]");
+            for (m = 0, len = ref1.length; m < len; m++) {
+              c = ref1[m];
+              SVG.attr(c, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
+            }
+            ref2 = svgElement.querySelectorAll("[stroke]");
+            results = [];
+            for (n = 0, len1 = ref2.length; n < len1; n++) {
+              c = ref2[n];
+              results.push(SVG.attr(c, "stroke", "hsl(227, 4%, " + (l * 100) + "%)"));
+            }
+            return results;
           });
         }
       };

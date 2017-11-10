@@ -21,7 +21,10 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
   if not titleLines?
     titleLines = []
   if not Mode.embed and titleLines.length is 0
-    titleLines = document.title.replace("| LunchBox Sessions", "")
+    titleString = document.title
+                          .replace("| ", "")
+                          .replace("LunchBox Sessions", "")
+    titleLines = if titleString.length > 0 then [titleString] else []
   
   infoLines = Mode.get("meta")?.info
   infoLines = [] if not infoLines?

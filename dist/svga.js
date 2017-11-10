@@ -2905,7 +2905,7 @@
   });
 
   Take(["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG) {
-    var Settings, bg, close, closeCircle, closeX, elm, height, infoLines, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelWidth, ref, ref1, titleLines;
+    var Settings, bg, close, closeCircle, closeX, elm, height, infoLines, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelWidth, ref, ref1, titleLines, titleString;
     height = 0;
     panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
     elm = SVG.create("g", GUI.elm);
@@ -2922,7 +2922,8 @@
       titleLines = [];
     }
     if (!Mode.embed && titleLines.length === 0) {
-      titleLines = document.title.replace("| LunchBox Sessions", "");
+      titleString = document.title.replace("| ", "").replace("LunchBox Sessions", "");
+      titleLines = titleString.length > 0 ? [titleString] : [];
     }
     infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0;
     if (infoLines == null) {
@@ -4229,7 +4230,7 @@
     });
   });
 
-  Take(["Action", "Mode", "Reaction", "Settings"], function(Action, Mode, Reaction, Settings) {
+  Take(["Action", "Ease", "Mode", "Reaction", "Settings"], function(Action, Ease, Mode, Reaction, Settings) {
     var init, update;
     if (typeof Mode.background === "string") {
       return Action("Background:Set", Mode.background);
@@ -4247,7 +4248,9 @@
           name: "Background",
           value: init,
           snaps: [.7],
-          update: update
+          update: function(v) {
+            return update(Ease.linear(v, 0, 1, 0.25, 1));
+          }
         });
       }
       return Take("SceneReady", function() {

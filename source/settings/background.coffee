@@ -1,4 +1,4 @@
-Take ["Action", "Mode", "Reaction", "Settings"], (Action, Mode, Reaction, Settings)->
+Take ["Action", "Ease", "Mode", "Reaction", "Settings"], (Action, Ease, Mode, Reaction, Settings)->
   
   if typeof Mode.background is "string"
     Action "Background:Set", Mode.background
@@ -17,7 +17,8 @@ Take ["Action", "Mode", "Reaction", "Settings"], (Action, Mode, Reaction, Settin
         name: "Background"
         value: init
         snaps: [.7]
-        update: update
+        update: (v)->
+          update Ease.linear v, 0, 1, 0.25, 1
     
     Take "SceneReady", ()->
       update init

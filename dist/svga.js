@@ -5279,7 +5279,6 @@
     if (touch) {
       prepTouchEvent = function(e) {
         var newState, overChanged, pElm, ref, ref1;
-        e.preventDefault();
         state.touch = true;
         e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
         e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
@@ -5322,6 +5321,7 @@
           return;
         }
         prepTouchEvent(e);
+        e.preventDefault();
         up(e);
         return state.touch = false;
       });

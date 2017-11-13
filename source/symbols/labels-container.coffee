@@ -10,8 +10,12 @@ Take ["Reaction", "Symbol", "SVG"], (Reaction, Symbol, SVG)->
           l = (l/2 + .8) % 1
           
           for c in svgElement.querySelectorAll "[fill]"
-            SVG.attr c, "fill", "hsl(227, 4%, #{l*100}%)"
+            current = SVG.attr c, "fill"
+            if current isnt "none" and current isnt "transparent"
+              SVG.attr c, "fill", "hsl(227, 4%, #{l*100}%)"
           
           for c in svgElement.querySelectorAll "[stroke]"
-            SVG.attr c, "stroke", "hsl(227, 4%, #{l*100}%)"
+            current = SVG.attr c, "stroke"
+            if current isnt "none" and current isnt "transparent"
+              SVG.attr c, "stroke", "hsl(227, 4%, #{l*100}%)"
   

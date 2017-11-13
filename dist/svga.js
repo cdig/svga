@@ -4439,20 +4439,28 @@
             return scope.alpha = true;
           });
           return Reaction("Background:Set", function(v) {
-            var c, l, len, len1, m, n, ref, ref1, ref2, results;
+            var c, current, l, len, len1, m, n, ref, ref1, ref2, results;
             l = (ref = v.split(", ")[2]) != null ? ref.split("%")[0] : void 0;
             l /= 100;
             l = (l / 2 + .8) % 1;
             ref1 = svgElement.querySelectorAll("[fill]");
             for (m = 0, len = ref1.length; m < len; m++) {
               c = ref1[m];
-              SVG.attr(c, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
+              current = SVG.attr(c, "fill");
+              if (current !== "none" && current !== "transparent") {
+                SVG.attr(c, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
+              }
             }
             ref2 = svgElement.querySelectorAll("[stroke]");
             results = [];
             for (n = 0, len1 = ref2.length; n < len1; n++) {
               c = ref2[n];
-              results.push(SVG.attr(c, "stroke", "hsl(227, 4%, " + (l * 100) + "%)"));
+              current = SVG.attr(c, "stroke");
+              if (current !== "none" && current !== "transparent") {
+                results.push(SVG.attr(c, "stroke", "hsl(227, 4%, " + (l * 100) + "%)"));
+              } else {
+                results.push(void 0);
+              }
             }
             return results;
           });

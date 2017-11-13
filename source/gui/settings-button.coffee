@@ -8,8 +8,8 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"
   scope.x = GUI.ControlPanel.panelMargin
   scope.y = GUI.ControlPanel.panelMargin
   
-  width = 56
-  height = 20
+  width = 60
+  height = 22
   
   hit = SVG.create "rect", elm,
     x: -GUI.ControlPanel.panelMargin
@@ -27,8 +27,8 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"
   label = SVG.create "text", elm,
     textContent: "Settings"
     x: width/2
-    y: height * 0.66
-    fontSize: 13
+    y: height * 0.7
+    fontSize: 14
     textAnchor: "middle"
     fill: "hsl(220, 10%, 92%)"
   

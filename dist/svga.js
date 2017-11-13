@@ -3358,7 +3358,8 @@
       return RAF(resize, true);
     });
     Take("AllReady", function() {
-      return RAF(resize, true);
+      RAF(resize, true);
+      return setTimeout(resize, 1000);
     });
     if (!Mode.nav) {
       Make("Nav", false);

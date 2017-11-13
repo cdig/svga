@@ -158,7 +158,6 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
         panel.hide 0.2
     
     # Input event handling
-    blocked = false
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
@@ -175,10 +174,6 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
           showing = false
           update()
       click: ()->
-        # iOS fires 2 click events in rapid succession, so we debounce it here
-        return if blocked
-        blocked = true
-        setTimeout (()-> blocked = false), 100
         showing = !showing
         update()
     

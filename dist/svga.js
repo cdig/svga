@@ -741,12 +741,14 @@
     });
   });
 
-  Take(["Action", "ParentElement", "Reaction", "SVG"], function(Action, ParentElement, Reaction, SVG) {
+  Take(["Action", "Ease", "ParentElement", "Reaction", "SVG"], function(Action, Ease, ParentElement, Reaction, SVG) {
     Reaction("Background:Set", function(v) {
       return SVG.style(ParentElement, "background-color", v);
     });
     return Reaction("Background:Lightness", function(v) {
-      return Action("Background:Set", "hsl(227, 5%, " + (v * 100 | 0) + "%)");
+      var hue;
+      hue = Ease.linear(v, 0, 1, 227, 218);
+      return Action("Background:Set", "hsl(" + hue + ", 5%, " + (v * 100 | 0) + "%)");
     });
   });
 
@@ -1038,7 +1040,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "button", function(elm, props) {
-      var bg, bgFill, bgc, blocked, blueBG, handlers, input, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
+      var bg, bgFill, bgc, blueBG, handlers, input, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
       handlers = [];
       bgFill = "hsl(220, 10%, 92%)";
       labelFill = "hsl(227, 16%, 24%)";
@@ -1086,7 +1088,6 @@
         });
       };
       tickBG(blueBG);
-      blocked = false;
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -1122,13 +1123,6 @@
         dragOut: toNormal,
         click: function() {
           var handler, len, m;
-          if (blocked) {
-            return;
-          }
-          blocked = true;
-          setTimeout((function() {
-            return blocked = false;
-          }), 100);
           toClicked();
           for (m = 0, len = handlers.length; m < len; m++) {
             handler = handlers[m];
@@ -1201,7 +1195,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "popover", function(elm, props) {
-      var activeButtonCancelCb, activeFill, activeLabel, bgc, blocked, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, input, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
+      var activeButtonCancelCb, activeFill, activeLabel, bgc, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, input, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
       labelFill = "hsl(220, 10%, 92%)";
       rectFill = "hsl(227, 45%, 25%)";
       triangleFill = "hsl(220, 35%, 80%)";
@@ -1368,7 +1362,6 @@
           return panel.hide(0.2);
         }
       };
-      blocked = false;
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -1409,13 +1402,6 @@
           }
         },
         click: function() {
-          if (blocked) {
-            return;
-          }
-          blocked = true;
-          setTimeout((function() {
-            return blocked = false;
-          }), 100);
           showing = !showing;
           return update();
         }
@@ -2317,7 +2303,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "switch", function(elm, props) {
-      var active, bgc, blocked, blueBG, handlers, height, input, label, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
+      var active, bgc, blueBG, handlers, height, input, label, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
       handlers = [];
       strokeWidth = 2;
       thumbSize = GUI.thumbSize;
@@ -2386,7 +2372,6 @@
         });
       };
       tickBG(blueBG);
-      blocked = false;
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -2421,13 +2406,6 @@
         moveOut: toNormal,
         dragOut: toNormal,
         click: function() {
-          if (blocked) {
-            return;
-          }
-          blocked = true;
-          setTimeout((function() {
-            return blocked = false;
-          }), 100);
           toClicked();
           toggle();
           return void 0;
@@ -2786,7 +2764,7 @@
     var GUI;
     GUI = arg.Settings;
     return Registry.set("SettingType", "switch", function(elm, props) {
-      var active, bgc, blocked, blueBG, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track;
+      var active, bgc, blueBG, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track;
       strokeWidth = 2;
       labelPad = 10;
       labelWidth = GUI.itemWidth / 2;
@@ -2853,7 +2831,6 @@
         });
       };
       tickBG(blueBG);
-      blocked = false;
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -2888,13 +2865,6 @@
         moveOut: toNormal,
         dragOut: toNormal,
         click: function() {
-          if (blocked) {
-            return;
-          }
-          blocked = true;
-          setTimeout((function() {
-            return blocked = false;
-          }), 100);
           toClicked();
           toggle();
           return void 0;

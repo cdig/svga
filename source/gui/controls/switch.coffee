@@ -57,7 +57,6 @@ Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {Con
     tickBG blueBG
     
     # Input event handling
-    blocked = false
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
@@ -70,11 +69,6 @@ Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {Con
       moveOut: toNormal
       dragOut: toNormal
       click: ()->
-        # iOS fires 2 click events in rapid succession, so we debounce it here
-        return if blocked
-        blocked = true
-        setTimeout (()-> blocked = false), 100
-        
         toClicked()
         toggle()
         undefined

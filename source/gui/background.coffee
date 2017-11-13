@@ -1,7 +1,8 @@
-Take ["Action", "ParentElement", "Reaction", "SVG"], (Action, ParentElement, Reaction, SVG)->
+Take ["Action", "Ease", "ParentElement", "Reaction", "SVG"], (Action, Ease, ParentElement, Reaction, SVG)->
   
   Reaction "Background:Set", (v)->
     SVG.style ParentElement, "background-color", v
   
   Reaction "Background:Lightness", (v)->
-    Action "Background:Set", "hsl(227, 5%, #{v*100|0}%)"
+    hue = Ease.linear v, 0, 1, 227, 218
+    Action "Background:Set", "hsl(#{hue}, 5%, #{v*100|0}%)"

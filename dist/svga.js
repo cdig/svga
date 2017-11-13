@@ -54,24 +54,26 @@
       if (!Mode.dev) {
         return;
       }
-      ref = elm.querySelectorAll("[id]");
-      for (m = 0, len = ref.length; m < len; m++) {
-        element = ref[m];
-        if (window[element.id] != null) {
-          (function(element) {
-            var handlers;
-            handlers = {
-              get: function() {
-                console.log(element);
-                throw "You forgot to use an @ when accessing the scope for this element ^^^";
-              },
-              set: function(val) {
-                console.log(element);
-                throw "You forgot to use an @ when accessing the scope for this element ^^^";
-              }
-            };
-            return window[element.id] = new Proxy({}, handlers);
-          })(element);
+      if (typeof Proxy !== "undefined" && Proxy !== null) {
+        ref = elm.querySelectorAll("[id]");
+        for (m = 0, len = ref.length; m < len; m++) {
+          element = ref[m];
+          if (window[element.id] != null) {
+            (function(element) {
+              var handlers;
+              handlers = {
+                get: function() {
+                  console.log(element);
+                  throw "You forgot to use an @ when accessing the scope for this element ^^^";
+                },
+                set: function(val) {
+                  console.log(element);
+                  throw "You forgot to use an @ when accessing the scope for this element ^^^";
+                }
+              };
+              return window[element.id] = new Proxy({}, handlers);
+            })(element);
+          }
         }
       }
       return void 0;
@@ -3046,8 +3048,8 @@
     scope = Scope(elm);
     scope.x = GUI.ControlPanel.panelMargin;
     scope.y = GUI.ControlPanel.panelMargin;
-    width = 56;
-    height = 20;
+    width = 60;
+    height = 22;
     hit = SVG.create("rect", elm, {
       x: -GUI.ControlPanel.panelMargin,
       y: -GUI.ControlPanel.panelMargin,
@@ -3064,8 +3066,8 @@
     label = SVG.create("text", elm, {
       textContent: "Settings",
       x: width / 2,
-      y: height * 0.66,
-      fontSize: 13,
+      y: height * 0.7,
+      fontSize: 14,
       textAnchor: "middle",
       fill: "hsl(220, 10%, 92%)"
     });
@@ -5277,6 +5279,7 @@
     if (touch) {
       prepTouchEvent = function(e) {
         var newState, overChanged, pElm, ref, ref1;
+        e.preventDefault();
         state.touch = true;
         e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
         e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;

@@ -121,7 +121,12 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
   if touch
   
     prepTouchEvent = (e)->
-      # Don't prevent default, or it'll break pinch-zoom on non-Nav animations
+      # Previously, we didn't have this because it'd break pinch-zoom on non-Nav animations.
+      # It was added back, so as to avoid duplicate event firing in iOS — without it, touch events also fire mouse events.
+      # Also, we don't need to worry about passive events, because SVGAs don't "scroll"
+      # We will deploy this, test it, and then update this comment appropritately.
+      e.preventDefault()
+      
       state.touch = true
       e.clientX = e.touches[0]?.clientX
       e.clientY = e.touches[0]?.clientY

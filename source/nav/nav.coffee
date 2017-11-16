@@ -145,7 +145,9 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
   window.top.addEventListener "resize", ()-> RAF resize, true
   Take "AllReady", ()->
     RAF resize, true
-    setTimeout resize, 1000 # Fire one more delayed resize, which avoids some residual sizing bugs when in dev when embedded
+    setTimeout resize, 100 # Fire delayed resizes, to avoid sizing issues around load time
+    setTimeout resize, 1000 # Fire delayed resizes, to avoid sizing issues around load time
+    setTimeout resize, 5000 # Fire delayed resizes, to avoid sizing issues around load time
   
   
   # BAIL IF WE'RE NOT NAV-ING

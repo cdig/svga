@@ -1,5 +1,5 @@
 (function() {
-  var base,
+  var Storage, base,
     slice = [].slice,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -2595,11 +2595,11 @@
     });
   });
 
-  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
+  Take(["Registry", "Ease", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, Ease, arg, Input, SVG, TRS, Tween) {
     var GUI;
     GUI = arg.Settings;
     return Registry.set("SettingType", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, label, labelPad, labelWidth, lightBG, lightDot, normalDot, orangeBG, range, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackWidth, update, v;
+      var bgc, blueBG, handleDrag, label, labelPad, labelWidth, lightBG, lightDot, normalDot, orangeBG, range, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackWidth, update, updateSnaps, v;
       snapElms = [];
       v = 0;
       startDrag = 0;
@@ -2678,32 +2678,59 @@
         });
       };
       tickBG(blueBG);
+      updateSnaps = function(input) {
+        var i, inMax, inMin, len, len1, m, n, outMax, outMin, ref, ref1;
+        ref = props.snaps;
+        for (i = m = 0, len = ref.length; m < len; i = ++m) {
+          snap = ref[i];
+          SVG.attrs(snapElms[i], {
+            r: 2,
+            stroke: normalDot
+          });
+        }
+        ref1 = props.snaps;
+        for (i = n = 0, len1 = ref1.length; n < len1; i = ++n) {
+          snap = ref1[i];
+          if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
+            SVG.attrs(snapElms[i], {
+              r: 3,
+              stroke: lightDot
+            });
+            TRS.abs(thumb, {
+              x: snap * range
+            });
+            return snap;
+          } else if (input < snap - snapTolerance) {
+            TRS.abs(thumb, {
+              x: input * range
+            });
+            inMin = i > 0 ? props.snaps[i - 1] + snapTolerance : 0;
+            inMax = snap - snapTolerance;
+            outMin = i > 0 ? props.snaps[i - 1] : 0;
+            outMax = snap;
+            return Ease.linear(input, inMin, inMax, outMin, outMax);
+          }
+        }
+        TRS.abs(thumb, {
+          x: input * range
+        });
+        inMin = props.snaps[props.snaps.length - 1] + snapTolerance;
+        inMax = 1;
+        outMin = props.snaps[props.snaps.length - 1];
+        outMax = 1;
+        return Ease.linear(input, inMin, inMax, outMin, outMax);
+      };
       update = function(V) {
-        var i, len, m, ref;
         if (V != null) {
           v = Math.max(0, Math.min(1, V));
         }
         if (props.snaps != null) {
-          ref = props.snaps;
-          for (i = m = 0, len = ref.length; m < len; i = ++m) {
-            snap = ref[i];
-            if (v > snap - snapTolerance && v < snap + snapTolerance) {
-              v = snap;
-              SVG.attrs(snapElms[i], {
-                r: 3,
-                stroke: lightDot
-              });
-            } else {
-              SVG.attrs(snapElms[i], {
-                r: 2,
-                stroke: normalDot
-              });
-            }
-          }
+          return v = updateSnaps(v);
+        } else {
+          return TRS.abs(thumb, {
+            x: v * range
+          });
         }
-        return TRS.abs(thumb, {
-          x: v * range
-        });
       };
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
@@ -3338,7 +3365,9 @@
     });
     Take("AllReady", function() {
       RAF(resize, true);
-      return setTimeout(resize, 1000);
+      setTimeout(resize, 100);
+      setTimeout(resize, 1000);
+      return setTimeout(resize, 5000);
     });
     if (!Mode.nav) {
       Make("Nav", false);
@@ -4212,47 +4241,45 @@
     });
   });
 
-  Take(["Action", "Ease", "Mode", "Reaction", "Settings"], function(Action, Ease, Mode, Reaction, Settings) {
-    var init, update;
+  Take(["Action", "Ease", "Mode", "Reaction", "Settings", "Storage"], function(Action, Ease, Mode, Reaction, Settings, Storage) {
+    var apply, init;
     if (typeof Mode.background === "string") {
       return Action("Background:Set", Mode.background);
     } else if (Mode.background === true) {
-      init = +window.top.localStorage["SVGA-Background"];
+      init = +Storage("Background");
       if (isNaN(init)) {
         init = .7;
       }
-      update = function(v) {
-        Action("Background:Lightness", v);
-        return window.top.localStorage["SVGA-Background"] = v.toString();
+      apply = function(v) {
+        Storage("Background", v);
+        return Action("Background:Lightness", Ease.linear(v, 0, 1, 0.25, 1));
       };
       if (Mode.background === true) {
         Settings.addSetting("slider", {
           name: "Background",
           value: init,
           snaps: [.7],
-          update: function(v) {
-            return update(Ease.linear(v, 0, 1, 0.25, 1));
-          }
+          update: apply
         });
       }
       return Take("SceneReady", function() {
-        return update(init);
+        return apply(init);
       });
     } else {
       return Action("Background:Set", "transparent");
     }
   });
 
-  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+  Take(["Action", "Reaction", "Settings", "Storage"], function(Action, Reaction, Settings, Storage) {
     var arrowsSwitch, enabled, update;
-    enabled = window.top.localStorage["SVGA-FlowArrows"] === "false" ? false : true;
+    enabled = Storage("FlowArrows") === "false" ? false : true;
     update = function(active) {
       if (active) {
         Action("FlowArrows:Show");
-        return window.top.localStorage["SVGA-FlowArrows"] = "true";
+        return Storage("FlowArrows", "true");
       } else {
         Action("FlowArrows:Hide");
-        return window.top.localStorage["SVGA-FlowArrows"] = "false";
+        return Storage("FlowArrows", "false");
       }
     };
     arrowsSwitch = Settings.addSetting("switch", {
@@ -4265,12 +4292,12 @@
     });
   });
 
-  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+  Take(["Action", "Reaction", "Settings", "Storage"], function(Action, Reaction, Settings, Storage) {
     var init, update;
-    init = window.top.localStorage["SVGA-Highlights"] === "false" ? false : true;
+    init = Storage("Highlights") === "false" ? false : true;
     update = function(active) {
       Action("Highlights:Set", active);
-      return window.top.localStorage["SVGA-Highlights"] = active.toString();
+      return Storage("Highlights", active);
     };
     Settings.addSetting("switch", {
       name: "Highlights",
@@ -4282,16 +4309,16 @@
     });
   });
 
-  Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
+  Take(["Action", "Reaction", "Settings", "Storage"], function(Action, Reaction, Settings, Storage) {
     var arrowsSwitch, enabled, update;
-    enabled = window.top.localStorage["SVGA-Labels"] === "false" ? false : true;
+    enabled = Storage("Labels") === "false" ? false : true;
     update = function(active) {
       if (active) {
         Action("Labels:Show");
-        return window.top.localStorage["SVGA-Labels"] = "true";
+        return Storage("Labels", "true");
       } else {
         Action("Labels:Hide");
-        return window.top.localStorage["SVGA-Labels"] = "false";
+        return Storage("Labels", "false");
       }
     };
     arrowsSwitch = Settings.addSetting("switch", {
@@ -5732,6 +5759,14 @@
       throw new Error("^ @" + prop + " is a reserved name. Please choose a different name for your child/property \"" + prop + "\".");
     }
     return void 0;
+  });
+
+  Make("Storage", Storage = function(k, v) {
+    if (v != null) {
+      return window.top.localStorage["SVGA-" + k] = v.toString();
+    } else {
+      return window.top.localStorage["SVGA-" + k];
+    }
   });
 
   Take("DOMContentLoaded", function() {

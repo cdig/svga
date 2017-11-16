@@ -1,14 +1,15 @@
-Take ["Action", "Reaction", "Settings"], (Action, Reaction, Settings)->
+Take ["Action", "Reaction", "Settings", "Storage"], (Action, Reaction, Settings, Storage)->
   
-  enabled = if window.top.localStorage["SVGA-FlowArrows"] is "false" then false else true
+  # By explicitly checking for the string "false", we make the default (empty) case true
+  enabled = if Storage("FlowArrows") is "false" then false else true
   
   update = (active)->
     if active
       Action "FlowArrows:Show"
-      window.top.localStorage["SVGA-FlowArrows"] = "true"
+      Storage "FlowArrows", "true"
     else
       Action "FlowArrows:Hide"
-      window.top.localStorage["SVGA-FlowArrows"] = "false"
+      Storage "FlowArrows", "false"
   
   arrowsSwitch = Settings.addSetting "switch",
     name: "Flow Arrows"

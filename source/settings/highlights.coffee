@@ -1,10 +1,11 @@
-Take ["Action", "Reaction", "Settings"], (Action, Reaction, Settings)->
+Take ["Action", "Reaction", "Settings", "Storage"], (Action, Reaction, Settings, Storage)->
   
-  init = if window.top.localStorage["SVGA-Highlights"] is "false" then false else true
+  # By explicitly checking for the string "false", we make the default (empty) case true
+  init = if Storage("Highlights") is "false" then false else true
   
   update = (active)->
     Action "Highlights:Set", active
-    window.top.localStorage["SVGA-Highlights"] = active.toString()
+    Storage "Highlights", active
   
   Settings.addSetting "switch",
     name: "Highlights"

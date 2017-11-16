@@ -1,14 +1,15 @@
-Take ["Action", "Reaction", "Settings"], (Action, Reaction, Settings)->
+Take ["Action", "Reaction", "Settings", "Storage"], (Action, Reaction, Settings, Storage)->
   
-  enabled = if window.top.localStorage["SVGA-Labels"] is "false" then false else true
+  # By explicitly checking for the string "false", we make the default (empty) case true
+  enabled = if Storage("Labels") is "false" then false else true
   
   update = (active)->
     if active
       Action "Labels:Show"
-      window.top.localStorage["SVGA-Labels"] = "true"
+      Storage "Labels", "true"
     else
       Action "Labels:Hide"
-      window.top.localStorage["SVGA-Labels"] = "false"
+      Storage "Labels", "false"
   
   arrowsSwitch = Settings.addSetting "switch",
     name: "Labels"

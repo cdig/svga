@@ -3361,7 +3361,8 @@
       });
     };
     window.top.addEventListener("resize", function() {
-      return RAF(resize, true);
+      RAF(resize, true);
+      return setTimeout(resize, 100);
     });
     Take("AllReady", function() {
       RAF(resize, true);

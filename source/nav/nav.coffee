@@ -142,7 +142,12 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
       
   
   # Init resizing, and fire an initial resize when everything is ready
-  window.top.addEventListener "resize", ()-> RAF resize, true
+  window.top.addEventListener "resize", ()->
+    # We've got issues with resizes not being stable after 1 round, so
+    # we'll just run them a second time after a momentary delay
+    RAF resize, true
+    setTimeout resize, 100
+  
   Take "AllReady", ()->
     RAF resize, true
     setTimeout resize, 100 # Fire delayed resizes, to avoid sizing issues around load time

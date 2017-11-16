@@ -33,7 +33,7 @@ Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)-
           html += "<div style='color:#{colors[k]}'>#{k}: #{v}</div>"
         elm.innerHTML = html
   
-  Make "HUD", HUD = (k, v, c = "#0008")->
+  Make "HUD", HUD = (k, v, c = "#000")->
     
     # Allow passing an object of k-v pairs, with the 2nd arg as the optional color
     if typeof k is "object"

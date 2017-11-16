@@ -64,6 +64,8 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     return resizeInfo =
       panelClaimedW: panelClaimedW
       panelClaimedH: panelClaimedH
+      wFrac: wFrac
+      hFrac: hFrac
       windowScale: windowScale
       availableSpaceW: availableSpaceW
       availableSpaceH: availableSpaceH
@@ -76,8 +78,11 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     horizontalResizeInfo = computeResizeInfo horizontalPanelInfo
     verticalResizeInfo = computeResizeInfo verticalPanelInfo
     if Mode.embed
-      # We'd prefer the panel to be on the side, if there's room for it, since putting it on the bottom risks expanding our <object> height to be bigger than the window.
-      return verticalResizeInfo.windowScale < 1 and horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale
+      horizontalContentHeight = contentHeight * horizontalResizeInfo.wFrac
+      horizontalPanelHeight = horizontalResizeInfo.panelClaimedH
+      doesHorizontalFitInWindow = horizontalContentHeight + horizontalPanelHeight < window.top.innerHeight
+      doesVerticalCauseShrinking = verticalResizeInfo.windowScale < 1
+      return doesHorizontalFitInWindow and doesVerticalCauseShrinking
     else
       return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale
   
@@ -98,9 +103,11 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     if Mode.embed
       parentRect = ParentElement.getBoundingClientRect()
       aspectAdjustedHeight = resizeInfo.panelClaimedH + contentHeight * (parentRect.width - resizeInfo.panelClaimedW) / contentWidth
-      computedHeight = Math.max aspectAdjustedHeight, panelInfo.h
-      ParentElement.style.height = Math.round(computedHeight) + "px"
-      # TODO: Has totalSpace changed?
+      computedHeight = Math.ceil Math.max aspectAdjustedHeight, panelInfo.h
+      ParentElement.style.height = computedHeight + "px"
+      heightChange = computedHeight - totalSpace.height
+      totalSpace.height = computedHeight
+      totalSpace.bottom += heightChange
     
     # Save our window scale for future nav actions
     windowScale = resizeInfo.windowScale
@@ -135,7 +142,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
       
   
   # Init resizing, and fire an initial resize when everything is ready
-  window.addEventListener "resize", ()-> RAF resize, true
+  window.top.addEventListener "resize", ()-> RAF resize, true
   Take "AllReady", ()->
     RAF resize, true
     setTimeout resize, 1000 # Fire one more delayed resize, which avoids some residual sizing bugs when in dev when embedded

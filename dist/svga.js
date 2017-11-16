@@ -2557,7 +2557,7 @@
     return Make("HUD", HUD = function(k, v, c) {
       var _k, _v;
       if (c == null) {
-        c = "#0008";
+        c = "#000";
       }
       if (typeof k === "object") {
         for (_k in k) {
@@ -3274,6 +3274,8 @@
       return resizeInfo = {
         panelClaimedW: panelClaimedW,
         panelClaimedH: panelClaimedH,
+        wFrac: wFrac,
+        hFrac: hFrac,
         windowScale: windowScale,
         availableSpaceW: availableSpaceW,
         availableSpaceH: availableSpaceH,
@@ -3282,25 +3284,32 @@
       };
     };
     checkHorizontalIsBetter = function(horizontalPanelInfo, verticalPanelInfo) {
-      var horizontalResizeInfo, verticalResizeInfo;
+      var doesHorizontalFitInWindow, doesVerticalCauseShrinking, horizontalContentHeight, horizontalPanelHeight, horizontalResizeInfo, verticalResizeInfo;
       horizontalResizeInfo = computeResizeInfo(horizontalPanelInfo);
       verticalResizeInfo = computeResizeInfo(verticalPanelInfo);
       if (Mode.embed) {
-        return verticalResizeInfo.windowScale < 1 && horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale;
+        horizontalContentHeight = contentHeight * horizontalResizeInfo.wFrac;
+        horizontalPanelHeight = horizontalResizeInfo.panelClaimedH;
+        doesHorizontalFitInWindow = horizontalContentHeight + horizontalPanelHeight < window.top.innerHeight;
+        doesVerticalCauseShrinking = verticalResizeInfo.windowScale < 1;
+        return doesHorizontalFitInWindow && doesVerticalCauseShrinking;
       } else {
         return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale;
       }
     };
     resize = function() {
-      var aspectAdjustedHeight, computedHeight, panelInfo, resizeInfo;
+      var aspectAdjustedHeight, computedHeight, heightChange, panelInfo, resizeInfo;
       totalSpace = SVG.svg.getBoundingClientRect();
       panelInfo = ControlPanel.getPanelLayoutInfo(checkHorizontalIsBetter);
       resizeInfo = computeResizeInfo(panelInfo);
       if (Mode.embed) {
         parentRect = ParentElement.getBoundingClientRect();
         aspectAdjustedHeight = resizeInfo.panelClaimedH + contentHeight * (parentRect.width - resizeInfo.panelClaimedW) / contentWidth;
-        computedHeight = Math.max(aspectAdjustedHeight, panelInfo.h);
-        ParentElement.style.height = Math.round(computedHeight) + "px";
+        computedHeight = Math.ceil(Math.max(aspectAdjustedHeight, panelInfo.h));
+        ParentElement.style.height = computedHeight + "px";
+        heightChange = computedHeight - totalSpace.height;
+        totalSpace.height = computedHeight;
+        totalSpace.bottom += heightChange;
       }
       windowScale = resizeInfo.windowScale;
       center.x = resizeInfo.availableSpaceX + resizeInfo.availableSpaceW / 2;
@@ -3324,7 +3333,7 @@
         }
       });
     };
-    window.addEventListener("resize", function() {
+    window.top.addEventListener("resize", function() {
       return RAF(resize, true);
     });
     Take("AllReady", function() {
@@ -4208,13 +4217,13 @@
     if (typeof Mode.background === "string") {
       return Action("Background:Set", Mode.background);
     } else if (Mode.background === true) {
-      init = +window.localStorage["SVGA-Background"];
+      init = +window.top.localStorage["SVGA-Background"];
       if (isNaN(init)) {
         init = .7;
       }
       update = function(v) {
         Action("Background:Lightness", v);
-        return window.localStorage["SVGA-Background"] = v.toString();
+        return window.top.localStorage["SVGA-Background"] = v.toString();
       };
       if (Mode.background === true) {
         Settings.addSetting("slider", {
@@ -4236,14 +4245,14 @@
 
   Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
     var arrowsSwitch, enabled, update;
-    enabled = window.localStorage["SVGA-FlowArrows"] === "false" ? false : true;
+    enabled = window.top.localStorage["SVGA-FlowArrows"] === "false" ? false : true;
     update = function(active) {
       if (active) {
         Action("FlowArrows:Show");
-        return window.localStorage["SVGA-FlowArrows"] = "true";
+        return window.top.localStorage["SVGA-FlowArrows"] = "true";
       } else {
         Action("FlowArrows:Hide");
-        return window.localStorage["SVGA-FlowArrows"] = "false";
+        return window.top.localStorage["SVGA-FlowArrows"] = "false";
       }
     };
     arrowsSwitch = Settings.addSetting("switch", {
@@ -4258,10 +4267,10 @@
 
   Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
     var init, update;
-    init = window.localStorage["SVGA-Highlights"] === "false" ? false : true;
+    init = window.top.localStorage["SVGA-Highlights"] === "false" ? false : true;
     update = function(active) {
       Action("Highlights:Set", active);
-      return window.localStorage["SVGA-Highlights"] = active.toString();
+      return window.top.localStorage["SVGA-Highlights"] = active.toString();
     };
     Settings.addSetting("switch", {
       name: "Highlights",
@@ -4275,14 +4284,14 @@
 
   Take(["Action", "Reaction", "Settings"], function(Action, Reaction, Settings) {
     var arrowsSwitch, enabled, update;
-    enabled = window.localStorage["SVGA-Labels"] === "false" ? false : true;
+    enabled = window.top.localStorage["SVGA-Labels"] === "false" ? false : true;
     update = function(active) {
       if (active) {
         Action("Labels:Show");
-        return window.localStorage["SVGA-Labels"] = "true";
+        return window.top.localStorage["SVGA-Labels"] = "true";
       } else {
         Action("Labels:Hide");
-        return window.localStorage["SVGA-Labels"] = "false";
+        return window.top.localStorage["SVGA-Labels"] = "false";
       }
     };
     arrowsSwitch = Settings.addSetting("switch", {
@@ -4443,7 +4452,7 @@
   });
 
   Take(["Config", "ParentElement"], function(Config, ParentElement) {
-    var Mode, fetchAttribute, ref;
+    var Mode, fetchAttribute, isDev;
     fetchAttribute = function(name) {
       var attrName, val;
       attrName = "x-" + name;
@@ -4463,11 +4472,22 @@
         return Config[name];
       }
     };
+    isDev = function() {
+      var loc, ref;
+      loc = window.top.location;
+      if (loc.search.indexOf("dev=false") > 0) {
+        return false;
+      }
+      if (loc.search.indexOf("dev=true") > 0) {
+        return true;
+      }
+      return ((ref = loc.port) != null ? ref.length : void 0) >= 4;
+    };
     Mode = {
       get: fetchAttribute,
       background: fetchAttribute("background"),
       controlPanel: fetchAttribute("controlPanel"),
-      dev: ((ref = window.top.location.port) != null ? ref.length : void 0) >= 4,
+      dev: isDev(),
       nav: fetchAttribute("nav"),
       embed: window !== window.top,
       settings: fetchAttribute("settings")

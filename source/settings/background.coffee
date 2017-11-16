@@ -5,12 +5,12 @@ Take ["Action", "Ease", "Mode", "Reaction", "Settings"], (Action, Ease, Mode, Re
   
   else if Mode.background is true
     
-    init = +window.localStorage["SVGA-Background"]
+    init = +window.top.localStorage["SVGA-Background"]
     init = .7 if isNaN init
     
     update = (v)->
       Action "Background:Lightness", v
-      window.localStorage["SVGA-Background"] = v.toString()
+      window.top.localStorage["SVGA-Background"] = v.toString()
     
     if Mode.background is true
       Settings.addSetting "slider",

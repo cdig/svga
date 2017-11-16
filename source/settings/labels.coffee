@@ -1,14 +1,14 @@
 Take ["Action", "Reaction", "Settings"], (Action, Reaction, Settings)->
   
-  enabled = if window.localStorage["SVGA-Labels"] is "false" then false else true
+  enabled = if window.top.localStorage["SVGA-Labels"] is "false" then false else true
   
   update = (active)->
     if active
       Action "Labels:Show"
-      window.localStorage["SVGA-Labels"] = "true"
+      window.top.localStorage["SVGA-Labels"] = "true"
     else
       Action "Labels:Hide"
-      window.localStorage["SVGA-Labels"] = "false"
+      window.top.localStorage["SVGA-Labels"] = "false"
   
   arrowsSwitch = Settings.addSetting "switch",
     name: "Labels"

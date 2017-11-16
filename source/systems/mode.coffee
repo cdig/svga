@@ -14,11 +14,20 @@ Take ["Config", "ParentElement"], (Config, ParentElement)->
     else
       Config[name]
   
+  isDev = ()->
+    loc = window.top.location
+    # Allow turning off dev mode when running locally
+    return false if loc.search.indexOf("dev=false") > 0
+    # Allow turning on dev mode when running in prod
+    return true if loc.search.indexOf("dev=true") > 0
+    # By default, dev mode is active when we have a URL with a port number
+    return loc.port?.length >= 4
+  
   Mode =
     get: fetchAttribute
     background: fetchAttribute "background"
     controlPanel: fetchAttribute "controlPanel"
-    dev: window.top.location.port?.length >= 4
+    dev: isDev()
     nav: fetchAttribute "nav"
     embed: window isnt window.top
     settings: fetchAttribute "settings"

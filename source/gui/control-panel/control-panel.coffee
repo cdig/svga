@@ -43,13 +43,8 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope
     else
       1
     
-    # controlPanelScale = 1
-    
     scaledPanelW = panelSize.w * controlPanelScale
     scaledPanelH = panelSize.h * controlPanelScale
-    
-    # Take("HUD")
-    #   test: (vertical and scaledPanelW > view.w/2) or (!vertical and scaledPanelH > view.h/2)
     
     if config.x? or config.y?
       signedXPosition = config.x or 0

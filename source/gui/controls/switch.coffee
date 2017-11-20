@@ -35,7 +35,10 @@ Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {Con
     label = SVG.create "text", elm,
       textContent: props.name
       x: trackWidth + GUI.labelMargin
-      y: 21
+      y: (props.fontSize or 16) + GUI.unit/16
+      fontSize: props.fontSize or 16
+      fontWeight: props.fontWeight or "normal"
+      fontStyle: props.fontStyle or "normal"
       textAnchor: "start"
       fill: lightFill
     

@@ -40,10 +40,17 @@ Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)-
       for _k, _v of k
         HUD _k, _v, v
     
+    # Pretty-print nested objects (and avoid infinite loops if there's a reference cycle)
+    else if typeof v is "object" and not v._hud_visited
+      v._hud_visited = true
+      for _k, _v of v when _k isnt "_hud_visited"
+        HUD "#{k}.#{_k}", _v, v
+      v._hud_visited = false
+    
     else
       if values[k] isnt v or not values[k]?
         values[k] = v
         colors[k] = c
         needsUpdate = true
-
-    undefined
+    
+    return v # Pass-through whenever possible

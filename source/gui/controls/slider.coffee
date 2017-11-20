@@ -139,7 +139,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
         update e.clientX/range - startDrag
         handler v for handler in handlers
         undefined
-    input = Input elm,
+    inputCalls =
       moveIn: toHover
       dragIn: (e, state)-> toClicking() if state.clicking
       down: (e)->
@@ -150,7 +150,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
       drag: handleDrag
       dragOther: handleDrag
       click: toClicked
-    
+    input = Input elm, inputCalls, true, true, blockScroll: true
     
     return scope =
       height: height

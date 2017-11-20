@@ -2043,7 +2043,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, handlers, height, hit, input, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, updateSnaps, v;
+      var bgc, blueBG, handleDrag, handlers, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, updateSnaps, v;
       handlers = [];
       snapElms = [];
       v = 0;
@@ -2232,7 +2232,7 @@
           return void 0;
         }
       };
-      input = Input(elm, {
+      inputCalls = {
         moveIn: toHover,
         dragIn: function(e, state) {
           if (state.clicking) {
@@ -2248,6 +2248,9 @@
         drag: handleDrag,
         dragOther: handleDrag,
         click: toClicked
+      };
+      input = Input(elm, inputCalls, true, true, {
+        blockScroll: true
       });
       return scope = {
         height: height,
@@ -5122,16 +5125,22 @@
     });
   });
 
-  Make("Input", function(elm, calls, mouse, touch) {
-    var api, down, enabled, move, out, over, prepTouchEvent, resetState, state, up;
+  Make("Input", function(elm, calls, mouse, touch, options) {
+    var api, down, enabled, move, out, over, prepTouchEvent, resetState, state, touchListenerOptions, touchmove, touchstart, up;
     if (mouse == null) {
       mouse = true;
     }
     if (touch == null) {
       touch = true;
     }
+    if (options == null) {
+      options = {};
+    }
     enabled = true;
     state = null;
+    touchListenerOptions = {
+      passive: !options.blockScroll
+    };
     resetState = function() {
       return state = {
         down: false,
@@ -5191,6 +5200,9 @@
       state.deltaY = e.clientY - state.lastY;
       if (state.over) {
         if (state.down) {
+          if (options.blockScroll && state.touch) {
+            e.preventDefault();
+          }
           if (typeof calls.drag === "function") {
             calls.drag(e, state);
           }
@@ -5317,22 +5329,24 @@
         }
         return state.captured != null ? state.captured : state.captured = false;
       };
-      document.addEventListener("touchstart", function(e) {
+      touchstart = function(e) {
         if (!enabled) {
           return;
         }
         state.captured = null;
         prepTouchEvent(e);
         return down(e);
-      });
+      };
+      document.addEventListener("touchstart", touchstart, touchListenerOptions);
       if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
-        document.addEventListener("touchmove", function(e) {
+        touchmove = function(e) {
           if (!enabled) {
             return;
           }
           prepTouchEvent(e);
           return move(e);
-        });
+        };
+        document.addEventListener("touchmove", touchmove, touchListenerOptions);
       }
       document.addEventListener("touchend", function(e) {
         if (!enabled) {

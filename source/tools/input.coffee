@@ -1,6 +1,9 @@
-Make "Input", (elm, calls, mouse = true, touch = true)->
+Make "Input", (elm, calls, mouse = true, touch = true, options = {})->
   enabled = true
   state = null
+  
+  # Thanks, Chrome..v_v
+  touchListenerOptions = passive: not options.blockScroll
   
   resetState = ()->
     state =
@@ -49,6 +52,7 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
     state.deltaY = e.clientY - state.lastY
     if state.over
       if state.down
+        e.preventDefault() if options.blockScroll and state.touch
         calls.drag? e, state
       else
         calls.move? e, state
@@ -136,19 +140,21 @@ Make "Input", (elm, calls, mouse = true, touch = true)->
             out e
       state.captured ?= false
   
-    document.addEventListener "touchstart", (e)->
+    touchstart = (e)->
       return unless enabled
       state.captured = null
       prepTouchEvent e
       down e
+    document.addEventListener "touchstart", touchstart, touchListenerOptions
   
     # Windows fires this event every tick when touch-dragging, even when the input doesn't move?
     # Only add the move listener if we need it, to avoid the perf cost
     if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther? or calls.moveIn? or calls.dragIn? or calls.moveOut? or calls.dragOut?
-      document.addEventListener "touchmove", (e)->
+      touchmove = (e)->
         return unless enabled
         prepTouchEvent e
         move e
+      document.addEventListener "touchmove", touchmove, touchListenerOptions
   
     document.addEventListener "touchend", (e)->
       return unless enabled

@@ -802,12 +802,13 @@
     return hide();
   });
 
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady) {
-    var CP, ControlPanel, columnsElm, config, groups, makePanelInfo, panelBg, panelElm, showing;
+  Take(["HUD", "ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(HUD, ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady) {
+    var CP, ControlPanel, columnElms, columnsElm, config, getColumnElm, groups, panelBg, panelElm, showing;
     CP = GUI.ControlPanel;
     config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
     showing = false;
     groups = [];
+    columnElms = [];
     panelElm = SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 16,
@@ -822,43 +823,14 @@
       xColumns: "",
       transform: "translate(" + CP.panelPadding + "," + CP.panelPadding + ")"
     });
+    getColumnElm = function(index) {
+      return columnElms[index] != null ? columnElms[index] : columnElms[index] = SVG.create("g", columnsElm);
+    };
     Take("SceneReady", function() {
       if (!showing) {
         return GUI.elm.removeChild(panelElm);
       }
     });
-    makePanelInfo = function(vertical, panelSize, view) {
-      var controlPanelScale, controlPanelX, controlPanelY, marginedViewHeight, marginedViewWidth, normalizedX, normalizedY, panelInfo, scaledPanelH, scaledPanelW, signedXPosition, signedYPosition;
-      controlPanelScale = vertical && (panelSize.w > view.w / 2 || panelSize.h > view.h) ? Math.max(0.7, Math.min(view.w / panelSize.w / 2, view.h / panelSize.h)) : !vertical && (panelSize.h > view.h / 2 || panelSize.w > view.w) ? Math.max(0.7, Math.min(view.w / panelSize.w, view.h / panelSize.h / 2)) : 1;
-      scaledPanelW = panelSize.w * controlPanelScale;
-      scaledPanelH = panelSize.h * controlPanelScale;
-      if ((config.x != null) || (config.y != null)) {
-        signedXPosition = config.x || 0;
-        signedYPosition = config.y || 0;
-      } else if (vertical) {
-        signedXPosition = 1;
-        signedYPosition = 0;
-      } else {
-        signedXPosition = 0;
-        signedYPosition = 1;
-      }
-      marginedViewWidth = view.w - scaledPanelW;
-      marginedViewHeight = view.h - scaledPanelH;
-      normalizedX = signedXPosition / 2 + 0.5;
-      normalizedY = signedYPosition / 2 + 0.5;
-      controlPanelX = CP.panelMargin + normalizedX * marginedViewWidth | 0;
-      controlPanelY = CP.panelMargin + normalizedY * marginedViewHeight | 0;
-      return panelInfo = {
-        controlPanelScale: controlPanelScale,
-        controlPanelX: controlPanelX,
-        controlPanelY: controlPanelY,
-        vertical: vertical,
-        signedX: signedXPosition,
-        signedY: signedYPosition,
-        w: scaledPanelW + CP.panelMargin * 2,
-        h: scaledPanelH + CP.panelMargin * 2
-      };
-    };
     Make("ControlPanel", ControlPanel = Scope(panelElm, function() {
       return {
         registerGroup: function(group) {
@@ -868,41 +840,55 @@
           showing = true;
           return SVG.create("g", parent);
         },
-        getPanelLayoutInfo: function(horizontalIsBetter) {
-          var horizontalPanelInfo, horizontalPanelSize, outerBounds, panelInfo, panelSize, vertical, verticalPanelInfo, verticalPanelSize, view;
-          outerBounds = SVG.svg.getBoundingClientRect();
-          view = {
-            w: outerBounds.width - CP.panelMargin * 2,
-            h: outerBounds.height - CP.panelMargin * 2
+        computeLayout: function(vertical, totalAvailableSpace) {
+          var consumedSpace, innerPanelSize, layout, marginedSpace, outerPanelSize, panelInfo, ref, scale;
+          marginedSpace = {
+            w: totalAvailableSpace.w - CP.panelMargin * 2,
+            h: totalAvailableSpace.h - CP.panelMargin * 2
           };
-          if (config.vertical === true) {
-            vertical = true;
-            panelSize = ControlPanelLayout.vertical(groups, view, columnsElm);
-          } else if (config.vertical === false) {
-            vertical = false;
-            panelSize = ControlPanelLayout.horizontal(groups, view, columnsElm);
-          } else {
-            horizontalPanelSize = ControlPanelLayout.horizontal(groups, view, columnsElm);
-            verticalPanelSize = ControlPanelLayout.vertical(groups, view, columnsElm);
-            horizontalPanelInfo = makePanelInfo(false, horizontalPanelSize, view);
-            verticalPanelInfo = makePanelInfo(true, verticalPanelSize, view);
-            if (horizontalIsBetter(horizontalPanelInfo, verticalPanelInfo)) {
-              vertical = false;
-              panelSize = ControlPanelLayout.horizontal(groups, view, columnsElm);
-            } else {
-              vertical = true;
-              panelSize = verticalPanelSize;
-            }
+          ref = vertical ? ControlPanelLayout.vertical(groups, marginedSpace) : ControlPanelLayout.horizontal(groups, marginedSpace), innerPanelSize = ref[0], layout = ref[1];
+          scale = vertical && (innerPanelSize.w > marginedSpace.w / 2 || innerPanelSize.h > marginedSpace.h) ? Math.max(0.8, Math.min(marginedSpace.w / innerPanelSize.w / 2, marginedSpace.h / innerPanelSize.h)) : !vertical && (innerPanelSize.w > marginedSpace.w || innerPanelSize.h > marginedSpace.h / 2) ? Math.max(0.8, Math.min(marginedSpace.w / innerPanelSize.w, marginedSpace.h / innerPanelSize.h / 2)) : 1;
+          outerPanelSize = {
+            w: innerPanelSize.w * scale + CP.panelMargin * 2,
+            h: innerPanelSize.h * scale + CP.panelMargin * 2
+          };
+          consumedSpace = {
+            w: 0,
+            h: 0
+          };
+          if (showing && vertical) {
+            consumedSpace.w = outerPanelSize.w;
           }
-          panelInfo = makePanelInfo(vertical, panelSize, view);
-          SVG.attrs(panelBg, {
-            width: panelSize.w,
-            height: panelSize.h
+          if (showing && !vertical) {
+            consumedSpace.h = outerPanelSize.h;
+          }
+          return panelInfo = {
+            showing: showing,
+            vertical: vertical,
+            consumedSpace: consumedSpace,
+            innerPanelSize: innerPanelSize,
+            outerPanelSize: outerPanelSize,
+            scale: scale,
+            layout: layout
+          };
+        },
+        applyLayout: function(resizeInfo, totalAvailableSpace) {
+          if (!resizeInfo.panelInfo.showing) {
+            return;
+          }
+          ControlPanelLayout.applyLayout(resizeInfo.panelInfo.layout, getColumnElm);
+          if (resizeInfo.panelInfo.vertical) {
+            ControlPanel.x = Math.round(totalAvailableSpace.w - resizeInfo.panelInfo.outerPanelSize.w + CP.panelMargin);
+            ControlPanel.y = Math.round(totalAvailableSpace.h / 2 - resizeInfo.panelInfo.outerPanelSize.h / 2 + CP.panelMargin);
+          } else {
+            ControlPanel.x = Math.round(totalAvailableSpace.w / 2 - resizeInfo.panelInfo.outerPanelSize.w / 2 + CP.panelMargin);
+            ControlPanel.y = Math.round(totalAvailableSpace.h - resizeInfo.panelInfo.outerPanelSize.h + CP.panelMargin);
+          }
+          ControlPanel.scale = resizeInfo.panelInfo.scale;
+          return SVG.attrs(panelBg, {
+            width: resizeInfo.panelInfo.innerPanelSize.w,
+            height: resizeInfo.panelInfo.innerPanelSize.h
           });
-          ControlPanel.scale = panelInfo.controlPanelScale;
-          ControlPanel.x = panelInfo.controlPanelX;
-          ControlPanel.y = panelInfo.controlPanelY;
-          return panelInfo;
         }
       };
     }));
@@ -915,106 +901,108 @@
   });
 
   Take(["GUI", "Mode", "SVG"], function(arg, Mode, SVG) {
-    var GUI, checkPanelSize, columns, getColumn, performLayout;
+    var GUI, checkPanelSize, constructLayout;
     GUI = arg.ControlPanel;
-    columns = [];
-    getColumn = function(index, panelElm) {
-      return columns[index] != null ? columns[index] : columns[index] = {
-        x: index * (GUI.colInnerWidth + GUI.groupPad * 2 + GUI.columnMargin),
-        groups: [],
-        height: 0,
-        visible: false,
-        element: SVG.create("g", panelElm)
-      };
-    };
-    performLayout = function(groups, panelElm, desiredColumnHeight) {
-      var column, currentColumnIndex, group, len, len1, len2, len3, m, n, panelHeight, panelWidth, q, tallestColumnHeight, u, y;
-      for (m = 0, len = columns.length; m < len; m++) {
-        column = columns[m];
-        column.groups = [];
-        column.height = 0;
-        column.visible = false;
-      }
-      currentColumnIndex = 0;
-      column = getColumn(currentColumnIndex, panelElm);
-      for (n = 0, len1 = groups.length; n < len1; n++) {
-        group = groups[n];
-        if (column.height > desiredColumnHeight) {
-          column = getColumn(++currentColumnIndex, panelElm);
+    constructLayout = function(groups, desiredColumnHeight, vertical) {
+      var column, columns, group, innerPanelSize, len, len1, len2, m, n, q, tallestColumnHeight;
+      columns = [];
+      column = null;
+      for (m = 0, len = groups.length; m < len; m++) {
+        group = groups[m];
+        if ((column == null) || column.height > desiredColumnHeight) {
+          columns.push(column = {
+            x: columns.length * (GUI.colInnerWidth + GUI.groupPad * 2 + GUI.columnMargin),
+            y: 0,
+            height: 0,
+            groups: []
+          });
         }
         if (column.groups.length > 0) {
           column.height += GUI.groupMargin;
         }
-        column.groups.push(group);
-        SVG.append(column.element, group.scope.element);
-        group.scope.y = column.height;
+        column.groups.push({
+          scope: group.scope,
+          y: column.height
+        });
         column.height += group.height;
-        column.visible = true;
       }
       tallestColumnHeight = 0;
+      for (n = 0, len1 = columns.length; n < len1; n++) {
+        column = columns[n];
+        tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
+      }
       for (q = 0, len2 = columns.length; q < len2; q++) {
         column = columns[q];
-        if (column.visible) {
-          tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
-        }
+        column.y = vertical ? tallestColumnHeight / 2 - column.height / 2 : tallestColumnHeight - column.height;
       }
-      for (u = 0, len3 = columns.length; u < len3; u++) {
-        column = columns[u];
-        if (!column.visible) {
-          continue;
-        }
-        y = tallestColumnHeight / 2 - column.height / 2;
-        SVG.attrs(column.element, {
-          transform: "translate(" + column.x + "," + y + ")"
-        });
-      }
-      panelWidth = GUI.panelPadding * 2 + (currentColumnIndex + 1) * (GUI.colInnerWidth + GUI.groupPad * 2) + currentColumnIndex * GUI.columnMargin;
-      panelHeight = GUI.panelPadding * 2 + tallestColumnHeight;
-      return {
-        w: panelWidth,
-        h: panelHeight
+      innerPanelSize = {
+        w: GUI.panelPadding * 2 + columns.length * (GUI.colInnerWidth + GUI.groupPad * 2) + (columns.length - 1) * GUI.columnMargin,
+        h: GUI.panelPadding * 2 + tallestColumnHeight
       };
+      return [innerPanelSize, columns];
     };
     Make("ControlPanelLayout", {
-      vertical: function(groups, availableSpace, panelElm) {
-        var availableSpaceInsidePanel, desiredColumnHeight, group, len, m, nColumns, totalHeight;
-        if (!(availableSpace.h > 0 && groups.length > 0)) {
-          return {
-            w: 0,
-            h: 0
-          };
+      vertical: function(groups, marginedSpace) {
+        var desiredColumnHeight, desiredNumberOfColumns, group, len, m, maxHeight;
+        if (!(marginedSpace.h > 0 && groups.length > 0)) {
+          return [
+            {
+              w: 0,
+              h: 0
+            }, []
+          ];
         }
-        totalHeight = 0;
+        maxHeight = 0;
         for (m = 0, len = groups.length; m < len; m++) {
           group = groups[m];
-          totalHeight += group.height;
+          maxHeight += group.height;
         }
-        totalHeight += GUI.groupMargin * (groups.length - 1);
-        availableSpaceInsidePanel = availableSpace.h - GUI.panelPadding * 2;
-        nColumns = Mode.embed ? 1 : Math.ceil(totalHeight / availableSpaceInsidePanel);
-        desiredColumnHeight = Math.max(GUI.unit, Math.floor(totalHeight / nColumns));
-        return performLayout(groups, panelElm, desiredColumnHeight);
+        maxHeight += GUI.groupMargin * (groups.length - 1);
+        desiredNumberOfColumns = Mode.embed ? 1 : Math.ceil(maxHeight / (marginedSpace.h - GUI.panelPadding * 2));
+        desiredColumnHeight = Math.max(GUI.unit, Math.floor(maxHeight / desiredNumberOfColumns));
+        return constructLayout(groups, desiredColumnHeight, true);
       },
-      horizontal: function(groups, availableSpace, panelElm) {
-        var desiredColumnHeight, group, len, m;
-        if (!(availableSpace.w > 0 && groups.length > 0)) {
-          return {
-            w: 0,
-            h: 0
-          };
+      horizontal: function(groups, marginedSpace) {
+        var desiredColumnHeight;
+        if (!(marginedSpace.w > 0 && groups.length > 0)) {
+          return [
+            {
+              w: 0,
+              h: 0
+            }, []
+          ];
         }
-        desiredColumnHeight = 0;
-        for (m = 0, len = groups.length; m < len; m++) {
-          group = groups[m];
-          desiredColumnHeight = Math.max(desiredColumnHeight, group.height);
+        desiredColumnHeight = GUI.unit / 2;
+        while (!checkPanelSize(desiredColumnHeight, groups, marginedSpace)) {
+          desiredColumnHeight += GUI.unit / 4;
         }
-        while (!checkPanelSize(desiredColumnHeight, groups, availableSpace)) {
-          desiredColumnHeight += GUI.unit / 2;
+        return constructLayout(groups, desiredColumnHeight, false);
+      },
+      applyLayout: function(columns, getColumnElm) {
+        var c, column, columnElm, groupInfo, len, m, results;
+        results = [];
+        for (c = m = 0, len = columns.length; m < len; c = ++m) {
+          column = columns[c];
+          columnElm = getColumnElm(c);
+          SVG.attrs(columnElm, {
+            transform: "translate(" + column.x + "," + column.y + ")"
+          });
+          results.push((function() {
+            var len1, n, ref, results1;
+            ref = column.groups;
+            results1 = [];
+            for (n = 0, len1 = ref.length; n < len1; n++) {
+              groupInfo = ref[n];
+              SVG.append(columnElm, groupInfo.scope.element);
+              results1.push(groupInfo.scope.y = groupInfo.y);
+            }
+            return results1;
+          })());
         }
-        return performLayout(groups, panelElm, desiredColumnHeight);
+        return results;
       }
     });
-    return checkPanelSize = function(columnHeight, groups, availableSpace) {
+    return checkPanelSize = function(columnHeight, groups, marginedSpace) {
       var consumedHeight, consumedWidth, group, len, m, nthGroupInColumn;
       consumedWidth = GUI.colInnerWidth + GUI.panelPadding * 2;
       consumedHeight = GUI.panelPadding * 2;
@@ -1032,7 +1020,7 @@
         consumedHeight += group.height;
         nthGroupInColumn++;
       }
-      return consumedWidth < availableSpace.w || columnHeight > availableSpace.h / 2;
+      return consumedWidth < marginedSpace.w || columnHeight > marginedSpace.h / 2;
     };
   });
 
@@ -2336,7 +2324,10 @@
       label = SVG.create("text", elm, {
         textContent: props.name,
         x: trackWidth + GUI.labelMargin,
-        y: 21,
+        y: (props.fontSize || 16) + GUI.unit / 16,
+        fontSize: props.fontSize || 16,
+        fontWeight: props.fontWeight || "normal",
+        fontStyle: props.fontStyle || "normal",
         textAnchor: "start",
         fill: lightFill
       });
@@ -2564,6 +2555,15 @@
           _v = k[_k];
           HUD(_k, _v, v);
         }
+      } else if (typeof v === "object" && !v._hud_visited) {
+        v._hud_visited = true;
+        for (_k in v) {
+          _v = v[_k];
+          if (_k !== "_hud_visited") {
+            HUD(k + "." + _k, _v, v);
+          }
+        }
+        v._hud_visited = false;
       } else {
         if (values[k] !== v || (values[k] == null)) {
           values[k] = v;
@@ -2571,7 +2571,7 @@
           needsUpdate = true;
         }
       }
-      return void 0;
+      return v;
     });
   });
 
@@ -3231,8 +3231,13 @@
     });
   });
 
-  Take(["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, checkHorizontalIsBetter, computeResizeInfo, contentHeight, contentWidth, dist, distTo, initialRootRect, limit, parentRect, pos, render, requestRender, resize, scaleStartPosZ, totalSpace, tween, windowScale;
+  Take(["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, HUD, Mode, ParentElement, RAF, Resize, SVG, Tween) {
+    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, debugBox, dist, distTo, initialRootRect, limit, parentRect, pickBestLayout, pos, render, requestRender, resize, scaleStartPosZ, tween;
+    debugBox = SVG.create("rect", SVG.root, {
+      fill: "none",
+      stroke: "#0F0A",
+      strokeWidth: 6
+    });
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
@@ -3273,86 +3278,84 @@
         max: 3
       }
     };
-    windowScale = 1;
+    contentScale = 1;
     scaleStartPosZ = 0;
     tween = null;
-    totalSpace = null;
     render = function() {
-      return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + (windowScale * Math.pow(2, pos.z)) + ") translate(" + (pos.x - centerInverse.x) + "," + (pos.y - centerInverse.y) + ")");
+      return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + (contentScale * Math.pow(2, pos.z)) + ") translate(" + (pos.x - centerInverse.x) + "," + (pos.y - centerInverse.y) + ")");
     };
-    computeResizeInfo = function(panelInfo) {
-      var availableSpaceH, availableSpaceW, availableSpaceX, availableSpaceY, hFrac, panelClaimedH, panelClaimedW, resizeInfo, wFrac;
-      panelClaimedW = Math.abs(panelInfo.signedX) >= 0.9 ? panelInfo.w : 0;
-      panelClaimedH = Math.abs(panelInfo.signedY) >= 0.9 ? panelInfo.h : 0;
-      if (panelClaimedW > 0 && panelClaimedH > 0) {
-        if (panelClaimedW < panelClaimedH) {
-          panelClaimedH = 0;
-        } else {
-          panelClaimedW = 0;
+    pickBestLayout = function(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo) {
+      var contentHeightWhenHorizontal, panelHeightWhenHorizontal;
+      if (Mode.embed) {
+        if (verticalResizeInfo.scale.min >= 1) {
+          return verticalResizeInfo;
+        }
+        contentHeightWhenHorizontal = contentHeight * horizontalResizeInfo.scale.min;
+        panelHeightWhenHorizontal = horizontalResizeInfo.panelInfo.consumedSpace.h;
+        if (window.top.innerHeight > contentHeightWhenHorizontal + panelHeightWhenHorizontal) {
+          return horizontalResizeInfo;
         }
       }
-      availableSpaceW = totalSpace.width - panelClaimedW;
-      availableSpaceH = totalSpace.height - panelClaimedH;
-      availableSpaceX = panelInfo.signedX < 0 ? panelInfo.w : 0;
-      availableSpaceY = panelInfo.signedY < 0 ? panelInfo.h : 0;
-      wFrac = availableSpaceW / contentWidth;
-      hFrac = availableSpaceH / contentHeight;
-      windowScale = Math.min(wFrac, hFrac);
+      if (horizontalResizeInfo.scale.min > verticalResizeInfo.scale.min) {
+        return horizontalResizeInfo;
+      } else {
+        return verticalResizeInfo;
+      }
+    };
+    computeResizeInfo = function(totalAvailableSpace, panelInfo) {
+      var claimedH, idealContentHeight, idealHeight, resizeInfo, scale, totalAvailableContentSpace;
+      totalAvailableContentSpace = {
+        w: totalAvailableSpace.w - panelInfo.consumedSpace.w,
+        h: totalAvailableSpace.h - panelInfo.consumedSpace.h
+      };
+      scale = {
+        x: totalAvailableContentSpace.w / contentWidth,
+        y: totalAvailableContentSpace.h / contentHeight
+      };
+      scale.min = Math.min(scale.x, scale.y);
+      idealHeight = Mode.embed ? (idealContentHeight = scale.x * contentHeight, claimedH = idealContentHeight + panelInfo.consumedSpace.h, Math.min(totalAvailableSpace.h, Math.max(claimedH, panelInfo.outerPanelSize.h))) : totalAvailableContentSpace.h;
       return resizeInfo = {
-        panelClaimedW: panelClaimedW,
-        panelClaimedH: panelClaimedH,
-        wFrac: wFrac,
-        hFrac: hFrac,
-        windowScale: windowScale,
-        availableSpaceW: availableSpaceW,
-        availableSpaceH: availableSpaceH,
-        availableSpaceX: availableSpaceX,
-        availableSpaceY: availableSpaceY
+        panelInfo: panelInfo,
+        totalAvailableContentSpace: totalAvailableContentSpace,
+        idealHeight: idealHeight,
+        scale: scale
       };
     };
-    checkHorizontalIsBetter = function(horizontalPanelInfo, verticalPanelInfo) {
-      var doesHorizontalFitInWindow, doesVerticalCauseShrinking, horizontalContentHeight, horizontalPanelHeight, horizontalResizeInfo, verticalResizeInfo;
-      horizontalResizeInfo = computeResizeInfo(horizontalPanelInfo);
-      verticalResizeInfo = computeResizeInfo(verticalPanelInfo);
-      if (Mode.embed) {
-        horizontalContentHeight = contentHeight * horizontalResizeInfo.wFrac;
-        horizontalPanelHeight = horizontalResizeInfo.panelClaimedH;
-        doesHorizontalFitInWindow = horizontalContentHeight + horizontalPanelHeight < window.top.innerHeight;
-        doesVerticalCauseShrinking = verticalResizeInfo.windowScale < 1;
-        return doesHorizontalFitInWindow && doesVerticalCauseShrinking;
-      } else {
-        return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale;
-      }
-    };
     resize = function() {
-      var aspectAdjustedHeight, computedHeight, heightChange, panelInfo, resizeInfo;
-      totalSpace = SVG.svg.getBoundingClientRect();
-      panelInfo = ControlPanel.getPanelLayoutInfo(checkHorizontalIsBetter);
-      resizeInfo = computeResizeInfo(panelInfo);
+      var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
+      totalAvailableSpace = {
+        w: SVG.svg.getBoundingClientRect().width,
+        h: window.top.innerHeight
+      };
+      verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
+      horizontalPanelInfo = ControlPanel.computeLayout(false, totalAvailableSpace);
+      verticalResizeInfo = computeResizeInfo(totalAvailableSpace, verticalPanelInfo);
+      horizontalResizeInfo = computeResizeInfo(totalAvailableSpace, horizontalPanelInfo);
+      resizeInfo = pickBestLayout(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo);
       if (Mode.embed) {
-        parentRect = ParentElement.getBoundingClientRect();
-        aspectAdjustedHeight = resizeInfo.panelClaimedH + contentHeight * (parentRect.width - resizeInfo.panelClaimedW) / contentWidth;
-        computedHeight = Math.ceil(Math.max(aspectAdjustedHeight, panelInfo.h));
-        ParentElement.style.height = computedHeight + "px";
-        heightChange = computedHeight - totalSpace.height;
-        totalSpace.height = computedHeight;
-        totalSpace.bottom += heightChange;
+        ParentElement.style.height = Math.round(resizeInfo.idealHeight) + "px";
+        totalAvailableSpace.h = resizeInfo.idealHeight;
       }
-      windowScale = resizeInfo.windowScale;
-      center.x = resizeInfo.availableSpaceX + resizeInfo.availableSpaceW / 2;
-      center.y = resizeInfo.availableSpaceY + resizeInfo.availableSpaceH / 2;
+      ControlPanel.applyLayout(resizeInfo, totalAvailableSpace);
+      contentScale = resizeInfo.scale.min;
+      center.x = resizeInfo.totalAvailableContentSpace.w / 2;
+      center.y = resizeInfo.idealHeight / 2 - resizeInfo.panelInfo.consumedSpace.h / 2;
       centerInverse.x = contentWidth / 2;
       centerInverse.y = contentHeight / 2;
       render();
+      SVG.attrs(debugBox, {
+        width: contentWidth,
+        height: contentHeight
+      });
       return Resize._fire({
-        window: totalSpace,
+        window: totalAvailableSpace,
         panel: {
-          scale: panelInfo.controlPanelScale,
-          vertical: panelInfo.vertical,
-          x: panelInfo.controlPanelX,
-          y: panelInfo.controlPanelY,
-          width: panelInfo.w,
-          height: panelInfo.h
+          scale: resizeInfo.panelInfo.scale,
+          vertical: resizeInfo.panelInfo.vertical,
+          x: resizeInfo.panelInfo.x,
+          y: resizeInfo.panelInfo.y,
+          width: resizeInfo.panelInfo.outerPanelSize.w,
+          height: resizeInfo.panelInfo.outerPanelSize.h
         },
         content: {
           width: contentWidth,
@@ -3361,14 +3364,10 @@
       });
     };
     window.top.addEventListener("resize", function() {
-      RAF(resize, true);
-      return setTimeout(resize, 100);
+      return RAF(resize, true);
     });
     Take("AllReady", function() {
-      RAF(resize, true);
-      setTimeout(resize, 100);
-      setTimeout(resize, 1000);
-      return setTimeout(resize, 5000);
+      return RAF(resize, true);
     });
     if (!Mode.nav) {
       Make("Nav", false);
@@ -3403,7 +3402,7 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, pos.z + p.z);
         }
-        scale = windowScale * Math.pow(2, pos.z);
+        scale = contentScale * Math.pow(2, pos.z);
         if (p.x != null) {
           pos.x = applyLimit(limit.x, pos.x + p.x / scale);
         }
@@ -3420,7 +3419,7 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, p.z);
         }
-        scale = windowScale * Math.pow(2, pos.z);
+        scale = contentScale * Math.pow(2, pos.z);
         if (p.x != null) {
           pos.x = applyLimit(limit.x, p.x / scale);
         }

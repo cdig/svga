@@ -1,7 +1,7 @@
-Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween)->
+Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, HUD, Mode, ParentElement, RAF, Resize, SVG, Tween)->
   
   # Turn this on if we need to debug resizing
-  # debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F04", strokeWidth: 6
+  debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
   
   # Our SVGs don't have a viewbox, which means they render at 1:1 scale with surrounding content,
   # and are cropped when resized. We use their specified width and height as the desired bounding rect for the content.
@@ -26,95 +26,93 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     x: min: -contentWidth/2, max: contentWidth/2
     y: min: -contentHeight/2, max: contentHeight/2
     z: min: -0.5, max: 3
-  windowScale = 1
+  contentScale = 1
   scaleStartPosZ = 0
   tween = null
-  totalSpace = null
   
   render = ()->
     # First, we move SVG.root so the top left corner is in the middle of our available space.
     # ("Available space" means the size of the window, minus the space occupied by the control panel.)
-    # Then, we scale to fit to the available space (windowScale) and desired zoom level (Math.pow 2, pos.z).
+    # Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
     # Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
-    SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{windowScale * Math.pow 2, pos.z}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
+    SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{contentScale * Math.pow 2, pos.z}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
   
   
-  computeResizeInfo = (panelInfo)->
-    # Figure out whether to leave room for the panel, or just scale to fit the full window.
-    # (Eg: If the panel is in the bottom right corner, then we'll make room for it on the side when vertical, bottom when horizontal.)
-    # Note: We look for values greater than 0.9, because there are a lot of modules that used 0.9 (instead of 1) as a way to get rounded corners in v3.
-    panelClaimedW = if Math.abs(panelInfo.signedX) >= 0.9 then panelInfo.w else 0
-    panelClaimedH = if Math.abs(panelInfo.signedY) >= 0.9 then panelInfo.h else 0
+  pickBestLayout = (totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo)->
+    if Mode.embed
+      # Prefer vertical, if that doesn't cause our content to shrink
+      return verticalResizeInfo if verticalResizeInfo.scale.min >= 1
+      
+      # Failing that, prefer hozitontal, if there's enough screen height
+      contentHeightWhenHorizontal = contentHeight * horizontalResizeInfo.scale.min
+      panelHeightWhenHorizontal = horizontalResizeInfo.panelInfo.consumedSpace.h
+      return horizontalResizeInfo if window.top.innerHeight > contentHeightWhenHorizontal + panelHeightWhenHorizontal
     
-    # If we're in a corner, only make room on whichever edge requires less space
-    if panelClaimedW > 0 and panelClaimedH > 0
-      if panelClaimedW < panelClaimedH then panelClaimedH = 0 else panelClaimedW = 0
-    
-    # Figure out how much space is available for our main graphic, and whether it should be shifted away from the top/left to make room for the panel
-    availableSpaceW = totalSpace.width - panelClaimedW
-    availableSpaceH = totalSpace.height - panelClaimedH
-    availableSpaceX = if panelInfo.signedX < 0 then panelInfo.w else 0
-    availableSpaceY = if panelInfo.signedY < 0 then panelInfo.h else 0
+    # Take whichever panel layout leaves more room for content
+    if horizontalResizeInfo.scale.min > verticalResizeInfo.scale.min
+      horizontalResizeInfo
+    else
+      verticalResizeInfo
+  
+  
+  computeResizeInfo = (totalAvailableSpace, panelInfo)->
+    # Figure out how much space remains for our main graphic
+    totalAvailableContentSpace =
+      w: totalAvailableSpace.w - panelInfo.consumedSpace.w
+      h: totalAvailableSpace.h - panelInfo.consumedSpace.h
     
     # Scale the graphic so it fits inside our available space
-    wFrac = availableSpaceW / contentWidth
-    hFrac = availableSpaceH / contentHeight
-    windowScale = Math.min wFrac, hFrac
+    scale =
+      x: totalAvailableContentSpace.w / contentWidth
+      y: totalAvailableContentSpace.h / contentHeight
+    scale.min = Math.min scale.x, scale.y
+    
+    idealHeight = if Mode.embed
+      idealContentHeight = scale.x * contentHeight
+      claimedH = idealContentHeight + panelInfo.consumedSpace.h
+      Math.min totalAvailableSpace.h, Math.max claimedH, panelInfo.outerPanelSize.h
+    else
+      totalAvailableContentSpace.h
     
     return resizeInfo =
-      panelClaimedW: panelClaimedW
-      panelClaimedH: panelClaimedH
-      wFrac: wFrac
-      hFrac: hFrac
-      windowScale: windowScale
-      availableSpaceW: availableSpaceW
-      availableSpaceH: availableSpaceH
-      availableSpaceX: availableSpaceX
-      availableSpaceY: availableSpaceY
-  
-  
-  # This function takes two panel layouts and figures out which one leaves more space for our content.
-  checkHorizontalIsBetter = (horizontalPanelInfo, verticalPanelInfo)->
-    horizontalResizeInfo = computeResizeInfo horizontalPanelInfo
-    verticalResizeInfo = computeResizeInfo verticalPanelInfo
-    if Mode.embed
-      horizontalContentHeight = contentHeight * horizontalResizeInfo.wFrac
-      horizontalPanelHeight = horizontalResizeInfo.panelClaimedH
-      doesHorizontalFitInWindow = horizontalContentHeight + horizontalPanelHeight < window.top.innerHeight
-      doesVerticalCauseShrinking = verticalResizeInfo.windowScale < 1
-      return doesHorizontalFitInWindow and doesVerticalCauseShrinking
-    else
-      return horizontalResizeInfo.windowScale > verticalResizeInfo.windowScale
+      panelInfo: panelInfo
+      totalAvailableContentSpace: totalAvailableContentSpace
+      idealHeight: idealHeight
+      scale: scale
   
   
   resize = ()->
     
-    # We need to use getBoundingClientRect() on our full-screen <svg>, because window.innerWidth/Height are sometimes 0 or wrong, depending on where we are in the load/init process.
-    totalSpace = SVG.svg.getBoundingClientRect()
+    # This is the largest our SVGA can ever be
+    totalAvailableSpace =
+      w: SVG.svg.getBoundingClientRect().width
+      h: window.top.innerHeight
     
-    # Force the panel to do a layout.
-    # We pass in a function that takes 2 panel orientations, and figures out which is better.
-    panelInfo = ControlPanel.getPanelLayoutInfo checkHorizontalIsBetter
+    # Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
+    verticalPanelInfo = ControlPanel.computeLayout true, totalAvailableSpace
+    horizontalPanelInfo = ControlPanel.computeLayout false, totalAvailableSpace
     
-    # Based on the panel info, compute what size our content should be.
-    resizeInfo = computeResizeInfo panelInfo
+    # Measure both layouts
+    verticalResizeInfo = computeResizeInfo totalAvailableSpace, verticalPanelInfo
+    horizontalResizeInfo = computeResizeInfo totalAvailableSpace, horizontalPanelInfo
     
-    # If we're embedded into a cd-module, resize our embedding object so it matches our desired aspect, plus room for the panel
+    # Pick the best layout
+    resizeInfo = pickBestLayout totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo
+    
+    # If we're embedded into a cd-module, resize our embedding object.
     if Mode.embed
-      parentRect = ParentElement.getBoundingClientRect()
-      aspectAdjustedHeight = resizeInfo.panelClaimedH + contentHeight * (parentRect.width - resizeInfo.panelClaimedW) / contentWidth
-      computedHeight = Math.ceil Math.max aspectAdjustedHeight, panelInfo.h
-      ParentElement.style.height = computedHeight + "px"
-      heightChange = computedHeight - totalSpace.height
-      totalSpace.height = computedHeight
-      totalSpace.bottom += heightChange
+      ParentElement.style.height = Math.round(resizeInfo.idealHeight) + "px"
+      totalAvailableSpace.h = resizeInfo.idealHeight
+    
+    # Apply the chosen layout to the ControlPanel
+    ControlPanel.applyLayout resizeInfo, totalAvailableSpace
     
     # Save our window scale for future nav actions
-    windowScale = resizeInfo.windowScale
+    contentScale = resizeInfo.scale.min
     
     # Before we do any scale operations, we need to move the top left corner of the graphic to the center of the available space
-    center.x = resizeInfo.availableSpaceX + resizeInfo.availableSpaceW/2
-    center.y = resizeInfo.availableSpaceY + resizeInfo.availableSpaceH/2
+    center.x = resizeInfo.totalAvailableContentSpace.w/2
+    center.y = resizeInfo.idealHeight/2 - resizeInfo.panelInfo.consumedSpace.h/2
     
     # After we do any scale operations, we need to move the top left corner of the graphic up and left, so the center of the graphic is aligned with the center of the consumed space
     centerInverse.x = contentWidth/2
@@ -123,36 +121,29 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     render()
     
     # Turn this on if we need to debug resizing
-    # SVG.attrs debugBox,
-    #   width: contentWidth
-    #   height: contentHeight
+    SVG.attrs debugBox, width: contentWidth, height: contentHeight
     
     Resize._fire
-      window: totalSpace
+      window: totalAvailableSpace
       panel:
-        scale: panelInfo.controlPanelScale
-        vertical: panelInfo.vertical
-        x: panelInfo.controlPanelX
-        y: panelInfo.controlPanelY
-        width: panelInfo.w
-        height: panelInfo.h
+        scale: resizeInfo.panelInfo.scale
+        vertical: resizeInfo.panelInfo.vertical
+        x: resizeInfo.panelInfo.x
+        y: resizeInfo.panelInfo.y
+        width: resizeInfo.panelInfo.outerPanelSize.w
+        height: resizeInfo.panelInfo.outerPanelSize.h
       content:
         width: contentWidth
         height: contentHeight
       
   
   # Init resizing, and fire an initial resize when everything is ready
-  window.top.addEventListener "resize", ()->
-    # We've got issues with resizes not being stable after 1 round, so
-    # we'll just run them a second time after a momentary delay
-    RAF resize, true
-    setTimeout resize, 100
-  
+  window.top.addEventListener "resize", ()-> RAF resize, true
   Take "AllReady", ()->
     RAF resize, true
-    setTimeout resize, 100 # Fire delayed resizes, to avoid sizing issues around load time
-    setTimeout resize, 1000 # Fire delayed resizes, to avoid sizing issues around load time
-    setTimeout resize, 5000 # Fire delayed resizes, to avoid sizing issues around load time
+    # setTimeout resize, 100 # Fire delayed resizes, to avoid sizing issues around load time
+    # setTimeout resize, 1000 # Fire delayed resizes, to avoid sizing issues around load time
+    # setTimeout resize, 5000 # Fire delayed resizes, to avoid sizing issues around load time
   
   
   # BAIL IF WE'RE NOT NAV-ING
@@ -179,7 +170,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     by: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, pos.z + p.z if p.z?
-      scale = windowScale * Math.pow 2, pos.z
+      scale = contentScale * Math.pow 2, pos.z
       pos.x = applyLimit limit.x, pos.x + p.x / scale if p.x?
       pos.y = applyLimit limit.y, pos.y + p.y / scale if p.y?
       requestRender()
@@ -187,7 +178,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     at: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, p.z if p.z?
-      scale = windowScale * Math.pow 2, pos.z
+      scale = contentScale * Math.pow 2, pos.z
       pos.x = applyLimit limit.x, p.x / scale if p.x?
       pos.y = applyLimit limit.y, p.y / scale if p.y?
       requestRender()

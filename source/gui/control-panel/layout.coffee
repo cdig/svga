@@ -1,95 +1,99 @@
 Take ["GUI", "Mode", "SVG"], ({ControlPanel:GUI}, Mode, SVG)->
   
-  columns = []
-  
-  getColumn = (index, panelElm)->
-    columns[index] ?=
-      x: index * (GUI.colInnerWidth + GUI.groupPad*2 + GUI.columnMargin)
-      groups: []
-      height: 0
-      visible: false
-      element: SVG.create "g", panelElm
-  
-  performLayout = (groups, panelElm, desiredColumnHeight)->
-    # Reset our columns
-    for column in columns
-      column.groups = []
-      column.height = 0
-      column.visible = false
+  constructLayout = (groups, desiredColumnHeight, vertical)->
+    columns = []
+    column = null
     
-    # Assemble the groups into columns
-    currentColumnIndex = 0
-    column = getColumn currentColumnIndex, panelElm
+    # Whether we're in horizontal or vertical, our layout is built of columns.
+    # Controls may be grouped together with a color, and a color group is never split across columns.
+    
     for group in groups
       
-      # Make a new column if we need one
-      if column.height > desiredColumnHeight
-        column = getColumn ++currentColumnIndex, panelElm
+      # Start a new column if we need one
+      if not column? or column.height > desiredColumnHeight
+        columns.push column =
+          x: columns.length * (GUI.colInnerWidth + GUI.groupPad*2 + GUI.columnMargin)
+          y: 0 # This will be computed once we know how tall all our columns are
+          height: 0
+          groups: []
       
-      # If we already have groups in the current column, add some space
+      # Add some margin between this group and the previous
       column.height += GUI.groupMargin if column.groups.length > 0
       
-      # Attach this group to the current column, and move it into position
-      column.groups.push group
-      SVG.append column.element, group.scope.element
-      group.scope.y = column.height
+      # Attach this group to the column, and assign it a position
+      column.groups.push
+        scope: group.scope
+        y: column.height
       
-      # Bump the column data
+      # Add this group's height to our running total
       column.height += group.height
-      column.visible = true
     
-    # Now measure the columns
+    # Figure out which column is tallest, so we know how tall to make the panel
     tallestColumnHeight = 0
-    for column in columns when column.visible
-      # Figure out which column is tallest, so we know how tall to make the panel
+    for column in columns
       tallestColumnHeight = Math.max tallestColumnHeight, column.height
     
-    # Now, position the columns
-    for column in columns when column.visible
-      y = tallestColumnHeight/2 - column.height/2
-      SVG.attrs column.element, transform: "translate(#{column.x},#{y})"
+    # Set the y position for each column
+    for column in columns
+      column.y = if vertical
+        # In vertical orientation, center-align
+        tallestColumnHeight/2 - column.height/2
+      else
+        # In horizontal orientation, bottom-align
+        tallestColumnHeight - column.height
     
     # Figure out how big to make the panel, so it fits all our columns
-    panelWidth = GUI.panelPadding*2 + (currentColumnIndex+1) * (GUI.colInnerWidth + GUI.groupPad*2) + currentColumnIndex * GUI.columnMargin
-    panelHeight = GUI.panelPadding*2 + tallestColumnHeight
+    innerPanelSize =
+      w: GUI.panelPadding*2 + columns.length * (GUI.colInnerWidth + GUI.groupPad*2) + (columns.length-1) * GUI.columnMargin
+      h: GUI.panelPadding*2 + tallestColumnHeight
     
-    return w:panelWidth, h:panelHeight
-
+    return [innerPanelSize, columns]
+  
   
   Make "ControlPanelLayout",
-    vertical: (groups, availableSpace, panelElm)->
-      return {w:0, h:0} unless availableSpace.h > 0 and groups.length > 0 # Bail if the screen is too small or we have no controls
+    vertical: (groups, marginedSpace)->
+      return [{w:0, h:0}, []] unless marginedSpace.h > 0 and groups.length > 0 # Bail if the screen is too small or we have no controls
       
-      # First, get the total height of the panel
-      totalHeight = 0
-      totalHeight += group.height for group in groups
-      totalHeight += GUI.groupMargin * (groups.length - 1) # Add padding between all groups
+      # First, get the height of the panel if it was just 1 column wide
+      maxHeight = 0
+      maxHeight += group.height for group in groups
+      maxHeight += GUI.groupMargin * (groups.length - 1) # Add padding between all groups
       
-      # Figure out how many columns we need to fit this much height
-      availableSpaceInsidePanel = availableSpace.h - GUI.panelPadding*2
-      nColumns = if Mode.embed then 1 else Math.ceil totalHeight / availableSpaceInsidePanel
-      desiredColumnHeight = Math.max GUI.unit, Math.floor totalHeight / nColumns
+      # Figure out how many columns we need to fit this much height.
+      desiredNumberOfColumns = if Mode.embed
+        1 # If we're in embed mode, we'll force it to only ever have 1 column, because that's nicer.
+      else
+        Math.ceil maxHeight / (marginedSpace.h - GUI.panelPadding*2)
       
-      return performLayout groups, panelElm, desiredColumnHeight
+      desiredColumnHeight = Math.max GUI.unit, Math.floor maxHeight / desiredNumberOfColumns
+      
+      return constructLayout groups, desiredColumnHeight, true
     
     
-    horizontal: (groups, availableSpace, panelElm)->
-      return {w:0, h:0} unless availableSpace.w > 0 and groups.length > 0 # Bail if the screen is too small or we have no controls
+    horizontal: (groups, marginedSpace)->
+      return [{w:0, h:0}, []] unless marginedSpace.w > 0 and groups.length > 0 # Bail if the screen is too small or we have no controls
       
-      desiredColumnHeight = 0
-      
-      # Find our tallest group
-      for group in groups
-        desiredColumnHeight = Math.max desiredColumnHeight, group.height
+      desiredColumnHeight = GUI.unit/2
       
       # Increase the column height until everything fits on screen
-      until checkPanelSize desiredColumnHeight, groups, availableSpace
-        desiredColumnHeight += GUI.unit/2
-      
-      return performLayout groups, panelElm, desiredColumnHeight
+      until checkPanelSize desiredColumnHeight, groups, marginedSpace
+        desiredColumnHeight += GUI.unit/4
+            
+      return constructLayout groups, desiredColumnHeight, false
+    
+    
+    applyLayout: (columns, getColumnElm)->
+      for column, c in columns
+        columnElm = getColumnElm c
+        
+        SVG.attrs columnElm, transform: "translate(#{column.x},#{column.y})"
+        
+        for groupInfo in column.groups
+          SVG.append columnElm, groupInfo.scope.element
+          groupInfo.scope.y = groupInfo.y
   
   
-  checkPanelSize = (columnHeight, groups, availableSpace)->
+  checkPanelSize = (columnHeight, groups, marginedSpace)->
     # We'll always have at least 1 column's worth of width, plus padding on both sides
     consumedWidth = GUI.colInnerWidth + GUI.panelPadding*2
     consumedHeight = GUI.panelPadding*2
@@ -107,4 +111,4 @@ Take ["GUI", "Mode", "SVG"], ({ControlPanel:GUI}, Mode, SVG)->
       nthGroupInColumn++
     
     # We're done if we fit within the available width, or our column height gets out of hand
-    return consumedWidth < availableSpace.w or columnHeight > availableSpace.h/2
+    return consumedWidth < marginedSpace.w or columnHeight > marginedSpace.h/2

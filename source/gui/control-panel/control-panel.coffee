@@ -1,4 +1,4 @@
-Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], (ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady)->
+Take ["HUD", "ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], (HUD, ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady)->
   
   # Aliases
   CP = GUI.ControlPanel
@@ -7,6 +7,7 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope
   # State
   showing = false
   groups = []
+  columnElms = []
   
   # Elements
   
@@ -25,55 +26,16 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope
     transform: "translate(#{CP.panelPadding},#{CP.panelPadding})"
   
   
+  getColumnElm = (index)->
+    columnElms[index] ?= SVG.create "g", columnsElm
+  
+  
   Take "SceneReady", ()->
     if !showing
       # It'd be simpler to just not add the CP unless we need it,
       # rather than what we're doing here (remove it if it's unused).
       # But we need to do it this way to avoid an IE bug.
       GUI.elm.removeChild panelElm
-  
-  
-  makePanelInfo = (vertical, panelSize, view)->
-    
-    # If the panel is still way the hell too big, scale down
-    controlPanelScale = if vertical and (panelSize.w > view.w/2 or panelSize.h > view.h)
-      Math.max 0.7, Math.min view.w / panelSize.w / 2, view.h / panelSize.h
-    else if !vertical and (panelSize.h > view.h/2 or panelSize.w > view.w)
-      Math.max 0.7, Math.min view.w / panelSize.w, view.h / panelSize.h / 2
-    else
-      1
-    
-    scaledPanelW = panelSize.w * controlPanelScale
-    scaledPanelH = panelSize.h * controlPanelScale
-    
-    if config.x? or config.y?
-      signedXPosition = config.x or 0
-      signedYPosition = config.y or 0
-    else if vertical
-      signedXPosition = 1
-      signedYPosition = 0
-    else
-      signedXPosition = 0
-      signedYPosition = 1
-    
-    marginedViewWidth = view.w - scaledPanelW
-    marginedViewHeight = view.h - scaledPanelH
-    
-    normalizedX = (signedXPosition/2 + 0.5)
-    normalizedY = (signedYPosition/2 + 0.5)
-    
-    controlPanelX = CP.panelMargin + normalizedX * marginedViewWidth |0
-    controlPanelY = CP.panelMargin + normalizedY * marginedViewHeight |0
-    
-    return panelInfo =
-      controlPanelScale: controlPanelScale
-      controlPanelX: controlPanelX
-      controlPanelY: controlPanelY
-      vertical: vertical
-      signedX: signedXPosition # These are normalized as -1 to 1
-      signedY: signedYPosition # These are normalized as -1 to 1
-      w: scaledPanelW + CP.panelMargin*2 # These are pixel sizes
-      h: scaledPanelH + CP.panelMargin*2 # These are pixel sizes
   
   
   Make "ControlPanel", ControlPanel = Scope panelElm, ()->
@@ -84,46 +46,61 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope
       showing = true
       SVG.create "g", parent
     
-    getPanelLayoutInfo: (horizontalIsBetter)->
-      outerBounds = SVG.svg.getBoundingClientRect()
+    computeLayout: (vertical, totalAvailableSpace)->
+      marginedSpace =
+        w: totalAvailableSpace.w - CP.panelMargin*2
+        h: totalAvailableSpace.h - CP.panelMargin*2
       
-      view =
-        w: outerBounds.width - CP.panelMargin*2
-        h: outerBounds.height - CP.panelMargin*2
+      [innerPanelSize, layout] = if vertical
+        ControlPanelLayout.vertical groups, marginedSpace
+      else
+        ControlPanelLayout.horizontal groups, marginedSpace
       
-      # Perform the layout, and store the size and orientation of the panel
-      if config.vertical is true
-        vertical = true
-        panelSize = ControlPanelLayout.vertical groups, view, columnsElm
-      else if config.vertical is false
-        vertical = false
-        panelSize = ControlPanelLayout.horizontal groups, view, columnsElm
-      else # Try both orientations, and go with whichever one maximizes the scale of the content
-        horizontalPanelSize = ControlPanelLayout.horizontal groups, view, columnsElm
-        verticalPanelSize = ControlPanelLayout.vertical groups, view, columnsElm
-        
-        horizontalPanelInfo = makePanelInfo false, horizontalPanelSize, view
-        verticalPanelInfo = makePanelInfo true, verticalPanelSize, view
-        
-        # We're currently in vertical orientation (since it was done last). Switch back to horizontal if need be.
-        if horizontalIsBetter horizontalPanelInfo, verticalPanelInfo
-          vertical = false
-          panelSize = ControlPanelLayout.horizontal groups, view, columnsElm
-        else
-          vertical = true
-          panelSize = verticalPanelSize
+      # If the panel is still way the hell too big, scale down
+      scale = if vertical and (innerPanelSize.w > marginedSpace.w/2 or innerPanelSize.h > marginedSpace.h)
+        Math.max 0.8, Math.min marginedSpace.w / innerPanelSize.w / 2, marginedSpace.h / innerPanelSize.h
+      else if !vertical and (innerPanelSize.w > marginedSpace.w or innerPanelSize.h > marginedSpace.h/2)
+        Math.max 0.8, Math.min marginedSpace.w / innerPanelSize.w, marginedSpace.h / innerPanelSize.h / 2
+      else
+        1
       
-      panelInfo = makePanelInfo vertical, panelSize, view
+      outerPanelSize =
+        w: innerPanelSize.w * scale + CP.panelMargin*2
+        h: innerPanelSize.h * scale + CP.panelMargin*2
       
+      # How much of the available content space does the panel use up?
+      consumedSpace = w: 0, h: 0
+      consumedSpace.w = outerPanelSize.w if showing and vertical
+      consumedSpace.h = outerPanelSize.h if showing and not vertical
+      
+      return panelInfo =
+        showing: showing
+        vertical: vertical
+        consumedSpace: consumedSpace
+        innerPanelSize: innerPanelSize
+        outerPanelSize: outerPanelSize
+        scale: scale
+        layout: layout
+    
+    applyLayout: (resizeInfo, totalAvailableSpace)->
+      return unless resizeInfo.panelInfo.showing
+      
+      # Now that we know which layout we're using, apply it to the SVG
+      ControlPanelLayout.applyLayout resizeInfo.panelInfo.layout, getColumnElm
+      
+      if resizeInfo.panelInfo.vertical
+        ControlPanel.x = Math.round totalAvailableSpace.w - resizeInfo.panelInfo.outerPanelSize.w + CP.panelMargin
+        ControlPanel.y = Math.round totalAvailableSpace.h/2 - resizeInfo.panelInfo.outerPanelSize.h/2 + CP.panelMargin
+      else
+        ControlPanel.x = Math.round totalAvailableSpace.w/2 - resizeInfo.panelInfo.outerPanelSize.w/2 + CP.panelMargin
+        ControlPanel.y = Math.round totalAvailableSpace.h - resizeInfo.panelInfo.outerPanelSize.h + CP.panelMargin
+      
+      ControlPanel.scale = resizeInfo.panelInfo.scale
+      
+      # Apply the final size to our background elm
       SVG.attrs panelBg,
-        width: panelSize.w
-        height: panelSize.h
-      
-      ControlPanel.scale = panelInfo.controlPanelScale
-      ControlPanel.x = panelInfo.controlPanelX
-      ControlPanel.y = panelInfo.controlPanelY
-      
-      return panelInfo
+        width: resizeInfo.panelInfo.innerPanelSize.w
+        height: resizeInfo.panelInfo.innerPanelSize.h
   
   
   Reaction "ControlPanel:Show", ()-> ControlPanel.show .5

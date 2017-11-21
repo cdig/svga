@@ -3235,7 +3235,7 @@
   });
 
   Take(["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, HUD, Mode, ParentElement, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, debugBox, dist, distTo, initialRootRect, limit, parentRect, pickBestLayout, pos, render, requestRender, resize, scaleStartPosZ, tween;
+    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, debugBox, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, scaleStartPosZ, tween;
     debugBox = SVG.create("rect", SVG.root, {
       fill: "none",
       stroke: "#0F0A",
@@ -3245,10 +3245,6 @@
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
       throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
-    }
-    if (Mode.embed) {
-      parentRect = ParentElement.getBoundingClientRect();
-      ParentElement.style.height = Math.round(contentHeight * parentRect.width / contentWidth) + "px";
     }
     initialRootRect = SVG.root.getBoundingClientRect();
     if (!(initialRootRect.width > 0 && initialRootRect.height > 0)) {

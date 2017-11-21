@@ -11,10 +11,10 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
   
   # Right off the bat, set our height to something reasonable.
   # This will help the control panel assume the correct size.
-  if Mode.embed
-    parentRect = ParentElement.getBoundingClientRect()
-    ParentElement.style.height = Math.round(contentHeight * parentRect.width / contentWidth) + "px"
-  
+  # TODO: Disabled because this is probably no longer needed, pending testing.
+  # if Mode.embed
+  #   parentRect = ParentElement.getBoundingClientRect()
+  #   ParentElement.style.height = Math.round(contentHeight * parentRect.width / contentWidth) + "px"
   
   initialRootRect = SVG.root.getBoundingClientRect()
   return unless initialRootRect.width > 0 and initialRootRect.height > 0 # This avoids a divide by zero error when the SVG is empty

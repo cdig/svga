@@ -1,7 +1,7 @@
 Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, HUD, Mode, ParentElement, RAF, Resize, SVG, Tween)->
   
   # Turn this on if we need to debug resizing
-  debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
+  # debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
   
   # Our SVGs don't have a viewbox, which means they render at 1:1 scale with surrounding content,
   # and are cropped when resized. We use their specified width and height as the desired bounding rect for the content.
@@ -121,7 +121,7 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
     render()
     
     # Turn this on if we need to debug resizing
-    SVG.attrs debugBox, width: contentWidth, height: contentHeight
+    # SVG.attrs debugBox, width: contentWidth, height: contentHeight
     
     Resize._fire
       window: totalAvailableSpace

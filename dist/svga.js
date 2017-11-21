@@ -3235,12 +3235,7 @@
   });
 
   Take(["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, HUD, Mode, ParentElement, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, debugBox, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, scaleStartPosZ, tween;
-    debugBox = SVG.create("rect", SVG.root, {
-      fill: "none",
-      stroke: "#0F0A",
-      strokeWidth: 6
-    });
+    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, scaleStartPosZ, tween;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
@@ -3342,10 +3337,6 @@
       centerInverse.x = contentWidth / 2;
       centerInverse.y = contentHeight / 2;
       render();
-      SVG.attrs(debugBox, {
-        width: contentWidth,
-        height: contentHeight
-      });
       return Resize._fire({
         window: totalAvailableSpace,
         panel: {
@@ -3501,13 +3492,19 @@
     return Make("Resize", Resize);
   })();
 
-  Take(["Mode", "Nav"], function(Mode, Nav) {
-    var cloneTouches, distTouches, lastTouches, touchMove, touchStart;
+  Take(["Mode", "Nav", "TouchAcceleration"], function(Mode, Nav, TouchAcceleration) {
+    var cloneTouches, distTouches, dragging, lastTouches, touchMove, touchStart;
     if (!Mode.nav) {
       return;
     }
     lastTouches = null;
+    dragging = false;
     window.addEventListener("touchstart", touchStart = function(e) {
+      dragging = false;
+      TouchAcceleration.move({
+        x: 0,
+        y: 0
+      });
       if (Nav.eventInside(e)) {
         e.preventDefault();
         return cloneTouches(e);
@@ -3526,12 +3523,19 @@
             z: (b - a) / 200
           });
         } else {
-          Nav.by({
+          dragging = true;
+          TouchAcceleration.move({
             x: e.touches[0].clientX - lastTouches[0].clientX,
             y: e.touches[0].clientY - lastTouches[0].clientY
           });
         }
         return cloneTouches(e);
+      }
+    });
+    window.addEventListener("touchend", touchMove = function(e) {
+      if (dragging) {
+        dragging = false;
+        return TouchAcceleration.up();
       }
     });
     cloneTouches = function(e) {
@@ -3559,6 +3563,40 @@
       dy = a.clientY - b.clientY;
       return Math.sqrt(dx * dx + dy * dy);
     };
+  });
+
+  Take(["Nav", "Tick"], function(Nav, Tick) {
+    var running, vel;
+    vel = {
+      x: 0,
+      y: 0
+    };
+    running = false;
+    Tick(function(t, dt) {
+      if (!running) {
+        return;
+      }
+      if (Math.abs(vel.x) > 0.1 || Math.abs(vel.y) > 0.1) {
+        Nav.by(vel);
+        vel.x /= 1.1;
+        return vel.y /= 1.1;
+      } else {
+        return running = false;
+      }
+    });
+    return Make("TouchAcceleration", {
+      move: function(accel) {
+        vel.x = accel.x;
+        vel.y = accel.y;
+        Nav.by(vel);
+        return running = false;
+      },
+      up: function() {
+        if (Math.abs(vel.x) > 2 || Math.abs(vel.y) > 2) {
+          return running = true;
+        }
+      }
+    });
   });
 
   if ((base = SVGElement.prototype).contains == null) {

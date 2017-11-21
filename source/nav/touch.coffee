@@ -1,9 +1,12 @@
-Take ["Mode", "Nav"], (Mode, Nav)->
+Take ["Mode", "Nav", "TouchAcceleration"], (Mode, Nav, TouchAcceleration)->
   return unless Mode.nav
   
   lastTouches = null
+  dragging = false
 
   window.addEventListener "touchstart", touchStart = (e)->
+    dragging = false
+    TouchAcceleration.move x: 0, y: 0 # Stop any momentum scrolling
     if Nav.eventInside e
       e.preventDefault()
       cloneTouches e
@@ -19,11 +22,16 @@ Take ["Mode", "Nav"], (Mode, Nav)->
         b = distTouches e.touches
         Nav.by z: (b - a) / 200
       else
-        Nav.by
+        dragging = true
+        TouchAcceleration.move
           x: e.touches[0].clientX - lastTouches[0].clientX
           y: e.touches[0].clientY - lastTouches[0].clientY
       cloneTouches e
 
+  window.addEventListener "touchend", touchMove = (e)->
+    if dragging
+      dragging = false
+      TouchAcceleration.up()
 
   cloneTouches = (e)->
     lastTouches = for t in e.touches

@@ -8,8 +8,8 @@ html, body, #svga {
 
 [svga-hud] {
   position: absolute;
-  top: 2.8em;
-  left: .4em;
+  margin-top: 2em;
+  margin-left: .4em;
   font-family: sans-serif;
   font-size: 10pt;
   overflow: visible;

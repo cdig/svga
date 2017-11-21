@@ -3312,7 +3312,7 @@
         y: totalAvailableContentSpace.h / contentHeight
       };
       scale.min = Math.min(scale.x, scale.y);
-      idealHeight = Mode.embed ? (idealContentHeight = scale.x * contentHeight, claimedH = idealContentHeight + panelInfo.consumedSpace.h, Math.min(totalAvailableSpace.h, Math.max(claimedH, panelInfo.outerPanelSize.h))) : totalAvailableContentSpace.h;
+      idealHeight = Mode.embed ? (idealContentHeight = scale.x * contentHeight, claimedH = idealContentHeight + panelInfo.consumedSpace.h, Math.min(totalAvailableSpace.h, Math.max(claimedH, panelInfo.outerPanelSize.h))) : totalAvailableSpace.h;
       return resizeInfo = {
         panelInfo: panelInfo,
         totalAvailableContentSpace: totalAvailableContentSpace,

@@ -72,7 +72,7 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
       claimedH = idealContentHeight + panelInfo.consumedSpace.h
       Math.min totalAvailableSpace.h, Math.max claimedH, panelInfo.outerPanelSize.h
     else
-      totalAvailableContentSpace.h
+      totalAvailableSpace.h
     
     return resizeInfo =
       panelInfo: panelInfo

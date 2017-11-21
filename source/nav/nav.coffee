@@ -139,8 +139,7 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
   
   # Init resizing, and fire an initial resize when everything is ready
   window.top.addEventListener "resize", ()-> RAF resize, true
-  Take "AllReady", ()->
-    RAF resize, true
+  Take "AllReady", ()-> RAF resize, true
   
   
   # BAIL IF WE'RE NOT NAV-ING

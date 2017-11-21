@@ -1,7 +1,8 @@
-Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], (Action, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG)->
+Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], (Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG)->
   
-  height = 0
   panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2
+  panelHeight = 0
+  innerHeight = 0
   
   elm = SVG.create "g", GUI.elm
   
@@ -100,21 +101,21 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope
       instance = Scope SVG.create "g", items
       builder = Registry.get "SettingType", type
       builder instance.element, props
-      instance.y = height
-      height += GUI.Settings.unit + GUI.Settings.itemMargin
-      bgHeight = height + GUI.Settings.panelPad*2 - GUI.Settings.itemMargin
-      SVG.attrs bg, height: bgHeight
-      SVG.attrs metaBoxRect, y: -bgHeight, height: bgHeight + metaBoxHeight
-      metaBox.y = bgHeight
+      instance.y = innerHeight
+      innerHeight += GUI.Settings.unit + GUI.Settings.itemMargin
+      panelHeight = innerHeight + GUI.Settings.panelPad*2 - GUI.Settings.itemMargin
+      SVG.attrs bg, height: panelHeight
+      SVG.attrs metaBoxRect, y: -panelHeight, height: panelHeight + metaBoxHeight
+      metaBox.y = panelHeight
   
   Settings.hide 0
   
   Make "Settings", Settings
   
-  Resize ()->
-    svgRect = SVG.svg.getBoundingClientRect()
-    Settings.x = svgRect.width/2 - panelWidth/2
-    Settings.y = 60
+  Resize (info)->
+    Settings.scale = Ease.linear info.window.w, 0, panelWidth + GUI.Settings.panelMargin*2, 0, 1
+    Settings.x = info.window.w/2 - panelWidth/2 * Settings.scale
+    Settings.y = Ease.linear info.window.h, panelHeight, 1000, -10, 300, false
   
   Reaction "Settings:Show", ()-> Settings.show .3
   Reaction "Settings:Hide", ()-> Settings.hide .3

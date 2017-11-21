@@ -2487,9 +2487,10 @@
       },
       Settings: {
         unit: 32,
-        itemWidth: 300,
+        itemWidth: 360,
         itemMargin: 8,
         panelPad: 8,
+        panelMargin: 16,
         panelBorderRadius: 8
       }
     });
@@ -2906,10 +2907,11 @@
     });
   });
 
-  Take(["Action", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG) {
-    var Settings, bg, close, closeCircle, closeX, elm, height, infoLines, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelWidth, ref, ref1, titleLines, titleString;
-    height = 0;
+  Take(["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG) {
+    var Settings, bg, close, closeCircle, closeX, elm, infoLines, innerHeight, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelHeight, panelWidth, ref, ref1, titleLines, titleString;
     panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
+    panelHeight = 0;
+    innerHeight = 0;
     elm = SVG.create("g", GUI.elm);
     metaBoxHeight = 20;
     metaBoxElm = SVG.create("g", elm);
@@ -3003,31 +3005,30 @@
     Settings = Scope(elm, function() {
       return {
         addSetting: function(type, props) {
-          var bgHeight, builder, instance;
+          var builder, instance;
           instance = Scope(SVG.create("g", items));
           builder = Registry.get("SettingType", type);
           builder(instance.element, props);
-          instance.y = height;
-          height += GUI.Settings.unit + GUI.Settings.itemMargin;
-          bgHeight = height + GUI.Settings.panelPad * 2 - GUI.Settings.itemMargin;
+          instance.y = innerHeight;
+          innerHeight += GUI.Settings.unit + GUI.Settings.itemMargin;
+          panelHeight = innerHeight + GUI.Settings.panelPad * 2 - GUI.Settings.itemMargin;
           SVG.attrs(bg, {
-            height: bgHeight
+            height: panelHeight
           });
           SVG.attrs(metaBoxRect, {
-            y: -bgHeight,
-            height: bgHeight + metaBoxHeight
+            y: -panelHeight,
+            height: panelHeight + metaBoxHeight
           });
-          return metaBox.y = bgHeight;
+          return metaBox.y = panelHeight;
         }
       };
     });
     Settings.hide(0);
     Make("Settings", Settings);
-    Resize(function() {
-      var svgRect;
-      svgRect = SVG.svg.getBoundingClientRect();
-      Settings.x = svgRect.width / 2 - panelWidth / 2;
-      return Settings.y = 60;
+    Resize(function(info) {
+      Settings.scale = Ease.linear(info.window.w, 0, panelWidth + GUI.Settings.panelMargin * 2, 0, 1);
+      Settings.x = info.window.w / 2 - panelWidth / 2 * Settings.scale;
+      return Settings.y = Ease.linear(info.window.h, panelHeight, 1000, -10, 300, false);
     });
     Reaction("Settings:Show", function() {
       return Settings.show(.3);

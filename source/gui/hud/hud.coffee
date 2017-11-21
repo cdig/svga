@@ -1,6 +1,9 @@
 Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)->
-  return unless Mode.dev
-
+  
+  if not Mode.dev
+    Make "HUD", ()-> # Noop
+    return
+  
   rate = .1 # Update every n seconds
   elapsed = rate # Run the first update immediately
   needsUpdate = true

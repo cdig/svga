@@ -2512,6 +2512,7 @@
   Take(["Mode", "ParentElement", "Tick", "SVGReady"], function(Mode, ParentElement, Tick) {
     var HUD, colors, elapsed, elm, needsUpdate, prev, rate, ref, values;
     if (!Mode.dev) {
+      Make("HUD", function() {});
       return;
     }
     rate = .1;

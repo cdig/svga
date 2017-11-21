@@ -4294,7 +4294,7 @@
       };
       if (Mode.background === true) {
         Settings.addSetting("slider", {
-          name: "Background",
+          name: "Background Color",
           value: init,
           snaps: [.7],
           update: apply

@@ -46,7 +46,7 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
       # Failing that, prefer hozitontal, if there's enough screen height
       contentHeightWhenHorizontal = contentHeight * horizontalResizeInfo.scale.min
       panelHeightWhenHorizontal = horizontalResizeInfo.panelInfo.consumedSpace.h
-      return horizontalResizeInfo if window.top.innerHeight > contentHeightWhenHorizontal + panelHeightWhenHorizontal
+      return horizontalResizeInfo if totalAvailableSpace.h > contentHeightWhenHorizontal + panelHeightWhenHorizontal
     
     # Take whichever panel layout leaves more room for content
     if horizontalResizeInfo.scale.min > verticalResizeInfo.scale.min
@@ -84,9 +84,10 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
   resize = ()->
     
     # This is the largest our SVGA can ever be
+    svgBCR = SVG.svg.getBoundingClientRect()
     totalAvailableSpace =
-      w: SVG.svg.getBoundingClientRect().width
-      h: window.top.innerHeight
+      w: svgBCR.width
+      h: if Mode.embed then window.top.innerHeight else svgBCR.height
     
     # Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
     verticalPanelInfo = ControlPanel.computeLayout true, totalAvailableSpace

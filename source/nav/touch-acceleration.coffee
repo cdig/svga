@@ -7,8 +7,8 @@ Take ["Nav", "Tick"], (Nav, Tick)->
     return unless running
     if Math.abs(vel.x) > 0.1 or Math.abs(vel.y) > 0.1
       Nav.by vel
-      vel.x /= 1.1
-      vel.y /= 1.1
+      vel.x /= 1.15
+      vel.y /= 1.15
     else
       running = false
   

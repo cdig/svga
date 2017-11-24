@@ -3288,7 +3288,7 @@
         }
         contentHeightWhenHorizontal = contentHeight * horizontalResizeInfo.scale.min;
         panelHeightWhenHorizontal = horizontalResizeInfo.panelInfo.consumedSpace.h;
-        if (window.top.innerHeight > contentHeightWhenHorizontal + panelHeightWhenHorizontal) {
+        if (totalAvailableSpace.h > contentHeightWhenHorizontal + panelHeightWhenHorizontal) {
           return horizontalResizeInfo;
         }
       }
@@ -3318,10 +3318,11 @@
       };
     };
     resize = function() {
-      var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
+      var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, svgBCR, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
+      svgBCR = SVG.svg.getBoundingClientRect();
       totalAvailableSpace = {
-        w: SVG.svg.getBoundingClientRect().width,
-        h: window.top.innerHeight
+        w: svgBCR.width,
+        h: Mode.embed ? window.top.innerHeight : svgBCR.height
       };
       verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
       horizontalPanelInfo = ControlPanel.computeLayout(false, totalAvailableSpace);

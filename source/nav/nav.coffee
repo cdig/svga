@@ -86,7 +86,11 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
     # This is the largest our SVGA can ever be
     totalAvailableSpace =
       w: SVG.svg.getBoundingClientRect().width
-      h: window.top.innerHeight - 48 # 48 is our header height
+      h: window.top.innerHeight
+    
+    # When deployed, account for the floating header
+    if not Mode.dev
+      totalAvailableSpace.h -= 48
     
     # Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
     verticalPanelInfo = ControlPanel.computeLayout true, totalAvailableSpace

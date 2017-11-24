@@ -3321,8 +3321,11 @@
       var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
       totalAvailableSpace = {
         w: SVG.svg.getBoundingClientRect().width,
-        h: window.top.innerHeight - 48
+        h: window.top.innerHeight
       };
+      if (!Mode.dev) {
+        totalAvailableSpace.h -= 48;
+      }
       verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
       horizontalPanelInfo = ControlPanel.computeLayout(false, totalAvailableSpace);
       verticalResizeInfo = computeResizeInfo(totalAvailableSpace, verticalPanelInfo);

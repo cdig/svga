@@ -14,8 +14,8 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"
   hit = SVG.create "rect", elm,
     x: -GUI.ControlPanel.panelMargin
     y: -GUI.ControlPanel.panelMargin
-    width: width + GUI.ControlPanel.panelMargin*2
-    height: height + GUI.ControlPanel.panelMargin*2
+    width: width + 16
+    height: height + 16
     fill: "transparent"
   
   bg = SVG.create "rect", elm,

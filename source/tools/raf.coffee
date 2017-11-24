@@ -2,18 +2,31 @@
 # For every-frame requestAnimationFrame callbacks, use system/tick.coffee
 
 do ()->
-  requested = false
+  allReady = false
+  runRequested = false
+  aboutToRun = false
   callbacksByPriority = [[],[]] # Assume 2 priorities will be used in most cases
   
   
   run = (time)->
-    requested = false
-    
+    aboutToRun = false
     for callbacks, priority in callbacksByPriority when callbacks?
       callbacksByPriority[priority] = []
       cb time for cb in callbacks
     
     undefined
+  
+  
+  attemptToRun = ()->
+    if allReady and runRequested
+      if not aboutToRun
+        aboutToRun = true
+        requestAnimationFrame run
+  
+  
+  Take "AllReady", ()->
+    allReady = true
+    attemptToRun()
   
   
   Make "RAF", (cb, ignoreDuplicates = false, priority = 0)->
@@ -26,8 +39,7 @@ do ()->
     
     (callbacksByPriority[priority] ?= []).push cb
     
-    if not requested
-      requested = true
-      requestAnimationFrame run
+    runRequested = true
+    attemptToRun()
     
     cb # Composable

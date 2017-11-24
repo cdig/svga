@@ -5706,12 +5706,14 @@
   })();
 
   (function() {
-    var callbacksByPriority, requested, run;
-    requested = false;
+    var aboutToRun, allReady, attemptToRun, callbacksByPriority, run, runRequested;
+    allReady = false;
+    runRequested = false;
+    aboutToRun = false;
     callbacksByPriority = [[], []];
     run = function(time) {
       var callbacks, cb, len, len1, m, n, priority;
-      requested = false;
+      aboutToRun = false;
       for (priority = m = 0, len = callbacksByPriority.length; m < len; priority = ++m) {
         callbacks = callbacksByPriority[priority];
         if (!(callbacks != null)) {
@@ -5725,6 +5727,18 @@
       }
       return void 0;
     };
+    attemptToRun = function() {
+      if (allReady && runRequested) {
+        if (!aboutToRun) {
+          aboutToRun = true;
+          return requestAnimationFrame(run);
+        }
+      }
+    };
+    Take("AllReady", function() {
+      allReady = true;
+      return attemptToRun();
+    });
     return Make("RAF", function(cb, ignoreDuplicates, priority) {
       var c, len, m, ref;
       if (ignoreDuplicates == null) {
@@ -5749,10 +5763,8 @@
         throw new Error("^ RAF was called more than once with this function. You can use RAF(fn, true) to drop duplicates and bypass this error.");
       }
       (callbacksByPriority[priority] != null ? callbacksByPriority[priority] : callbacksByPriority[priority] = []).push(cb);
-      if (!requested) {
-        requested = true;
-        requestAnimationFrame(run);
-      }
+      runRequested = true;
+      attemptToRun();
       return cb;
     });
   })();

@@ -1,4 +1,4 @@
-Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, HUD, Mode, ParentElement, RAF, Resize, SVG, Tween)->
+Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween)->
   
   # Turn this on if we need to debug resizing
   # debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6

@@ -802,7 +802,7 @@
     return hide();
   });
 
-  Take(["HUD", "ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(HUD, ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady) {
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady) {
     var CP, ControlPanel, columnElms, columnsElm, config, getColumnElm, groups, panelBg, panelElm, showing;
     CP = GUI.ControlPanel;
     config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
@@ -3236,7 +3236,7 @@
     });
   });
 
-  Take(["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, HUD, Mode, ParentElement, RAF, Resize, SVG, Tween) {
+  Take(["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween) {
     var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, scaleStartPosZ, tween;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");

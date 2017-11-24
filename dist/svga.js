@@ -3318,11 +3318,10 @@
       };
     };
     resize = function() {
-      var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, svgBCR, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
-      svgBCR = SVG.svg.getBoundingClientRect();
+      var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
       totalAvailableSpace = {
-        w: svgBCR.width,
-        h: Mode.embed ? window.top.innerHeight : svgBCR.height
+        w: SVG.svg.getBoundingClientRect().width,
+        h: window.top.innerHeight - 48
       };
       verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
       horizontalPanelInfo = ControlPanel.computeLayout(false, totalAvailableSpace);
@@ -3496,13 +3495,13 @@
   })();
 
   Take(["Mode", "Nav", "TouchAcceleration"], function(Mode, Nav, TouchAcceleration) {
-    var cloneTouches, distTouches, dragging, lastTouches, touchMove, touchStart;
+    var cloneTouches, distTouches, dragging, lastTouches, touchEnd, touchMove, touchStart;
     if (!Mode.nav) {
       return;
     }
     lastTouches = null;
     dragging = false;
-    window.addEventListener("touchstart", touchStart = function(e) {
+    touchStart = function(e) {
       dragging = false;
       TouchAcceleration.move({
         x: 0,
@@ -3512,8 +3511,8 @@
         e.preventDefault();
         return cloneTouches(e);
       }
-    });
-    window.addEventListener("touchmove", touchMove = function(e) {
+    };
+    touchMove = function(e) {
       var a, b;
       if (Nav.eventInside(e)) {
         e.preventDefault();
@@ -3534,13 +3533,20 @@
         }
         return cloneTouches(e);
       }
-    });
-    window.addEventListener("touchend", touchMove = function(e) {
+    };
+    touchEnd = function(e) {
       if (dragging) {
         dragging = false;
         return TouchAcceleration.up();
       }
+    };
+    window.addEventListener("touchstart", touchStart, {
+      passive: false
     });
+    window.addEventListener("touchmove", touchMove, {
+      passive: false
+    });
+    window.addEventListener("touchend", touchEnd);
     cloneTouches = function(e) {
       var t;
       lastTouches = (function() {
@@ -3581,8 +3587,8 @@
       }
       if (Math.abs(vel.x) > 0.1 || Math.abs(vel.y) > 0.1) {
         Nav.by(vel);
-        vel.x /= 1.1;
-        return vel.y /= 1.1;
+        vel.x /= 1.15;
+        return vel.y /= 1.15;
       } else {
         return running = false;
       }

@@ -84,10 +84,9 @@ Take ["ControlPanel", "HUD", "Mode", "ParentElement", "RAF", "Resize", "SVG", "T
   resize = ()->
     
     # This is the largest our SVGA can ever be
-    svgBCR = SVG.svg.getBoundingClientRect()
     totalAvailableSpace =
-      w: svgBCR.width
-      h: if Mode.embed then window.top.innerHeight else svgBCR.height
+      w: SVG.svg.getBoundingClientRect().width
+      h: window.top.innerHeight - 48 # 48 is our header height
     
     # Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
     verticalPanelInfo = ControlPanel.computeLayout true, totalAvailableSpace

@@ -9,13 +9,6 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
   contentHeight = +SVG.attr SVG.svg, "height"
   throw new Error "This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash." unless contentWidth? and contentHeight?
   
-  # Right off the bat, set our height to something reasonable.
-  # This will help the control panel assume the correct size.
-  # TODO: Disabled because this is probably no longer needed, pending testing.
-  # if Mode.embed
-  #   parentRect = ParentElement.getBoundingClientRect()
-  #   ParentElement.style.height = Math.round(contentHeight * parentRect.width / contentWidth) + "px"
-  
   initialRootRect = SVG.root.getBoundingClientRect()
   return unless initialRootRect.width > 0 and initialRootRect.height > 0 # This avoids a divide by zero error when the SVG is empty
   

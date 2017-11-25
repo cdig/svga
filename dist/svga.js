@@ -2511,31 +2511,20 @@
     });
   });
 
-  Take(["Mode", "ParentElement", "Tick", "SVGReady"], function(Mode, ParentElement, Tick) {
-    var HUD, colors, elapsed, elm, needsUpdate, prev, rate, ref, values;
+  Take(["Mode", "Tick", "SVG", "SVGReady"], function(Mode, Tick, SVG) {
+    var HUD, colors, elapsed, elm, needsUpdate, rate, values;
     if (!Mode.dev) {
       Make("HUD", function() {});
       return;
     }
-    rate = .1;
+    rate = 1 / 8;
     elapsed = rate;
     needsUpdate = true;
     colors = {};
     values = {};
     elm = document.createElement("div");
     elm.setAttribute("svga-hud", "true");
-    if (!Mode.embed) {
-      document.body.insertBefore(elm, document.body.firstChild);
-    } else {
-      prev = ParentElement.previousSibling;
-      if (prev != null ? typeof prev.hasAttribute === "function" ? prev.hasAttribute("svga-hud") : void 0 : void 0) {
-        elm = prev;
-      } else {
-        if ((ref = ParentElement.parentNode) != null) {
-          ref.insertBefore(elm, ParentElement);
-        }
-      }
-    }
+    document.body.insertBefore(elm, SVG.svg);
     Tick(function(time, dt) {
       var html, k, v;
       elapsed += dt;

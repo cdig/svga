@@ -1,10 +1,10 @@
-Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)->
+Take ["Mode", "Tick", "SVG", "SVGReady"], (Mode, Tick, SVG)->
   
   if not Mode.dev
     Make "HUD", ()-> # Noop
     return
   
-  rate = .1 # Update every n seconds
+  rate = 1/8 # Update every nth of a second
   elapsed = rate # Run the first update immediately
   needsUpdate = true
   
@@ -13,17 +13,7 @@ Take ["Mode", "ParentElement", "Tick", "SVGReady"], (Mode, ParentElement, Tick)-
   
   elm = document.createElement "div"
   elm.setAttribute "svga-hud", "true"
-  
-  if not Mode.embed
-    document.body.insertBefore elm, document.body.firstChild
-  else
-    # If the SVGA is removed and re-added, it creates duplicate HUD elements.
-    # So if there's an existing element, we should just use it.
-    prev = ParentElement.previousSibling
-    if prev?.hasAttribute? "svga-hud"
-      elm = prev
-    else
-      ParentElement.parentNode?.insertBefore elm, ParentElement
+  document.body.insertBefore elm, SVG.svg
   
   Tick (time, dt)->
     elapsed += dt

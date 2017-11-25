@@ -743,9 +743,9 @@
     });
   });
 
-  Take(["Action", "Ease", "ParentElement", "Reaction", "SVG"], function(Action, Ease, ParentElement, Reaction, SVG) {
+  Take(["Action", "Ease", "Reaction", "SVG"], function(Action, Ease, Reaction, SVG) {
     Reaction("Background:Set", function(v) {
-      return SVG.style(ParentElement, "background-color", v);
+      return SVG.style(document.body, "background-color", v);
     });
     return Reaction("Background:Lightness", function(v) {
       var hue;

@@ -141,9 +141,11 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
         height: contentHeight
       
   
-  # Init resizing, and fire an initial resize when everything is ready
-  window.top.addEventListener "resize", ()-> RAF resize, true
-  Take "AllReady", ()-> RAF resize, true
+  # Init
+  runResize = ()-> RAF resize, true
+  window.addEventListener "resize", runResize
+  window.top.addEventListener "resize", runResize
+  Take "AllReady", runResize
   
   
   # BAIL IF WE'RE NOT NAV-ING

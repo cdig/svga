@@ -3237,7 +3237,7 @@
   });
 
   Take(["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, scaleStartPosZ, tween;
+    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
@@ -3358,12 +3358,12 @@
         }
       });
     };
-    window.top.addEventListener("resize", function() {
+    runResize = function() {
       return RAF(resize, true);
-    });
-    Take("AllReady", function() {
-      return RAF(resize, true);
-    });
+    };
+    window.addEventListener("resize", runResize);
+    window.top.addEventListener("resize", runResize);
+    Take("AllReady", runResize);
     if (!Mode.nav) {
       Make("Nav", false);
       return;

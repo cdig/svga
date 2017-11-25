@@ -2580,7 +2580,7 @@
     });
   });
 
-  Take(["HUD", "Mode", "ParentElement", "SVGReady"], function(HUD, Mode, ParentElement) {
+  Take(["HUD", "Mode", "SVGReady"], function(HUD, Mode) {
     var nodeCountElm;
     if (!Mode.dev) {
       return;

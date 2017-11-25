@@ -1,4 +1,4 @@
-Take ["HUD", "Mode", "ParentElement", "SVGReady"], (HUD, Mode, ParentElement)->
+Take ["HUD", "Mode", "SVGReady"], (HUD, Mode)->
   return unless Mode.dev
   
   nodeCountElm = document.querySelector "[node-count]"

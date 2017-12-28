@@ -1,4 +1,10 @@
 Take ["Mode", "Registry", "ScopeCheck", "Symbol"], (Mode, Registry, ScopeCheck, Symbol)->
+  findParent = (element)->
+    while element?
+      return element._scope if element._scope?
+      element = element.parentNode
+    return null # needed, because while returns an array
+  
   Make "Scope", Scope = (element, symbol, props = {})->
     if not element instanceof SVGElement then console.log element; throw new Error "Scope() takes an element as the first argument. Got ^^^"
     if symbol? and typeof symbol isnt "function" then console.log symbol; throw new Error "Scope() takes a function as the second arg. Got ^^^"
@@ -49,10 +55,3 @@ Take ["Mode", "Registry", "ScopeCheck", "Symbol"], (Mode, Registry, ScopeCheck, 
     scopeProcessor scope, props for scopeProcessor in Registry.all "ScopeProcessor"
     
     return scope
-  
-  
-  findParent = (element)->
-    while element?
-      return element._scope if element._scope?
-      element = element.parentNode
-    return null # needed, because while returns an array

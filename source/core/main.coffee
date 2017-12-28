@@ -24,16 +24,19 @@ Take ["Registry", "Scene", "SVG"], (Registry, Scene, SVG)->
     # Inform all systems that we've just finished setting up Controls.
     Make "ControlReady"
     
-    # By now, we're assuming all Symbols are ready.
-    Registry.closeRegistration "Symbols"
-    Registry.closeRegistration "SymbolNames"
-    
-    # Use the DOM references collected earlier to build our Scene tree.
-    Scene.build svgData
-    svgData = null # Free this memory
-    
-    # Inform all systems that we've just finished setting up the scene.
-    Make "SceneReady"
-    
-    # Inform all systems that bloody everything is done.
-    Make "AllReady"
+    # We need to wait a bit for Symbols
+    setTimeout ()->
+      
+      # By now, we're assuming all Symbols are ready.
+      Registry.closeRegistration "Symbols"
+      Registry.closeRegistration "SymbolNames"
+      
+      # Use the DOM references collected earlier to build our Scene tree.
+      Scene.build svgData
+      svgData = null # Free this memory
+      
+      # Inform all systems that we've just finished setting up the scene.
+      Make "SceneReady"
+      
+      # Inform all systems that bloody everything is done.
+      Make "AllReady"

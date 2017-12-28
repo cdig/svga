@@ -13,12 +13,14 @@
       Registry.closeRegistration("Control");
       Registry.closeRegistration("SettingType");
       Make("ControlReady");
-      Registry.closeRegistration("Symbols");
-      Registry.closeRegistration("SymbolNames");
-      Scene.build(svgData);
-      svgData = null;
-      Make("SceneReady");
-      return Make("AllReady");
+      return setTimeout(function() {
+        Registry.closeRegistration("Symbols");
+        Registry.closeRegistration("SymbolNames");
+        Scene.build(svgData);
+        svgData = null;
+        Make("SceneReady");
+        return Make("AllReady");
+      });
     });
   });
 

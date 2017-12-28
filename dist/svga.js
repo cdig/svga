@@ -479,9 +479,6 @@
 
   Take("FlowArrows:Config", function(Config) {
     var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
-    Make("FlowArrows:Process", function(lineData) {
-      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
-    });
     log = function(a) {
       console.dir(a);
       return a;
@@ -686,9 +683,12 @@
       dy = b.y - a.y;
       return Math.sqrt(dx * dx + dy * dy);
     };
-    return angle = function(a, b) {
+    angle = function(a, b) {
       return Math.atan2(b.y - a.y, b.x - a.x);
     };
+    return Make("FlowArrows:Process", function(lineData) {
+      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
+    });
   });
 
   Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize", "Mode"], function(Arrow, Config, Containerize, Mode) {

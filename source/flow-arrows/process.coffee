@@ -1,16 +1,5 @@
 Take "FlowArrows:Config", (Config)->
-  Make "FlowArrows:Process", (lineData)->
-    wrap lineData # Wrap our data into a format suitable for the below processing pipeline
-    .process formSegments # organize the points into an array of segment groups
-    .process joinSegments # combine segments that are visibly connected but whose points were listed in the wrong order
-    .process cullShortEdges # remove points that constitute an unusably short edge
-    .process cullInlinePoints # remove points that lie on a line
-    .process reifyVectors # create vectors with a position, dist, and angle
-    .process reifySegments # create segments with a dist and edges
-    .process cullShortSegments # remove vectors that are unusably short
-    .result # return the result after all the above processing steps
-  
-  
+
   # PROCESSING STEPS ##############################################################################
   
   log = (a)->
@@ -209,3 +198,17 @@ Take "FlowArrows:Config", (Config)->
   
   angle = (a, b)->
     return Math.atan2(b.y - a.y, b.x - a.x)
+  
+  
+  # MAIN ##########################################################################################
+  
+  Make "FlowArrows:Process", (lineData)->
+    wrap lineData # Wrap our data into a format suitable for the below processing pipeline
+    .process formSegments # organize the points into an array of segment groups
+    .process joinSegments # combine segments that are visibly connected but whose points were listed in the wrong order
+    .process cullShortEdges # remove points that constitute an unusably short edge
+    .process cullInlinePoints # remove points that lie on a line
+    .process reifyVectors # create vectors with a position, dist, and angle
+    .process reifySegments # create segments with a dist and edges
+    .process cullShortSegments # remove vectors that are unusably short
+    .result # return the result after all the above processing steps

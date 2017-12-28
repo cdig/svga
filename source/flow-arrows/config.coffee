@@ -1,4 +1,9 @@
 do ()->
+  defineProp = (obj, k)->
+    Object.defineProperty obj, k,
+      get: ()-> Config[k]
+      set: (v)-> Config[k] = v
+  
   Make "FlowArrows:Config", Config =
     SCALE: 0.5 # Visible size of arrows is multiplied by this value — it's not factored in to any of the other size/distance/speed values
     SPACING: 600 # APPROXIMATELY how far apart should arrows be spaced? (+/-)50%
@@ -11,8 +16,3 @@ do ()->
     wrap: (obj)->
       defineProp obj, k for k of Config when k isnt "wrap"
       obj # Composable
-  
-  defineProp = (obj, k)->
-    Object.defineProperty obj, k,
-      get: ()-> Config[k]
-      set: (v)-> Config[k] = v

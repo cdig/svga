@@ -149,7 +149,16 @@
 
   Take(["Mode", "Registry", "ScopeCheck", "Symbol"], function(Mode, Registry, ScopeCheck, Symbol) {
     var Scope, findParent;
-    Make("Scope", Scope = function(element, symbol, props) {
+    findParent = function(element) {
+      while (element != null) {
+        if (element._scope != null) {
+          return element._scope;
+        }
+        element = element.parentNode;
+      }
+      return null;
+    };
+    return Make("Scope", Scope = function(element, symbol, props) {
       var attr, attrs, idCounter, len, len1, m, n, parentScope, ref, scope, scopeProcessor, tempID;
       if (props == null) {
         props = {};
@@ -214,15 +223,6 @@
       }
       return scope;
     });
-    return findParent = function(element) {
-      while (element != null) {
-        if (element._scope != null) {
-          return element._scope;
-        }
-        element = element.parentNode;
-      }
-      return null;
-    };
   });
 
   Take(["FlowArrows:Config", "SVG", "TRS"], function(Config, SVG, TRS) {
@@ -282,7 +282,17 @@
 
   (function() {
     var Config, defineProp;
-    Make("FlowArrows:Config", Config = {
+    defineProp = function(obj, k) {
+      return Object.defineProperty(obj, k, {
+        get: function() {
+          return Config[k];
+        },
+        set: function(v) {
+          return Config[k] = v;
+        }
+      });
+    };
+    return Make("FlowArrows:Config", Config = {
       SCALE: 0.5,
       SPACING: 600,
       FADE_LENGTH: 50,
@@ -300,16 +310,6 @@
         return obj;
       }
     });
-    return defineProp = function(obj, k) {
-      return Object.defineProperty(obj, k, {
-        get: function() {
-          return Config[k];
-        },
-        set: function(v) {
-          return Config[k] = v;
-        }
-      });
-    };
   })();
 
   Take(["Pressure", "SVG"], function(Pressure, SVG) {

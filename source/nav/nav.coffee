@@ -1,4 +1,4 @@
-Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween)->
+Take ["ControlPanel", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, ParentData, RAF, Resize, SVG, Tween)->
   
   # Turn this on if we need to debug resizing
   # debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
@@ -98,7 +98,7 @@ Take ["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", 
     
     # If we're embedded into a cd-module, resize our embedding object.
     if Mode.embed
-      ParentElement.style.height = Math.round(resizeInfo.idealHeight) + "px"
+      ParentData.send "height", Math.round(resizeInfo.idealHeight) + "px"
       totalAvailableSpace.h = resizeInfo.idealHeight
     
     # Apply the chosen layout to the ControlPanel

@@ -3226,7 +3226,7 @@
     });
   });
 
-  Take(["ControlPanel", "Mode", "ParentElement", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentElement, RAF, Resize, SVG, Tween) {
+  Take(["ControlPanel", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentData, RAF, Resize, SVG, Tween) {
     var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
@@ -3322,7 +3322,7 @@
       horizontalResizeInfo = computeResizeInfo(totalAvailableSpace, horizontalPanelInfo);
       resizeInfo = pickBestLayout(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo);
       if (Mode.embed) {
-        ParentElement.style.height = Math.round(resizeInfo.idealHeight) + "px";
+        ParentData.send("height", Math.round(resizeInfo.idealHeight) + "px");
         totalAvailableSpace.h = resizeInfo.idealHeight;
       }
       ControlPanel.applyLayout(resizeInfo, totalAvailableSpace);
@@ -4551,7 +4551,6 @@
     Mode = {
       get: fetchAttribute,
       background: fetchAttribute("background"),
-      controlPanel: fetchAttribute("controlPanel"),
       dev: isDev(),
       nav: fetchAttribute("nav"),
       embed: embedded,
@@ -4564,46 +4563,65 @@
   });
 
   (function() {
-    var channel, handshakeComplete, port, receivedData;
+    var channel, inbox, listeners, open, outbox, port;
+    if (window === window.top) {
+      Make("ParentData", null);
+      return;
+    }
     channel = new MessageChannel();
     port = channel.port1;
-    receivedData = {};
-    handshakeComplete = function() {
-      handshakeComplete = null;
-      return Make("ParentData", {
-        get: function(k) {
-          return receivedData[k];
-        },
-        send: function(k, v) {
-          return port.postMessage(k + ":" + v);
+    open = false;
+    inbox = {};
+    outbox = {};
+    listeners = [];
+    Make("ParentData", {
+      send: function(k, v) {
+        if (outbox[k] !== v) {
+          outbox[k] = v;
+          if (open) {
+            return port.postMessage(k + ":" + v);
+          }
         }
-      });
-    };
-    port.addEventListener("message", function(e) {
-      var parts;
-      parts = e.data.split(":");
-      receivedData[parts[0]] = parts[1];
-      return typeof handshakeComplete === "function" ? handshakeComplete() : void 0;
-    });
-    window.top.postMessage("Handshake", "*", [channel.port2]);
-    return port.start();
-  })();
-
-  (function() {
-    var len, m, o, parentElement, ref;
-    parentElement = null;
-    ref = window.parent.document.querySelectorAll("object");
-    for (m = 0, len = ref.length; m < len; m++) {
-      o = ref[m];
-      if (o.contentDocument === document) {
-        parentElement = o;
-        break;
+      },
+      get: function(k) {
+        return inbox[k];
+      },
+      listen: function(cb) {
+        listeners.push(cb);
+        return cb(inbox);
       }
-    }
-    if (parentElement == null) {
-      parentElement = document.body;
-    }
-    return Make("ParentElement", parentElement);
+    });
+    port.addEventListener("message", function(e) {
+      var cb, len, m, parts, results;
+      parts = e.data.split(":");
+      if (parts.length > 0) {
+        inbox[parts[0]] = parts[1];
+      }
+      results = [];
+      for (m = 0, len = listeners.length; m < len; m++) {
+        cb = listeners[m];
+        results.push(cb(inbox));
+      }
+      return results;
+    });
+    window.addEventListener("message", function(e) {
+      var k, results, v;
+      if (e.data === "RequestHandshake") {
+        window.top.postMessage("Handshake", "*");
+      }
+      if (e.data === "RequestChannel") {
+        window.top.postMessage("Channel", "*", [channel.port2]);
+        open = true;
+        results = [];
+        for (k in outbox) {
+          v = outbox[k];
+          results.push(port.postMessage(k + ":" + v));
+        }
+        return results;
+      }
+    });
+    port.start();
+    return window.top.postMessage("Handshake", "*");
   })();
 
   (function() {
@@ -6052,7 +6070,7 @@
     return Make("Symbol", Symbol);
   });
 
-  Take(["ParentElement", "RAF"], function(ParentElement, RAF) {
+  Take(["Mode", "ParentData", "RAF"], function(Mode, ParentData, RAF) {
     var callbacks, internalTime, maximumDt, tick, wallTime;
     maximumDt = 0.5;
     callbacks = [];
@@ -6062,7 +6080,7 @@
       var cb, dt, len, m;
       dt = Math.min(t / 1000 - wallTime, maximumDt);
       wallTime = t / 1000;
-      if (!ParentElement.disableSVGA) {
+      if (!(Mode.embed && ParentData.get("disabled") === "true")) {
         internalTime += dt;
         for (m = 0, len = callbacks.length; m < len; m++) {
           cb = callbacks[m];

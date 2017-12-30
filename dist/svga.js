@@ -804,10 +804,9 @@
     return hide();
   });
 
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady) {
-    var CP, ControlPanel, columnElms, columnsElm, config, getColumnElm, groups, panelBg, panelElm, showing;
+  Take(["ControlPanelLayout", "Gradient", "GUI", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, Reaction, SVG, Scope, TRS, ControlReady) {
+    var CP, ControlPanel, columnElms, columnsElm, getColumnElm, groups, panelBg, panelElm, showing;
     CP = GUI.ControlPanel;
-    config = Mode.controlPanel != null ? Mode.controlPanel : Mode.controlPanel = {};
     showing = false;
     groups = [];
     columnElms = [];
@@ -4518,13 +4517,12 @@
     });
   });
 
-  Take(["Config", "ParentElement"], function(Config, ParentElement) {
-    var Mode, fetchAttribute, isDev;
+  Take(["Config", "ParentData"], function(Config, ParentData) {
+    var Mode, embedded, fetchAttribute, isDev;
+    embedded = window !== window.top;
     fetchAttribute = function(name) {
-      var attrName, val;
-      attrName = "x-" + name;
-      if (ParentElement.hasAttribute(attrName)) {
-        val = ParentElement.getAttribute(attrName);
+      var val;
+      if (embedded && (val = ParentData.get(name))) {
         if (val === "" || val === "true") {
           return true;
         }
@@ -4556,7 +4554,7 @@
       controlPanel: fetchAttribute("controlPanel"),
       dev: isDev(),
       nav: fetchAttribute("nav"),
-      embed: window !== window.top,
+      embed: embedded,
       settings: fetchAttribute("settings")
     };
     if (Mode.embed) {
@@ -4564,6 +4562,32 @@
     }
     return Make("Mode", Mode);
   });
+
+  (function() {
+    var channel, handshakeComplete, port, receivedData;
+    channel = new MessageChannel();
+    port = channel.port1;
+    receivedData = {};
+    handshakeComplete = function() {
+      handshakeComplete = null;
+      return Make("ParentData", {
+        get: function(k) {
+          return receivedData[k];
+        },
+        send: function(k, v) {
+          return port.postMessage(k + ":" + v);
+        }
+      });
+    };
+    port.addEventListener("message", function(e) {
+      var parts;
+      parts = e.data.split(":");
+      receivedData[parts[0]] = parts[1];
+      return typeof handshakeComplete === "function" ? handshakeComplete() : void 0;
+    });
+    window.top.postMessage("Handshake", "*", [channel.port2]);
+    return port.start();
+  })();
 
   (function() {
     var len, m, o, parentElement, ref;

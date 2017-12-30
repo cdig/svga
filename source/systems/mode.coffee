@@ -1,12 +1,12 @@
 # Config is defined in the config.coffee in every SVGA
 
-Take ["Config", "ParentElement"], (Config, ParentElement)->
+Take ["Config", "ParentData"], (Config, ParentData)->
+  
+  embedded = window isnt window.top
   
   fetchAttribute = (name)->
-    attrName = "x-" + name
-    if ParentElement.hasAttribute attrName
+    if embedded and val = ParentData.get name
       # This isn't ideal, but it is good enough for now
-      val = ParentElement.getAttribute attrName
       return true if val is "" or val is "true"
       return false if val is "false"
       return JSON.parse(val) if val.charAt(0) is "{"
@@ -26,10 +26,9 @@ Take ["Config", "ParentElement"], (Config, ParentElement)->
   Mode =
     get: fetchAttribute
     background: fetchAttribute "background"
-    controlPanel: fetchAttribute "controlPanel"
     dev: isDev()
     nav: fetchAttribute "nav"
-    embed: window isnt window.top
+    embed: embedded
     settings: fetchAttribute "settings"
   
   # We always disallow nav in embed mode

@@ -1,8 +1,7 @@
-Take ["ControlPanelLayout", "Gradient", "GUI", "Mode", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], (ControlPanelLayout, Gradient, GUI, Mode, Reaction, SVG, Scope, TRS, ControlReady)->
+Take ["ControlPanelLayout", "Gradient", "GUI", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], (ControlPanelLayout, Gradient, GUI, Reaction, SVG, Scope, TRS, ControlReady)->
   
   # Aliases
   CP = GUI.ControlPanel
-  config = Mode.controlPanel ?= {}
   
   # State
   showing = false

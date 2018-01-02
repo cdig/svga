@@ -6,16 +6,16 @@ do ()->
   
   channel = new MessageChannel()
   port = channel.port1
-  open = false
   inbox = {}
   outbox = {}
   listeners = []
+  id = window.location.pathname.replace(/^\//, "") + window.location.hash
   
   Make "ParentData",
     send: (k,v)->
       if outbox[k] isnt v
         outbox[k] = v
-        port.postMessage "#{k}:#{v}" if open
+        port.postMessage "#{k}:#{v}"
     
     get: (k)->
       inbox[k]
@@ -29,19 +29,7 @@ do ()->
     inbox[parts[0]] = parts[1] if parts.length > 0
     cb inbox for cb in listeners
   
-  window.addEventListener "message", (e)->
-    # TODO: Add origin checks
-    # return unless e.origin is window.origin or e.origin.indexOf("https://cdn.lunchboxsessions.com") is 0
-    
-    if e.data is "RequestHandshake"
-      window.top.postMessage "Handshake", "*" # TODO: Restrict the origin
-    
-    if e.data is "RequestChannel"
-      window.top.postMessage "Channel", "*", [channel.port2] # TODO: Restrict the origin
-      open = true
-      port.postMessage "#{k}:#{v}" for k,v of outbox
+  window.top.postMessage "Channel:#{id}", "*", [channel.port2] # TODO: Restrict the origin
+  port.postMessage "#{k}:#{v}" for k,v of outbox
   
   port.start()
-  
-  window.top.postMessage "Handshake", "*" # TODO: Restrict the origin
-  

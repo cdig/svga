@@ -4563,24 +4563,22 @@
   });
 
   (function() {
-    var channel, inbox, listeners, open, outbox, port;
+    var channel, id, inbox, k, listeners, outbox, port, v;
     if (window === window.top) {
       Make("ParentData", null);
       return;
     }
     channel = new MessageChannel();
     port = channel.port1;
-    open = false;
     inbox = {};
     outbox = {};
     listeners = [];
+    id = window.location.pathname.replace(/^\//, "") + window.location.hash;
     Make("ParentData", {
       send: function(k, v) {
         if (outbox[k] !== v) {
           outbox[k] = v;
-          if (open) {
-            return port.postMessage(k + ":" + v);
-          }
+          return port.postMessage(k + ":" + v);
         }
       },
       get: function(k) {
@@ -4604,24 +4602,12 @@
       }
       return results;
     });
-    window.addEventListener("message", function(e) {
-      var k, results, v;
-      if (e.data === "RequestHandshake") {
-        window.top.postMessage("Handshake", "*");
-      }
-      if (e.data === "RequestChannel") {
-        window.top.postMessage("Channel", "*", [channel.port2]);
-        open = true;
-        results = [];
-        for (k in outbox) {
-          v = outbox[k];
-          results.push(port.postMessage(k + ":" + v));
-        }
-        return results;
-      }
-    });
-    port.start();
-    return window.top.postMessage("Handshake", "*");
+    window.top.postMessage("Channel:" + id, "*", [channel.port2]);
+    for (k in outbox) {
+      v = outbox[k];
+      port.postMessage(k + ":" + v);
+    }
+    return port.start();
   })();
 
   (function() {

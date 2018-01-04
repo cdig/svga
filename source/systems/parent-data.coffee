@@ -35,7 +35,6 @@ do ()->
       inbox[parts[0]] = parts[1] if parts.length > 0
       cb inbox for cb in listeners
   
-  window.top.postMessage "Channel:#{id}", "*", [channel.port2] # TODO: Restrict the origin
+  window.top.postMessage "Channel:#{id}", "*", [channel.port2]
   port.postMessage "#{k}:#{v}" for k,v of outbox
-  
   port.start()

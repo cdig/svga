@@ -11,23 +11,29 @@ do ()->
   listeners = []
   id = window.location.pathname.replace(/^\//, "") + window.location.hash
   
-  Make "ParentData",
-    send: (k,v)->
-      if outbox[k] isnt v
-        outbox[k] = v
-        port.postMessage "#{k}:#{v}"
+  finishSetup = ()->
+    finishSetup = null
     
-    get: (k)->
-      inbox[k]
-    
-    listen: (cb)->
-      listeners.push cb
-      cb inbox
+    Make "ParentData",
+      send: (k,v)->
+        if outbox[k] isnt v
+          outbox[k] = v
+          port.postMessage "#{k}:#{v}"
+      
+      get: (k)->
+        inbox[k]
+      
+      listen: (cb)->
+        listeners.push cb
+        cb inbox
   
   port.addEventListener "message", (e)->
-    parts = e.data.split ":"
-    inbox[parts[0]] = parts[1] if parts.length > 0
-    cb inbox for cb in listeners
+    if e.data is "INIT"
+      finishSetup?()
+    else
+      parts = e.data.split ":"
+      inbox[parts[0]] = parts[1] if parts.length > 0
+      cb inbox for cb in listeners
   
   window.top.postMessage "Channel:#{id}", "*", [channel.port2] # TODO: Restrict the origin
   port.postMessage "#{k}:#{v}" for k,v of outbox

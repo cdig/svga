@@ -1,4 +1,5 @@
-Take ["Registry", "Scene", "SVG"], (Registry, Scene, SVG)->
+Take ["Registry", "Scene", "SVG", "ParentData"], (Registry, Scene, SVG)->
+  # We don't use ParentData, but we need it to exist before we can safely continue
   
   # This is the very first code that changes the DOM. It crawls the entire DOM and:
   # 1. Makes structural changes to prepare things for animation.

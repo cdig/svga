@@ -3,7 +3,7 @@
     slice = [].slice,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  Take(["Registry", "Scene", "SVG"], function(Registry, Scene, SVG) {
+  Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
     var svgData;
     svgData = Scene.crawl(SVG.root);
     Make("SVGReady");
@@ -4563,7 +4563,7 @@
   });
 
   (function() {
-    var channel, id, inbox, k, listeners, outbox, port, v;
+    var channel, finishSetup, id, inbox, k, listeners, outbox, port, v;
     if (window === window.top) {
       Make("ParentData", null);
       return;
@@ -4574,33 +4574,40 @@
     outbox = {};
     listeners = [];
     id = window.location.pathname.replace(/^\//, "") + window.location.hash;
-    Make("ParentData", {
-      send: function(k, v) {
-        if (outbox[k] !== v) {
-          outbox[k] = v;
-          return port.postMessage(k + ":" + v);
+    finishSetup = function() {
+      finishSetup = null;
+      return Make("ParentData", {
+        send: function(k, v) {
+          if (outbox[k] !== v) {
+            outbox[k] = v;
+            return port.postMessage(k + ":" + v);
+          }
+        },
+        get: function(k) {
+          return inbox[k];
+        },
+        listen: function(cb) {
+          listeners.push(cb);
+          return cb(inbox);
         }
-      },
-      get: function(k) {
-        return inbox[k];
-      },
-      listen: function(cb) {
-        listeners.push(cb);
-        return cb(inbox);
-      }
-    });
+      });
+    };
     port.addEventListener("message", function(e) {
       var cb, len, m, parts, results;
-      parts = e.data.split(":");
-      if (parts.length > 0) {
-        inbox[parts[0]] = parts[1];
+      if (e.data === "INIT") {
+        return typeof finishSetup === "function" ? finishSetup() : void 0;
+      } else {
+        parts = e.data.split(":");
+        if (parts.length > 0) {
+          inbox[parts[0]] = parts[1];
+        }
+        results = [];
+        for (m = 0, len = listeners.length; m < len; m++) {
+          cb = listeners[m];
+          results.push(cb(inbox));
+        }
+        return results;
       }
-      results = [];
-      for (m = 0, len = listeners.length; m < len; m++) {
-        cb = listeners[m];
-        results.push(cb(inbox));
-      }
-      return results;
     });
     window.top.postMessage("Channel:" + id, "*", [channel.port2]);
     for (k in outbox) {

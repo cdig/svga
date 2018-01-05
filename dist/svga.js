@@ -5197,255 +5197,267 @@
     });
   });
 
-  Make("Input", function(elm, calls, mouse, touch, options) {
-    var api, down, enabled, move, out, over, prepTouchEvent, resetState, state, touchListenerOptions, touchmove, touchstart, up;
-    if (mouse == null) {
-      mouse = true;
-    }
-    if (touch == null) {
-      touch = true;
-    }
-    if (options == null) {
-      options = {};
-    }
-    enabled = true;
-    state = null;
-    touchListenerOptions = {
-      passive: !options.blockScroll
-    };
-    resetState = function() {
-      return state = {
-        down: false,
-        over: false,
-        touch: false,
-        clicking: false,
-        captured: false,
-        deltaX: 0,
-        deltaY: 0,
-        lastX: 0,
-        lastY: 0
+  Take("SVG", function(SVG) {
+    return Make("Input", function(elm, calls, mouse, touch, options) {
+      var api, down, enabled, eventInside, move, out, over, prepTouchEvent, resetState, state, touchListenerOptions, touchmove, touchstart, up;
+      if (mouse == null) {
+        mouse = true;
+      }
+      if (touch == null) {
+        touch = true;
+      }
+      if (options == null) {
+        options = {};
+      }
+      enabled = true;
+      state = null;
+      touchListenerOptions = {
+        passive: !options.blockScroll
       };
-    };
-    resetState();
-    down = function(e) {
-      state.lastX = e.clientX;
-      state.lastY = e.clientY;
-      state.deltaX = 0;
-      state.deltaY = 0;
-      if (!state.down) {
-        state.down = true;
-        if (state.over) {
-          state.clicking = true;
-          return typeof calls.down === "function" ? calls.down(e, state) : void 0;
-        } else {
-          return typeof calls.downOther === "function" ? calls.downOther(e, state) : void 0;
+      eventInside = function(e) {
+        var ref;
+        if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+          e = e.touches[0];
         }
-      }
-    };
-    up = function(e) {
-      if (state.down) {
-        state.down = false;
-        if (state.over) {
-          if (typeof calls.up === "function") {
-            calls.up(e, state);
-          }
-          if (state.clicking) {
-            state.clicking = false;
-            return typeof calls.click === "function" ? calls.click(e, state) : void 0;
-          }
-        } else {
-          if (typeof calls.upOther === "function") {
-            calls.upOther(e, state);
-          }
-          if (state.clicking) {
-            state.clicking = false;
-            return typeof calls.miss === "function" ? calls.miss(e, state) : void 0;
+        return e.target === SVG.svg || SVG.root.contains(e.target);
+      };
+      resetState = function() {
+        return state = {
+          down: false,
+          over: false,
+          touch: false,
+          clicking: false,
+          captured: false,
+          deltaX: 0,
+          deltaY: 0,
+          lastX: 0,
+          lastY: 0
+        };
+      };
+      resetState();
+      down = function(e) {
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        state.deltaX = 0;
+        state.deltaY = 0;
+        if (!state.down) {
+          state.down = true;
+          if (state.over) {
+            state.clicking = true;
+            return typeof calls.down === "function" ? calls.down(e, state) : void 0;
+          } else {
+            return typeof calls.downOther === "function" ? calls.downOther(e, state) : void 0;
           }
         }
-      }
-    };
-    move = function(e) {
-      if (e.clientX === state.lastX && e.clientY === state.lastY) {
-        return;
-      }
-      state.deltaX = e.clientX - state.lastX;
-      state.deltaY = e.clientY - state.lastY;
-      if (state.over) {
+      };
+      up = function(e) {
         if (state.down) {
-          if (options.blockScroll && state.touch) {
-            e.preventDefault();
-          }
-          if (typeof calls.drag === "function") {
-            calls.drag(e, state);
-          }
-        } else {
-          if (typeof calls.move === "function") {
-            calls.move(e, state);
-          }
-        }
-      } else {
-        if (state.down) {
-          if (typeof calls.dragOther === "function") {
-            calls.dragOther(e, state);
-          }
-        } else {
-          if (typeof calls.moveOther === "function") {
-            calls.moveOther(e, state);
-          }
-        }
-      }
-      state.lastX = e.clientX;
-      return state.lastY = e.clientY;
-    };
-    out = function(e) {
-      if (state.over) {
-        state.over = false;
-        if (state.down) {
-          return typeof calls.dragOut === "function" ? calls.dragOut(e, state) : void 0;
-        } else {
-          return typeof calls.moveOut === "function" ? calls.moveOut(e, state) : void 0;
-        }
-      }
-    };
-    over = function(e) {
-      state.lastX = e.clientX;
-      state.lastY = e.clientY;
-      if (!state.over) {
-        state.over = true;
-        if (state.down) {
-          return typeof calls.dragIn === "function" ? calls.dragIn(e, state) : void 0;
-        } else {
-          return typeof calls.moveIn === "function" ? calls.moveIn(e, state) : void 0;
-        }
-      }
-    };
-    if (mouse) {
-      document.addEventListener("mousedown", function(e) {
-        if (!enabled) {
-          return;
-        }
-        if (e.button !== 0) {
-          return;
-        }
-        if (state.touch) {
-          return;
-        }
-        return down(e);
-      });
-      if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
-        document.addEventListener("mousemove", function(e) {
-          if (!enabled) {
-            return;
-          }
-          if (state.touch) {
-            return;
-          }
-          return move(e);
-        });
-      }
-      document.addEventListener("mouseup", function(e) {
-        if (!enabled) {
-          return;
-        }
-        if (e.button !== 0) {
-          return;
-        }
-        if (state.touch) {
-          return;
-        }
-        return up(e);
-      });
-      if (elm != null) {
-        elm.addEventListener("mouseleave", function(e) {
-          if (!enabled) {
-            return;
-          }
-          if (state.touch) {
-            return;
-          }
-          return out(e);
-        });
-      }
-      if (elm != null) {
-        elm.addEventListener("mouseenter", function(e) {
-          if (!enabled) {
-            return;
-          }
-          if (state.touch) {
-            return;
-          }
-          return over(e);
-        });
-      }
-    }
-    if (touch) {
-      prepTouchEvent = function(e) {
-        var newState, overChanged, pElm, ref, ref1;
-        state.touch = true;
-        e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
-        e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
-        if ((elm != null) && (e.clientX != null) && (e.clientY != null) && (state.captured === null || state.captured === true)) {
-          pElm = document.elementFromPoint(e.clientX, e.clientY);
-          newState = elm === pElm || elm.contains(pElm);
-          overChanged = newState !== state.over;
-          if (overChanged) {
-            if (newState) {
-              if (state.captured == null) {
-                state.captured = true;
-              }
-              over(e);
-            } else {
-              out(e);
+          state.down = false;
+          if (state.over) {
+            if (typeof calls.up === "function") {
+              calls.up(e, state);
+            }
+            if (state.clicking) {
+              state.clicking = false;
+              return typeof calls.click === "function" ? calls.click(e, state) : void 0;
+            }
+          } else {
+            if (typeof calls.upOther === "function") {
+              calls.upOther(e, state);
+            }
+            if (state.clicking) {
+              state.clicking = false;
+              return typeof calls.miss === "function" ? calls.miss(e, state) : void 0;
             }
           }
         }
-        return state.captured != null ? state.captured : state.captured = false;
       };
-      touchstart = function(e) {
-        if (!enabled) {
+      move = function(e) {
+        if (e.clientX === state.lastX && e.clientY === state.lastY) {
           return;
         }
-        state.captured = null;
-        prepTouchEvent(e);
-        return down(e);
+        state.deltaX = e.clientX - state.lastX;
+        state.deltaY = e.clientY - state.lastY;
+        if (state.over) {
+          if (state.down) {
+            if (options.blockScroll && state.touch) {
+              e.preventDefault();
+            }
+            if (typeof calls.drag === "function") {
+              calls.drag(e, state);
+            }
+          } else {
+            if (typeof calls.move === "function") {
+              calls.move(e, state);
+            }
+          }
+        } else {
+          if (state.down) {
+            if (typeof calls.dragOther === "function") {
+              calls.dragOther(e, state);
+            }
+          } else {
+            if (typeof calls.moveOther === "function") {
+              calls.moveOther(e, state);
+            }
+          }
+        }
+        state.lastX = e.clientX;
+        return state.lastY = e.clientY;
       };
-      document.addEventListener("touchstart", touchstart, touchListenerOptions);
-      if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
-        touchmove = function(e) {
+      out = function(e) {
+        if (state.over) {
+          state.over = false;
+          if (state.down) {
+            return typeof calls.dragOut === "function" ? calls.dragOut(e, state) : void 0;
+          } else {
+            return typeof calls.moveOut === "function" ? calls.moveOut(e, state) : void 0;
+          }
+        }
+      };
+      over = function(e) {
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        if (!state.over) {
+          state.over = true;
+          if (state.down) {
+            return typeof calls.dragIn === "function" ? calls.dragIn(e, state) : void 0;
+          } else {
+            return typeof calls.moveIn === "function" ? calls.moveIn(e, state) : void 0;
+          }
+        }
+      };
+      if (mouse) {
+        document.addEventListener("mousedown", function(e) {
+          if (!enabled) {
+            return;
+          }
+          if (e.button !== 0) {
+            return;
+          }
+          if (state.touch) {
+            return;
+          }
+          return down(e);
+        });
+        if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
+          document.addEventListener("mousemove", function(e) {
+            if (!enabled) {
+              return;
+            }
+            if (state.touch) {
+              return;
+            }
+            return move(e);
+          });
+        }
+        document.addEventListener("mouseup", function(e) {
+          if (!enabled) {
+            return;
+          }
+          if (e.button !== 0) {
+            return;
+          }
+          if (state.touch) {
+            return;
+          }
+          return up(e);
+        });
+        if (elm != null) {
+          elm.addEventListener("mouseleave", function(e) {
+            if (!enabled) {
+              return;
+            }
+            if (state.touch) {
+              return;
+            }
+            return out(e);
+          });
+        }
+        if (elm != null) {
+          elm.addEventListener("mouseenter", function(e) {
+            if (!enabled) {
+              return;
+            }
+            if (state.touch) {
+              return;
+            }
+            return over(e);
+          });
+        }
+      }
+      if (touch) {
+        prepTouchEvent = function(e) {
+          var newState, overChanged, pElm, ref, ref1;
+          state.touch = true;
+          e.clientX = (ref = e.touches[0]) != null ? ref.clientX : void 0;
+          e.clientY = (ref1 = e.touches[0]) != null ? ref1.clientY : void 0;
+          if ((elm != null) && (e.clientX != null) && (e.clientY != null) && (state.captured === null || state.captured === true)) {
+            pElm = document.elementFromPoint(e.clientX, e.clientY);
+            newState = elm === pElm || elm.contains(pElm);
+            overChanged = newState !== state.over;
+            if (overChanged) {
+              if (newState) {
+                if (state.captured == null) {
+                  state.captured = true;
+                }
+                over(e);
+              } else {
+                out(e);
+              }
+            }
+          }
+          return state.captured != null ? state.captured : state.captured = false;
+        };
+        touchstart = function(e) {
+          if (!enabled) {
+            return;
+          }
+          state.captured = null;
+          prepTouchEvent(e);
+          return down(e);
+        };
+        document.addEventListener("touchstart", touchstart, touchListenerOptions);
+        if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
+          touchmove = function(e) {
+            if (!enabled) {
+              return;
+            }
+            prepTouchEvent(e);
+            return move(e);
+          };
+          document.addEventListener("touchmove", touchmove, touchListenerOptions);
+        }
+        document.addEventListener("touchend", function(e) {
+          if (!enabled) {
+            return;
+          }
+          if (!eventInside(e)) {
+            return;
+          }
+          prepTouchEvent(e);
+          e.preventDefault();
+          up(e);
+          return state.touch = false;
+        });
+        document.addEventListener("touchcancel", function(e) {
           if (!enabled) {
             return;
           }
           prepTouchEvent(e);
-          return move(e);
-        };
-        document.addEventListener("touchmove", touchmove, touchListenerOptions);
+          up(e);
+          return state.touch = false;
+        });
       }
-      document.addEventListener("touchend", function(e) {
-        if (!enabled) {
-          return;
+      return api = {
+        enable: function(_enabled) {
+          enabled = _enabled;
+          if (!enabled) {
+            return resetState();
+          }
         }
-        prepTouchEvent(e);
-        e.preventDefault();
-        up(e);
-        return state.touch = false;
-      });
-      document.addEventListener("touchcancel", function(e) {
-        if (!enabled) {
-          return;
-        }
-        prepTouchEvent(e);
-        up(e);
-        return state.touch = false;
-      });
-    }
-    return api = {
-      enable: function(_enabled) {
-        enabled = _enabled;
-        if (!enabled) {
-          return resetState();
-        }
-      }
-    };
+      };
+    });
   });
 
   (function() {

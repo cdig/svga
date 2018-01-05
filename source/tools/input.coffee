@@ -164,7 +164,7 @@ Take "SVG", (SVG)->
     
       document.addEventListener "touchend", (e)->
         return unless enabled
-        return unless eventInside e
+        return unless eventInside e # Without this, the Back To Menu button breaks due to our preventDefault call below
         prepTouchEvent e
         e.preventDefault() # This avoids redundant mouse events, which double-fire click handlers
         up e

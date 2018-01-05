@@ -5,6 +5,7 @@ html, body, #svga {
   margin: 0;
   background: transparent;
   overflow: hidden;
+  text-rendering: geometricPrecision;
 }
 
 // Remember: Keep this in sync with the svga-hud styles in cd-module

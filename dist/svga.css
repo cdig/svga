@@ -4,7 +4,8 @@ html, body, #svga {
   height: 100%;
   margin: 0;
   background: transparent;
-  overflow: hidden; }
+  overflow: hidden;
+  text-rendering: geometricPrecision; }
 
 [svga-hud] {
   position: absolute;

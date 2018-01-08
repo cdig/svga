@@ -9,7 +9,7 @@ Take "SVG", (SVG)->
     # Thanks, iOS.. v_v
     eventInside = (e)->
       e = e.touches[0] if e.touches?.length > 0
-      e.target is SVG.svg or SVG.root.contains e.target
+      e.target is SVG.svg or SVG.svg.contains e.target
     
     resetState = ()->
       state =

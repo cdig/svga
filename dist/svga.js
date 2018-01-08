@@ -5219,7 +5219,7 @@
         if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
           e = e.touches[0];
         }
-        return e.target === SVG.svg || SVG.root.contains(e.target);
+        return e.target === SVG.svg || SVG.svg.contains(e.target);
       };
       resetState = function() {
         return state = {

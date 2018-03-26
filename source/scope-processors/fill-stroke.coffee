@@ -1,9 +1,9 @@
 Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "stroke", "strokeWidth", "fill"
-    
+
     childPathStrokes = childPathStrokeWidths = childPathFills = scope.element.querySelectorAll "path"
-    
+
     stroke = null
     Object.defineProperty scope, 'stroke',
       get: ()-> stroke
@@ -25,7 +25,7 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
             SVG.attr childPathStrokeWidth, "strokeWidth", null for childPathStrokeWidth in childPathStrokeWidths
             childPathStrokeWidths = []
 
-    
+
     fill = null
     Object.defineProperty scope, 'fill',
       get: ()-> fill

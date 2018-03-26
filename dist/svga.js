@@ -3919,9 +3919,9 @@
 
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var childPathFills, childPathStrokes, fill, stroke;
-      ScopeCheck(scope, "stroke", "fill");
-      childPathStrokes = childPathFills = scope.element.querySelectorAll("path");
+      var childPathFills, childPathStrokeWidths, childPathStrokes, fill, stroke, strokeWidth;
+      ScopeCheck(scope, "stroke", "strokeWidth", "fill");
+      childPathStrokes = childPathStrokeWidths = childPathFills = scope.element.querySelectorAll("path");
       stroke = null;
       Object.defineProperty(scope, 'stroke', {
         get: function() {
@@ -3937,6 +3937,25 @@
                 SVG.attr(childPathStroke, "stroke", null);
               }
               return childPathStrokes = [];
+            }
+          }
+        }
+      });
+      strokeWidth = null;
+      Object.defineProperty(scope, 'strokeWidth', {
+        get: function() {
+          return strokeWidth;
+        },
+        set: function(val) {
+          var childPathStrokeWidth, len, m;
+          if (strokeWidth !== val) {
+            SVG.attr(scope.element, "strokeWidth", strokeWidth = val);
+            if (childPathStrokeWidths.length > 0) {
+              for (m = 0, len = childPathStrokeWidths.length; m < len; m++) {
+                childPathStrokeWidth = childPathStrokeWidths[m];
+                SVG.attr(childPathStrokeWidth, "strokeWidth", null);
+              }
+              return childPathStrokeWidths = [];
             }
           }
         }

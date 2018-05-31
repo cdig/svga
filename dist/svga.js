@@ -2044,7 +2044,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, changeHandlers, downHandlers, handleDown, handleDrag, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, upHandlers, update, updateSnaps, v;
+      var bgc, blueBG, changeHandlers, downHandlers, handleDown, handleDrag, handleUp, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, upHandlers, update, updateSnaps, v;
       changeHandlers = [];
       downHandlers = [];
       upHandlers = [];
@@ -2244,16 +2244,14 @@
           return void 0;
         }
       };
-      ({
-        handleUp: function(e, state) {
-          var len, m, upHandler;
-          for (m = 0, len = upHandlers.length; m < len; m++) {
-            upHandler = upHandlers[m];
-            upHandler(v);
-          }
-          return void 0;
+      handleUp = function(e, state) {
+        var len, m, upHandler;
+        for (m = 0, len = upHandlers.length; m < len; m++) {
+          upHandler = upHandlers[m];
+          upHandler(v);
         }
-      });
+        return void 0;
+      };
       inputCalls = {
         moveIn: toHover,
         dragIn: function(e, s) {

@@ -145,7 +145,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
         update e.clientX/range - startDrag
         changeHandler v for changeHandler in changeHandlers
         undefined
-    handleUp: (e, state)->
+    handleUp = (e, state)->
       upHandler v for upHandler in upHandlers
       undefined
     inputCalls =

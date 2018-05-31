@@ -136,27 +136,27 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
     toClicking = (e, state)-> Tween bgc, orangeBG, 0, tick:tickBG
     toClicked  = (e, state)-> Tween bgc, lightBG, .2, tick:tickBG
     toMissed   = (e, state)-> Tween bgc, blueBG, .2, tick:tickBG
+    handleDown = (e, state)->
+      startDrag = e.clientX/range - v
+      downHandler v for downHandler in downHandlers
+      undefined
     handleDrag = (e, state)->
       if state.clicking
         update e.clientX/range - startDrag
         changeHandler v for changeHandler in changeHandlers
         undefined
+    handleUp: (e, state)->
+      upHandler v for upHandler in upHandlers
+      undefined
     inputCalls =
       moveIn: toHover
-      dragIn: (e, state)-> toClicking() if state.clicking
-      down: (e)->
-        toClicking()
-        startDrag = e.clientX/range - v
-        downHandler v for downHandler in downHandlers
-        undefined
+      dragIn: (e, s)-> toClicking() if state.clicking
+      down: (e, s)-> toClicking(e, s); handleDown(e, s)
       moveOut: toNormal
-      miss: toMissed
+      miss: (e, s)-> toMissed(e, s); handleUp(e, s)
       drag: handleDrag
       dragOther: handleDrag
-      click: toClicked
-      up: (e)->
-        upHandler v for upHandler in upHandlers
-        undefined
+      click: (e, s)-> toClicked(e, s); handleUp(e, s)
     input = Input elm, inputCalls, true, true, blockScroll: true
 
     return scope =

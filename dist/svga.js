@@ -2044,8 +2044,10 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, handleDrag, handlers, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, update, updateSnaps, v;
-      handlers = [];
+      var bgc, blueBG, changeHandlers, downHandlers, handleDrag, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, upHandlers, update, updateSnaps, v;
+      changeHandlers = [];
+      downHandlers = [];
+      upHandlers = [];
       snapElms = [];
       v = 0;
       startDrag = 0;
@@ -2223,12 +2225,12 @@
         });
       };
       handleDrag = function(e, state) {
-        var handler, len, m;
+        var changeHandler, len, m;
         if (state.clicking) {
           update(e.clientX / range - startDrag);
-          for (m = 0, len = handlers.length; m < len; m++) {
-            handler = handlers[m];
-            handler(v);
+          for (m = 0, len = changeHandlers.length; m < len; m++) {
+            changeHandler = changeHandlers[m];
+            changeHandler(v);
           }
           return void 0;
         }
@@ -2241,14 +2243,28 @@
           }
         },
         down: function(e) {
+          var downHandler, len, m;
           toClicking();
-          return startDrag = e.clientX / range - v;
+          startDrag = e.clientX / range - v;
+          for (m = 0, len = downHandlers.length; m < len; m++) {
+            downHandler = downHandlers[m];
+            downHandler(v);
+          }
+          return void 0;
         },
         moveOut: toNormal,
         miss: toMissed,
         drag: handleDrag,
         dragOther: handleDrag,
-        click: toClicked
+        click: toClicked,
+        up: function(e) {
+          var len, m, upHandler;
+          for (m = 0, len = upHandlers.length; m < len; m++) {
+            upHandler = upHandlers[m];
+            upHandler(v);
+          }
+          return void 0;
+        }
       };
       input = Input(elm, inputCalls, true, true, {
         blockScroll: true
@@ -2258,7 +2274,13 @@
         input: input,
         attach: function(props) {
           if (props.change != null) {
-            handlers.push(props.change);
+            changeHandlers.push(props.change);
+          }
+          if (props.down != null) {
+            downHandlers.push(props.down);
+          }
+          if (props.up != null) {
+            upHandlers.push(props.up);
           }
           if (props.value != null) {
             return update(props.value);

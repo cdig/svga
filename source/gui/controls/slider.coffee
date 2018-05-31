@@ -1,18 +1,20 @@
 Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {ControlPanel:GUI}, Input, Registry, SVG, TRS, Tween)->
   Registry.set "Control", "slider", (elm, props)->
-    
-    # An array to hold all the change functions that have been attached to this slider
-    handlers = []
-    
+
+    # An array to hold all the callbacks that have been attached to this slider
+    changeHandlers = []
+    downHandlers = []
+    upHandlers = []
+
     snapElms = []
-    
+
     # Some local variables used to manage the slider position
     v = 0
     startDrag = 0
-    
+
     strokeWidth = 2
     snapTolerance = 0.033
-    
+
     if props.name?
       # Remember: SVG text element position is ALWAYS relative to the text baseline.
       # So, we position our baseline a certain distance from the top, based on the font size.
@@ -20,20 +22,20 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
       labelHeight = GUI.labelPad + (props.fontSize or 16) * 1.2 # Lato's descenders are about 120% down from the top of the caps
     else
       labelHeight = 0
-    
+
     thumbSize = GUI.thumbSize
     height = labelHeight + thumbSize
     range = GUI.colInnerWidth - thumbSize
-    
+
     trackFill = "hsl(227, 45%, 24%)"
     thumbBGFill = "hsl(220, 10%, 92%)"
     labelFill = "hsl(220, 10%, 92%)"
     lightDot = "hsl(92, 46%, 57%)"
     normalDot = "hsl(220, 10%, 92%)"
-    
+
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
-    
+
     hit = SVG.create "rect", elm,
       width: GUI.colInnerWidth
       height: height
@@ -65,7 +67,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
           cy: labelHeight + thumbSize/2
           fill: "transparent"
           strokeWidth: 4
-            
+
     # The text label
     if props.name?
       label = SVG.create "text", elm,
@@ -76,7 +78,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
         fontWeight: props.fontWeight or "normal"
         fontStyle: props.fontStyle or "normal"
         fill: labelFill
-    
+
     # Setup the thumb stroke color for tweening
     bgc = blueBG = r:34, g:46, b:89
     lightBG = r:133, g:163, b:224
@@ -85,22 +87,22 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
       bgc = _bgc
       SVG.attrs thumb, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
     tickBG blueBG
-    
-    
+
+
     updateSnaps = (input)->
       # Reset all snaps
       for snap, i in props.snaps
         SVG.attrs snapElms[i], r: 2, stroke: normalDot
-      
+
       # Map our input to the right position, move the slider, and highlight the proper dot if needed
       for snap, i in props.snaps
-        
+
         # Input is inside this snap point
         if input >= snap - snapTolerance and input <= snap + snapTolerance
           SVG.attrs snapElms[i], r: 3, stroke: lightDot
           TRS.abs thumb, x: snap * range
           return snap
-        
+
         # Input is below this snap point
         else if input < snap - snapTolerance
           TRS.abs thumb, x: input * range
@@ -109,7 +111,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
           outMin = if i > 0 then props.snaps[i-1] else 0
           outMax = snap
           return Ease.linear input, inMin, inMax, outMin, outMax
-      
+
       # Snap is above the last snap point
       TRS.abs thumb, x: input * range
       inMin = props.snaps[props.snaps.length-1] + snapTolerance
@@ -117,7 +119,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
       outMin = props.snaps[props.snaps.length-1]
       outMax = 1
       return Ease.linear input, inMin, inMax, outMin, outMax
-    
+
     # Update and save the thumb position
     update = (V)->
       v = Math.max 0, Math.min 1, V if V?
@@ -125,9 +127,9 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
         v = updateSnaps v
       else
         TRS.abs thumb, x: v * range
-    
+
     update props.value or 0
-    
+
     # Input event handling
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
@@ -137,7 +139,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
     handleDrag = (e, state)->
       if state.clicking
         update e.clientX/range - startDrag
-        handler v for handler in handlers
+        changeHandler v for changeHandler in changeHandlers
         undefined
     inputCalls =
       moveIn: toHover
@@ -145,21 +147,28 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
       down: (e)->
         toClicking()
         startDrag = e.clientX/range - v
+        downHandler v for downHandler in downHandlers
+        undefined
       moveOut: toNormal
       miss: toMissed
       drag: handleDrag
       dragOther: handleDrag
       click: toClicked
+      up: (e)->
+        upHandler v for upHandler in upHandlers
+        undefined
     input = Input elm, inputCalls, true, true, blockScroll: true
-    
+
     return scope =
       height: height
       input: input
-      
+
       attach: (props)->
-        handlers.push props.change if props.change?
+        changeHandlers.push props.change if props.change?
+        downHandlers.push props.down if props.down?
+        upHandlers.push props.up if props.up?
         update props.value if props.value?
-      
+
       _highlight: (enable)->
         if enable
           SVG.attrs track, fill: "url(#DarkHighlightGradient)"

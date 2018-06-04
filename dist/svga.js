@@ -2255,7 +2255,7 @@
       inputCalls = {
         moveIn: toHover,
         dragIn: function(e, s) {
-          if (state.clicking) {
+          if (s.clicking) {
             return toClicking();
           }
         },

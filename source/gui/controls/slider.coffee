@@ -150,7 +150,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
       undefined
     inputCalls =
       moveIn: toHover
-      dragIn: (e, s)-> toClicking() if state.clicking
+      dragIn: (e, s)-> toClicking() if s.clicking
       down: (e, s)-> toClicking(e, s); handleDown(e, s)
       moveOut: toNormal
       miss: (e, s)-> toMissed(e, s); handleUp(e, s)

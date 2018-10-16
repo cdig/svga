@@ -25,7 +25,7 @@
   });
 
   Take(["Mode", "Scope", "SVG", "Symbol"], function(Mode, Scope, SVG, Symbol) {
-    var Scene, buildScopes, cleanupIds, defs, deprecations, masks, processElm;
+    var Scene, buildScopes, cleanupIds, defs, deprecations, masks, processElm, removeUselessLayers;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
     masks = [];
     defs = {};
@@ -80,12 +80,38 @@
       }
       return void 0;
     };
+    removeUselessLayers = function(containerElm) {
+      var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len, m, ref, results;
+      layerSuspects = Array.prototype.slice.call(containerElm.childNodes);
+      results = [];
+      for (m = 0, len = layerSuspects.length; m < len; m++) {
+        layerSuspect = layerSuspects[m];
+        isGroup = layerSuspect instanceof SVGGElement;
+        isUselessLayer = ((ref = layerSuspect.id) != null ? ref.search(/L_\d+/) : void 0) >= 0;
+        if (isGroup && isUselessLayer) {
+          results.push((function() {
+            var len1, n, ref1, results1;
+            ref1 = Array.prototype.slice.call(layerSuspect.childNodes);
+            results1 = [];
+            for (n = 0, len1 = ref1.length; n < len1; n++) {
+              childElm = ref1[n];
+              results1.push(containerElm.insertBefore(childElm, layerSuspect));
+            }
+            return results1;
+          })());
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
     processElm = function(elm) {
       var childElm, childNodes, clone, def, defId, len, m, ref, ref1, tree;
       tree = {
         elm: elm,
         sub: []
       };
+      removeUselessLayers(elm);
       childNodes = Array.prototype.slice.call(elm.childNodes);
       for (m = 0, len = childNodes.length; m < len; m++) {
         childElm = childNodes[m];

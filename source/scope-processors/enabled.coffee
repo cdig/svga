@@ -16,7 +16,6 @@ Take ["Registry", "ScopeCheck", "SVG"], (Registry, ScopeCheck, SVG)->
         if enabled isnt val
           enabled = val
           scope.input?.enable enabled
-          console.log scope.input
           if enabled
             scope.alpha = 1
             SVG.attrs scope.element, disabled: null

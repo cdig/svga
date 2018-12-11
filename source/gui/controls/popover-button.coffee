@@ -1,22 +1,22 @@
 Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
   active = null
-  
+
   Make "PopoverButton", (elm, props)->
-    
+
     handlers = []
     isActive = false
     highlighting = false
-    labelFill = "hsl(227, 16%, 24%)"
-    
+    labelFill = props.fontColor or "hsl(227, 16%, 24%)"
+
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
-    
-    
+
+
     bg = SVG.create "rect", elm,
       width: GUI.colInnerWidth - GUI.panelPadding*2
       height: GUI.unit
       rx: GUI.groupBorderRadius
-    
+
     label = SVG.create "text", elm,
       x: GUI.colInnerWidth/2 - GUI.panelPadding
       y: (props.fontSize or 16) + GUI.unit/5
@@ -25,8 +25,8 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       fontSize: props.fontSize or 16
       fontWeight: props.fontWeight or "normal"
       fontStyle: props.fontStyle or "normal"
-    
-    
+
+
     # Setup the bg stroke color for tweening
     curBG = null
     whiteBG  = h:220, s: 10, l: 92
@@ -40,8 +40,8 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       else
         SVG.attrs bg, fill: "hsl(#{curBG.h|0},#{curBG.s|0}%,#{curBG.l|0}%)"
     tickBG whiteBG
-    
-    
+
+
     # Input event handling
     toNormal   = (e, state)-> Tween curBG, whiteBG, .2, tick:tickBG
     toHover    = (e, state)-> Tween curBG, blueBG,   0, tick:tickBG if not state.touch and not isActive
@@ -64,19 +64,19 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       moveOut: (e, state)->   toNormal e, state unless isActive
       dragOut: (e, state)->   toNormal e, state unless isActive
       click:   (e, state)->      click e, state unless isActive
-    
-    
+
+
     # Set up click handling
     attachClick = (cb)-> handlers.push cb
     attachClick props.click if props.click?
-    
+
     Take "SceneReady", ()->
       click() if props.active
-    
+
     return scope =
       click: attachClick
       input: input
-      
+
       _highlight: (enable)->
         if highlighting = enable
           SVG.attrs label, fill: "black"

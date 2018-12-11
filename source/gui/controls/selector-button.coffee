@@ -1,23 +1,23 @@
 Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
   active = null
-  
+
   Make "SelectorButton", (elm, props)->
-    
+
     handlers = []
     isActive = false
     highlighting = false
-    labelFill = "hsl(227, 16%, 24%)"
+    labelFill = props.fontColor or "hsl(227, 16%, 24%)"
     strokeWidth = 2
-    
+
     # Enable pointer cursor, other UI features
     SVG.attrs elm, ui: true
-    
-    
+
+
     bg = SVG.create "rect", elm,
       x: strokeWidth/2
       y: strokeWidth/2
       height: GUI.unit - strokeWidth
-    
+
     label = SVG.create "text", elm,
       y: (props.fontSize or 16) + GUI.unit/5
       textContent: props.name
@@ -25,8 +25,8 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       fontSize: props.fontSize or 16
       fontWeight: props.fontWeight or "normal"
       fontStyle: props.fontStyle or "normal"
-    
-    
+
+
     # Setup the bg stroke color for tweening
     curBG = whiteBG = r:233, g:234, b:237
     lightBG = r:142, g:196, b:96
@@ -39,8 +39,8 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       else
         SVG.attrs bg, fill: "rgb(#{curBG.r|0},#{curBG.g|0},#{curBG.b|0})"
     tickBG whiteBG
-    
-    
+
+
     # Input event handling
     toNormal   = (e, state)-> Tween curBG, whiteBG, .2, tick:tickBG
     toHover    = (e, state)-> Tween curBG, blueBG,   0, tick:tickBG if not state.touch and not isActive
@@ -63,23 +63,23 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       moveOut: (e, state)->   toNormal e, state unless isActive
       dragOut: (e, state)->   toNormal e, state unless isActive
       click:   (e, state)->      click e, state unless isActive
-    
-    
+
+
     # Set up click handling
     attachClick = (cb)-> handlers.push cb
     attachClick props.click if props.click?
-    
+
     Take "SceneReady", ()->
       click() if props.active
-    
+
     return scope =
       click: attachClick
       input: input
-      
+
       resize: (width)->
         SVG.attrs bg, width: width - strokeWidth
         SVG.attrs label, x: width/2
-      
+
       _highlight: (enable)->
         if highlighting = enable
           SVG.attrs label, fill: "black"

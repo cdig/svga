@@ -1058,7 +1058,7 @@
       var bg, bgFill, bgc, blueBG, handlers, input, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
       handlers = [];
       bgFill = "hsl(220, 10%, 92%)";
-      labelFill = "hsl(227, 16%, 24%)";
+      labelFill = props.fontColor || "hsl(227, 16%, 24%)";
       strokeWidth = 2;
       SVG.attrs(elm, {
         ui: true
@@ -1190,7 +1190,7 @@
       var height, label, labelFill, labelY, scope;
       labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
       height = GUI.labelPad + (props.fontSize || 16);
-      labelFill = "hsl(220, 10%, 92%)";
+      labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       label = SVG.create("text", elm, {
         textContent: props.name,
         x: GUI.colInnerWidth / 2,
@@ -1211,7 +1211,7 @@
     GUI = arg.ControlPanel;
     return Registry.set("Control", "popover", function(elm, props) {
       var activeButtonCancelCb, activeFill, activeLabel, bgc, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, input, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
-      labelFill = "hsl(220, 10%, 92%)";
+      labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       rectFill = "hsl(227, 45%, 25%)";
       triangleFill = "hsl(220, 35%, 80%)";
       activeFill = "hsl(92, 46%, 57%)";
@@ -1498,7 +1498,7 @@
       handlers = [];
       isActive = false;
       highlighting = false;
-      labelFill = "hsl(227, 16%, 24%)";
+      labelFill = props.fontColor || "hsl(227, 16%, 24%)";
       SVG.attrs(elm, {
         ui: true
       });
@@ -1665,7 +1665,7 @@
       radius = GUI.unit * 0.6;
       height = Math.max(radius * 2, props.fontSize || 16);
       bgFill = "hsl(220, 10%, 92%)";
-      labelFill = "hsl(220, 10%, 92%)";
+      labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       SVG.attrs(elm, {
         ui: true
       });
@@ -1807,7 +1807,7 @@
         labelHeight = 0;
       }
       height = labelHeight + GUI.unit;
-      labelFill = "hsl(220, 10%, 92%)";
+      labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       borderFill = "rgb(34, 46, 89)";
       clip = SVG.create("clipPath", SVG.defs, {
         id: id
@@ -1903,7 +1903,7 @@
       handlers = [];
       isActive = false;
       highlighting = false;
-      labelFill = "hsl(227, 16%, 24%)";
+      labelFill = props.fontColor || "hsl(227, 16%, 24%)";
       strokeWidth = 2;
       SVG.attrs(elm, {
         ui: true
@@ -2090,7 +2090,7 @@
       range = GUI.colInnerWidth - thumbSize;
       trackFill = "hsl(227, 45%, 24%)";
       thumbBGFill = "hsl(220, 10%, 92%)";
-      labelFill = "hsl(220, 10%, 92%)";
+      labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       lightDot = "hsl(92, 46%, 57%)";
       normalDot = "hsl(220, 10%, 92%)";
       SVG.attrs(elm, {
@@ -2366,7 +2366,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "switch", function(elm, props) {
-      var active, bgc, blueBG, handlers, height, input, label, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
+      var active, bgc, blueBG, handlers, height, input, label, labelFill, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
       handlers = [];
       strokeWidth = 2;
       thumbSize = GUI.thumbSize;
@@ -2376,6 +2376,7 @@
       normalTrack = "hsl(227, 45%, 24%)";
       lightTrack = "hsl(92, 46%, 57%)";
       lightFill = "hsl(220, 10%, 92%)";
+      labelFill = props.fontColor || lightFill;
       SVG.attrs(elm, {
         ui: true
       });
@@ -2404,7 +2405,7 @@
         fontWeight: props.fontWeight || "normal",
         fontStyle: props.fontStyle || "normal",
         textAnchor: "start",
-        fill: lightFill
+        fill: labelFill
       });
       toggle = function() {
         active = !active;
@@ -2507,7 +2508,7 @@
               fill: lightFill
             });
             return SVG.attrs(label, {
-              fill: lightFill
+              fill: labelFill
             });
           }
         }

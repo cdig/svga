@@ -1,14 +1,14 @@
 Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SVG", "Tween"], ({ControlPanel:GUI}, Input, PopoverButton, RAF, Registry, Resize, Scope, SVG, Tween)->
   Registry.set "Control", "popover", (elm, props)->
-    
+
     # Config
-    labelFill = "hsl(220, 10%, 92%)"
+    labelFill = props.fontColor or "hsl(220, 10%, 92%)"
     rectFill = "hsl(227, 45%, 25%)"
     triangleFill = "hsl(220, 35%, 80%)" # Todo: Try $silver
     activeFill = "hsl(92, 46%, 57%)"
     triangleSize = 24
     strokeWidth = 2
-    
+
     # State
     showing = false
     panelIsVertical = true
@@ -22,8 +22,8 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     desiredPanelY = null
     controlPanelScale = null
     windowHeight = null
-    
-    
+
+
     # Init label size values
     if props.name?
       labelY = GUI.labelPad + (props.fontSize or 16) * 0.75 # Lato's baseline is about 75% down from the top of the caps
@@ -31,11 +31,11 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     else
       labelHeight = 0
     height = labelHeight + GUI.unit
-    
-    
+
+
     # This is the "item" in the main control panel
     itemElm = SVG.create "g", elm, ui: true
-    
+
     if props.name?
       label = SVG.create "text", itemElm,
         textContent: props.name
@@ -45,7 +45,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
         fontWeight: props.fontWeight or "normal"
         fontStyle: props.fontStyle or "normal"
         fill: labelFill
-    
+
     rect = SVG.create "rect", itemElm,
       rx: GUI.borderRadius + 2
       fill: rectFill
@@ -54,11 +54,11 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       width: GUI.colInnerWidth
       height: GUI.unit
       strokeWidth: strokeWidth
-    
+
     activeLabel = SVG.create "text", itemElm,
       y: labelHeight + 21
       fill: activeFill
-    
+
     labelTriangle = SVG.create "polyline", itemElm,
       points: "6,-6 13,0 6,6"
       transform: "translate(0, #{labelHeight + GUI.unit/2})"
@@ -66,25 +66,25 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       strokeWidth: 4
       strokeLinecap: "round"
       fill: "none"
-    
+
     # This is the panel that pops open when you click the item
     panel = Scope SVG.create "g", elm
     panel.hide 0
-    
+
     panelTriangle = SVG.create "polyline", panel.element,
       points: "0,#{-triangleSize/2} #{triangleSize*4/7},0 0,#{triangleSize/2}"
       fill: triangleFill
-    
+
     panelInner = SVG.create "g", panel.element
-    
+
     panelRect = SVG.create "rect", panelInner,
       width: GUI.colInnerWidth
       rx: GUI.panelBorderRadius
       fill: triangleFill
-    
+
     buttonContainer = SVG.create "g", panelInner,
       transform: "translate(#{GUI.panelPadding},#{GUI.panelPadding})"
-        
+
     resize = ()->
       if panelIsVertical
         desiredPanelX = - GUI.colInnerWidth - 6
@@ -94,27 +94,27 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
         desiredPanelX = 0
         desiredPanelY = panelInner.y = - nextButtonOffsetY - triangleSize + labelHeight + 9
         SVG.attrs panelTriangle, transform: "translate(#{GUI.colInnerWidth/2},#{labelHeight-7}) rotate(90)"
-      
+
       SVG.attrs panelInner, transform: "translate(#{desiredPanelX}, #{desiredPanelY})"
-      
+
       # We have to wait 1 tick for a layout operation to happen.
       # This causes some flickering, but I can't find a way to avoid that.
       requestReposition()
-    
-    
+
+
     requestReposition = ()->
       RAF reposition, true
-      
+
     reposition = ()->
       bounds = panelInner.getBoundingClientRect()
-      
+
       tooTall = bounds.height > windowHeight - GUI.panelMargin*2
       offTop = bounds.top / controlPanelScale < GUI.panelMargin
       offBottom = bounds.bottom / controlPanelScale > windowHeight - GUI.panelMargin
-      
+
       moveToTop = desiredPanelY - bounds.top / controlPanelScale + GUI.panelMargin
       moveToBottom = desiredPanelY - (bounds.bottom / controlPanelScale) / controlPanelScale + (windowHeight - GUI.panelMargin)
-      
+
       if tooTall
         panelScale = Math.min 1, (windowHeight - GUI.panelMargin*2) / bounds.height
         newPanelY = moveToTop
@@ -127,10 +127,10 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       else
         newPanelY = desiredPanelY
         panelScale = 1
-      
+
       SVG.attrs panelInner, transform: "translate(#{desiredPanelX * panelScale}, #{newPanelY}) scale(#{panelScale})"
-    
-    
+
+
     setActive = (name, unclick)->
       SVG.attrs activeLabel,
         textContent: name
@@ -140,7 +140,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       if showing
         showing = false
         update()
-    
+
     # Setup the bg stroke color for tweening
     bgc = blueBG = r:34, g:46, b:89
     lightBG = r:133, g:163, b:224
@@ -149,14 +149,14 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       bgc = _bgc
       SVG.attrs rect, stroke: "rgb(#{bgc.r|0},#{bgc.g|0},#{bgc.b|0})"
     tickBG blueBG
-    
+
     update = ()->
       if showing
         panel.show 0
         resize()
       else
         panel.hide 0.2
-    
+
     # Input event handling
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
     toHover    = (e, state)-> Tween bgc, lightBG,  0, tick:tickBG if not state.touch
@@ -176,18 +176,18 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       click: ()->
         showing = !showing
         update()
-    
+
     Resize (info)->
       windowHeight = info.window.height
       controlPanelScale = info.panel.scale
       panelIsVertical = info.panel.vertical
       desiredPanelY = null
       resize()
-    
+
     return scope =
       height: height
       input: input
-      
+
       button: (props)->
         props.setActive = setActive
         buttonElm = SVG.create "g", buttonContainer
@@ -196,9 +196,9 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
         buttonScope.y = nextButtonOffsetY
         nextButtonOffsetY += GUI.unit + GUI.itemMargin
         SVG.attrs panelRect, height: nextButtonOffsetY + GUI.panelPadding*2 - GUI.itemMargin
-        
+
         return buttonScope
-      
+
       _highlight: (enable)->
         if enable
           SVG.attrs label, fill: "url(#LightHighlightGradient)"

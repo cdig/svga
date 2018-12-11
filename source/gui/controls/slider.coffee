@@ -29,7 +29,7 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
 
     trackFill = "hsl(227, 45%, 24%)"
     thumbBGFill = "hsl(220, 10%, 92%)"
-    labelFill = "hsl(220, 10%, 92%)"
+    labelFill = props.fontColor or "hsl(220, 10%, 92%)"
     lightDot = "hsl(92, 46%, 57%)"
     normalDot = "hsl(220, 10%, 92%)"
 

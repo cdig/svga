@@ -2307,6 +2307,20 @@
       return scope = {
         height: height,
         input: input,
+        setValue: function(v, runHandlers) {
+          var changeHandler, len, m;
+          if (runHandlers == null) {
+            runHandlers = true;
+          }
+          update(v);
+          if (runHandlers) {
+            for (m = 0, len = changeHandlers.length; m < len; m++) {
+              changeHandler = changeHandlers[m];
+              changeHandler(v);
+            }
+          }
+          return void 0;
+        },
         attach: function(props) {
           if (props.change != null) {
             changeHandlers.push(props.change);

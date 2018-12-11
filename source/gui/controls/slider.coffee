@@ -162,6 +162,10 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
     return scope =
       height: height
       input: input
+      setValue: (v, runHandlers = true)->
+        update v
+        changeHandler v for changeHandler in changeHandlers if runHandlers
+        undefined
 
       attach: (props)->
         changeHandlers.push props.change if props.change?

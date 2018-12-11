@@ -3953,7 +3953,6 @@
             if ((ref = scope.input) != null) {
               ref.enable(enabled);
             }
-            console.log(scope.input);
             if (enabled) {
               scope.alpha = 1;
               return SVG.attrs(scope.element, {

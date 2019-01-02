@@ -48,6 +48,7 @@ Take ["Mode", "Scope", "SVG", "Symbol"], (Mode, Scope, SVG, Symbol)->
       if isGroup and isUselessLayer
         for childElm in Array.prototype.slice.call layerSuspect.childNodes
           containerElm.insertBefore childElm, layerSuspect
+        containerElm.removeChild layerSuspect
 
 
   processElm = (elm)->

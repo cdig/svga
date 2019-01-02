@@ -81,7 +81,7 @@
       return void 0;
     };
     removeUselessLayers = function(containerElm) {
-      var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len, m, ref, results;
+      var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len, len1, m, n, ref, ref1, results;
       layerSuspects = Array.prototype.slice.call(containerElm.childNodes);
       results = [];
       for (m = 0, len = layerSuspects.length; m < len; m++) {
@@ -89,16 +89,12 @@
         isGroup = layerSuspect instanceof SVGGElement;
         isUselessLayer = ((ref = layerSuspect.id) != null ? ref.search(/L_\d+/) : void 0) >= 0;
         if (isGroup && isUselessLayer) {
-          results.push((function() {
-            var len1, n, ref1, results1;
-            ref1 = Array.prototype.slice.call(layerSuspect.childNodes);
-            results1 = [];
-            for (n = 0, len1 = ref1.length; n < len1; n++) {
-              childElm = ref1[n];
-              results1.push(containerElm.insertBefore(childElm, layerSuspect));
-            }
-            return results1;
-          })());
+          ref1 = Array.prototype.slice.call(layerSuspect.childNodes);
+          for (n = 0, len1 = ref1.length; n < len1; n++) {
+            childElm = ref1[n];
+            containerElm.insertBefore(childElm, layerSuspect);
+          }
+          results.push(containerElm.removeChild(layerSuspect));
         } else {
           results.push(void 0);
         }

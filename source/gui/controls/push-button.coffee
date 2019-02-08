@@ -4,6 +4,7 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     # Arrays to hold all the functions that have been attached to this control
     onHandlers = []
     offHandlers = []
+    isActive = false
 
     strokeWidth = 2
     radius = GUI.unit * 0.6
@@ -53,26 +54,45 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
     toHover    = (e, state)-> Tween bsc, lightBG,  0, tick:tickBG
     toClicking = (e, state)-> Tween bsc, orangeBG, 0, tick:tickBG
     input = Input elm,
-      moveIn: toHover
+      moveIn: ()->
+        toHover() unless isActive
       down: ()->
+        return if isActive
+        isActive = true
         toClicking()
         onHandler() for onHandler in onHandlers
         undefined
       up: ()->
+        return unless isActive
+        isActive = false
         toHover()
         offHandler() for offHandler in offHandlers
         undefined
       miss: ()->
+        return unless isActive
+        isActive = false
         toNormal()
         offHandler() for offHandler in offHandlers
         undefined
-      moveOut: toNormal
+      moveOut: ()->
+        toNormal unless isActive
 
 
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =
       height: height
       input: input
+
+      setValue: (activate, runHandlers = true)->
+        if activate and not isActive
+          isActive = true
+          toClicking()
+          onHandler() for onHandler in onHandlers if runHandlers
+        else if isActive and not activate
+          isActive = false
+          if input.over then toHover() else toNormal()
+          offHandler() for offHandler in offHandlers if runHandlers
+        undefined
 
       attach: (props)->
         onHandlers.push props.on if props.on?

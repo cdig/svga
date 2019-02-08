@@ -2,15 +2,15 @@ Take "SVG", (SVG)->
   Make "Input", (elm, calls, mouse = true, touch = true, options = {})->
     enabled = true
     state = null
-    
+
     # Thanks, Chrome..v_v
     touchListenerOptions = passive: not options.blockScroll
-    
+
     # Thanks, iOS.. v_v
     eventInside = (e)->
       e = e.touches[0] if e.touches?.length > 0
       e.target is SVG.svg or SVG.svg.contains e.target
-    
+
     resetState = ()->
       state =
         down: false
@@ -22,9 +22,9 @@ Take "SVG", (SVG)->
         deltaY: 0
         lastX: 0 # These are used to compute deltas..
         lastY: 0 # and to avoid repeat unchanged move events on IE
-    
+
     resetState()
-    
+
     down = (e)->
       state.lastX = e.clientX
       state.lastY = e.clientY
@@ -37,7 +37,7 @@ Take "SVG", (SVG)->
           calls.down? e, state
         else
           calls.downOther? e, state
-    
+
     up = (e)->
       if state.down
         state.down = false
@@ -51,7 +51,7 @@ Take "SVG", (SVG)->
           if state.clicking
             state.clicking = false
             calls.miss? e, state
-    
+
     move = (e)->
       return if e.clientX is state.lastX and e.clientY is state.lastY
       state.deltaX = e.clientX - state.lastX
@@ -69,7 +69,7 @@ Take "SVG", (SVG)->
           calls.moveOther? e, state
       state.lastX = e.clientX
       state.lastY = e.clientY
-    
+
     out = (e)->
       if state.over
         state.over = false
@@ -77,7 +77,7 @@ Take "SVG", (SVG)->
           calls.dragOut? e, state
         else
           calls.moveOut? e, state
-    
+
     over = (e)->
       state.lastX = e.clientX
       state.lastY = e.clientY
@@ -87,18 +87,18 @@ Take "SVG", (SVG)->
           calls.dragIn? e, state
         else
           calls.moveIn? e, state
-    
-    
+
+
     # MOUSE #####################################################################################
-    
+
     if mouse
-    
+
       document.addEventListener "mousedown", (e)->
         return unless enabled
         return unless e.button is 0
         return if state.touch
         down e
-    
+
       # Windows fires this event every tick when touch-dragging, even when the input doesn't move?
       # Only add the move listener if we need it, to avoid the perf cost
       if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther?
@@ -106,30 +106,30 @@ Take "SVG", (SVG)->
           return unless enabled
           return if state.touch
           move e
-    
+
       document.addEventListener "mouseup", (e)->
         return unless enabled
         return unless e.button is 0
         return if state.touch
         up e
-    
+
       if elm?
         elm.addEventListener "mouseleave", (e)->
           return unless enabled
           return if state.touch
           out e
-    
+
       if elm?
         elm.addEventListener "mouseenter", (e)->
           return unless enabled
           return if state.touch
           over e
-    
-    
+
+
     # TOUCH #####################################################################################
-    
+
     if touch
-    
+
       prepTouchEvent = (e)->
         state.touch = true
         e.clientX = e.touches[0]?.clientX
@@ -145,14 +145,14 @@ Take "SVG", (SVG)->
             else
               out e
         state.captured ?= false
-    
+
       touchstart = (e)->
         return unless enabled
         state.captured = null
         prepTouchEvent e
         down e
       document.addEventListener "touchstart", touchstart, touchListenerOptions
-    
+
       # Windows fires this event every tick when touch-dragging, even when the input doesn't move?
       # Only add the move listener if we need it, to avoid the perf cost
       if calls.move? or calls.drag? or calls.moveOther? or calls.dragOther? or calls.moveIn? or calls.dragIn? or calls.moveOut? or calls.dragOut?
@@ -161,7 +161,7 @@ Take "SVG", (SVG)->
           prepTouchEvent e
           move e
         document.addEventListener "touchmove", touchmove, touchListenerOptions
-    
+
       document.addEventListener "touchend", (e)->
         return unless enabled
         return unless eventInside e # Without this, the Back To Menu button breaks due to our preventDefault call below
@@ -169,7 +169,7 @@ Take "SVG", (SVG)->
         e.preventDefault() # This avoids redundant mouse events, which double-fire click handlers
         up e
         state.touch = false
-    
+
       document.addEventListener "touchcancel", (e)->
         return unless enabled
         prepTouchEvent e
@@ -178,7 +178,7 @@ Take "SVG", (SVG)->
 
 
     return api =
+      state: state
       enable: (_enabled)->
         enabled = _enabled
         resetState() if !enabled
-        

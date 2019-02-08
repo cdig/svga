@@ -45,11 +45,11 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     toNormal   = (e, state)-> Tween curBG, whiteBG, .2, tick:tickBG
     toHover    = (e, state)-> Tween curBG, blueBG,   0, tick:tickBG if not state.touch and not isActive
     toClicking = (e, state)-> Tween curBG, orangeBG, 0, tick:tickBG
-    toActive   = (e, state)-> Tween curBG, lightBG,  .2, tick:tickBG
+    toActive   = (e, state)-> Tween curBG, lightBG, .2, tick:tickBG
     unclick = ()->
       toNormal()
       isActive = false
-    click = (e, state)->
+    click = ()->
       props.setActive unclick
       isActive = true
       toActive()
@@ -75,6 +75,16 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     return scope =
       click: attachClick
       input: input
+
+      setValue: (activate, runHandlers = true)->
+        if activate and not isActive
+          props.setActive unclick
+          isActive = true
+          toActive()
+          handler() for handler in handlers if runHandlers
+        else if isActive and not activate
+          unclick()
+        undefined
 
       resize: (width)->
         SVG.attrs bg, width: width - strokeWidth

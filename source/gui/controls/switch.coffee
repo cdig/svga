@@ -6,7 +6,7 @@ Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {Con
     strokeWidth = 2
     thumbSize = GUI.thumbSize
     trackWidth = thumbSize * 2
-    active = false
+    isActive = false
     height = thumbSize
 
     normalTrack = "hsl(227, 45%, 24%)"
@@ -45,10 +45,10 @@ Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {Con
 
 
     toggle = ()->
-      active = !active
-      TRS.abs thumb, x: if active then thumbSize else 0
-      SVG.attrs track, fill: if active then lightTrack else normalTrack
-      props.click active
+      isActive = !isActive
+      TRS.abs thumb, x: if isActive then thumbSize else 0
+      SVG.attrs track, fill: if isActive then lightTrack else normalTrack
+      props.click isActive
 
 
     # Setup the thumb stroke color for tweening
@@ -81,16 +81,20 @@ Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {Con
       height: height
       input: input
 
+      setValue: (v = null)->
+        if not v? or v isnt isActive
+          toggle()
+
       attach: (props)->
         handlers.push props.change if props.change?
         RAF toggle, true if props.active
 
       _highlight: (enable)->
         if enable
-          SVG.attrs track, fill: if active then "url(#MidHighlightGradient)" else "url(#DarkHighlightGradient)"
+          SVG.attrs track, fill: if isActive then "url(#MidHighlightGradient)" else "url(#DarkHighlightGradient)"
           SVG.attrs thumb, fill: "url(#LightHighlightGradient)"
           SVG.attrs label, fill: "url(#LightHighlightGradient)"
         else
-          SVG.attrs track, fill: if active then lightTrack else normalTrack
+          SVG.attrs track, fill: if isActive then lightTrack else normalTrack
           SVG.attrs thumb, fill: lightFill
           SVG.attrs label, fill: labelFill

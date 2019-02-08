@@ -1654,9 +1654,10 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "pushButton", function(elm, props) {
-      var bgFill, blueBG, bsc, button, height, hit, input, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, strokeWidth, tickBG, toClicking, toHover, toNormal;
+      var bgFill, blueBG, bsc, button, height, hit, input, isActive, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, strokeWidth, tickBG, toClicking, toHover, toNormal;
       onHandlers = [];
       offHandlers = [];
+      isActive = false;
       strokeWidth = 2;
       radius = GUI.unit * 0.6;
       height = Math.max(radius * 2, props.fontSize || 16);
@@ -1725,9 +1726,17 @@
         });
       };
       input = Input(elm, {
-        moveIn: toHover,
+        moveIn: function() {
+          if (!isActive) {
+            return toHover();
+          }
+        },
         down: function() {
           var len, m, onHandler;
+          if (isActive) {
+            return;
+          }
+          isActive = true;
           toClicking();
           for (m = 0, len = onHandlers.length; m < len; m++) {
             onHandler = onHandlers[m];
@@ -1737,6 +1746,10 @@
         },
         up: function() {
           var len, m, offHandler;
+          if (!isActive) {
+            return;
+          }
+          isActive = false;
           toHover();
           for (m = 0, len = offHandlers.length; m < len; m++) {
             offHandler = offHandlers[m];
@@ -1746,6 +1759,10 @@
         },
         miss: function() {
           var len, m, offHandler;
+          if (!isActive) {
+            return;
+          }
+          isActive = false;
           toNormal();
           for (m = 0, len = offHandlers.length; m < len; m++) {
             offHandler = offHandlers[m];
@@ -1753,11 +1770,45 @@
           }
           return void 0;
         },
-        moveOut: toNormal
+        moveOut: function() {
+          if (!isActive) {
+            return toNormal;
+          }
+        }
       });
       return scope = {
         height: height,
         input: input,
+        setValue: function(activate, runHandlers) {
+          var len, len1, m, n, offHandler, onHandler;
+          if (runHandlers == null) {
+            runHandlers = true;
+          }
+          if (activate && !isActive) {
+            isActive = true;
+            toClicking();
+            if (runHandlers) {
+              for (m = 0, len = onHandlers.length; m < len; m++) {
+                onHandler = onHandlers[m];
+                onHandler();
+              }
+            }
+          } else if (isActive && !activate) {
+            isActive = false;
+            if (input.over) {
+              toHover();
+            } else {
+              toNormal();
+            }
+            if (runHandlers) {
+              for (n = 0, len1 = offHandlers.length; n < len1; n++) {
+                offHandler = offHandlers[n];
+                offHandler();
+              }
+            }
+          }
+          return void 0;
+        },
         attach: function(props) {
           if (props.on != null) {
             onHandlers.push(props.on);
@@ -1977,7 +2028,7 @@
         toNormal();
         return isActive = false;
       };
-      click = function(e, state) {
+      click = function() {
         var handler, len, m;
         props.setActive(unclick);
         isActive = true;
@@ -2039,6 +2090,26 @@
       return scope = {
         click: attachClick,
         input: input,
+        setValue: function(activate, runHandlers) {
+          var handler, len, m;
+          if (runHandlers == null) {
+            runHandlers = true;
+          }
+          if (activate && !isActive) {
+            props.setActive(unclick);
+            isActive = true;
+            toActive();
+            if (runHandlers) {
+              for (m = 0, len = handlers.length; m < len; m++) {
+                handler = handlers[m];
+                handler();
+              }
+            }
+          } else if (isActive && !activate) {
+            unclick();
+          }
+          return void 0;
+        },
         resize: function(width) {
           SVG.attrs(bg, {
             width: width - strokeWidth
@@ -2363,12 +2434,12 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "switch", function(elm, props) {
-      var active, bgc, blueBG, handlers, height, input, label, labelFill, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
+      var bgc, blueBG, handlers, height, input, isActive, label, labelFill, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
       handlers = [];
       strokeWidth = 2;
       thumbSize = GUI.thumbSize;
       trackWidth = thumbSize * 2;
-      active = false;
+      isActive = false;
       height = thumbSize;
       normalTrack = "hsl(227, 45%, 24%)";
       lightTrack = "hsl(92, 46%, 57%)";
@@ -2405,14 +2476,14 @@
         fill: labelFill
       });
       toggle = function() {
-        active = !active;
+        isActive = !isActive;
         TRS.abs(thumb, {
-          x: active ? thumbSize : 0
+          x: isActive ? thumbSize : 0
         });
         SVG.attrs(track, {
-          fill: active ? lightTrack : normalTrack
+          fill: isActive ? lightTrack : normalTrack
         });
-        return props.click(active);
+        return props.click(isActive);
       };
       bgc = blueBG = {
         r: 34,
@@ -2478,6 +2549,14 @@
       return scope = {
         height: height,
         input: input,
+        setValue: function(v) {
+          if (v == null) {
+            v = null;
+          }
+          if ((v == null) || v !== isActive) {
+            return toggle();
+          }
+        },
         attach: function(props) {
           if (props.change != null) {
             handlers.push(props.change);
@@ -2489,7 +2568,7 @@
         _highlight: function(enable) {
           if (enable) {
             SVG.attrs(track, {
-              fill: active ? "url(#MidHighlightGradient)" : "url(#DarkHighlightGradient)"
+              fill: isActive ? "url(#MidHighlightGradient)" : "url(#DarkHighlightGradient)"
             });
             SVG.attrs(thumb, {
               fill: "url(#LightHighlightGradient)"
@@ -2499,7 +2578,7 @@
             });
           } else {
             SVG.attrs(track, {
-              fill: active ? lightTrack : normalTrack
+              fill: isActive ? lightTrack : normalTrack
             });
             SVG.attrs(thumb, {
               fill: lightFill
@@ -5537,6 +5616,7 @@
         });
       }
       return api = {
+        state: state,
         enable: function(_enabled) {
           enabled = _enabled;
           if (!enabled) {

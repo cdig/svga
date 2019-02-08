@@ -1851,6 +1851,7 @@
         button: function(props) {
           var button, buttonElm, buttonScope, buttonWidth, i, len, m;
           props.setActive = setActive;
+          props._isControl = true;
           buttonElm = SVG.create("g", buttonsContainer.element);
           buttonScope = Scope(buttonElm, SelectorButton, props);
           buttons.push(buttonScope);

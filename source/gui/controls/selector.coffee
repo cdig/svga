@@ -61,6 +61,10 @@ Take ["Registry", "GUI", "SelectorButton", "Scope", "SVG"], (Registry, {ControlP
 
       button: (props)->
         props.setActive = setActive
+
+        # We check for this property in some control-specific scope-processors
+        props._isControl = true
+
         buttonElm = SVG.create "g", buttonsContainer.element
         buttonScope = Scope buttonElm, SelectorButton, props
         buttons.push buttonScope

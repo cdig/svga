@@ -5204,6 +5204,7 @@
         var doFill, doFunction, doStroke, e, fill, len, m, ref, ref1, ref2, ref3, stroke, width;
         fill = SVG.attr(elm, "fill");
         stroke = SVG.attr(elm, "stroke");
+        width = SVG.attr(elm, "stroke-width");
         doFill = (fill != null) && fill !== "none" && fill !== "transparent";
         doStroke = (stroke != null) && stroke !== "none" && stroke !== "transparent";
         doFunction = ((ref = elm._scope) != null ? ref._highlight : void 0) != null;
@@ -5224,7 +5225,7 @@
           if (doStroke) {
             e.attrs.stroke = stroke;
           }
-          if (doStroke && ((width = SVG.attr(elm, "stroke-width")) != null)) {
+          if (doStroke) {
             e.attrs.strokeWidth = width;
           }
           e.dontHighlightOnHover = ((ref2 = elm._scope) != null ? ref2._dontHighlightOnHover : void 0) != null;

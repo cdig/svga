@@ -1,5 +1,5 @@
 Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"], (Ease, FPS, Gradient, Input, RAF, Reaction, SVG, Tick)->
-  
+
   enabled = true
   activeHighlight = null
   counter = 0
@@ -7,8 +7,8 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
   mgradient = Gradient.linear "MidHighlightGradient",   gradientUnits: "userSpaceOnUse", "#2F6", "#FF2", "#F72"
   dgradient = Gradient.linear "DarkHighlightGradient",  gradientUnits: "userSpaceOnUse", "#0B3", "#DD0", "#D50"
   tgradient = Gradient.linear "TextHighlightGradient",  gradientUnits: "userSpaceOnUse", "#091", "#BB0", "#B30"
-  
-  
+
+
   Tick (time)->
     if activeHighlight? and FPS() > 20
       if ++counter%3 is 0
@@ -21,17 +21,18 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
         Gradient.updateProps mgradient, props
         Gradient.updateProps dgradient, props
         Gradient.updateProps tgradient, props
-  
-  
+
+
   Make "Highlight", (targets...)->
     highlights = []
     active = false
     timeout = null
-    
-    
+
+
     setup = (elm)->
       fill = SVG.attr elm, "fill"
       stroke = SVG.attr elm, "stroke"
+      width = SVG.attr elm, "stroke-width"
       doFill = fill? and fill isnt "none" and fill isnt "transparent"
       doStroke = stroke? and stroke isnt "none" and stroke isnt "transparent"
       doFunction = elm._scope?._highlight?
@@ -42,15 +43,15 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
         highlights.push e = elm: elm, attrs: {}
         e.attrs.fill = fill if doFill
         e.attrs.stroke = stroke if doStroke
-        e.attrs.strokeWidth = width if doStroke and (width = SVG.attr elm, "stroke-width")?
+        e.attrs.strokeWidth = width if doStroke
         e.dontHighlightOnHover = elm._scope?._dontHighlightOnHover?
       if not doFunction
         for elm in elm.childNodes
           if elm.tagName is "g" or elm.tagName is "path" or elm.tagName is "text" or elm.tagName is "tspan" or elm.tagName is "rect" or elm.tagName is "circle"
             setup elm
       undefined
-    
-    
+
+
     activate = (currentTarget)-> ()->
       return if active or not enabled
       active = true
@@ -82,7 +83,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
             else
               SVG.attrs h.elm, fill: "url(#MidHighlightGradient)"
       undefined
-    
+
     deactivate = ()->
       if active
         active = false
@@ -94,7 +95,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
           else
             SVG.attrs h.elm, h.attrs
       undefined
-    
+
     # Delay running the Highlight setup code by one frame so that if fills / strokes are changed
     # by the @animate() function (eg: an @linearGradient is created), we can capture those changes.
     # See: https://github.com/cdig/svga/issues/133
@@ -105,12 +106,12 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
         unless t._HighlighterSetup
           t._HighlighterSetup = true
           setup t
-          
+
       for target in targets
         t = target.element or target # Support both scopes and elements
         unless t._Highlighter
           t._Highlighter = true
-          
+
           # Handle Mouse and Touch separately, for better perf
           mouseProps =
             moveIn: activate target
@@ -119,9 +120,9 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
             down: activate target
           Input t, mouseProps, true, false
           Input t, touchProps, false, true
-          
+
       undefined
-  
-  
+
+
   Reaction "Highlights:Set", (v)->
     enabled = v

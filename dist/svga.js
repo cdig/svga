@@ -4214,8 +4214,8 @@
         set: function(val) {
           if (pressure !== val) {
             pressure = val;
-            if (scope._setPressure != null) {
-              return scope._setPressure(pressure);
+            if (scope._setColor != null) {
+              return scope._setColor(pressure);
             } else {
               return scope.fill = Pressure(scope.pressure);
             }
@@ -4446,6 +4446,30 @@
     });
   });
 
+  Take(["Voltage", "Registry", "ScopeCheck", "SVG"], function(Voltage, Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var accessors, voltage;
+      ScopeCheck(scope, "voltage");
+      voltage = null;
+      accessors = {
+        get: function() {
+          return voltage;
+        },
+        set: function(val) {
+          if (voltage !== val) {
+            voltage = val;
+            if (scope._setColor != null) {
+              return scope._setColor(voltage);
+            } else {
+              return scope.fill = Voltage(scope.voltage);
+            }
+          }
+        }
+      };
+      return Object.defineProperty(scope, "voltage", accessors);
+    });
+  });
+
   Take(["Action", "Ease", "Mode", "Reaction", "Settings", "Storage"], function(Action, Ease, Mode, Reaction, Settings, Storage) {
     var apply, init;
     if (typeof Mode.background === "string") {
@@ -4572,9 +4596,9 @@
     });
   });
 
-  Take(["Pressure", "Reaction", "SVG", "Symbol"], function(Pressure, Reaction, SVG, Symbol) {
+  Take(["Pressure", "Reaction", "SVG", "Symbol", "Voltage"], function(Pressure, Reaction, SVG, Symbol, Voltage) {
     return Symbol("HydraulicLine", [], function(element) {
-      var apply, fillElms, highlightActive, scope, strip, strokeElms;
+      var applyColor, fillElms, highlightActive, scope, strip, strokeElms;
       strokeElms = [];
       fillElms = [];
       highlightActive = false;
@@ -4603,7 +4627,7 @@
       };
       strip(element);
       element.setAttribute("fill", "transparent");
-      apply = function(stroke, fill) {
+      applyColor = function(stroke, fill) {
         var elm, len, len1, m, n;
         if (fill == null) {
           fill = stroke;
@@ -4621,14 +4645,18 @@
       return scope = {
         _highlight: function(enable) {
           if (highlightActive = enable) {
-            return apply("url(#MidHighlightGradient)", "url(#LightHighlightGradient)");
+            return applyColor("url(#MidHighlightGradient)", "url(#LightHighlightGradient)");
           } else {
-            return apply(Pressure(scope.pressure));
+            return applyColor(Pressure(scope.pressure));
           }
         },
-        _setPressure: function(p) {
-          if (!highlightActive) {
-            return apply(Pressure(p));
+        _setColor: function(p) {
+          if (highlightActive) {
+
+          } else if (this.voltage != null) {
+            return applyColor(Voltage(p));
+          } else {
+            return applyColor(Pressure(p));
           }
         },
         setup: function() {
@@ -6611,6 +6639,57 @@
       return gc();
     });
     return Make("Tween", Tween);
+  });
+
+  Take("Ease", function(Ease) {
+    var Voltage, renderHSLString, renderString;
+    Voltage = function(voltage, alpha) {
+      var h;
+      if (alpha == null) {
+        alpha = 1;
+      }
+      switch (false) {
+        case typeof voltage !== "string":
+          return voltage;
+        case voltage !== Voltage.black:
+          return renderString(0, 0, 0, alpha);
+        case voltage !== Voltage.white:
+          return renderString(255, 255, 255, alpha);
+        case voltage !== Voltage.electric:
+          return renderString(0, 218, 255, alpha);
+        case voltage !== Voltage.magnetic:
+          return renderString(141, 2, 155, alpha);
+        case voltage !== Voltage.zero:
+          return renderString(0, 0, 0, alpha);
+        default:
+          h = Ease.linear(voltage, Voltage.min, Voltage.max, 100, 180);
+          return renderHSLString(h, 100, 50, alpha);
+      }
+    };
+    Voltage.black = 101;
+    Voltage.white = -101;
+    Voltage.ground = 0;
+    Voltage.zero = 0;
+    Voltage.min = 1;
+    Voltage.med = 50;
+    Voltage.max = 100;
+    Voltage.electric = 1000;
+    Voltage.magnetic = 1001;
+    renderString = function(r, g, b, a) {
+      if (a >= .99) {
+        return "rgb(" + r + "," + g + "," + b + ")";
+      } else {
+        return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+      }
+    };
+    renderHSLString = function(h, s, l, a) {
+      if (a >= .99) {
+        return "hsl(" + h + "," + s + "%," + l + "%)";
+      } else {
+        return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
+      }
+    };
+    return Make("Voltage", Voltage);
   });
 
 }).call(this);

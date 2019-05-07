@@ -1,10 +1,10 @@
-Take ["Pressure", "Reaction", "SVG", "Symbol"], (Pressure, Reaction, SVG, Symbol)->
+Take ["Pressure", "Reaction", "SVG", "Symbol", "Voltage"], (Pressure, Reaction, SVG, Symbol, Voltage)->
   Symbol "HydraulicLine", [], (element)->
     strokeElms = []
     fillElms = []
     highlightActive = false
-    
-    
+
+
     strip = (elm)->
       if elm.hasAttribute?("fill") and elm.getAttribute("fill") isnt "none"
         fillElms.push elm if elm isnt element
@@ -18,26 +18,31 @@ Take ["Pressure", "Reaction", "SVG", "Symbol"], (Pressure, Reaction, SVG, Symbol
 
     strip element
     element.setAttribute "fill", "transparent"
-    
-    
-    apply = (stroke, fill = stroke)->
+
+
+    applyColor = (stroke, fill = stroke)->
       for elm in strokeElms
         SVG.attr elm, "stroke", stroke
       for elm in fillElms
         SVG.attr elm, "fill", fill
       undefined
-    
-    
+
+
     return scope =
       _highlight: (enable)->
         if highlightActive = enable
-          apply "url(#MidHighlightGradient)", "url(#LightHighlightGradient)"
+          applyColor "url(#MidHighlightGradient)", "url(#LightHighlightGradient)"
         else
-          apply Pressure scope.pressure # scope, not @, because binding doesn't seem to stick when using => here * shrug *
-      
-      _setPressure: (p)->
-        apply Pressure p unless highlightActive
-      
+          applyColor Pressure scope.pressure # scope, not @, because binding doesn't seem to stick when using => here * shrug *
+
+      _setColor: (p)->
+        if highlightActive
+          # Do nothing
+        else if @voltage?
+          applyColor Voltage p
+        else
+          applyColor Pressure p
+
       setup: ()->
         @pressure = 0
         Reaction "Schematic:Show", ()-> @pressure = Pressure.black

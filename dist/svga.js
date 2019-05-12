@@ -3409,8 +3409,8 @@
         max: contentHeight / 2
       },
       z: {
-        min: -0.5,
-        max: 3
+        min: -1,
+        max: 6
       }
     };
     contentScale = 1;

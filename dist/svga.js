@@ -4476,7 +4476,9 @@
     if (typeof Mode.background === "string") {
       return Action("Background:Set", Mode.background);
     } else if (Mode.background === true) {
-      init = +Storage("Background");
+      if (Mode.settings) {
+        init = +Storage("Background");
+      }
       if (isNaN(init)) {
         init = .7;
       }
@@ -4500,9 +4502,9 @@
     }
   });
 
-  Take(["Action", "Reaction", "Settings", "Storage"], function(Action, Reaction, Settings, Storage) {
+  Take(["Action", "Mode", "Reaction", "Settings", "Storage"], function(Action, Mode, Reaction, Settings, Storage) {
     var arrowsSwitch, enabled, update;
-    enabled = Storage("FlowArrows") === "false" ? false : true;
+    enabled = Mode.settings && Storage("FlowArrows") === "false" ? false : true;
     update = function(active) {
       if (active) {
         Action("FlowArrows:Show");
@@ -4522,9 +4524,9 @@
     });
   });
 
-  Take(["Action", "Reaction", "Settings", "Storage"], function(Action, Reaction, Settings, Storage) {
+  Take(["Action", "Mode", "Reaction", "Settings", "Storage"], function(Action, Mode, Reaction, Settings, Storage) {
     var init, update;
-    init = Storage("Highlights") === "false" ? false : true;
+    init = Mode.settings && Storage("Highlights") === "false" ? false : true;
     update = function(active) {
       Action("Highlights:Set", active);
       return Storage("Highlights", active);
@@ -4539,9 +4541,9 @@
     });
   });
 
-  Take(["Action", "Reaction", "Settings", "Storage"], function(Action, Reaction, Settings, Storage) {
+  Take(["Action", "Mode", "Reaction", "Settings", "Storage"], function(Action, Mode, Reaction, Settings, Storage) {
     var arrowsSwitch, enabled, update;
-    enabled = Storage("Labels") === "false" ? false : true;
+    enabled = Mode.settings && Storage("Labels") === "false" ? false : true;
     update = function(active) {
       if (active) {
         Action("Labels:Show");

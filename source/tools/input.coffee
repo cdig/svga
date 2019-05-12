@@ -179,6 +179,7 @@ Take "SVG", (SVG)->
 
     return api =
       state: state
+      resetState: resetState
       enable: (_enabled)->
         enabled = _enabled
         resetState() if !enabled

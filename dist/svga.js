@@ -3047,7 +3047,7 @@
   });
 
   Take(["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG) {
-    var Settings, bg, close, closeCircle, closeX, elm, infoLines, innerHeight, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelHeight, panelWidth, ref, ref1, titleLines, titleString;
+    var Settings, bg, close, closeCircle, closeX, elm, infoLines, innerHeight, input, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelHeight, panelWidth, ref, ref1, titleLines, titleString;
     panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
     panelHeight = 0;
     innerHeight = 0;
@@ -3136,8 +3136,9 @@
       strokeLinecap: "round",
       stroke: "#FFF"
     });
-    Input(close, {
-      click: function() {
+    input = Input(close, {
+      click: function(e, state) {
+        input.resetState();
         return Action("Settings:Toggle");
       }
     });
@@ -5646,6 +5647,7 @@
       }
       return api = {
         state: state,
+        resetState: resetState,
         enable: function(_enabled) {
           enabled = _enabled;
           if (!enabled) {

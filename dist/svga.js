@@ -4649,6 +4649,8 @@
         _highlight: function(enable) {
           if (highlightActive = enable) {
             return applyColor("url(#MidHighlightGradient)", "url(#LightHighlightGradient)");
+          } else if (scope.voltage != null) {
+            return applyColor(Voltage(scope.voltage));
           } else {
             return applyColor(Pressure(scope.pressure));
           }
@@ -4656,7 +4658,7 @@
         _setColor: function(p) {
           if (highlightActive) {
 
-          } else if (this.voltage != null) {
+          } else if (scope.voltage != null) {
             return applyColor(Voltage(p));
           } else {
             return applyColor(Pressure(p));

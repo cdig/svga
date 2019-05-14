@@ -32,13 +32,15 @@ Take ["Pressure", "Reaction", "SVG", "Symbol", "Voltage"], (Pressure, Reaction, 
       _highlight: (enable)->
         if highlightActive = enable
           applyColor "url(#MidHighlightGradient)", "url(#LightHighlightGradient)"
+        else if scope.voltage?
+          applyColor Voltage scope.voltage
         else
-          applyColor Pressure scope.pressure # scope, not @, because binding doesn't seem to stick when using => here * shrug *
+          applyColor Pressure scope.pressure
 
       _setColor: (p)->
         if highlightActive
           # Do nothing
-        else if @voltage?
+        else if scope.voltage?
           applyColor Voltage p
         else
           applyColor Pressure p

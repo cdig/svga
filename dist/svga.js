@@ -4920,6 +4920,15 @@
   (function() {
     var Ease;
     return Make("Ease", Ease = {
+      clip: function(input, min, max) {
+        if (min == null) {
+          min = 0;
+        }
+        if (max == null) {
+          max = 1;
+        }
+        return Math.max(min, Math.min(max, input));
+      },
       sin: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
         var cos, p;
         if (inputMin == null) {
@@ -4941,7 +4950,7 @@
           return outputMin;
         }
         if (clip) {
-          input = Math.max(inputMin, Math.min(inputMax, input));
+          input = Ease.clip(input, inputMin, inputMax);
         }
         p = (input - inputMin) / (inputMax - inputMin);
         cos = Math.cos(p * Math.PI);
@@ -4985,7 +4994,7 @@
           return outputMin;
         }
         if (clip) {
-          input = Math.max(inputMin, Math.min(inputMax, input));
+          input = Ease.clip(input, inputMin, inputMax);
         }
         input -= inputMin;
         input /= inputMax - inputMin;
@@ -5017,7 +5026,7 @@
           return outputMin;
         }
         if (clip) {
-          input = Math.max(inputMin, Math.min(inputMax, input));
+          input = Ease.clip(input, inputMin, inputMax);
         }
         outputDiff = outputMax - outputMin;
         inputDiff = inputMax - inputMin;

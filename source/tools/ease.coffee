@@ -11,32 +11,37 @@
 
 do ()->
   Make "Ease", Ease =
-    
+
+
+    clip: (input, min = 0, max = 1)->
+      Math.max min, Math.min max, input
+
+
     sin: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       return outputMin if inputMin is inputMax # Avoids a divide by zero
-      input = Math.max inputMin, Math.min inputMax, input if clip
+      input = Ease.clip input, inputMin, inputMax if clip
       p = (input - inputMin) / (inputMax - inputMin)
       cos = Math.cos(p * Math.PI)
       return (.5 - cos/2) * (outputMax - outputMin) + outputMin
-    
-    
+
+
     cubic: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       Ease.power(input, 3, inputMin, inputMax, outputMin, outputMax, clip)
-    
-    
+
+
     linear: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       return outputMin if inputMin is inputMax # Avoids a divide by zero
-      input = Math.max inputMin, Math.min inputMax, input if clip
+      input = Ease.clip input, inputMin, inputMax if clip
       input -= inputMin
       input /= inputMax - inputMin
       input *= outputMax - outputMin
       input += outputMin
       return input
-    
-    
+
+
     power: (input, power = 1, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       return outputMin if inputMin is inputMax # Avoids a divide by zero
-      input = Math.max inputMin, Math.min inputMax, input if clip
+      input = Ease.clip input, inputMin, inputMax if clip
       outputDiff = outputMax - outputMin
       inputDiff = inputMax - inputMin
       p = (input-inputMin) / (inputDiff/2)
@@ -44,16 +49,16 @@ do ()->
         return outputMin + outputDiff/2 * Math.pow(p, power)
       else
         return outputMin + outputDiff/2 * (2 - Math.abs(Math.pow(p-2, power)))
-    
-    
+
+
     quadratic: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       Ease.power(input, 2, inputMin, inputMax, outputMin, outputMax, clip)
-    
-    
+
+
     quartic: (input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true)->
       Ease.power(input, 4, inputMin, inputMax, outputMin, outputMax, clip)
 
-    
+
     # This is a special easing helper for moving from one value to another.
     # It's sorta halfway between a tween and an ease, so it lives here.
     # You pass in the current value, target value, rate of change (per second), and dT.

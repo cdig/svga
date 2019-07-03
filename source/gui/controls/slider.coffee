@@ -52,6 +52,24 @@ Take ["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], (Ease, {Contro
       stroke: "hsl(227, 45%, 24%)"
       rx: thumbSize/2
 
+    # The labels for left and right ends
+    if props.leftLabel?
+      leftLabel = SVG.create "text", elm,
+        textContent: props.leftLabel.toUpperCase()
+        x: strokeWidth + 5
+        y: labelHeight + thumbSize/2 + 3
+        fontSize: 10
+        textAnchor: "start"
+        fill: "hsl(220, 25%, 75%)"
+    if props.rightLabel?
+      rightLabel = SVG.create "text", elm,
+        textContent: props.rightLabel.toUpperCase()
+        x: GUI.colInnerWidth - strokeWidth - 5
+        y: labelHeight + thumbSize/2 + 3
+        fontSize: 10
+        textAnchor: "end"
+        fill: "hsl(220, 25%, 75%)"
+
     # The thumb graphic
     thumb = TRS SVG.create "circle", elm,
       cx: thumbSize/2

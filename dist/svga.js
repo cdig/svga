@@ -2138,7 +2138,7 @@
     var GUI;
     GUI = arg.ControlPanel;
     return Registry.set("Control", "slider", function(elm, props) {
-      var bgc, blueBG, changeHandlers, downHandlers, handleDown, handleDrag, handleUp, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, lightBG, lightDot, normalDot, orangeBG, range, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, upHandlers, update, updateSnaps, v;
+      var bgc, blueBG, changeHandlers, downHandlers, handleDown, handleDrag, handleUp, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, leftLabel, lightBG, lightDot, normalDot, orangeBG, range, rightLabel, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, upHandlers, update, updateSnaps, v;
       changeHandlers = [];
       downHandlers = [];
       upHandlers = [];
@@ -2179,6 +2179,26 @@
         stroke: "hsl(227, 45%, 24%)",
         rx: thumbSize / 2
       }));
+      if (props.leftLabel != null) {
+        leftLabel = SVG.create("text", elm, {
+          textContent: props.leftLabel.toUpperCase(),
+          x: strokeWidth + 5,
+          y: labelHeight + thumbSize / 2 + 3,
+          fontSize: 10,
+          textAnchor: "start",
+          fill: "hsl(220, 25%, 75%)"
+        });
+      }
+      if (props.rightLabel != null) {
+        rightLabel = SVG.create("text", elm, {
+          textContent: props.rightLabel.toUpperCase(),
+          x: GUI.colInnerWidth - strokeWidth - 5,
+          y: labelHeight + thumbSize / 2 + 3,
+          fontSize: 10,
+          textAnchor: "end",
+          fill: "hsl(220, 25%, 75%)"
+        });
+      }
       thumb = TRS(SVG.create("circle", elm, {
         cx: thumbSize / 2,
         cy: labelHeight + thumbSize / 2,

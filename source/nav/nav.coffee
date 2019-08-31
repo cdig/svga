@@ -9,9 +9,6 @@ Take ["ControlPanel", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "Sc
   contentHeight = +SVG.attr SVG.svg, "height"
   throw new Error "This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash." unless contentWidth? and contentHeight?
 
-  initialRootRect = SVG.root.getBoundingClientRect()
-  return unless initialRootRect.width > 0 and initialRootRect.height > 0 # This avoids a divide by zero error when the SVG is empty
-
   pos = x: 0, y: 0, z: 0
   center = x: 0, y: 0
   centerInverse = x: 0, y: 0

@@ -4,10 +4,10 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
-    var svgData;
+    var checkBounds, svgData;
     svgData = Scene.crawl(SVG.root);
     Make("SVGReady");
-    return setTimeout(function() {
+    setTimeout(function() {
       Registry.closeRegistration("ScopeProcessor");
       Make("ScopeReady");
       Registry.closeRegistration("Control");
@@ -18,10 +18,19 @@
         Registry.closeRegistration("SymbolNames");
         Scene.build(svgData);
         svgData = null;
-        Make("SceneReady");
-        return Make("AllReady");
+        return checkBounds();
       });
     });
+    return checkBounds = function() {
+      var initialRootRect;
+      initialRootRect = SVG.root.getBoundingClientRect();
+      if (initialRootRect.width < 1 || initialRootRect.height < 1) {
+        return setTimeout(checkBounds, 500);
+      } else {
+        Make("SceneReady");
+        return Make("AllReady");
+      }
+    };
   });
 
   Take(["Mode", "Scope", "SVG", "Symbol"], function(Mode, Scope, SVG, Symbol) {
@@ -3396,15 +3405,11 @@
   });
 
   Take(["ControlPanel", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentData, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, initialRootRect, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
+    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
       throw new Error("This SVG is missing the required 'width' and 'height' attributes. Please re-export it from Flash.");
-    }
-    initialRootRect = SVG.root.getBoundingClientRect();
-    if (!(initialRootRect.width > 0 && initialRootRect.height > 0)) {
-      return;
     }
     pos = {
       x: 0,

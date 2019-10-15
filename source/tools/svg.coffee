@@ -70,6 +70,16 @@ Take "DOMContentLoaded", ()->
         parent.appendChild child
       child # Composable
     
+    remove: (parent, child)->
+      throw new Error "SVG.remove() called before SVGReady" unless CheckSVGReady()
+      parent.removeChild child
+      return child
+  
+    removeAllChildren: (parent)->
+      throw new Error "SVG.removeAllChildren() called before SVGReady" unless CheckSVGReady()
+      while parent.children.length > 0
+        parent.removeChild parent.firstChild
+      
     attrs: (elm, attrs)->
       unless elm then throw new Error "SVG.attrs was called with a null element"
       unless typeof attrs is "object" then console.log attrs; throw new Error "SVG.attrs requires an object as the second argument, got ^"

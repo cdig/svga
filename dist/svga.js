@@ -6198,6 +6198,24 @@
         }
         return child;
       },
+      remove: function(parent, child) {
+        if (!CheckSVGReady()) {
+          throw new Error("SVG.remove() called before SVGReady");
+        }
+        parent.removeChild(child);
+        return child;
+      },
+      removeAllChildren: function(parent) {
+        var results;
+        if (!CheckSVGReady()) {
+          throw new Error("SVG.removeAllChildren() called before SVGReady");
+        }
+        results = [];
+        while (parent.children.length > 0) {
+          results.push(parent.removeChild(parent.firstChild));
+        }
+        return results;
+      },
       attrs: function(elm, attrs) {
         var k, v;
         if (!elm) {

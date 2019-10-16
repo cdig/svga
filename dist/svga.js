@@ -192,7 +192,7 @@
       return null;
     };
     return Make("Scope", Scope = function(element, symbol, props) {
-      var attr, attrs, idCounter, len, len1, m, n, parentScope, ref, scope, scopeProcessor, tempID;
+      var attr, attrs, len, len1, m, n, parentScope, ref, scope, scopeProcessor;
       if (props == null) {
         props = {};
       }
@@ -218,20 +218,7 @@
       scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
       scope.id = props.id;
       if (parentScope != null) {
-        scope.parent = parentScope;
-        if (scope.id == null) {
-          scope.id = "child" + (parentScope.children.length || 0);
-        }
-        if (parentScope[scope.id] != null) {
-          tempID = scope.id;
-          idCounter = 1;
-          while (parentScope[tempID + idCounter] != null) {
-            idCounter++;
-          }
-          scope.id = tempID + idCounter;
-        }
-        parentScope[scope.id] = scope;
-        parentScope.children.push(scope);
+        parentScope.attachScope(scope);
       }
       if (Mode.dev && !(navigator.userAgent.indexOf("Trident") >= 0 || navigator.userAgent.indexOf("Edge") >= 0)) {
         element.setAttribute("SCOPE", scope.id || "");
@@ -3942,6 +3929,81 @@
       return Reaction("Schematic:Show", function() {
         return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
       });
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      ScopeCheck(scope, "attachScope", "detachScope", "detachAllScopes");
+      ScopeCheck(scope, "append", "prepend", "remove", "removeAllChildren");
+      scope.attachScope = function(child, prepend) {
+        var idCounter, tempID;
+        if (prepend == null) {
+          prepend = false;
+        }
+        child.parent = scope;
+        if (child.id == null) {
+          child.id = "child" + (scope.children.length || 0);
+        }
+        if (scope[child.id] != null) {
+          tempID = child.id.replace(/\d/g, "");
+          idCounter = 1;
+          while (scope[tempID + idCounter] != null) {
+            idCounter++;
+          }
+          child.id = tempID + idCounter;
+        }
+        scope[child.id] = child;
+        if (prepend) {
+          return scope.children.unshift(child);
+        } else {
+          return scope.children.push(child);
+        }
+      };
+      scope.detachScope = function(child) {
+        var c, i, m, ref;
+        ref = scope.children;
+        for (i = m = ref.length - 1; m >= 0; i = m += -1) {
+          c = ref[i];
+          if (c === child) {
+            scope.children.splice(i, 1);
+          }
+        }
+        delete scope[child.id];
+        if (child.id.indexOf("child") !== -1) {
+          delete child.id;
+        }
+        return delete child.parent;
+      };
+      scope.detachAllScopes = function() {
+        var child, len, m, ref;
+        ref = scope.children;
+        for (m = 0, len = ref.length; m < len; m++) {
+          child = ref[m];
+          delete scope[child.id];
+          if (child.id.indexOf("child") !== -1) {
+            delete child.id;
+          }
+          delete child.parent;
+        }
+        return scope.children = [];
+      };
+      scope.append = function(child) {
+        SVG.append(scope.element, child.element);
+        return scope.attachScope(child);
+      };
+      scope.prepend = function(child) {
+        SVG.prepend(scope.element, child.element);
+        return scope.attachScope(child, true);
+      };
+      scope.remove = function(child) {
+        SVG.remove(scope.element, child.element);
+        return scope.detachScope(child);
+      };
+      return scope.removeAllChildren = function() {
+        SVG.removeAllChildren(scope.element);
+        return scope.detachAllScopes();
+      };
     });
   });
 

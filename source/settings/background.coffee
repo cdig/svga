@@ -1,4 +1,4 @@
-Take ["Action", "Ease", "Mode", "Reaction", "Settings", "Storage"], (Action, Ease, Mode, Reaction, Settings, Storage)->
+Take ["Action", "Ease", "Mode", "Settings", "Storage"], (Action, Ease, Mode, Settings, Storage)->
 
   if typeof Mode.background is "string"
     Action "Background:Set", Mode.background

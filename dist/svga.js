@@ -4558,7 +4558,7 @@
     });
   });
 
-  Take(["Action", "Ease", "Mode", "Reaction", "Settings", "Storage"], function(Action, Ease, Mode, Reaction, Settings, Storage) {
+  Take(["Action", "Ease", "Mode", "Settings", "Storage"], function(Action, Ease, Mode, Settings, Storage) {
     var apply, init;
     if (typeof Mode.background === "string") {
       return Action("Background:Set", Mode.background);
@@ -4589,64 +4589,56 @@
     }
   });
 
-  Take(["Action", "Mode", "Reaction", "Settings", "Storage"], function(Action, Mode, Reaction, Settings, Storage) {
-    var arrowsSwitch, enabled, update;
-    enabled = Mode.settings && Storage("FlowArrows") === "false" ? false : true;
+  Take(["Action", "Settings"], function(Action, Settings) {
+    var arrowsSwitch, update;
     update = function(active) {
       if (active) {
-        Action("FlowArrows:Show");
-        return Storage("FlowArrows", "true");
+        return Action("FlowArrows:Show");
       } else {
-        Action("FlowArrows:Hide");
-        return Storage("FlowArrows", "false");
+        return Action("FlowArrows:Hide");
       }
     };
     arrowsSwitch = Settings.addSetting("switch", {
       name: "Flow Arrows",
-      value: enabled,
+      value: true,
       update: update
     });
     return Take("AllReady", function() {
-      return update(enabled);
+      return update(true);
     });
   });
 
-  Take(["Action", "Mode", "Reaction", "Settings", "Storage"], function(Action, Mode, Reaction, Settings, Storage) {
-    var init, update;
-    init = Mode.settings && Storage("Highlights") === "false" ? false : true;
+  Take(["Action", "Settings"], function(Action, Settings) {
+    var update;
     update = function(active) {
-      Action("Highlights:Set", active);
-      return Storage("Highlights", active);
+      return Action("Highlights:Set", active);
     };
     Settings.addSetting("switch", {
       name: "Highlights",
-      value: init,
+      value: true,
       update: update
     });
     return Take("AllReady", function() {
-      return update(init);
+      return update(true);
     });
   });
 
-  Take(["Action", "Mode", "Reaction", "Settings", "Storage"], function(Action, Mode, Reaction, Settings, Storage) {
-    var arrowsSwitch, enabled, update;
-    enabled = Mode.settings && Storage("Labels") === "false" ? false : true;
+  Take(["Action", "Settings"], function(Action, Settings) {
+    var arrowsSwitch, update;
     update = function(active) {
       if (active) {
-        Action("Labels:Show");
-        return Storage("Labels", "true");
+        return Action("Labels:Show");
       } else {
-        Action("Labels:Hide");
-        return Storage("Labels", "false");
+        return Action("Labels:Hide");
       }
     };
     arrowsSwitch = Settings.addSetting("switch", {
       name: "Labels",
-      value: enabled,
+      value: true,
       update: update
     });
     return Take("AllReady", function() {
-      return update(enabled);
+      return update(true);
     });
   });
 

@@ -1,20 +1,15 @@
-Take ["Action", "Mode", "Reaction", "Settings", "Storage"], (Action, Mode, Reaction, Settings, Storage)->
-
-  # By explicitly checking for the string "false", we make the default (empty) case true
-  enabled = if Mode.settings and Storage("FlowArrows") is "false" then false else true
+Take ["Action", "Settings"], (Action, Settings)->
 
   update = (active)->
     if active
       Action "FlowArrows:Show"
-      Storage "FlowArrows", "true"
     else
       Action "FlowArrows:Hide"
-      Storage "FlowArrows", "false"
 
   arrowsSwitch = Settings.addSetting "switch",
     name: "Flow Arrows"
-    value: enabled
+    value: true
     update: update
 
   Take "AllReady", ()->
-    update enabled
+    update true

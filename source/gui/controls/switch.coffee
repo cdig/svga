@@ -81,6 +81,8 @@ Take ["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], (Registry, {Con
       height: height
       input: input
 
+      isActive: ()-> isActive
+
       setValue: (v = null)->
         if not v? or v isnt isActive
           toggle()

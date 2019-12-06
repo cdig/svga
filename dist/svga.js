@@ -763,7 +763,8 @@
 
   Take(["Action", "Ease", "Reaction", "SVG"], function(Action, Ease, Reaction, SVG) {
     Reaction("Background:Set", function(v) {
-      return SVG.style(document.body, "background-color", v);
+      SVG.style(document.body, "background-color", v);
+      return SVG.style(SVG.svg, "background-color", v);
     });
     return Reaction("Background:Lightness", function(v) {
       var hue;
@@ -2565,6 +2566,9 @@
       return scope = {
         height: height,
         input: input,
+        isActive: function() {
+          return isActive;
+        },
         setValue: function(v) {
           if (v == null) {
             v = null;
@@ -2950,12 +2954,12 @@
     var GUI;
     GUI = arg.Settings;
     return Registry.set("SettingType", "switch", function(elm, props) {
-      var active, bgc, blueBG, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track;
+      var bgc, blueBG, isActive, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track;
       strokeWidth = 2;
       labelPad = 10;
       labelWidth = GUI.itemWidth / 2;
       thumbSize = GUI.unit;
-      active = false;
+      isActive = false;
       normalTrack = "hsl(227, 45%, 24%)";
       lightTrack = "hsl(92, 46%, 57%)";
       SVG.attrs(elm, {
@@ -2986,14 +2990,14 @@
         fill: "hsl(220, 10%, 92%)"
       });
       toggle = function() {
-        active = !active;
+        isActive = !isActive;
         TRS.abs(thumb, {
-          x: active ? thumbSize : 0
+          x: isActive ? thumbSize : 0
         });
         SVG.attrs(track, {
-          fill: active ? lightTrack : normalTrack
+          fill: isActive ? lightTrack : normalTrack
         });
-        return props.update(active);
+        return props.update(isActive);
       };
       bgc = blueBG = {
         r: 34,
@@ -3057,8 +3061,21 @@
         }
       });
       if (props.value) {
-        return toggle();
+        toggle();
       }
+      return scope = {
+        isActive: function() {
+          return isActive;
+        },
+        setValue: function(v) {
+          if (v == null) {
+            v = null;
+          }
+          if ((v == null) || v !== isActive) {
+            return toggle();
+          }
+        }
+      };
     });
   });
 
@@ -3161,10 +3178,10 @@
     Settings = Scope(elm, function() {
       return {
         addSetting: function(type, props) {
-          var builder, instance;
+          var builder, instance, scope;
           instance = Scope(SVG.create("g", items));
           builder = Registry.get("SettingType", type);
-          builder(instance.element, props);
+          scope = builder(instance.element, props);
           instance.y = innerHeight;
           innerHeight += GUI.Settings.unit + GUI.Settings.itemMargin;
           panelHeight = innerHeight + GUI.Settings.panelPad * 2 - GUI.Settings.itemMargin;
@@ -3175,7 +3192,8 @@
             y: -panelHeight,
             height: panelHeight + metaBoxHeight
           });
-          return metaBox.y = panelHeight;
+          metaBox.y = panelHeight;
+          return scope;
         }
       };
     });
@@ -3391,7 +3409,7 @@
     });
   });
 
-  Take(["ControlPanel", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Mode, ParentData, RAF, Resize, SVG, Tween) {
+  Take(["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween) {
     var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
@@ -3474,7 +3492,7 @@
         w: SVG.svg.getBoundingClientRect().width,
         h: window.top.innerHeight
       };
-      if (!Mode.dev) {
+      if (!Mode.dev && !Fullscreen.active()) {
         totalAvailableSpace.h -= 48;
       }
       verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
@@ -4606,6 +4624,60 @@
     return Take("AllReady", function() {
       return update(true);
     });
+  });
+
+  Take(["Action", "Settings", "SVG"], function(Action, Settings, SVG) {
+    var enterFullscreen, exitFullscreen, fullScreenSwitch, isFullscreen, switchChanged, updateSwitch;
+    isFullscreen = function() {
+      return (document.fullscreenElement != null) || (document.msFullscreenElement != null) || (document.webkitFullscreenElement != null);
+    };
+    Make("Fullscreen", {
+      active: isFullscreen
+    });
+    if (document.fullscreenEnabled || document.msFullScreenEnabled || document.webkitFullscreenEnabled) {
+      enterFullscreen = function() {
+        if (SVG.svg.requestFullscreen != null) {
+          return SVG.svg.requestFullscreen();
+        }
+        if (SVG.svg.msRequestFullscreen != null) {
+          return SVG.svg.msRequestFullscreen();
+        }
+        if (SVG.svg.webkitRequestFullscreen != null) {
+          return SVG.svg.webkitRequestFullscreen();
+        }
+      };
+      exitFullscreen = function() {
+        if (document.exitFullscreen != null) {
+          return document.exitFullscreen();
+        }
+        if (document.msExitFullscreen != null) {
+          return document.msExitFullscreen();
+        }
+        if (document.webkitExitFullscreen != null) {
+          return document.webkitExitFullscreen();
+        }
+      };
+      updateSwitch = function(e) {
+        return fullScreenSwitch.setValue(isFullscreen());
+      };
+      window.addEventListener("fullscreenchange", updateSwitch);
+      window.addEventListener("MSFullscreenChange", updateSwitch);
+      window.addEventListener("webkitfullscreenchange", updateSwitch);
+      switchChanged = function(switchActive) {
+        if (switchActive === isFullscreen()) {
+
+        } else if (switchActive) {
+          return enterFullscreen();
+        } else {
+          return exitFullscreen();
+        }
+      };
+      return fullScreenSwitch = Settings.addSetting("switch", {
+        name: "Full Screen",
+        value: false,
+        update: switchChanged
+      });
+    }
   });
 
   Take(["Action", "Settings"], function(Action, Settings) {

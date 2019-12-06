@@ -102,13 +102,14 @@ Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize"
     addSetting: (type, props)->
       instance = Scope SVG.create "g", items
       builder = Registry.get "SettingType", type
-      builder instance.element, props
+      scope = builder instance.element, props
       instance.y = innerHeight
       innerHeight += GUI.Settings.unit + GUI.Settings.itemMargin
       panelHeight = innerHeight + GUI.Settings.panelPad*2 - GUI.Settings.itemMargin
       SVG.attrs bg, height: panelHeight
       SVG.attrs metaBoxRect, y: -panelHeight, height: panelHeight + metaBoxHeight
       metaBox.y = panelHeight
+      return scope
 
   Settings.hide 0
 

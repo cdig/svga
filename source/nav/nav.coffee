@@ -1,4 +1,4 @@
-Take ["ControlPanel", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Mode, ParentData, RAF, Resize, SVG, Tween)->
+Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween)->
 
   # Turn this on if we need to debug resizing
   # debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
@@ -79,7 +79,7 @@ Take ["ControlPanel", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "Sc
       h: window.top.innerHeight
 
     # When deployed, account for the floating header
-    if not Mode.dev
+    if not Mode.dev and not Fullscreen.active()
       totalAvailableSpace.h -= 48
 
     # Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.

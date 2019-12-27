@@ -1903,6 +1903,7 @@
           buttonElm = SVG.create("g", buttonsContainer.element);
           buttonScope = Scope(buttonElm, SelectorButton, props);
           buttons.push(buttonScope);
+          buttonScope._dontHighlightOnHover = true;
           buttonWidth = GUI.colInnerWidth / buttons.length;
           for (i = m = 0, len = buttons.length; m < len; i = ++m) {
             button = buttons[i];
@@ -1992,10 +1993,16 @@
       };
       tickBG = function(_curBG) {
         curBG = _curBG;
-        if (highlighting && isActive) {
-          return SVG.attrs(bg, {
-            fill: "url(#MidHighlightGradient)"
-          });
+        if (highlighting) {
+          if (isActive) {
+            return SVG.attrs(bg, {
+              fill: "url(#MidHighlightGradient)"
+            });
+          } else {
+            return SVG.attrs(bg, {
+              fill: "url(#LightHighlightGradient)"
+            });
+          }
         } else {
           return SVG.attrs(bg, {
             fill: "rgb(" + (curBG.r | 0) + "," + (curBG.g | 0) + "," + (curBG.b | 0) + ")"

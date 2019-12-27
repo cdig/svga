@@ -69,6 +69,10 @@ Take ["Registry", "GUI", "SelectorButton", "Scope", "SVG"], (Registry, {ControlP
         buttonScope = Scope buttonElm, SelectorButton, props
         buttons.push buttonScope
 
+        # We don't want controls to highlight when they're hovered over,
+        # so we flag them in a way that highlight can see.
+        buttonScope._dontHighlightOnHover = true
+
         buttonWidth = GUI.colInnerWidth / buttons.length
         for button, i in buttons
           button.resize buttonWidth

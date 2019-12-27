@@ -34,8 +34,11 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     blueBG = r:183, g:213, b:255
     tickBG = (_curBG)->
       curBG = _curBG
-      if highlighting and isActive
-        SVG.attrs bg, fill: "url(#MidHighlightGradient)"
+      if highlighting
+        if isActive
+          SVG.attrs bg, fill: "url(#MidHighlightGradient)"
+        else
+          SVG.attrs bg, fill: "url(#LightHighlightGradient)"
       else
         SVG.attrs bg, fill: "rgb(#{curBG.r|0},#{curBG.g|0},#{curBG.b|0})"
     tickBG whiteBG

@@ -78,9 +78,9 @@ Take ["Registry", "GUI", "SelectorButton", "Scope", "SVG"], (Registry, {ControlP
 
       _highlight: (enable)->
         if enable
-          SVG.attrs label, fill: "url(#LightHighlightGradient)"
+          SVG.attrs label, fill: "url(#LightHighlightGradient)" if label?
           SVG.attrs borderRect, fill: "url(#DarkHighlightGradient)"
         else
-          SVG.attrs label, fill: labelFill
+          SVG.attrs label, fill: labelFill if label?
           SVG.attrs borderRect, fill: borderFill
         button._highlight enable for button in buttons

@@ -1914,16 +1914,20 @@
         _highlight: function(enable) {
           var button, len, m, results;
           if (enable) {
-            SVG.attrs(label, {
-              fill: "url(#LightHighlightGradient)"
-            });
+            if (label != null) {
+              SVG.attrs(label, {
+                fill: "url(#LightHighlightGradient)"
+              });
+            }
             SVG.attrs(borderRect, {
               fill: "url(#DarkHighlightGradient)"
             });
           } else {
-            SVG.attrs(label, {
-              fill: labelFill
-            });
+            if (label != null) {
+              SVG.attrs(label, {
+                fill: labelFill
+              });
+            }
             SVG.attrs(borderRect, {
               fill: borderFill
             });

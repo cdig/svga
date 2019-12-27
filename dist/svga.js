@@ -5539,9 +5539,15 @@
             throw new Error("Highlight called with a null element ^^^");
           }
           t = target.element || target;
-          if (!t._HighlighterSetup) {
-            t._HighlighterSetup = true;
+          if (t._HighlighterSetupCount == null) {
+            t._HighlighterSetupCount = 0;
+          }
+          if (t._HighlighterSetupCount < 100) {
+            t._HighlighterSetupCount++;
             setup(t);
+          } else if (!t._HighlighterSetupCountWarned) {
+            t._HighlighterSetupCountWarned = true;
+            console.log("Warning: it looks like you're setting up Highlighter every frame. Don't do that.");
           }
         }
         for (n = 0, len1 = targets.length; n < len1; n++) {

@@ -103,9 +103,15 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
       for target in targets
         if not target? then console.log targets.map((e)-> e?.element); throw new Error "Highlight called with a null element ^^^"
         t = target.element or target # Support both scopes and elements
-        unless t._HighlighterSetup
-          t._HighlighterSetup = true
+
+        # Since setting up Highlight has a cost to it, we do some extra bookkeeping to make sure it's not happening every frame.
+        t._HighlighterSetupCount ?= 0
+        if t._HighlighterSetupCount < 100 # If we see this element more than 100 times, we're probably inside a tick
+          t._HighlighterSetupCount++
           setup t
+        else unless t._HighlighterSetupCountWarned
+          t._HighlighterSetupCountWarned = true
+          console.log "Warning: it looks like you're setting up Highlighter every frame. Don't do that."
 
       for target in targets
         t = target.element or target # Support both scopes and elements

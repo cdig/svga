@@ -1,4 +1,4 @@
-Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], (Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG)->
+Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "WrapText", "ControlReady"], (Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG, WrapText)->
 
   panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2
   panelHeight = 0
@@ -19,13 +19,10 @@ Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize"
     rx: GUI.Settings.panelBorderRadius
 
   titleLines = Mode.get("meta")?.title
-  if not titleLines?
-    titleLines = []
+  titleLines = [] unless titleLines?
   if not Mode.embed and titleLines.length is 0
-    titleString = document.title
-                          .replace("| ", "")
-                          .replace("LunchBox Sessions", "")
-    titleLines = if titleString.length > 0 then [titleString] else []
+    titleString = document.title.replace("| ", "").replace("LunchBox Sessions", "")
+    titleLines = WrapText titleString, 28
 
   infoLines = Mode.get("meta")?.info
   infoLines = [] if not infoLines?

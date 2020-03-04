@@ -1,5 +1,5 @@
 Take ["Ease", "Reaction", "Symbol"], (Ease, Reaction, Symbol)->
-  Symbol "ManifoldContainer", ["ManifoldContainer"], (svgElement)->
+  Symbol "ManifoldBackground", ["ManifoldBackground"], (svgElement)->
     return scope =
       setup: ()->
         Reaction "Background:Lightness", (v)->

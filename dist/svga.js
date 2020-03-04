@@ -4879,7 +4879,7 @@
   });
 
   Take(["Ease", "Reaction", "Symbol"], function(Ease, Reaction, Symbol) {
-    return Symbol("ManifoldContainer", ["ManifoldContainer"], function(svgElement) {
+    return Symbol("ManifoldBackground", ["ManifoldBackground"], function(svgElement) {
       var scope;
       return scope = {
         setup: function() {

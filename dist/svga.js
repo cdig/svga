@@ -3090,7 +3090,7 @@
     });
   });
 
-  Take(["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "ControlReady"], function(Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG) {
+  Take(["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "WrapText", "ControlReady"], function(Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG, WrapText) {
     var Settings, bg, close, closeCircle, closeX, elm, infoLines, innerHeight, input, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelHeight, panelWidth, ref, ref1, titleLines, titleString;
     panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
     panelHeight = 0;
@@ -3110,7 +3110,7 @@
     }
     if (!Mode.embed && titleLines.length === 0) {
       titleString = document.title.replace("| ", "").replace("LunchBox Sessions", "");
-      titleLines = titleString.length > 0 ? [titleString] : [];
+      titleLines = WrapText(titleString, 28);
     }
     infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0;
     if (infoLines == null) {
@@ -4872,6 +4872,23 @@
               }
             }
             return results;
+          });
+        }
+      };
+    });
+  });
+
+  Take(["Ease", "Reaction", "Symbol"], function(Ease, Reaction, Symbol) {
+    return Symbol("ManifoldContainer", ["ManifoldContainer"], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          return Reaction("Background:Lightness", function(v) {
+            var hue, lightness;
+            hue = Ease.linear(v, 0, 1, 227, 218);
+            lightness = v * 100;
+            lightness += lightness > 50 ? -7 : 7;
+            return scope.fill = "hsl(" + hue + ", 5%, " + lightness + "%)";
           });
         }
       };
@@ -6892,5 +6909,39 @@
     };
     return Make("Voltage", Voltage);
   });
+
+  (function() {
+    var WrapText;
+    return Make("WrapText", WrapText = function(string, maxLineLength) {
+      var currentLine, currentWord, i, len, line, lineLength, lines, m, words;
+      if (!((string != null) && string.length > 0)) {
+        return [];
+      }
+      lines = [];
+      currentLine = 0;
+      lineLength = 0;
+      words = string.split(" ");
+      while (words.length > 0) {
+        currentWord = words.shift();
+        if ((lines[currentLine] != null) && lineLength + currentWord.length > maxLineLength) {
+          currentLine++;
+        }
+        if (!lines[currentLine]) {
+          lines[currentLine] = [];
+          lineLength = 0;
+        }
+        lines[currentLine].push(currentWord);
+        lineLength += currentWord.length;
+        if (lines[currentLine].length > 1) {
+          lineLength += 1;
+        }
+      }
+      for (i = m = 0, len = lines.length; m < len; i = ++m) {
+        line = lines[i];
+        lines[i] = line.join(" ");
+      }
+      return lines;
+    });
+  })();
 
 }).call(this);

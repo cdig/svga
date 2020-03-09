@@ -1,38 +1,59 @@
 (function() {
   var Storage, base,
-    slice = [].slice,
-    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    indexOf = [].indexOf;
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
     var checkBounds, svgData;
+    // We don't use ParentData, but we need it to exist before we can safely continue
+
+    // This is the very first code that changes the DOM. It crawls the entire DOM and:
+    // 1. Makes structural changes to prepare things for animation.
+    // 2. Returns a tree of DOM references that we'll link Symbols to.
     svgData = Scene.crawl(SVG.root);
+    // We're done the initial traversal of the SVG. It's now safe for systems to mutate it.
     Make("SVGReady");
+    // We need to wait a bit for ScopeProcessors
     setTimeout(function() {
+      // By now, we're assuming all ScopeProcessors are ready.
       Registry.closeRegistration("ScopeProcessor");
+      // Inform all systems that it's now safe to use Scope.
       Make("ScopeReady");
+      // By now, we're assuming all Controls & Settings are ready.
       Registry.closeRegistration("Control");
       Registry.closeRegistration("SettingType");
+      // Inform all systems that we've just finished setting up Controls.
       Make("ControlReady");
+      // We need to wait a bit for Symbols
       return setTimeout(function() {
+        // By now, we're assuming all Symbols are ready.
         Registry.closeRegistration("Symbols");
         Registry.closeRegistration("SymbolNames");
+        // Use the DOM references collected earlier to build our Scene tree.
         Scene.build(svgData);
-        svgData = null;
+        svgData = null; // Free this memory
+        
+        // We also need to wait until we're properly displayed on screen.
         return checkBounds();
       });
     });
     return checkBounds = function() {
       var initialRootRect;
+      // If we don't do this check, we can get divide by zero errors in Nav.
+      // The root bounds will be zero if the export from Flash was bad, or if this SVGA is loaded in Chrome with display: none.
       initialRootRect = SVG.root.getBoundingClientRect();
       if (initialRootRect.width < 1 || initialRootRect.height < 1) {
-        return setTimeout(checkBounds, 500);
+        return setTimeout(checkBounds, 500); // Keep re-checking until whatever loaded this SVGA is ready to display it.
       } else {
+        // Inform all systems that we've just finished setting up the scene.
         Make("SceneReady");
+        // Inform all systems that bloody everything is done.
         return Make("AllReady");
       }
     };
   });
 
+  // This system is mainly in charge of crawling the DOM, doing some initial cleanup,
+  // and building a tree of important elements for animation.
   Take(["Mode", "Scope", "SVG", "Symbol"], function(Mode, Scope, SVG, Symbol) {
     var Scene, buildScopes, cleanupIds, defs, deprecations, masks, processElm, removeUselessLayers;
     deprecations = ["controlPanel", "ctrlPanel", "navOverlay"];
@@ -44,15 +65,16 @@
         cleanupIds(elm);
         tree = processElm(elm);
         if (masks.length) {
-          console.log.apply(console, ["Please remove these mask elements from your SVG:"].concat(slice.call(masks)));
+          console.log("Please remove these mask elements from your SVG:", ...masks);
         }
-        masks = null;
-        defs = null;
+        masks = null; // Avoid dangling references
+        defs = null; // Avoid dangling references
         return tree;
       },
       build: function(tree) {
         var m, setup, setups;
         buildScopes(tree, setups = []);
+// loop backwards, to set up children before parents
         for (m = setups.length - 1; m >= 0; m += -1) {
           setup = setups[m];
           setup();
@@ -65,6 +87,8 @@
       if (!Mode.dev) {
         return;
       }
+      // By default, elements with an ID are added to the window object.
+      // For the sake of better typo handling, we replace those references with a proxy.
       if (typeof Proxy !== "undefined" && Proxy !== null) {
         ref = elm.querySelectorAll("[id]");
         for (m = 0, len = ref.length; m < len; m++) {
@@ -85,12 +109,16 @@
               return window[element.id] = new Proxy({}, handlers);
             })(element);
           }
-        }
+        } // The old office iPad doesn't support Proxy
       }
       return void 0;
     };
     removeUselessLayers = function(containerElm) {
       var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len, len1, m, n, ref, ref1, results;
+      // In recent versions of Adobe Animate, groups are sometimes created to house layer contents,
+      // where previous versions wouldn't do this. This creates a weird mismatch between new and old code.
+      // To work around this, we detect these extra layer elements, and remove them before building
+      // the scope tree.
       layerSuspects = Array.prototype.slice.call(containerElm.childNodes);
       results = [];
       for (m = 0, len = layerSuspects.length; m < len; m++) {
@@ -121,8 +149,9 @@
       for (m = 0, len = childNodes.length; m < len; m++) {
         childElm = childNodes[m];
         if ((ref = childElm.id, indexOf.call(deprecations, ref) >= 0)) {
-          console.log("#" + childElm.id + " is obsolete. Please remove it from your FLA and re-export this SVG.");
+          console.log(`#${childElm.id} is obsolete. Please remove it from your FLA and re-export this SVG.`);
           elm.removeChild(childElm);
+        // clipPath masks are generated by Flash to wrap text, for some reason
         } else if (childElm.tagName === "clipPath") {
           elm.removeChild(childElm);
         } else if (childElm.tagName === "text") {
@@ -135,6 +164,7 @@
         } else if (childElm instanceof SVGGElement) {
           tree.sub.push(processElm(childElm));
         } else if (childElm instanceof SVGUseElement) {
+          // We make a clone of the use'd element in defs, so that we can reach in and change (eg) strokes/fills.
           defId = childElm.getAttribute("xlink:href");
           def = defs[defId] != null ? defs[defId] : defs[defId] = SVG.defs.querySelector(defId);
           clone = def.cloneNode(true);
@@ -149,17 +179,16 @@
       }
       return tree;
     };
-    return buildScopes = function(tree, setups, parentScope) {
+    // BUILD SCOPES ##################################################################################
+    return buildScopes = function(tree, setups, parentScope = null) {
       var baseName, len, m, props, ref, ref1, scope, subTarget, symbol;
-      if (parentScope == null) {
-        parentScope = null;
-      }
       props = {
         parent: parentScope
       };
       if (tree.elm.id.replace(/_FL/g, "").length > 0) {
         props.id = tree.elm.id.replace(/_FL/g, "");
       }
+      // This is a bit of a legacy hack, where symbols are given names in Flash so that our code can hook up with them.
       baseName = (ref = tree.elm.id) != null ? ref.split("_")[0] : void 0;
       symbol = baseName.indexOf("Line") > -1 || baseName.indexOf("line") === 0 ? Symbol.forSymbolName("HydraulicLine") : baseName.indexOf("Field") > -1 || baseName.indexOf("field") === 0 ? Symbol.forSymbolName("HydraulicField") : baseName.indexOf("BackgroundCover") > -1 ? Symbol.forSymbolName("BackgroundCover") : props.id != null ? Symbol.forInstanceName(props.id) : void 0;
       if (symbol == null) {
@@ -191,11 +220,8 @@
       }
       return null;
     };
-    return Make("Scope", Scope = function(element, symbol, props) {
+    return Make("Scope", Scope = function(element, symbol, props = {}) {
       var attr, attrs, len, len1, m, n, parentScope, ref, scope, scopeProcessor;
-      if (props == null) {
-        props = {};
-      }
       if (!element instanceof SVGElement) {
         console.log(element);
         throw new Error("Scope() takes an element as the first argument. Got ^^^");
@@ -211,21 +237,27 @@
       scope = symbol != null ? symbol(element, props) : {};
       parentScope = props.parent || findParent(element);
       ScopeCheck(scope, "_symbol", "children", "element", "id", "parent", "root");
+      // Private APIs
       element._scope = scope;
       scope._symbol = symbol;
+      // Public APIs
       scope.children = [];
       scope.element = element;
-      scope.root = Scope.root != null ? Scope.root : Scope.root = scope;
+      scope.root = Scope.root != null ? Scope.root : Scope.root = scope; // It is assumed that the very first scope created is the root scope.
       scope.id = props.id;
+      // Set up parent-child relationship
       if (parentScope != null) {
         parentScope.attachScope(scope);
       }
+      // Add some info to help devs locate scope elements in the DOM
       if (Mode.dev && !(navigator.userAgent.indexOf("Trident") >= 0 || navigator.userAgent.indexOf("Edge") >= 0)) {
+        // Add some helpful dev names to the element
         element.setAttribute("SCOPE", scope.id || "");
         if ((symbol != null ? symbol.symbolName : void 0) != null) {
           element.setAttribute("SYMBOL", symbol.symbolName);
         }
         attrs = Array.prototype.slice.call(element.attributes);
+// Sort attrs so that dev names come first
         for (m = 0, len = attrs.length; m < len; m++) {
           attr = attrs[m];
           if (!(attr.name !== "SCOPE" && attr.name !== "SYMBOL")) {
@@ -235,10 +267,12 @@
           element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
         }
       }
+      // Forcing a reflow fixes an IE bug
       window.getComputedStyle(element);
       ref = Registry.all("ScopeProcessor");
       for (n = 0, len1 = ref.length; n < len1; n++) {
         scopeProcessor = ref[n];
+        // Run this scope through all the processors, which add special properties, callbacks, and other fanciness
         scopeProcessor(scope, props);
       }
       return scope;
@@ -264,6 +298,7 @@
       return arrow = {
         update: function(parentFlow, parentScale) {
           var scale;
+          // if Config.SPACING < 30 * parentScale then throw new Error "Your flow arrows are overlapping. What the devil are you trying? You need to convince Ivan that what you are doing is okay."
           vectorPosition += parentFlow;
           segmentPosition += parentFlow;
           while (vectorPosition > vector.dist) {
@@ -313,13 +348,13 @@
       });
     };
     return Make("FlowArrows:Config", Config = {
-      SCALE: 0.5,
-      SPACING: 600,
-      FADE_LENGTH: 50,
-      MIN_SEGMENT_LENGTH: 200,
-      SPEED: 200,
-      MIN_EDGE_LENGTH: 8,
-      CONNECTED_DISTANCE: 1,
+      SCALE: 0.5, // Visible size of arrows is multiplied by this value — it's not factored in to any of the other size/distance/speed values
+      SPACING: 600, // APPROXIMATELY how far apart should arrows be spaced? (+/-)50%
+      FADE_LENGTH: 50, // Over how great a distance do Arrows fade in/out?
+      MIN_SEGMENT_LENGTH: 200, // How long must a segment be before we put arrows on it?
+      SPEED: 200, // The speed Arrows move per second when flow is 1
+      MIN_EDGE_LENGTH: 8, // How long must an edge be to survive being culled?
+      CONNECTED_DISTANCE: 1, // How close must two physically-disconnected points be to be treated as part of the same line?
       wrap: function(obj) {
         var k;
         for (k in Config) {
@@ -327,7 +362,7 @@
             defineProp(obj, k);
           }
         }
-        return obj;
+        return obj; // Composable
       }
     });
   })();
@@ -368,6 +403,8 @@
           display: active ? "inline" : "none"
         });
       };
+      
+      // This is used by FlowArrows when toggling
       Object.defineProperty(scope, 'enabled', {
         set: function(val) {
           if (visible !== val) {
@@ -438,8 +475,8 @@
   Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
     var animateMode, enableAll, sets, visible;
     sets = [];
-    visible = true;
-    animateMode = true;
+    visible = true; // Default to true, in case we don't have an arrows button
+    animateMode = true; // Default to true, in case we don't have a schematic mode
     enableAll = function() {
       var len, m, set;
       for (m = 0, len = sets.length; m < len; m++) {
@@ -464,7 +501,7 @@
     });
     Reaction("Schematic:Hide", function() {
       return setTimeout(function() {
-        return enableAll(animateMode = true);
+        return enableAll(animateMode = true); // Wait one extra tick, to give the creator's symbol code a chance to init all the appropriate flow/pressure values before we appear
       });
     });
     Reaction("Schematic:Show", function() {
@@ -476,15 +513,16 @@
     Reaction("FlowArrows:Hide", function() {
       return enableAll(visible = false);
     });
-    return Make("FlowArrows", Config.wrap(function() {
-      var elm, lineData, parentScope, set, setData;
-      parentScope = arguments[0], lineData = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    return Make("FlowArrows", Config.wrap(function(parentScope, ...lineData) {
+      var elm, set, setData;
       if (parentScope == null) {
         console.log(lineData);
         throw new Error("FlowArrows was called with a null target. ^^^ was the baked line data.");
       }
       elm = parentScope.element;
-      if (elm.querySelector("[id^=markerBox]")) {
+      
+      // This removes invisible lines (which have a child named markerBox)
+      if (elm.querySelector("[id^=markerBox]")) { // ^= matches values by prefix, so we can match IDs like markerBox_FL
         while (elm.hasChildNodes()) {
           elm.removeChild(elm.firstChild);
         }
@@ -499,27 +537,39 @@
 
   Take("FlowArrows:Config", function(Config) {
     var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
+    // PROCESSING STEPS ##############################################################################
     log = function(a) {
       console.dir(a);
       return a;
     };
     formSegments = function(lineData) {
       var i, m, pointA, pointB, ref, segmentEdges, segments;
-      segments = [];
-      segmentEdges = null;
+      segments = []; // array of segments
+      segmentEdges = null; // array of edges in the current segment
+
+      // loop in pairs, since lineData is alternating start/end points of edges
       for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
         pointA = lineData[i];
         pointB = lineData[i + 1];
+        
+        // if we're already making a segment, and the new edge is a continuation of the last edge
         if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1])) {
-          segmentEdges.push(pointB);
+          segmentEdges.push(pointB); // this edge is a continuation of the last edge
         } else if ((segmentEdges != null) && isConnected(pointB, segmentEdges[segmentEdges.length - 1])) {
-          segmentEdges.push(pointA);
+          segmentEdges.push(pointA); // this edge is a continuation of the last edge
+        
+        // if we're already making a segment, and the new edge comes before the first edge
         } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointB)) {
-          segmentEdges.unshift(pointA);
+          segmentEdges.unshift(pointA); // the first edge is a continuation of this edge
         } else if ((segmentEdges != null) && isConnected(segmentEdges[0], pointA)) {
-          segmentEdges.unshift(pointB);
+          segmentEdges.unshift(pointB); // the first edge is a continuation of this edge
         } else {
-          segments.push(segmentEdges = [pointA, pointB]);
+          
+          // we're not yet making a segment, or the new edge isn't connected to the current segment
+          segments.push(segmentEdges = [
+            pointA,
+            pointB // this edge is for a new segment
+          ]);
         }
       }
       return segments;
@@ -539,31 +589,41 @@
           pointA = segA[0];
           pointB = segB[0];
           if (isConnected(pointA, pointB)) {
+            // they're connected startA-to-startB, so flip B and merge B->A
             segB.reverse();
             segB.pop();
             segments[i] = segB.concat(segA);
             segments.splice(j, 1);
             continue;
           }
+          
+          // test the two segment ends
           pointA = segA[segA.length - 1];
           pointB = segB[segB.length - 1];
           if (isConnected(pointA, pointB)) {
+            // they're connected endA-to-endB, so flip B and merge A->B
             segB.reverse();
             segB.unshift();
             segments[i] = segA.concat(segB);
             segments.splice(j, 1);
             continue;
           }
+          
+          // test endA-to-startB
           pointA = segA[segA.length - 1];
           pointB = segB[0];
           if (isConnected(pointA, pointB)) {
+            // they're connected endA-to-startB, so merge A->B
             segments[i] = segA.concat(segB);
             segments.splice(j, 1);
             continue;
           }
+          
+          // test startA-to-endB
           pointA = segA[0];
           pointB = segB[segB.length - 1];
           if (isConnected(pointA, pointB)) {
+            // they're connected startA-to-endB, so merge B->A
             segments[i] = segB.concat(segA);
             segments.splice(j, 1);
             continue;
@@ -606,6 +666,7 @@
       pointA = null;
       pointB = null;
       pointC = null;
+      // find all points that are inline with the points on either side of it, and cull them
       i = segments.length;
       while (i--) {
         seg = segments[i];
@@ -667,6 +728,8 @@
         return segment.dist >= Config.MIN_SEGMENT_LENGTH;
       });
     };
+    
+    // HELPERS #######################################################################################
     wrap = function(data) {
       return {
         process: function(fn) {
@@ -706,14 +769,16 @@
     angle = function(a, b) {
       return Math.atan2(b.y - a.y, b.x - a.x);
     };
+    
+    // MAIN ##########################################################################################
     return Make("FlowArrows:Process", function(lineData) {
-      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result;
+      return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result; // Wrap our data into a format suitable for the below processing pipeline // organize the points into an array of segment groups // combine segments that are visibly connected but whose points were listed in the wrong order // remove points that constitute an unusably short edge // remove points that lie on a line // create vectors with a position, dist, and angle // create segments with a dist and edges // remove vectors that are unusably short // return the result after all the above processing steps
     });
   });
 
   Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize", "Mode"], function(Arrow, Config, Containerize, Mode) {
     return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName) {
-      return Containerize(parentElm, function(scope) {
+      return Containerize(parentElm, function(scope) { // This function must return an array of children
         var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
         if (Mode.dev) {
           scope.element.addEventListener("mouseover", function() {
@@ -727,7 +792,7 @@
         vectorIndex = 0;
         vector = segmentData.vectors[vectorIndex];
         results = [];
-        for (i = m = 0, ref = arrowCount; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
+        for (i = m = 0, ref = arrowCount; (0 <= ref ? m < ref : m > ref); i = 0 <= ref ? ++m : --m) {
           while (vectorPosition > vector.dist) {
             vectorPosition -= vector.dist;
             vector = segmentData.vectors[++vectorIndex];
@@ -744,13 +809,13 @@
 
   Take(["FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Config, Containerize, Segment) {
     return Make("FlowArrows:Set", function(parentElm, setData) {
-      return Containerize(parentElm, function(scope) {
+      return Containerize(parentElm, function(scope) { // This function must return an array of children
         var child, childName, i, len, m, results, segmentData;
         results = [];
         for (i = m = 0, len = setData.length; m < len; i = ++m) {
           segmentData = setData[i];
           if (segmentData.dist < Config.FADE_LENGTH * 2) {
-            throw new Error("You have a FlowArrows segment that is only " + (Math.round(segmentData.dist)) + " units long, which is clashing with your fade length of " + Config.FADE_LENGTH + " units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.");
+            throw new Error(`You have a FlowArrows segment that is only ${Math.round(segmentData.dist)} units long, which is clashing with your fade length of ${Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.`);
           }
           childName = "segment" + i;
           child = Segment(scope.element, segmentData, childName);
@@ -764,18 +829,23 @@
   Take(["Action", "Ease", "Reaction", "SVG"], function(Action, Ease, Reaction, SVG) {
     Reaction("Background:Set", function(v) {
       SVG.style(document.body, "background-color", v);
+      // We need to give the SVG element a background color,
+      // or else the background will be black when fullscreen
       return SVG.style(SVG.svg, "background-color", v);
     });
     return Reaction("Background:Lightness", function(v) {
       var hue;
       hue = Ease.linear(v, 0, 1, 227, 218);
-      return Action("Background:Set", "hsl(" + hue + ", 5%, " + (v * 100 | 0) + "%)");
+      return Action("Background:Set", `hsl(${hue}, 5%, ${v * 100 | 0}%)`);
     });
   });
 
   Take(["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], function(GUI, Mode, Resize, SVG, TRS) {
     var g, hide, show;
     return;
+    
+    // We're just going to disable this for now,
+    // since keyboard input is not well-known
     if (!Mode.nav) {
       return;
     }
@@ -814,21 +884,29 @@
     window.addEventListener("focus", hide);
     window.addEventListener("touchstart", hide);
     window.addEventListener("blur", show);
+    
+    // This makes IE happier
     window.addEventListener("mousedown", function() {
       if (document.activeElement === SVG.svg) {
         return window.focus();
       }
     });
-    window.focus();
-    return hide();
+    window.focus(); // Focus by default
+    return hide(); // Fix a flicker on IE
   });
 
   Take(["ControlPanelLayout", "Gradient", "GUI", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, Reaction, SVG, Scope, TRS, ControlReady) {
     var CP, ControlPanel, columnElms, columnsElm, getColumnElm, groups, panelBg, panelElm, showing;
+    
+    // Aliases
     CP = GUI.ControlPanel;
+    
+    // State
     showing = false;
     groups = [];
     columnElms = [];
+    
+    // Elements
     panelElm = SVG.create("g", GUI.elm, {
       xControls: "",
       fontSize: 16,
@@ -841,13 +919,16 @@
     });
     columnsElm = SVG.create("g", panelElm, {
       xColumns: "",
-      transform: "translate(" + CP.panelPadding + "," + CP.panelPadding + ")"
+      transform: `translate(${CP.panelPadding},${CP.panelPadding})`
     });
     getColumnElm = function(index) {
       return columnElms[index] != null ? columnElms[index] : columnElms[index] = SVG.create("g", columnsElm);
     };
     Take("SceneReady", function() {
       if (!showing) {
+        // It'd be simpler to just not add the CP unless we need it,
+        // rather than what we're doing here (remove it if it's unused).
+        // But we need to do it this way to avoid an IE bug.
         return GUI.elm.removeChild(panelElm);
       }
     });
@@ -861,17 +942,21 @@
           return SVG.create("g", parent);
         },
         computeLayout: function(vertical, totalAvailableSpace) {
-          var consumedSpace, innerPanelSize, layout, marginedSpace, outerPanelSize, panelInfo, ref, scale;
+          var consumedSpace, innerPanelSize, layout, marginedSpace, outerPanelSize, panelInfo, scale;
           marginedSpace = {
             w: totalAvailableSpace.w - CP.panelMargin * 2,
             h: totalAvailableSpace.h - CP.panelMargin * 2
           };
-          ref = vertical ? ControlPanelLayout.vertical(groups, marginedSpace) : ControlPanelLayout.horizontal(groups, marginedSpace), innerPanelSize = ref[0], layout = ref[1];
+          [innerPanelSize, layout] = vertical ? ControlPanelLayout.vertical(groups, marginedSpace) : ControlPanelLayout.horizontal(groups, marginedSpace);
+          
+          // If the panel is still way the hell too big, scale down
           scale = vertical && (innerPanelSize.w > marginedSpace.w / 2 || innerPanelSize.h > marginedSpace.h) ? Math.max(0.8, Math.min(marginedSpace.w / innerPanelSize.w / 2, marginedSpace.h / innerPanelSize.h)) : !vertical && (innerPanelSize.w > marginedSpace.w || innerPanelSize.h > marginedSpace.h / 2) ? Math.max(0.8, Math.min(marginedSpace.w / innerPanelSize.w, marginedSpace.h / innerPanelSize.h / 2)) : 1;
           outerPanelSize = {
             w: innerPanelSize.w * scale + CP.panelMargin * 2,
             h: innerPanelSize.h * scale + CP.panelMargin * 2
           };
+          
+          // How much of the available content space does the panel use up?
           consumedSpace = {
             w: 0,
             h: 0
@@ -896,6 +981,8 @@
           if (!resizeInfo.panelInfo.showing) {
             return;
           }
+          
+          // Now that we know which layout we're using, apply it to the SVG
           ControlPanelLayout.applyLayout(resizeInfo.panelInfo.layout, getColumnElm);
           if (resizeInfo.panelInfo.vertical) {
             ControlPanel.x = Math.round(totalAvailableSpace.w - resizeInfo.panelInfo.outerPanelSize.w + CP.panelMargin);
@@ -905,6 +992,8 @@
             ControlPanel.y = Math.round(totalAvailableSpace.h - resizeInfo.panelInfo.outerPanelSize.h + CP.panelMargin);
           }
           ControlPanel.scale = resizeInfo.panelInfo.scale;
+          
+          // Apply the final size to our background elm
           return SVG.attrs(panelBg, {
             width: resizeInfo.panelInfo.innerPanelSize.w,
             height: resizeInfo.panelInfo.innerPanelSize.h
@@ -920,41 +1009,61 @@
     });
   });
 
-  Take(["GUI", "Mode", "SVG"], function(arg, Mode, SVG) {
-    var GUI, checkPanelSize, constructLayout;
-    GUI = arg.ControlPanel;
+  Take(["GUI", "Mode", "SVG"], function({
+      ControlPanel: GUI
+    }, Mode, SVG) {
+    var checkPanelSize, constructLayout;
     constructLayout = function(groups, desiredColumnHeight, vertical) {
       var column, columns, group, innerPanelSize, len, len1, len2, m, n, q, tallestColumnHeight;
       columns = [];
       column = null;
+
+      // Whether we're in horizontal or vertical, our layout is built of columns.
+// Controls may be grouped together with a color, and a color group is never split across columns.
       for (m = 0, len = groups.length; m < len; m++) {
         group = groups[m];
+        
+        // Start a new column if we need one
         if ((column == null) || column.height > desiredColumnHeight) {
           columns.push(column = {
             x: columns.length * (GUI.colInnerWidth + GUI.groupPad * 2 + GUI.columnMargin),
-            y: 0,
+            y: 0, // This will be computed once we know how tall all our columns are
             height: 0,
             groups: []
           });
         }
         if (column.groups.length > 0) {
+          
+          // Add some margin between this group and the previous
           column.height += GUI.groupMargin;
         }
+        
+        // Attach this group to the column, and assign it a position
         column.groups.push({
           scope: group.scope,
           y: column.height
         });
+        
+        // Add this group's height to our running total
         column.height += group.height;
       }
+      
+      // Figure out which column is tallest, so we know how tall to make the panel
       tallestColumnHeight = 0;
       for (n = 0, len1 = columns.length; n < len1; n++) {
         column = columns[n];
         tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
       }
+
+      // Set the y position for each column
       for (q = 0, len2 = columns.length; q < len2; q++) {
         column = columns[q];
+        // In vertical orientation, center-align
+        // In horizontal orientation, bottom-align
         column.y = vertical ? tallestColumnHeight / 2 - column.height / 2 : tallestColumnHeight - column.height;
       }
+      
+      // Figure out how big to make the panel, so it fits all our columns
       innerPanelSize = {
         w: GUI.panelPadding * 2 + columns.length * (GUI.colInnerWidth + GUI.groupPad * 2) + (columns.length - 1) * GUI.columnMargin,
         h: GUI.panelPadding * 2 + tallestColumnHeight
@@ -964,35 +1073,43 @@
     Make("ControlPanelLayout", {
       vertical: function(groups, marginedSpace) {
         var desiredColumnHeight, desiredNumberOfColumns, group, len, m, maxHeight;
-        if (!(marginedSpace.h > 0 && groups.length > 0)) {
+        if (!(marginedSpace.h > 0 && groups.length > 0)) { // Bail if the screen is too small or we have no controls
           return [
             {
               w: 0,
               h: 0
-            }, []
+            },
+            []
           ];
         }
+        
+        // First, get the height of the panel if it was just 1 column wide
         maxHeight = 0;
         for (m = 0, len = groups.length; m < len; m++) {
           group = groups[m];
           maxHeight += group.height;
         }
-        maxHeight += GUI.groupMargin * (groups.length - 1);
-        desiredNumberOfColumns = Mode.embed ? 1 : Math.ceil(maxHeight / (marginedSpace.h - GUI.panelPadding * 2));
+        maxHeight += GUI.groupMargin * (groups.length - 1); // Add padding between all groups
+        
+        // Figure out how many columns we need to fit this much height.
+        desiredNumberOfColumns = Mode.embed ? 1 : Math.ceil(maxHeight / (marginedSpace.h - GUI.panelPadding * 2)); // If we're in embed mode, we'll force it to only ever have 1 column, because that's nicer.
         desiredColumnHeight = Math.max(GUI.unit, Math.floor(maxHeight / desiredNumberOfColumns));
         return constructLayout(groups, desiredColumnHeight, true);
       },
       horizontal: function(groups, marginedSpace) {
         var desiredColumnHeight;
-        if (!(marginedSpace.w > 0 && groups.length > 0)) {
+        if (!(marginedSpace.w > 0 && groups.length > 0)) { // Bail if the screen is too small or we have no controls
           return [
             {
               w: 0,
               h: 0
-            }, []
+            },
+            []
           ];
         }
         desiredColumnHeight = GUI.unit / 2;
+        
+          // Increase the column height until everything fits on screen
         while (!checkPanelSize(desiredColumnHeight, groups, marginedSpace)) {
           desiredColumnHeight += GUI.unit / 4;
         }
@@ -1005,7 +1122,7 @@
           column = columns[c];
           columnElm = getColumnElm(c);
           SVG.attrs(columnElm, {
-            transform: "translate(" + column.x + "," + column.y + ")"
+            transform: `translate(${column.x},${column.y})`
           });
           results.push((function() {
             var len1, n, ref, results1;
@@ -1024,11 +1141,13 @@
     });
     return checkPanelSize = function(columnHeight, groups, marginedSpace) {
       var consumedHeight, consumedWidth, group, len, m, nthGroupInColumn;
+      // We'll always have at least 1 column's worth of width, plus padding on both sides
       consumedWidth = GUI.colInnerWidth + GUI.panelPadding * 2;
       consumedHeight = GUI.panelPadding * 2;
       nthGroupInColumn = 0;
       for (m = 0, len = groups.length; m < len; m++) {
         group = groups[m];
+        // Move to the next column if needed
         if (consumedHeight > columnHeight) {
           consumedWidth += GUI.colInnerWidth + GUI.columnMargin;
           consumedHeight = GUI.panelPadding * 2;
@@ -1037,25 +1156,31 @@
         if (nthGroupInColumn > 0) {
           consumedHeight += GUI.groupMargin;
         }
+        // Add the current group height to our current column height
         consumedHeight += group.height;
         nthGroupInColumn++;
       }
+      
+      // We're done if we fit within the available width, or our column height gets out of hand
       return consumedWidth < marginedSpace.w || columnHeight > marginedSpace.h / 2;
     };
   });
 
-  Take(["GUI", "Input", "Registry", "SVG", "Tween"], function(arg, Input, Registry, SVG, Tween) {
-    var GUI;
-    GUI = arg.ControlPanel;
+  Take(["GUI", "Input", "Registry", "SVG", "Tween"], function({
+      ControlPanel: GUI
+    }, Input, Registry, SVG, Tween) {
     return Registry.set("Control", "button", function(elm, props) {
       var bg, bgFill, bgc, blueBG, handlers, input, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
+      // An array to hold all the click functions that have been attached to this button
       handlers = [];
       bgFill = "hsl(220, 10%, 92%)";
       labelFill = props.fontColor || "hsl(227, 16%, 24%)";
       strokeWidth = 2;
+      // Enable pointer cursor, other UI features
       SVG.attrs(elm, {
         ui: true
       });
+      // Button background element
       bg = SVG.create("rect", elm, {
         x: strokeWidth / 2,
         y: strokeWidth / 2,
@@ -1065,6 +1190,7 @@
         strokeWidth: strokeWidth,
         fill: bgFill
       });
+      // Button text label
       label = SVG.create("text", elm, {
         textContent: props.name,
         x: GUI.colInnerWidth / 2,
@@ -1074,6 +1200,7 @@
         fontStyle: props.fontStyle || "normal",
         fill: labelFill
       });
+      // Setup the bg stroke color for tweening
       bgc = blueBG = {
         r: 34,
         g: 46,
@@ -1092,10 +1219,11 @@
       tickBG = function(_bgc) {
         bgc = _bgc;
         return SVG.attrs(bg, {
-          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+          stroke: `rgb(${bgc.r | 0},${bgc.g | 0},${bgc.b | 0})`
         });
       };
       tickBG(blueBG);
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -1139,6 +1267,7 @@
           return void 0;
         }
       });
+      // Our scope just has the 3 mandatory control functions, nothing special.
       return scope = {
         height: GUI.unit,
         input: input,
@@ -1168,20 +1297,22 @@
     });
   });
 
-  Take(["GUI", "Registry", "SVG"], function(arg, Registry, SVG) {
-    var GUI;
-    GUI = arg.ControlPanel;
+  Take(["GUI", "Registry", "SVG"], function({
+      ControlPanel: GUI
+    }, Registry, SVG) {
     return Registry.set("Control", "divider", function(elm, props) {
       throw "Error: Control.divider() has been removed.";
     });
   });
 
-  Take(["Registry", "GUI", "Scope", "SVG"], function(Registry, arg, Scope, SVG) {
-    var GUI;
-    GUI = arg.ControlPanel;
+  Take(["Registry", "GUI", "Scope", "SVG"], function(Registry, {
+      ControlPanel: GUI
+    }, Scope, SVG) {
     return Registry.set("Control", "label", function(elm, props) {
       var height, label, labelFill, labelY, scope;
-      labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
+      // Remember: SVG text element position is ALWAYS relative to the text baseline.
+      // So, we position our baseline a certain distance from the top, based on the font size.
+      labelY = GUI.labelPad + (props.fontSize || 16) * 0.75; // Lato's baseline is about 75% down from the top of the caps
       height = GUI.labelPad + (props.fontSize || 16);
       labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       label = SVG.create("text", elm, {
@@ -1199,17 +1330,19 @@
     });
   });
 
-  Take(["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SVG", "Tween"], function(arg, Input, PopoverButton, RAF, Registry, Resize, Scope, SVG, Tween) {
-    var GUI;
-    GUI = arg.ControlPanel;
+  Take(["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SVG", "Tween"], function({
+      ControlPanel: GUI
+    }, Input, PopoverButton, RAF, Registry, Resize, Scope, SVG, Tween) {
     return Registry.set("Control", "popover", function(elm, props) {
       var activeButtonCancelCb, activeFill, activeLabel, bgc, blueBG, buttonContainer, buttons, controlPanelScale, desiredPanelX, desiredPanelY, height, input, itemElm, label, labelFill, labelHeight, labelTriangle, labelY, lightBG, nextButtonOffsetY, orangeBG, panel, panelInner, panelIsVertical, panelRect, panelTriangle, rect, rectFill, reposition, requestReposition, resize, scope, setActive, showing, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal, triangleFill, triangleSize, update, windowHeight;
+      // Config
       labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       rectFill = "hsl(227, 45%, 25%)";
-      triangleFill = "hsl(220, 35%, 80%)";
+      triangleFill = "hsl(220, 35%, 80%)"; // Todo: Try $silver
       activeFill = "hsl(92, 46%, 57%)";
       triangleSize = 24;
       strokeWidth = 2;
+      // State
       showing = false;
       panelIsVertical = true;
       buttons = [];
@@ -1222,13 +1355,15 @@
       desiredPanelY = null;
       controlPanelScale = null;
       windowHeight = null;
+      // Init label size values
       if (props.name != null) {
-        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
-        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
+        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75; // Lato's baseline is about 75% down from the top of the caps
+        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2; // Lato's descenders are about 120% down from the top of the caps
       } else {
         labelHeight = 0;
       }
       height = labelHeight + GUI.unit;
+      // This is the "item" in the main control panel
       itemElm = SVG.create("g", elm, {
         ui: true
       });
@@ -1258,16 +1393,17 @@
       });
       labelTriangle = SVG.create("polyline", itemElm, {
         points: "6,-6 13,0 6,6",
-        transform: "translate(0, " + (labelHeight + GUI.unit / 2) + ")",
+        transform: `translate(0, ${labelHeight + GUI.unit / 2})`,
         stroke: triangleFill,
         strokeWidth: 4,
         strokeLinecap: "round",
         fill: "none"
       });
+      // This is the panel that pops open when you click the item
       panel = Scope(SVG.create("g", elm));
       panel.hide(0);
       panelTriangle = SVG.create("polyline", panel.element, {
-        points: "0," + (-triangleSize / 2) + " " + (triangleSize * 4 / 7) + ",0 0," + (triangleSize / 2),
+        points: `0,${-triangleSize / 2} ${triangleSize * 4 / 7},0 0,${triangleSize / 2}`,
         fill: triangleFill
       });
       panelInner = SVG.create("g", panel.element);
@@ -1277,25 +1413,27 @@
         fill: triangleFill
       });
       buttonContainer = SVG.create("g", panelInner, {
-        transform: "translate(" + GUI.panelPadding + "," + GUI.panelPadding + ")"
+        transform: `translate(${GUI.panelPadding},${GUI.panelPadding})`
       });
       resize = function() {
         if (panelIsVertical) {
           desiredPanelX = -GUI.colInnerWidth - 6;
           desiredPanelY = labelHeight + GUI.unit / 2 - nextButtonOffsetY / 2;
           SVG.attrs(panelTriangle, {
-            transform: "translate(-7," + (labelHeight + GUI.unit / 2) + ")"
+            transform: `translate(-7,${labelHeight + GUI.unit / 2})`
           });
         } else {
           desiredPanelX = 0;
           desiredPanelY = panelInner.y = -nextButtonOffsetY - triangleSize + labelHeight + 9;
           SVG.attrs(panelTriangle, {
-            transform: "translate(" + (GUI.colInnerWidth / 2) + "," + (labelHeight - 7) + ") rotate(90)"
+            transform: `translate(${GUI.colInnerWidth / 2},${labelHeight - 7}) rotate(90)`
           });
         }
         SVG.attrs(panelInner, {
-          transform: "translate(" + desiredPanelX + ", " + desiredPanelY + ")"
+          transform: `translate(${desiredPanelX}, ${desiredPanelY})`
         });
+        // We have to wait 1 tick for a layout operation to happen.
+        // This causes some flickering, but I can't find a way to avoid that.
         return requestReposition();
       };
       requestReposition = function() {
@@ -1323,7 +1461,7 @@
           panelScale = 1;
         }
         return SVG.attrs(panelInner, {
-          transform: "translate(" + (desiredPanelX * panelScale) + ", " + newPanelY + ") scale(" + panelScale + ")"
+          transform: `translate(${desiredPanelX * panelScale}, ${newPanelY}) scale(${panelScale})`
         });
       };
       setActive = function(name, unclick) {
@@ -1340,6 +1478,7 @@
           return update();
         }
       };
+      // Setup the bg stroke color for tweening
       bgc = blueBG = {
         r: 34,
         g: 46,
@@ -1358,7 +1497,7 @@
       tickBG = function(_bgc) {
         bgc = _bgc;
         return SVG.attrs(rect, {
-          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+          stroke: `rgb(${bgc.r | 0},${bgc.g | 0},${bgc.b | 0})`
         });
       };
       tickBG(blueBG);
@@ -1370,6 +1509,7 @@
           return panel.hide(0.2);
         }
       };
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -1482,9 +1622,10 @@
     });
   });
 
-  Take(["GUI", "Input", "SVG", "Tween"], function(arg, Input, SVG, Tween) {
-    var GUI, active;
-    GUI = arg.ControlPanel;
+  Take(["GUI", "Input", "SVG", "Tween"], function({
+      ControlPanel: GUI
+    }, Input, SVG, Tween) {
+    var active;
     active = null;
     return Make("PopoverButton", function(elm, props) {
       var activeBG, attachClick, bg, blueBG, click, curBG, handlers, highlighting, input, isActive, label, labelFill, orangeBG, scope, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
@@ -1492,6 +1633,7 @@
       isActive = false;
       highlighting = false;
       labelFill = props.fontColor || "hsl(227, 16%, 24%)";
+      // Enable pointer cursor, other UI features
       SVG.attrs(elm, {
         ui: true
       });
@@ -1509,6 +1651,7 @@
         fontWeight: props.fontWeight || "normal",
         fontStyle: props.fontStyle || "normal"
       });
+      // Setup the bg stroke color for tweening
       curBG = null;
       whiteBG = {
         h: 220,
@@ -1538,11 +1681,12 @@
           });
         } else {
           return SVG.attrs(bg, {
-            fill: "hsl(" + (curBG.h | 0) + "," + (curBG.s | 0) + "%," + (curBG.l | 0) + "%)"
+            fill: `hsl(${curBG.h | 0},${curBG.s | 0}%,${curBG.l | 0}%)`
           });
         }
       };
       tickBG(whiteBG);
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(curBG, whiteBG, .2, {
           tick: tickBG
@@ -1617,6 +1761,7 @@
           }
         }
       });
+      // Set up click handling
       attachClick = function(cb) {
         return handlers.push(cb);
       };
@@ -1647,11 +1792,12 @@
     });
   });
 
-  Take(["GUI", "Input", "Registry", "SVG", "Tween"], function(arg, Input, Registry, SVG, Tween) {
-    var GUI;
-    GUI = arg.ControlPanel;
+  Take(["GUI", "Input", "Registry", "SVG", "Tween"], function({
+      ControlPanel: GUI
+    }, Input, Registry, SVG, Tween) {
     return Registry.set("Control", "pushButton", function(elm, props) {
       var bgFill, blueBG, bsc, button, height, hit, input, isActive, label, labelFill, lightBG, offHandlers, onHandlers, orangeBG, radius, scope, strokeWidth, tickBG, toClicking, toHover, toNormal;
+      // Arrays to hold all the functions that have been attached to this control
       onHandlers = [];
       offHandlers = [];
       isActive = false;
@@ -1660,6 +1806,7 @@
       height = Math.max(radius * 2, props.fontSize || 16);
       bgFill = "hsl(220, 10%, 92%)";
       labelFill = props.fontColor || "hsl(220, 10%, 92%)";
+      // Enable pointer cursor, other UI features
       SVG.attrs(elm, {
         ui: true
       });
@@ -1685,6 +1832,7 @@
         fontStyle: props.fontStyle || "normal",
         fill: labelFill
       });
+      // Setup the button stroke color for tweening
       bsc = blueBG = {
         r: 34,
         g: 46,
@@ -1703,10 +1851,11 @@
       tickBG = function(_bsc) {
         bsc = _bsc;
         return SVG.attrs(button, {
-          stroke: "rgb(" + (bsc.r | 0) + "," + (bsc.g | 0) + "," + (bsc.b | 0) + ")"
+          stroke: `rgb(${bsc.r | 0},${bsc.g | 0},${bsc.b | 0})`
         });
       };
       tickBG(blueBG);
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(bsc, blueBG, .2, {
           tick: tickBG
@@ -1773,14 +1922,12 @@
           }
         }
       });
+      // Our scope just has the 3 mandatory control functions, nothing special.
       return scope = {
         height: height,
         input: input,
-        setValue: function(activate, runHandlers) {
+        setValue: function(activate, runHandlers = true) {
           var len, len1, m, n, offHandler, onHandler;
-          if (runHandlers == null) {
-            runHandlers = true;
-          }
           if (activate && !isActive) {
             isActive = true;
             toClicking();
@@ -1835,18 +1982,21 @@
     });
   });
 
-  Take(["Registry", "GUI", "SelectorButton", "Scope", "SVG"], function(Registry, arg, SelectorButton, Scope, SVG) {
-    var GUI, idCounter;
-    GUI = arg.ControlPanel;
+  Take(["Registry", "GUI", "SelectorButton", "Scope", "SVG"], function(Registry, {
+      ControlPanel: GUI
+    }, SelectorButton, Scope, SVG) {
+    var idCounter;
     idCounter = 0;
     return Registry.set("Control", "selector", function(elm, props) {
       var activeButton, borderFill, borderRect, buttons, buttonsContainer, clip, clipRect, height, id, label, labelFill, labelHeight, labelY, scope, setActive;
-      id = "Selector" + (idCounter++);
+      id = `Selector${idCounter++}`;
       buttons = [];
       activeButton = null;
       if (props.name != null) {
-        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
-        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
+        // Remember: SVG text element position is ALWAYS relative to the text baseline.
+        // So, we position our baseline a certain distance from the top, based on the font size.
+        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75; // Lato's baseline is about 75% down from the top of the caps
+        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2; // Lato's descenders are about 120% down from the top of the caps
       } else {
         labelHeight = 0;
       }
@@ -1884,7 +2034,7 @@
         height: GUI.unit
       });
       buttonsContainer = Scope(SVG.create("g", elm, {
-        clipPath: "url(#" + id + ")"
+        clipPath: `url(#${id})`
       }));
       buttonsContainer.x = 0;
       buttonsContainer.y = labelHeight;
@@ -1899,10 +2049,13 @@
         button: function(props) {
           var button, buttonElm, buttonScope, buttonWidth, i, len, m;
           props.setActive = setActive;
+          // We check for this property in some control-specific scope-processors
           props._isControl = true;
           buttonElm = SVG.create("g", buttonsContainer.element);
           buttonScope = Scope(buttonElm, SelectorButton, props);
           buttons.push(buttonScope);
+          // We don't want controls to highlight when they're hovered over,
+          // so we flag them in a way that highlight can see.
           buttonScope._dontHighlightOnHover = true;
           buttonWidth = GUI.colInnerWidth / buttons.length;
           for (i = m = 0, len = buttons.length; m < len; i = ++m) {
@@ -1944,9 +2097,10 @@
     });
   });
 
-  Take(["GUI", "Input", "SVG", "Tween"], function(arg, Input, SVG, Tween) {
-    var GUI, active;
-    GUI = arg.ControlPanel;
+  Take(["GUI", "Input", "SVG", "Tween"], function({
+      ControlPanel: GUI
+    }, Input, SVG, Tween) {
+    var active;
     active = null;
     return Make("SelectorButton", function(elm, props) {
       var attachClick, bg, blueBG, click, curBG, handlers, highlighting, input, isActive, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toActive, toClicking, toHover, toNormal, unclick, whiteBG;
@@ -1955,6 +2109,7 @@
       highlighting = false;
       labelFill = props.fontColor || "hsl(227, 16%, 24%)";
       strokeWidth = 2;
+      // Enable pointer cursor, other UI features
       SVG.attrs(elm, {
         ui: true
       });
@@ -1971,6 +2126,7 @@
         fontWeight: props.fontWeight || "normal",
         fontStyle: props.fontStyle || "normal"
       });
+      // Setup the bg stroke color for tweening
       curBG = whiteBG = {
         r: 233,
         g: 234,
@@ -2005,11 +2161,12 @@
           }
         } else {
           return SVG.attrs(bg, {
-            fill: "rgb(" + (curBG.r | 0) + "," + (curBG.g | 0) + "," + (curBG.b | 0) + ")"
+            fill: `rgb(${curBG.r | 0},${curBG.g | 0},${curBG.b | 0})`
           });
         }
       };
       tickBG(whiteBG);
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(curBG, whiteBG, .2, {
           tick: tickBG
@@ -2084,6 +2241,7 @@
           }
         }
       });
+      // Set up click handling
       attachClick = function(cb) {
         return handlers.push(cb);
       };
@@ -2098,11 +2256,8 @@
       return scope = {
         click: attachClick,
         input: input,
-        setValue: function(activate, runHandlers) {
+        setValue: function(activate, runHandlers = true) {
           var handler, len, m;
-          if (runHandlers == null) {
-            runHandlers = true;
-          }
           if (activate && !isActive) {
             props.setActive(unclick);
             isActive = true;
@@ -2142,22 +2297,26 @@
     });
   });
 
-  Take(["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], function(Ease, arg, Input, Registry, SVG, TRS, Tween) {
-    var GUI;
-    GUI = arg.ControlPanel;
+  Take(["Ease", "GUI", "Input", "Registry", "SVG", "TRS", "Tween"], function(Ease, {
+      ControlPanel: GUI
+    }, Input, Registry, SVG, TRS, Tween) {
     return Registry.set("Control", "slider", function(elm, props) {
       var bgc, blueBG, changeHandlers, downHandlers, handleDown, handleDrag, handleUp, height, hit, input, inputCalls, label, labelFill, labelHeight, labelY, leftLabel, lightBG, lightDot, normalDot, orangeBG, range, rightLabel, scope, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbBGFill, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackFill, upHandlers, update, updateSnaps, v;
+      // An array to hold all the callbacks that have been attached to this slider
       changeHandlers = [];
       downHandlers = [];
       upHandlers = [];
       snapElms = [];
+      // Some local variables used to manage the slider position
       v = 0;
       startDrag = 0;
       strokeWidth = 2;
       snapTolerance = 0.033;
       if (props.name != null) {
-        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75;
-        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2;
+        // Remember: SVG text element position is ALWAYS relative to the text baseline.
+        // So, we position our baseline a certain distance from the top, based on the font size.
+        labelY = GUI.labelPad + (props.fontSize || 16) * 0.75; // Lato's baseline is about 75% down from the top of the caps
+        labelHeight = GUI.labelPad + (props.fontSize || 16) * 1.2; // Lato's descenders are about 120% down from the top of the caps
       } else {
         labelHeight = 0;
       }
@@ -2169,6 +2328,7 @@
       labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       lightDot = "hsl(92, 46%, 57%)";
       normalDot = "hsl(220, 10%, 92%)";
+      // Enable pointer cursor, other UI features
       SVG.attrs(elm, {
         ui: true
       });
@@ -2177,6 +2337,7 @@
         height: height,
         fill: "transparent"
       });
+      // Slider background element
       track = TRS(SVG.create("rect", elm, {
         x: strokeWidth / 2,
         y: labelHeight + strokeWidth / 2,
@@ -2187,6 +2348,7 @@
         stroke: "hsl(227, 45%, 24%)",
         rx: thumbSize / 2
       }));
+      // The labels for left and right ends
       if (props.leftLabel != null) {
         leftLabel = SVG.create("text", elm, {
           textContent: props.leftLabel.toUpperCase(),
@@ -2207,6 +2369,7 @@
           fill: "hsl(220, 25%, 75%)"
         });
       }
+      // The thumb graphic
       thumb = TRS(SVG.create("circle", elm, {
         cx: thumbSize / 2,
         cy: labelHeight + thumbSize / 2,
@@ -2231,6 +2394,7 @@
           return results;
         })();
       }
+      // The text label
       if (props.name != null) {
         label = SVG.create("text", elm, {
           textContent: props.name,
@@ -2242,6 +2406,7 @@
           fill: labelFill
         });
       }
+      // Setup the thumb stroke color for tweening
       bgc = blueBG = {
         r: 34,
         g: 46,
@@ -2260,13 +2425,14 @@
       tickBG = function(_bgc) {
         bgc = _bgc;
         return SVG.attrs(thumb, {
-          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+          stroke: `rgb(${bgc.r | 0},${bgc.g | 0},${bgc.b | 0})`
         });
       };
       tickBG(blueBG);
       updateSnaps = function(input) {
         var i, inMax, inMin, len, len1, m, n, outMax, outMin, ref, ref1;
         ref = props.snaps;
+        // Reset all snaps
         for (i = m = 0, len = ref.length; m < len; i = ++m) {
           snap = ref[i];
           SVG.attrs(snapElms[i], {
@@ -2275,8 +2441,10 @@
           });
         }
         ref1 = props.snaps;
+        // Map our input to the right position, move the slider, and highlight the proper dot if needed
         for (i = n = 0, len1 = ref1.length; n < len1; i = ++n) {
           snap = ref1[i];
+          // Input is inside this snap point
           if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
             SVG.attrs(snapElms[i], {
               r: 3,
@@ -2286,6 +2454,7 @@
               x: snap * range
             });
             return snap;
+          // Input is below this snap point
           } else if (input < snap - snapTolerance) {
             TRS.abs(thumb, {
               x: input * range
@@ -2297,6 +2466,7 @@
             return Ease.linear(input, inMin, inMax, outMin, outMax);
           }
         }
+        // Snap is above the last snap point
         TRS.abs(thumb, {
           x: input * range
         });
@@ -2306,6 +2476,7 @@
         outMax = 1;
         return Ease.linear(input, inMin, inMax, outMin, outMax);
       };
+      // Update and save the thumb position
       update = function(V) {
         if (V != null) {
           v = Math.max(0, Math.min(1, V));
@@ -2319,6 +2490,7 @@
         }
       };
       update(props.value || 0);
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -2403,11 +2575,8 @@
       return scope = {
         height: height,
         input: input,
-        setValue: function(v, runHandlers) {
+        setValue: function(v, runHandlers = true) {
           var changeHandler, len, m;
-          if (runHandlers == null) {
-            runHandlers = true;
-          }
           update(v);
           if (runHandlers) {
             for (m = 0, len = changeHandlers.length; m < len; m++) {
@@ -2458,11 +2627,12 @@
     });
   });
 
-  Take(["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], function(Registry, arg, Input, RAF, SVG, TRS, Tween) {
-    var GUI;
-    GUI = arg.ControlPanel;
+  Take(["Registry", "GUI", "Input", "RAF", "SVG", "TRS", "Tween"], function(Registry, {
+      ControlPanel: GUI
+    }, Input, RAF, SVG, TRS, Tween) {
     return Registry.set("Control", "switch", function(elm, props) {
       var bgc, blueBG, handlers, height, input, isActive, label, labelFill, lightBG, lightFill, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track, trackWidth;
+      // An array to hold all the change functions that have been attached to this slider
       handlers = [];
       strokeWidth = 2;
       thumbSize = GUI.thumbSize;
@@ -2513,6 +2683,7 @@
         });
         return props.click(isActive);
       };
+      // Setup the thumb stroke color for tweening
       bgc = blueBG = {
         r: 34,
         g: 46,
@@ -2531,10 +2702,11 @@
       tickBG = function(_bgc) {
         bgc = _bgc;
         return SVG.attrs(thumb, {
-          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+          stroke: `rgb(${bgc.r | 0},${bgc.g | 0},${bgc.b | 0})`
         });
       };
       tickBG(blueBG);
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -2580,10 +2752,7 @@
         isActive: function() {
           return isActive;
         },
-        setValue: function(v) {
-          if (v == null) {
-            v = null;
-          }
+        setValue: function(v = null) {
           if ((v == null) || v !== isActive) {
             return toggle();
           }
@@ -2625,17 +2794,21 @@
 
   Take(["Mode"], function(Mode) {
     if (!Mode.dev) {
+      // Disable the content menu, so that we can use long-press on touch Windows for pushButtons
       window.addEventListener("contextmenu", function(e) {
         return e.preventDefault();
       });
     }
+    // Block drag-to-copy on Windows
     window.addEventListener("dragstart", function(e) {
       return e.preventDefault();
     });
     if (Mode.nav) {
+      // Block scrolling on desktops
       window.addEventListener("scroll", function(e) {
         return e.preventDefault();
       });
+      // Block scrolling on iOS
       return window.addEventListener("touchmove", function(e) {
         return e.preventDefault();
       });
@@ -2652,23 +2825,23 @@
         borderRadius: 4,
         groupBorderRadius: groupBorderRadius = 6,
         panelBorderRadius: 8,
-        panelMargin: 4,
-        panelPadding: 6,
-        columnMargin: 5,
-        groupMargin: 4,
-        groupPad: 3,
-        itemMargin: 3,
-        labelPad: 3,
-        labelMargin: 6,
+        panelMargin: 4, // Space between the panel and the edge of the window
+        panelPadding: 6, // Padding inside the panel
+        columnMargin: 5, // Horizontal space between two columns
+        groupMargin: 4, // Vertical space between two groups
+        groupPad: 3, // Padding inside groups
+        itemMargin: 3, // Vertical space between two items
+        labelPad: 3, // Padding above text labels
+        labelMargin: 6, // Horizontal space around labels for push buttons and switches
         unit: unit = 32,
         thumbSize: unit - 4,
         colUnits: colUnits = 5,
-        colInnerWidth: colInnerWidth = unit * colUnits
+        colInnerWidth: colInnerWidth = unit * colUnits // Width of items in a column
       },
       Settings: {
         unit: 32,
         itemWidth: 360,
-        itemMargin: 8,
+        itemMargin: 8, // Vertical space between two items
         panelPad: 8,
         panelMargin: 16,
         panelBorderRadius: 8
@@ -2692,11 +2865,11 @@
   Take(["Mode", "Tick", "SVG", "SVGReady"], function(Mode, Tick, SVG) {
     var HUD, colors, elapsed, elm, needsUpdate, rate, values;
     if (!Mode.dev) {
-      Make("HUD", function() {});
+      Make("HUD", function() {}); // Noop
       return;
     }
-    rate = 1 / 8;
-    elapsed = rate;
+    rate = 1 / 8; // Update every nth of a second
+    elapsed = rate; // Run the first update immediately
     needsUpdate = true;
     colors = {};
     values = {};
@@ -2713,28 +2886,29 @@
           html = "";
           for (k in values) {
             v = values[k];
-            html += "<div style='color:" + colors[k] + "'>" + k + ": " + v + "</div>";
+            html += `<div style='color:${colors[k]}'>${k}: ${v}</div>`;
           }
           return elm.innerHTML = html;
         }
       }
     });
-    return Make("HUD", HUD = function(k, v, c) {
+    return Make("HUD", HUD = function(k, v, c = "#000") {
       var _k, _v;
-      if (c == null) {
-        c = "#000";
-      }
+      
+      // Allow passing an object of k-v pairs, with the 2nd arg as the optional color
       if (typeof k === "object") {
         for (_k in k) {
           _v = k[_k];
           HUD(_k, _v, v);
         }
+      
+      // Pretty-print nested objects (and avoid infinite loops if there's a reference cycle)
       } else if (typeof v === "object" && !v._hud_visited) {
         v._hud_visited = true;
         for (_k in v) {
           _v = v[_k];
           if (_k !== "_hud_visited") {
-            HUD(k + "." + _k, _v, v);
+            HUD(`${k}.${_k}`, _v, v);
           }
         }
         v._hud_visited = false;
@@ -2745,7 +2919,7 @@
           needsUpdate = true;
         }
       }
-      return v;
+      return v; // Pass-through whenever possible
     });
   });
 
@@ -2769,9 +2943,9 @@
     });
   });
 
-  Take(["Registry", "Ease", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, Ease, arg, Input, SVG, TRS, Tween) {
-    var GUI;
-    GUI = arg.Settings;
+  Take(["Registry", "Ease", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, Ease, {
+      Settings: GUI
+    }, Input, SVG, TRS, Tween) {
     return Registry.set("SettingType", "slider", function(elm, props) {
       var bgc, blueBG, handleDrag, label, labelPad, labelWidth, lightBG, lightDot, normalDot, orangeBG, range, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackWidth, update, updateSnaps, v;
       snapElms = [];
@@ -2830,6 +3004,8 @@
         textAnchor: "end",
         fill: "hsl(220, 10%, 92%)"
       });
+      
+      // Setup the thumb stroke color for tweening
       bgc = blueBG = {
         r: 34,
         g: 46,
@@ -2848,13 +3024,14 @@
       tickBG = function(_bgc) {
         bgc = _bgc;
         return SVG.attrs(thumb, {
-          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+          stroke: `rgb(${bgc.r | 0},${bgc.g | 0},${bgc.b | 0})`
         });
       };
       tickBG(blueBG);
       updateSnaps = function(input) {
         var i, inMax, inMin, len, len1, m, n, outMax, outMin, ref, ref1;
         ref = props.snaps;
+        // Reset all snaps
         for (i = m = 0, len = ref.length; m < len; i = ++m) {
           snap = ref[i];
           SVG.attrs(snapElms[i], {
@@ -2863,8 +3040,12 @@
           });
         }
         ref1 = props.snaps;
+        
+        // Map our input to the right position, move the slider, and highlight the proper dot if needed
         for (i = n = 0, len1 = ref1.length; n < len1; i = ++n) {
           snap = ref1[i];
+          
+          // Input is inside this snap point
           if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
             SVG.attrs(snapElms[i], {
               r: 3,
@@ -2874,6 +3055,8 @@
               x: snap * range
             });
             return snap;
+          
+          // Input is below this snap point
           } else if (input < snap - snapTolerance) {
             TRS.abs(thumb, {
               x: input * range
@@ -2885,6 +3068,8 @@
             return Ease.linear(input, inMin, inMax, outMin, outMax);
           }
         }
+        
+        // Snap is above the last snap point
         TRS.abs(thumb, {
           x: input * range
         });
@@ -2894,6 +3079,8 @@
         outMax = 1;
         return Ease.linear(input, inMin, inMax, outMin, outMax);
       };
+      
+      // Update and save the thumb position
       update = function(V) {
         if (V != null) {
           v = Math.max(0, Math.min(1, V));
@@ -2906,6 +3093,8 @@
           });
         }
       };
+      
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -2957,13 +3146,15 @@
         dragOther: handleDrag,
         click: toClicked
       });
+      
+      // Init
       return update(props.value || 0);
     });
   });
 
-  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, arg, Input, SVG, TRS, Tween) {
-    var GUI;
-    GUI = arg.Settings;
+  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, {
+      Settings: GUI
+    }, Input, SVG, TRS, Tween) {
     return Registry.set("SettingType", "switch", function(elm, props) {
       var bgc, blueBG, isActive, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track;
       strokeWidth = 2;
@@ -3010,6 +3201,7 @@
         });
         return props.update(isActive);
       };
+      // Setup the thumb stroke color for tweening
       bgc = blueBG = {
         r: 34,
         g: 46,
@@ -3028,10 +3220,11 @@
       tickBG = function(_bgc) {
         bgc = _bgc;
         return SVG.attrs(thumb, {
-          stroke: "rgb(" + (bgc.r | 0) + "," + (bgc.g | 0) + "," + (bgc.b | 0) + ")"
+          stroke: `rgb(${bgc.r | 0},${bgc.g | 0},${bgc.b | 0})`
         });
       };
       tickBG(blueBG);
+      // Input event handling
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
           tick: tickBG
@@ -3072,16 +3265,14 @@
         }
       });
       if (props.value) {
+        // Init
         toggle();
       }
       return scope = {
         isActive: function() {
           return isActive;
         },
-        setValue: function(v) {
-          if (v == null) {
-            v = null;
-          }
+        setValue: function(v = null) {
           if ((v == null) || v !== isActive) {
             return toggle();
           }
@@ -3096,6 +3287,7 @@
     panelHeight = 0;
     innerHeight = 0;
     elm = SVG.create("g", GUI.elm);
+    // Meta Info
     metaBoxHeight = 20;
     metaBoxElm = SVG.create("g", elm);
     metaBox = Scope(metaBoxElm);
@@ -3158,14 +3350,16 @@
       fill: "#FFF"
     });
     metaBoxHeight += 10;
+    // Main Settings Panel
     bg = SVG.create("rect", elm, {
       width: panelWidth,
       rx: GUI.Settings.panelBorderRadius,
       fill: "hsl(220, 45%, 45%)"
     });
     items = SVG.create("g", elm, {
-      transform: "translate(" + GUI.Settings.panelPad + "," + GUI.Settings.panelPad + ")"
+      transform: `translate(${GUI.Settings.panelPad},${GUI.Settings.panelPad})`
     });
+    // Close Button
     close = SVG.create("g", elm, {
       ui: true,
       transform: "translate(8,8)"
@@ -3180,9 +3374,10 @@
       strokeLinecap: "round",
       stroke: "#FFF"
     });
+    // Finish Setup
     input = Input(close, {
       click: function(e, state) {
-        input.resetState();
+        input.resetState(); // Hack to fix https://github.com/cdig/svga/issues/154
         return Action("Settings:Toggle");
       }
     });
@@ -3264,6 +3459,7 @@
     });
   });
 
+  // The SVG starts off hidden. We unhide it when the time comes.
   Take(["Mode", "RAF", "SVG", "Tween", "AllReady"], function(Mode, RAF, SVG, Tween) {
     if (Mode.dev) {
       return RAF(function() {
@@ -3280,6 +3476,10 @@
     if (!Mode.nav) {
       return;
     }
+    
+    // This only works in Safari and Mobile Safari
+    // On Mobile Safari, it fights a bit with touchmove.
+    // One of them will win and overwrite the other. Not a big deal.
     window.addEventListener("gesturestart", function(e) {
       if (Nav.eventInside(e)) {
         e.preventDefault();
@@ -3302,16 +3502,16 @@
     decel = 1.25;
     maxVel = {
       xy: 10,
-      z: 0.05
+      z: 0.05 // xy polar, z cartesian
     };
     accel = {
       xy: 0.7,
-      z: 0.004
+      z: 0.004 // xy polar, z cartesian
     };
     vel = {
       a: 0,
       d: 0,
-      z: 0
+      z: 0 // xy polar (angle, displacement), z cartesian
     };
     Tick(function(time, dt) {
       var down, inputX, inputY, inputZ, left, minus, plus, right, scaledDt, up;
@@ -3325,6 +3525,8 @@
       inputY = getAccel(up, down);
       inputZ = getAccel(plus, minus);
       if (inputZ === 0) {
+        
+        // Do z first, so we can scale xy based on z
         vel.z /= decel;
       }
       vel.z = Math.max(-maxVel.z, Math.min(maxVel.z, vel.z + accel.z * inputZ));
@@ -3338,6 +3540,8 @@
       if (!(Math.abs(vel.d) > 0.01 || Math.abs(vel.z) > 0.01)) {
         return;
       }
+      
+      // Scale the speed of nav so that it's somewhat framerate independent
       scaledDt = (dt * 1000) / 16;
       return Nav.by({
         x: scaledDt * Math.cos(vel.a) * vel.d,
@@ -3363,7 +3567,7 @@
     }
     dragging = false;
     down = function(e) {
-      e.preventDefault();
+      e.preventDefault(); // Without this, shift-drag pans the ENTIRE SVG! What the hell?
       if (Nav.eventInside(e)) {
         return dragging = true;
       }
@@ -3420,8 +3624,30 @@
     });
   });
 
+  
+  // Old code which was nice but sucked with mice
+  // # Is this a pixel-precise input device (eg: magic trackpad)?
+  // if e.deltaMode is WheelEvent.DOM_DELTA_PIXEL
+  //   if e.ctrlKey # Chrome, pinch to zoom
+  //     Nav.by z: -e.deltaY / 100
+  //   else if e.metaKey # Other browsers, meta+scroll to zoom
+  //     Nav.by z: -e.deltaY / 200
+  //   else
+  //     Nav.by
+  //       x: -e.deltaX
+  //       y: -e.deltaY
+  //       z: -e.deltaZ
+
+  // # This is probably a scroll wheel # DOESN'T WORK! :(
+  // else
+  //   Nav.by z: -e.deltaY / 500
   Take(["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween) {
     var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
+    // Turn this on if we need to debug resizing
+    // debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
+
+    // Our SVGs don't have a viewbox, which means they render at 1:1 scale with surrounding content,
+    // and are cropped when resized. We use their specified width and height as the desired bounding rect for the content.
     contentWidth = +SVG.attr(SVG.svg, "width");
     contentHeight = +SVG.attr(SVG.svg, "height");
     if (!((contentWidth != null) && (contentHeight != null))) {
@@ -3458,20 +3684,27 @@
     scaleStartPosZ = 0;
     tween = null;
     render = function() {
-      return SVG.attr(SVG.root, "transform", "translate(" + center.x + "," + center.y + ") scale(" + (contentScale * Math.pow(2, pos.z)) + ") translate(" + (pos.x - centerInverse.x) + "," + (pos.y - centerInverse.y) + ")");
+      // First, we move SVG.root so the top left corner is in the middle of our available space.
+      // ("Available space" means the size of the window, minus the space occupied by the control panel.)
+      // Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
+      // Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
+      return SVG.attr(SVG.root, "transform", `translate(${center.x},${center.y}) scale(${contentScale * Math.pow(2, pos.z)}) translate(${pos.x - centerInverse.x},${pos.y - centerInverse.y})`);
     };
     pickBestLayout = function(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo) {
       var contentHeightWhenHorizontal, panelHeightWhenHorizontal;
       if (Mode.embed) {
         if (verticalResizeInfo.scale.min >= 1) {
+          // Prefer vertical, if that doesn't cause our content to shrink
           return verticalResizeInfo;
         }
+        // Failing that, prefer hozitontal, if there's enough screen height
         contentHeightWhenHorizontal = contentHeight * horizontalResizeInfo.scale.min;
         panelHeightWhenHorizontal = horizontalResizeInfo.panelInfo.consumedSpace.h;
         if (totalAvailableSpace.h > contentHeightWhenHorizontal + panelHeightWhenHorizontal) {
           return horizontalResizeInfo;
         }
       }
+      // Take whichever panel layout leaves more room for content
       if (horizontalResizeInfo.scale.min > verticalResizeInfo.scale.min) {
         return horizontalResizeInfo;
       } else {
@@ -3480,10 +3713,12 @@
     };
     computeResizeInfo = function(totalAvailableSpace, panelInfo) {
       var claimedH, idealContentHeight, idealHeight, resizeInfo, scale, totalAvailableContentSpace;
+      // Figure out how much space remains for our main graphic
       totalAvailableContentSpace = {
         w: totalAvailableSpace.w - panelInfo.consumedSpace.w,
         h: totalAvailableSpace.h - panelInfo.consumedSpace.h
       };
+      // Scale the graphic so it fits inside our available space
       scale = {
         x: totalAvailableContentSpace.w / contentWidth,
         y: totalAvailableContentSpace.h / contentHeight
@@ -3499,29 +3734,41 @@
     };
     resize = function() {
       var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
+      // This is the largest our SVGA can ever be
       totalAvailableSpace = {
         w: SVG.svg.getBoundingClientRect().width,
         h: window.top.innerHeight
       };
+      // When deployed, account for the floating header
       if (!Mode.dev && !Fullscreen.active()) {
         totalAvailableSpace.h -= 48;
       }
+      // Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
       verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
       horizontalPanelInfo = ControlPanel.computeLayout(false, totalAvailableSpace);
+      // Measure both layouts
       verticalResizeInfo = computeResizeInfo(totalAvailableSpace, verticalPanelInfo);
       horizontalResizeInfo = computeResizeInfo(totalAvailableSpace, horizontalPanelInfo);
+      // Pick the best layout
       resizeInfo = pickBestLayout(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo);
+      // If we're embedded into a cd-module, resize our embedding object.
       if (Mode.embed) {
         ParentData.send("height", Math.round(resizeInfo.idealHeight) + "px");
         totalAvailableSpace.h = resizeInfo.idealHeight;
       }
+      // Apply the chosen layout to the ControlPanel
       ControlPanel.applyLayout(resizeInfo, totalAvailableSpace);
+      // Save our window scale for future nav actions
       contentScale = resizeInfo.scale.min;
+      // Before we do any scale operations, we need to move the top left corner of the graphic to the center of the available space
       center.x = resizeInfo.totalAvailableContentSpace.w / 2;
       center.y = resizeInfo.idealHeight / 2 - resizeInfo.panelInfo.consumedSpace.h / 2;
+      // After we do any scale operations, we need to move the top left corner of the graphic up and left, so the center of the graphic is aligned with the center of the consumed space
       centerInverse.x = contentWidth / 2;
       centerInverse.y = contentHeight / 2;
       render();
+      // Turn this on if we need to debug resizing
+      // SVG.attrs debugBox, width: contentWidth, height: contentHeight
       return Resize._fire({
         window: totalAvailableSpace,
         panel: {
@@ -3538,12 +3785,14 @@
         }
       });
     };
+    // Init
     runResize = function() {
       return RAF(resize, true);
     };
     window.addEventListener("resize", runResize);
     window.top.addEventListener("resize", runResize);
     Take("AllReady", runResize);
+    // BAIL IF WE'RE NOT NAV-ING
     if (!Mode.nav) {
       Make("Nav", false);
       return;
@@ -3627,14 +3876,15 @@
       dy = a.y - b.y;
       return dz = 200 * a.z - b.z;
     };
-    return dist = function(x, y, z) {
-      if (z == null) {
-        z = 0;
-      }
+    return dist = function(x, y, z = 0) {
       return Math.sqrt(x * x + y * y + z * z);
     };
   });
 
+  // Enable this to debug nav repaints
+  // Take "Tick", (Tick)->
+  //   Tick (t)->
+  //     Nav.at z: Math.sin(t)/10 - .1
   Take(["Mode", "Nav", "SVG"], function(Mode, Nav, SVG) {
     var gesture;
     if (!Mode.nav) {
@@ -3688,7 +3938,7 @@
       dragging = false;
       TouchAcceleration.move({
         x: 0,
-        y: 0
+        y: 0 // Stop any momentum scrolling
       });
       if (Nav.eventInside(e)) {
         e.preventDefault();
@@ -3701,6 +3951,7 @@
         e.preventDefault();
         if (e.touches.length !== lastTouches.length) {
 
+        // noop
         } else if (e.touches.length > 1) {
           a = distTouches(lastTouches);
           b = distTouches(e.touches);
@@ -3723,6 +3974,8 @@
         return TouchAcceleration.up();
       }
     };
+    
+    // We are safe to use passive: false, because we only do nav when standalone
     window.addEventListener("touchstart", touchStart, {
       passive: false
     });
@@ -3791,6 +4044,7 @@
     });
   });
 
+  // This is needed because IE doesn't support Node.contains() on SVG elements. Not sure about Edge.
   if ((base = SVGElement.prototype).contains == null) {
     base.contains = function(node) {
       while (node != null) {
@@ -3919,6 +4173,8 @@
     });
   });
 
+  // scope.animate
+  // An every-frame update function that only runs in animate mode.
   Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
     return Registry.add("ScopeProcessor", function(scope) {
       var animate, running, startTime;
@@ -3927,6 +4183,8 @@
       }
       running = false;
       startTime = 0;
+      
+      // Replace the actual scope animate function with a warning
       animate = scope.animate;
       scope.animate = function() {
         throw new Error("@animate() is called by the system. Please don't call it yourself.");
@@ -3950,6 +4208,8 @@
     });
   });
 
+  // scope.animateMode and scope.schematicMode
+  // Scope callbacks fired whenever we switch modes
   Take(["Reaction", "Registry"], function(Reaction, Registry) {
     return Registry.add("ScopeProcessor", function(scope) {
       Reaction("Schematic:Hide", function() {
@@ -3963,13 +4223,13 @@
 
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
+      // These functions don't change the DOM — they just control the scope hierarchy.
       ScopeCheck(scope, "attachScope", "detachScope", "detachAllScopes");
+      // These functions change both the DOM and scope hierarchy.
+      // They're named to be compatable with the SVG tools.
       ScopeCheck(scope, "append", "prepend", "remove", "removeAllChildren");
-      scope.attachScope = function(child, prepend) {
+      scope.attachScope = function(child, prepend = false) {
         var idCounter, tempID;
-        if (prepend == null) {
-          prepend = false;
-        }
         child.parent = scope;
         if (child.id == null) {
           child.id = "child" + (scope.children.length || 0);
@@ -4142,6 +4402,8 @@
     });
   });
 
+  // This is a special scope processor just for controls,
+  // allowing them to be enabled and disabled by animation code.
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope, props) {
       var enabled;
@@ -4246,6 +4508,7 @@
     });
   });
 
+  // Depends on style
   Take(["Gradient", "Registry", "ScopeCheck"], function(Gradient, Registry, ScopeCheck) {
     var gradientCount;
     gradientCount = 0;
@@ -4261,9 +4524,7 @@
       rGradName = "RGradient" + gradientCount;
       rGradProps = null;
       rGradStops = null;
-      scope.linearGradient = function() {
-        var angle, stops;
-        angle = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      scope.linearGradient = function(angle, ...stops) {
         if (linearGradient == null) {
           linearGradient = Gradient.linear(lGradName);
         }
@@ -4280,13 +4541,11 @@
         }
         if (lGradStops !== stops) {
           lGradStops = stops;
-          Gradient.updateStops.apply(Gradient, [linearGradient].concat(slice.call(stops)));
+          Gradient.updateStops(linearGradient, ...stops);
         }
-        return scope.fill = "url(#" + lGradName + ")";
+        return scope.fill = `url(#${lGradName})`;
       };
-      return scope.radialGradient = function() {
-        var props, stops;
-        props = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      return scope.radialGradient = function(props, ...stops) {
         if (radialGradient == null) {
           radialGradient = Gradient.radial(rGradName);
         }
@@ -4302,9 +4561,9 @@
         }
         if (rGradStops !== stops) {
           rGradStops = stops;
-          Gradient.updateStops.apply(Gradient, [radialGradient].concat(slice.call(stops)));
+          Gradient.updateStops(radialGradient, ...stops);
         }
-        return scope.fill = "url(#" + rGradName + ")";
+        return scope.fill = `url(#${rGradName})`;
       };
     });
   });
@@ -4319,6 +4578,7 @@
     });
   });
 
+  // Depends on style
   Take(["Pressure", "Registry", "ScopeCheck", "SVG"], function(Pressure, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var accessors, pressure;
@@ -4343,6 +4603,7 @@
     });
   });
 
+  // This processor depends on the Style processor
   Take(["Registry", "ScopeCheck", "Tween"], function(Registry, ScopeCheck, Tween) {
     return Registry.add("ScopeProcessor", function(scope) {
       var tick;
@@ -4350,25 +4611,13 @@
       tick = function(v) {
         return scope.alpha = v;
       };
-      scope.show = function(duration, target) {
-        if (duration == null) {
-          duration = 1;
-        }
-        if (target == null) {
-          target = 1;
-        }
+      scope.show = function(duration = 1, target = 1) {
         return Tween(scope.alpha, target, duration, {
           tick: tick,
           ease: "linear"
         });
       };
-      return scope.hide = function(duration, target) {
-        if (duration == null) {
-          duration = 1;
-        }
-        if (target == null) {
-          target = 0;
-        }
+      return scope.hide = function(duration = 1, target = 0) {
         return Tween(scope.alpha, target, duration, {
           tick: tick,
           ease: "linear"
@@ -4391,7 +4640,7 @@
         },
         set: function(val) {
           if (textElement == null) {
-            throw new Error("You have " + scope.id + ".align = '" + val + "', but this scope doesn't contain any text or tspan elements.");
+            throw new Error(`You have ${scope.id}.align = '${val}', but this scope doesn't contain any text or tspan elements.`);
           }
           if (alignment !== val) {
             alignment = val;
@@ -4405,7 +4654,7 @@
         },
         set: function(val) {
           if (textElement == null) {
-            throw new Error("You have " + scope.id + ".text = '" + val + "', but this scope doesn't contain any text or tspan elements.");
+            throw new Error(`You have ${scope.id}.text = '${val}', but this scope doesn't contain any text or tspan elements.`);
           }
           if (text !== val) {
             return SVG.attr(textElement, "textContent", text = val);
@@ -4415,6 +4664,8 @@
     });
   });
 
+  // scope.tick
+  // An every-frame update function that can be turned on and off by the content creator.
   Take(["Registry", "Tick"], function(Registry, Tick) {
     return Registry.add("ScopeProcessor", function(scope) {
       var running, startTime, tick;
@@ -4423,6 +4674,8 @@
       }
       running = true;
       startTime = null;
+      
+      // Replace the actual scope tick function with a warning
       tick = scope.tick;
       scope.tick = function() {
         throw new Error("@tick() is called by the system. Please don't call it yourself.");
@@ -4468,6 +4721,8 @@
       rotation = 0;
       scaleX = 1;
       scaleY = 1;
+      
+      // Extract the existing transform value from the element
       if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) === 1) {
         t = transformBaseVal.getItem(0);
         switch (t.type) {
@@ -4480,6 +4735,7 @@
             scaleY = (t.matrix.a * t.matrix.d - t.matrix.b * t.matrix.c) / scaleX;
             break;
           default:
+            // skewX = 180/Math.PI * Math.atan2 t.matrix.a * t.matrix.b + t.matrix.c * t.matrix.d, denom
             throw new Error("^ Transform encountered an SVG element with a non-matrix transform");
         }
       } else if ((transformBaseVal != null ? transformBaseVal.numberOfItems : void 0) > 1) {
@@ -4487,6 +4743,7 @@
         throw new Error("^ Transform encountered an SVG element with more than one transform");
       }
       applyTransform = function() {
+        // TODO: introduce a guard here to check if the value has changed
         matrix.a = scaleX;
         matrix.d = scaleY;
         matrix.e = x;
@@ -4563,6 +4820,7 @@
     });
   });
 
+  // Depends on style
   Take(["Voltage", "Registry", "ScopeCheck", "SVG"], function(Voltage, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var accessors, voltage;
@@ -4645,7 +4903,9 @@
     Make("Fullscreen", {
       active: isFullscreen
     });
+    // If we support fullscreen in this browser, add a switch for it
     if (document.fullscreenEnabled || document.msFullScreenEnabled || document.webkitFullscreenEnabled) {
+      // We can't use the ?() shorthand for these functions because that doesn't work in Safari (possibly elsewhere)
       enterFullscreen = function() {
         if (SVG.svg.requestFullscreen != null) {
           return SVG.svg.requestFullscreen();
@@ -4668,21 +4928,25 @@
           return document.webkitExitFullscreen();
         }
       };
+      // Whenever the fullscreen state changes, make sure the switch matches the new state
       updateSwitch = function(e) {
         return fullScreenSwitch.setValue(isFullscreen());
       };
       window.addEventListener("fullscreenchange", updateSwitch);
       window.addEventListener("MSFullscreenChange", updateSwitch);
       window.addEventListener("webkitfullscreenchange", updateSwitch);
+      // Whenever the switch state changes, update the fullscreen state to match
       switchChanged = function(switchActive) {
         if (switchActive === isFullscreen()) {
 
+        // NOOP — the fullscreen state already matches the switch state
         } else if (switchActive) {
           return enterFullscreen();
         } else {
           return exitFullscreen();
         }
       };
+      // Create the switch
       return fullScreenSwitch = Settings.addSetting("switch", {
         name: "Full Screen",
         value: false,
@@ -4732,6 +4996,42 @@
         setup: function() {
           return Reaction("Background:Set", function(v) {
             return scope.fill = v;
+          });
+        }
+      };
+    });
+  });
+
+  Take(["Reaction", "Symbol", "SVG"], function(Reaction, Symbol, SVG) {
+    return Symbol("ColorContainer", ["colorContainer"], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          return Reaction("Background:Set", function(v) {
+            var c, current, l, len, len1, m, n, ref, ref1, ref2, results;
+            l = (ref = v.split(", ")[2]) != null ? ref.split("%")[0] : void 0;
+            l /= 100;
+            l = (l / 2 + .8) % 1;
+            ref1 = svgElement.querySelectorAll("[fill]");
+            for (m = 0, len = ref1.length; m < len; m++) {
+              c = ref1[m];
+              current = SVG.attr(c, "fill");
+              if (current !== "none" && current !== "transparent") {
+                SVG.attr(c, "fill", `hsl(227, 4%, ${l * 100}%)`);
+              }
+            }
+            ref2 = svgElement.querySelectorAll("[stroke]");
+            results = [];
+            for (n = 0, len1 = ref2.length; n < len1; n++) {
+              c = ref2[n];
+              current = SVG.attr(c, "stroke");
+              if (current !== "none" && current !== "transparent") {
+                results.push(SVG.attr(c, "stroke", `hsl(227, 4%, ${l * 100}%)`));
+              } else {
+                results.push(void 0);
+              }
+            }
+            return results;
           });
         }
       };
@@ -4792,11 +5092,8 @@
       };
       strip(element);
       element.setAttribute("fill", "transparent");
-      applyColor = function(stroke, fill) {
+      applyColor = function(stroke, fill = stroke) {
         var elm, len, len1, m, n;
-        if (fill == null) {
-          fill = stroke;
-        }
         for (m = 0, len = strokeElms.length; m < len; m++) {
           elm = strokeElms[m];
           SVG.attr(elm, "stroke", stroke);
@@ -4820,6 +5117,7 @@
         _setColor: function(p) {
           if (highlightActive) {
 
+          // Do nothing
           } else if (scope.voltage != null) {
             return applyColor(Voltage(p));
           } else {
@@ -4857,7 +5155,7 @@
               c = ref1[m];
               current = SVG.attr(c, "fill");
               if (current !== "none" && current !== "transparent") {
-                SVG.attr(c, "fill", "hsl(227, 4%, " + (l * 100) + "%)");
+                SVG.attr(c, "fill", `hsl(227, 4%, ${l * 100}%)`);
               }
             }
             ref2 = svgElement.querySelectorAll("[stroke]");
@@ -4866,7 +5164,7 @@
               c = ref2[n];
               current = SVG.attr(c, "stroke");
               if (current !== "none" && current !== "transparent") {
-                results.push(SVG.attr(c, "stroke", "hsl(227, 4%, " + (l * 100) + "%)"));
+                results.push(SVG.attr(c, "stroke", `hsl(227, 4%, ${l * 100}%)`));
               } else {
                 results.push(void 0);
               }
@@ -4888,13 +5186,14 @@
             hue = Ease.linear(v, 0, 1, 227, 218);
             lightness = v * 100;
             lightness += lightness > 50 ? -7 : 7;
-            return scope.fill = "hsl(" + hue + ", 5%, " + lightness + "%)";
+            return scope.fill = `hsl(${hue}, 5%, ${lightness}%)`;
           });
         }
       };
     });
   });
 
+  // Config is defined in the config.coffee in every SVGA
   Take(["Config", "ParentData"], function(Config, ParentData) {
     var Mode, embedded, fetchAttribute, isDev;
     embedded = window !== window.top;
@@ -4902,6 +5201,7 @@
       var val;
       if (embedded && (val = ParentData.get(name))) {
         if (val === "" || val === "true") {
+          // This isn't ideal, but it is good enough for now
           return true;
         }
         if (val === "false") {
@@ -4919,11 +5219,14 @@
       var loc, ref;
       loc = window.top.location;
       if (loc.search.indexOf("dev=false") > 0) {
+        // Allow turning off dev mode when running locally
         return false;
       }
       if (loc.search.indexOf("dev=true") > 0) {
+        // Allow turning on dev mode when running in prod
         return true;
       }
+      // By default, dev mode is active when we have a URL with a port number
       return ((ref = loc.port) != null ? ref.length : void 0) >= 4;
     };
     Mode = {
@@ -4935,6 +5238,8 @@
       settings: fetchAttribute("settings")
     };
     if (Mode.embed) {
+      
+      // We always disallow nav in embed mode
       Mode.nav = false;
     }
     return Make("Mode", Mode);
@@ -4943,7 +5248,7 @@
   (function() {
     var channel, finishSetup, id, inbox, k, listeners, outbox, port, v;
     if (window === window.top) {
-      Make("ParentData", null);
+      Make("ParentData", null); // Make sure you check Mode.embed before using ParentData, hey?
       return;
     }
     channel = new MessageChannel();
@@ -4958,7 +5263,7 @@
         send: function(k, v) {
           if (outbox[k] !== v) {
             outbox[k] = v;
-            return port.postMessage(k + ":" + v);
+            return port.postMessage(`${k}:${v}`);
           }
         },
         get: function(k) {
@@ -4987,10 +5292,10 @@
         return results;
       }
     });
-    window.top.postMessage("Channel:" + id, "*", [channel.port2]);
+    window.top.postMessage(`Channel:${id}`, "*", [channel.port2]);
     for (k in outbox) {
       v = outbox[k];
-      port.postMessage(k + ":" + v);
+      port.postMessage(`${k}:${v}`);
     }
     return port.start();
   })();
@@ -5002,26 +5307,26 @@
       if (cb != null) {
         return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);
       } else {
-        throw "Null reference passed to Reaction() with name: " + name;
+        throw `Null reference passed to Reaction() with name: ${name}`;
       }
     });
-    return Make("Action", function() {
-      var args, cb, len, m, name, ref;
-      name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    return Make("Action", function(name, ...args) {
+      var cb, len, m, ref;
       if (cbs[name] != null) {
         ref = cbs[name];
         for (m = 0, len = ref.length; m < len; m++) {
           cb = ref[m];
-          cb.apply(null, args);
+          cb(...args);
         }
       }
       return void 0;
     });
   })();
 
-  Take(["ControlPanel", "ControlPanelLayout", "GUI", "Registry", "Scope", "SVG", "ControlReady"], function(ControlPanel, ControlPanelLayout, arg, Registry, Scope, SVG) {
-    var Control, GUI, addItemToGroup, currentGroup, defn, getGroup, instances, ref, setup, type;
-    GUI = arg.ControlPanel;
+  Take(["ControlPanel", "ControlPanelLayout", "GUI", "Registry", "Scope", "SVG", "ControlReady"], function(ControlPanel, ControlPanelLayout, {
+      ControlPanel: GUI
+    }, Registry, Scope, SVG) {
+    var Control, addItemToGroup, currentGroup, defn, getGroup, instances, ref, setup, type;
     Control = {};
     instances = {};
     currentGroup = null;
@@ -5057,29 +5362,35 @@
       return group.itemScopes.push(scope);
     };
     setup = function(type, defn) {
-      return Control[type] = function(props) {
+      return Control[type] = function(props = {}) {
         var base1, elm, group, scope;
-        if (props == null) {
-          props = {};
-        }
         if (typeof props !== "object") {
           console.log(props);
-          throw new Error("Control." + type + "(props) takes a optional props object. Got ^^^, which is not an object.");
+          throw new Error(`Control.${type}(props) takes a optional props object. Got ^^^, which is not an object.`);
         }
+        
+        // Re-using an existing ID? Just attach to the existing control.
         if ((props.id != null) && (instances[props.id] != null)) {
           if (typeof (base1 = instances[props.id]).attach === "function") {
             base1.attach(props);
           }
           return instances[props.id];
         } else {
+          
+          // Create a new control
           group = getGroup(props.group);
           elm = ControlPanel.createItemElement(props.parent || group.scope.element);
+          
+          // We check for this property in some control-specific scope-processors
           props._isControl = true;
           scope = Scope(elm, defn, props);
           addItemToGroup(group, scope);
           if (typeof scope.attach === "function") {
             scope.attach(props);
           }
+          
+          // We don't want controls to highlight when they're hovered over,
+          // so we flag them in a way that highlight can see.
           scope._dontHighlightOnHover = true;
           if (props.id != null) {
             instances[props.id] = scope;
@@ -5096,36 +5407,24 @@
     return Make("Control", Control);
   });
 
+  // Ease
+  // Unlike other easing functions you'll find through Google, these easing functions are ALMOST human-
+  // readable (typographic pun intended). Also, they get called with lots of arguments, rather than the
+  // usual four. The reason being.. the four-argument version of these functions assumes your input
+  // value never goes below zero, and that you want to pass in deltas (like the duration) rather than
+  // specify explicit min and max values (like start-time and end-time). But if you are smart, and go
+  // with min/max ranges, then you get to use the easing functions for all sorts of stuff than purely
+  // "easing", which is awesome. These functions also take an optional final argument that clips the
+  // input between 0 and 1, which is often very helpful.
   (function() {
     var Ease;
     return Make("Ease", Ease = {
-      clip: function(input, min, max) {
-        if (min == null) {
-          min = 0;
-        }
-        if (max == null) {
-          max = 1;
-        }
+      clip: function(input, min = 0, max = 1) {
         return Math.max(min, Math.min(max, input));
       },
-      sin: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
+      sin: function(input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true) {
         var cos, p;
-        if (inputMin == null) {
-          inputMin = 0;
-        }
-        if (inputMax == null) {
-          inputMax = 1;
-        }
-        if (outputMin == null) {
-          outputMin = 0;
-        }
-        if (outputMax == null) {
-          outputMax = 1;
-        }
-        if (clip == null) {
-          clip = true;
-        }
-        if (inputMin === inputMax) {
+        if (inputMin === inputMax) { // Avoids a divide by zero
           return outputMin;
         }
         if (clip) {
@@ -5135,41 +5434,11 @@
         cos = Math.cos(p * Math.PI);
         return (.5 - cos / 2) * (outputMax - outputMin) + outputMin;
       },
-      cubic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
-        if (inputMin == null) {
-          inputMin = 0;
-        }
-        if (inputMax == null) {
-          inputMax = 1;
-        }
-        if (outputMin == null) {
-          outputMin = 0;
-        }
-        if (outputMax == null) {
-          outputMax = 1;
-        }
-        if (clip == null) {
-          clip = true;
-        }
+      cubic: function(input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true) {
         return Ease.power(input, 3, inputMin, inputMax, outputMin, outputMax, clip);
       },
-      linear: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
-        if (inputMin == null) {
-          inputMin = 0;
-        }
-        if (inputMax == null) {
-          inputMax = 1;
-        }
-        if (outputMin == null) {
-          outputMin = 0;
-        }
-        if (outputMax == null) {
-          outputMax = 1;
-        }
-        if (clip == null) {
-          clip = true;
-        }
-        if (inputMin === inputMax) {
+      linear: function(input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true) {
+        if (inputMin === inputMax) { // Avoids a divide by zero
           return outputMin;
         }
         if (clip) {
@@ -5181,27 +5450,9 @@
         input += outputMin;
         return input;
       },
-      power: function(input, power, inputMin, inputMax, outputMin, outputMax, clip) {
+      power: function(input, power = 1, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true) {
         var inputDiff, outputDiff, p;
-        if (power == null) {
-          power = 1;
-        }
-        if (inputMin == null) {
-          inputMin = 0;
-        }
-        if (inputMax == null) {
-          inputMax = 1;
-        }
-        if (outputMin == null) {
-          outputMin = 0;
-        }
-        if (outputMax == null) {
-          outputMax = 1;
-        }
-        if (clip == null) {
-          clip = true;
-        }
-        if (inputMin === inputMax) {
+        if (inputMin === inputMax) { // Avoids a divide by zero
           return outputMin;
         }
         if (clip) {
@@ -5216,42 +5467,16 @@
           return outputMin + outputDiff / 2 * (2 - Math.abs(Math.pow(p - 2, power)));
         }
       },
-      quadratic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
-        if (inputMin == null) {
-          inputMin = 0;
-        }
-        if (inputMax == null) {
-          inputMax = 1;
-        }
-        if (outputMin == null) {
-          outputMin = 0;
-        }
-        if (outputMax == null) {
-          outputMax = 1;
-        }
-        if (clip == null) {
-          clip = true;
-        }
+      quadratic: function(input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true) {
         return Ease.power(input, 2, inputMin, inputMax, outputMin, outputMax, clip);
       },
-      quartic: function(input, inputMin, inputMax, outputMin, outputMax, clip) {
-        if (inputMin == null) {
-          inputMin = 0;
-        }
-        if (inputMax == null) {
-          inputMax = 1;
-        }
-        if (outputMin == null) {
-          outputMin = 0;
-        }
-        if (outputMax == null) {
-          outputMax = 1;
-        }
-        if (clip == null) {
-          clip = true;
-        }
+      quartic: function(input, inputMin = 0, inputMax = 1, outputMin = 0, outputMax = 1, clip = true) {
         return Ease.power(input, 4, inputMin, inputMax, outputMin, outputMax, clip);
       },
+      // This is a special easing helper for moving from one value to another.
+      // It's sorta halfway between a tween and an ease, so it lives here.
+      // You pass in the current value, target value, rate of change (per second), and dT.
+      // It returns the new "current" value.
       ramp: function(current, target, rate, dT) {
         var delta;
         delta = target - current;
@@ -5262,7 +5487,7 @@
 
   Take(["Tick", "SVGReady"], function(Tick) {
     var avgList, avgWindow, fps, total;
-    avgWindow = 1;
+    avgWindow = 1; // average over the past n seconds
     avgList = [];
     total = 0;
     fps = 1;
@@ -5275,9 +5500,9 @@
       while (total > avgWindow && avgList.length > 0) {
         total -= avgList.shift();
       }
-      fps = avgList.length / total;
-      fps = Math.min(60, fps);
-      if (isNaN(fps)) {
+      fps = avgList.length / total; // will be artifically low for the first second — that's fine
+      fps = Math.min(60, fps); // our method is slightly inexact, so sometimes you get numbers over 60 — cap to 60
+      if (isNaN(fps)) { // If we drop too low we get NaN — cap to 2
         return fps = 2;
       }
     });
@@ -5293,9 +5518,8 @@
           return delete existing[name];
         }
       },
-      updateStops: function() {
-        var attrs, dirty, gradient, i, len, len1, m, n, ref, stop, stops;
-        gradient = arguments[0], stops = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      updateStops: function(gradient, ...stops) {
+        var attrs, dirty, i, len, len1, m, n, ref, stop;
         if (gradient._stops != null) {
           dirty = false;
           ref = gradient._stops;
@@ -5338,21 +5562,17 @@
             SVG.create("stop", gradient, attrs);
           }
         }
-        return gradient;
+        return gradient; // Composable
       },
       updateProps: function(gradient, props) {
         return SVG.attrs(gradient, props);
       },
-      linear: function() {
-        var attrs, gradient, name, props, stops;
-        name = arguments[0], props = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
-        if (props == null) {
-          props = {};
-        }
+      linear: function(name, props = {}, ...stops) {
+        var attrs, gradient;
         if (existing[name] != null) {
-          throw new Error("Gradient named " + name + " already exists. Please don't create the same gradient more than once.");
+          throw new Error(`Gradient named ${name} already exists. Please don't create the same gradient more than once.`);
         }
-        attrs = typeof props === "object" ? (props.id = name, props) : props === true ? {
+        attrs = typeof props === "object" ? (props.id = name, props) : props === true ? { // Vertical
           id: name,
           x2: 0,
           y2: 1
@@ -5361,22 +5581,18 @@
         };
         gradient = existing[name] = SVG.create("linearGradient", SVG.defs, attrs);
         Gradient.updateStops(gradient, stops);
-        return gradient;
+        return gradient; // Composable
       },
-      radial: function() {
-        var gradient, name, props, stops;
-        name = arguments[0], props = arguments[1], stops = 3 <= arguments.length ? slice.call(arguments, 2) : [];
-        if (props == null) {
-          props = {};
-        }
+      radial: function(name, props = {}, ...stops) {
+        var gradient;
         if (existing[name] != null) {
-          throw new Error("Gradient named " + name + " already exists. Please don't create the same gradient more than once.");
+          throw new Error(`Gradient named ${name} already exists. Please don't create the same gradient more than once.`);
         }
         existing[name] = true;
         props.id = name;
         gradient = existing[name] = SVG.create("radialGradient", SVG.defs, props);
         Gradient.updateStops(gradient, stops);
-        return gradient;
+        return gradient; // Composable
       }
     });
   });
@@ -5415,9 +5631,8 @@
         }
       }
     });
-    Make("Highlight", function() {
-      var activate, active, deactivate, highlights, setup, targets, timeout;
-      targets = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+    Make("Highlight", function(...targets) {
+      var activate, active, deactivate, highlights, setup, timeout;
       highlights = [];
       active = false;
       timeout = null;
@@ -5432,7 +5647,7 @@
         if (doFunction) {
           highlights.push(e = {
             elm: elm,
-            "function": elm._scope._highlight
+            function: elm._scope._highlight
           });
           e.dontHighlightOnHover = ((ref1 = elm._scope) != null ? ref1._dontHighlightOnHover : void 0) != null;
         } else if (doFill || doStroke) {
@@ -5472,14 +5687,15 @@
           if (typeof activeHighlight === "function") {
             activeHighlight();
           }
-          activeHighlight = deactivate;
+          activeHighlight = deactivate; // Set this to be the new active highlight
           timeout = setTimeout(deactivate, 4000);
           for (m = 0, len = highlights.length; m < len; m++) {
             h = highlights[m];
             if (h.dontHighlightOnHover && currentTarget.element === h.elm) {
 
-            } else if (h["function"] != null) {
-              h["function"](true);
+            // skip
+            } else if (h.function != null) {
+              h.function(true);
             } else {
               if (h.attrs.stroke != null) {
                 if (h.elm.tagName === "text" || h.elm.tagName === "tspan") {
@@ -5536,8 +5752,8 @@
           activeHighlight = null;
           for (m = 0, len = highlights.length; m < len; m++) {
             h = highlights[m];
-            if (h["function"] != null) {
-              h["function"](false);
+            if (h.function != null) {
+              h.function(false);
             } else {
               SVG.attrs(h.elm, h.attrs);
             }
@@ -5545,6 +5761,9 @@
         }
         return void 0;
       };
+      // Delay running the Highlight setup code by one frame so that if fills / strokes are changed
+      // by the @animate() function (eg: an @linearGradient is created), we can capture those changes.
+      // See: https://github.com/cdig/svga/issues/133
       return RAF(function() {
         var len, len1, m, mouseProps, n, t, target, touchProps;
         for (m = 0, len = targets.length; m < len; m++) {
@@ -5555,11 +5774,13 @@
             }));
             throw new Error("Highlight called with a null element ^^^");
           }
-          t = target.element || target;
+          t = target.element || target; // Support both scopes and elements
+          
+          // Since setting up Highlight has a cost to it, we do some extra bookkeeping to make sure it's not happening every frame.
           if (t._HighlighterSetupCount == null) {
             t._HighlighterSetupCount = 0;
           }
-          if (t._HighlighterSetupCount < 100) {
+          if (t._HighlighterSetupCount < 100) { // If we see this element more than 100 times, we're probably inside a tick
             t._HighlighterSetupCount++;
             setup(t);
           } else if (!t._HighlighterSetupCountWarned) {
@@ -5569,9 +5790,10 @@
         }
         for (n = 0, len1 = targets.length; n < len1; n++) {
           target = targets[n];
-          t = target.element || target;
+          t = target.element || target; // Support both scopes and elements
           if (!t._Highlighter) {
             t._Highlighter = true;
+            // Handle Mouse and Touch separately, for better perf
             mouseProps = {
               moveIn: activate(target),
               moveOut: deactivate
@@ -5592,22 +5814,15 @@
   });
 
   Take("SVG", function(SVG) {
-    return Make("Input", function(elm, calls, mouse, touch, options) {
+    return Make("Input", function(elm, calls, mouse = true, touch = true, options = {}) {
       var api, down, enabled, eventInside, move, out, over, prepTouchEvent, resetState, state, touchListenerOptions, touchmove, touchstart, up;
-      if (mouse == null) {
-        mouse = true;
-      }
-      if (touch == null) {
-        touch = true;
-      }
-      if (options == null) {
-        options = {};
-      }
       enabled = true;
       state = null;
+      // Thanks, Chrome..v_v
       touchListenerOptions = {
         passive: !options.blockScroll
       };
+      // Thanks, iOS.. v_v
       eventInside = function(e) {
         var ref;
         if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
@@ -5624,8 +5839,8 @@
           captured: false,
           deltaX: 0,
           deltaY: 0,
-          lastX: 0,
-          lastY: 0
+          lastX: 0, // These are used to compute deltas..
+          lastY: 0 // and to avoid repeat unchanged move events on IE
         };
       };
       resetState();
@@ -5721,6 +5936,7 @@
           }
         }
       };
+      // MOUSE #####################################################################################
       if (mouse) {
         document.addEventListener("mousedown", function(e) {
           if (!enabled) {
@@ -5734,6 +5950,8 @@
           }
           return down(e);
         });
+        // Windows fires this event every tick when touch-dragging, even when the input doesn't move?
+        // Only add the move listener if we need it, to avoid the perf cost
         if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null)) {
           document.addEventListener("mousemove", function(e) {
             if (!enabled) {
@@ -5780,6 +5998,7 @@
           });
         }
       }
+      // TOUCH #####################################################################################
       if (touch) {
         prepTouchEvent = function(e) {
           var newState, overChanged, pElm, ref, ref1;
@@ -5812,6 +6031,8 @@
           return down(e);
         };
         document.addEventListener("touchstart", touchstart, touchListenerOptions);
+        // Windows fires this event every tick when touch-dragging, even when the input doesn't move?
+        // Only add the move listener if we need it, to avoid the perf cost
         if ((calls.move != null) || (calls.drag != null) || (calls.moveOther != null) || (calls.dragOther != null) || (calls.moveIn != null) || (calls.dragIn != null) || (calls.moveOut != null) || (calls.dragOut != null)) {
           touchmove = function(e) {
             if (!enabled) {
@@ -5826,11 +6047,11 @@
           if (!enabled) {
             return;
           }
-          if (!eventInside(e)) {
+          if (!eventInside(e)) { // Without this, the Back To Menu button breaks due to our preventDefault call below
             return;
           }
           prepTouchEvent(e);
-          e.preventDefault();
+          e.preventDefault(); // This avoids redundant mouse events, which double-fire click handlers
           up(e);
           return state.touch = false;
         });
@@ -5856,10 +6077,18 @@
     });
   });
 
+  // KeyMe is a quick way to add keyboard actions without having to manage events.
+  // It also exposes a nice map of currently pressed keys with the "pressing" property.
+  // You can add handlers for "any"-key presses/releases, too.
+  // And it automatically circumvents the key repeat rate, so you only get one call per press. Presto!
+  // Hey, maybe also does shortcuts (aka: chords) too? Woo!
+  // Note — shortcuts only work with 1 modifier. Command-g, perfect. Command-shift-g, no.
   (function() {
     var KeyMe, KeyNames, actionize, downHandlers, getModifier, handleKey, keyDown, keyUp, runCallbacks, upHandlers;
     downHandlers = {};
     upHandlers = {};
+    
+    // Give a keyname or keycode, and an options object with props for down, up, and/or modifier
     KeyMe = function(key, opts) {
       var name;
       if (key == null) {
@@ -5871,12 +6100,18 @@
       name = typeof key === "string" ? key : KeyNames[key];
       return actionize(opts.down, opts.up, name, opts.modifier);
     };
+    
+    // Register a down/up handler for when you press any key
     KeyMe.any = function(down, up) {
       return actionize(down, up, "any");
     };
+    
+    // Register a down/up handler for a given character
     KeyMe.char = function(char, down, up) {
       return actionize(down, up, char);
     };
+    
+    // Register a down/up handler for a given modifier+character
     KeyMe.shortcut = function(modifier, char, down, up) {
       return actionize(down, up, char, modifier);
     };
@@ -5913,6 +6148,9 @@
       };
       return handleKey(name, e, downHandlers);
     };
+    
+    // NOT SURE IF WE STILL NEED THIS:
+    // keyUp e if e.ctrlKey # Pressing a Command key shortcut doesn't release properly, so we need to release it now
     keyUp = function(e) {
       var code, name;
       code = e.keyCode;
@@ -5939,7 +6177,7 @@
       if (e.altKey) {
         return "alt";
       }
-      if (e.shiftKey) {
+      if (e.shiftKey) { // If we support shift, then uppercase chars might not work — need to test
         return "shift";
       }
     };
@@ -5998,7 +6236,7 @@
       56: "8",
       57: "9",
       59: "semicolon",
-      61: "equals",
+      61: "equals", // FF
       65: "a",
       66: "b",
       67: "c",
@@ -6068,10 +6306,10 @@
       135: "f24",
       144: "num_lock",
       145: "scroll_lock",
-      173: "minus",
-      187: "equals",
+      173: "minus", // FF
+      187: "equals", // Safari/Chrome
       188: "comma",
-      189: "minus",
+      189: "minus", // Safari/Chrome
       190: "period",
       191: "slash",
       192: "back_quote",
@@ -6085,33 +6323,49 @@
 
   (function() {
     var Pressure, renderString;
-    Pressure = function(pressure, alpha) {
+    Pressure = function(pressure, alpha = 1) {
       var green;
-      if (alpha == null) {
-        alpha = 1;
-      }
       switch (false) {
+        
+          // Pass-through for string values
         case typeof pressure !== "string":
           return pressure;
+        
+          // Schematic — black
         case pressure !== Pressure.black:
           return renderString(0, 0, 0, alpha);
+        
+          // Schematic — white
         case pressure !== Pressure.white:
           return renderString(255, 255, 255, alpha);
+        // Vacuum pressure - purple
         case pressure !== Pressure.vacuum:
           return renderString(255, 0, 255, alpha);
+        
+          // Zero pressure - light blue - also non-charged drain lines
         case pressure !== Pressure.atmospheric:
           return renderString(0, 153, 255, alpha);
+        
+          // Zero pressure - blue - also charged drain lines
         case pressure !== Pressure.drain:
           return renderString(0, 0, 255, alpha);
+        
+          // Electric
         case pressure !== Pressure.electric:
           return renderString(0, 218, 255, alpha);
+        
+          // Magnetic
         case pressure !== Pressure.magnetic:
           return renderString(141, 2, 155, alpha);
+        
+          // Normal - yellow to orange (102 green)
         case !(pressure < Pressure.med):
           green = Pressure.med - pressure;
           green *= 153 / (Pressure.med - 1);
           green += 102;
           return renderString(255, green | 0, 0, alpha);
+        
+          // Normal - orange (102 green) to red
         case !(pressure >= Pressure.med):
           green = Pressure.max - pressure;
           green *= 102 / Pressure.med;
@@ -6131,20 +6385,22 @@
     Pressure.magnetic = 1001;
     renderString = function(r, g, b, a) {
       if (a >= .99) {
-        return "rgb(" + r + "," + g + "," + b + ")";
+        return `rgb(${r},${g},${b})`;
       } else {
-        return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+        return `rgba(${r},${g},${b},${a})`;
       }
     };
     return Make("Pressure", Pressure);
   })();
 
+  // RAF is used for 1-time requestAnimationFrame callbacks.
+  // For every-frame requestAnimationFrame callbacks, use system/tick.coffee
   (function() {
     var aboutToRun, allReady, attemptToRun, callbacksByPriority, run, runRequested;
     allReady = false;
     runRequested = false;
     aboutToRun = false;
-    callbacksByPriority = [[], []];
+    callbacksByPriority = [[], []]; // Assume 2 priorities will be used in most cases
     run = function(time) {
       var callbacks, cb, len, len1, m, n, priority;
       aboutToRun = false;
@@ -6173,14 +6429,8 @@
       allReady = true;
       return attemptToRun();
     });
-    return Make("RAF", function(cb, ignoreDuplicates, priority) {
+    return Make("RAF", function(cb, ignoreDuplicates = false, priority = 0) {
       var c, len, m, ref;
-      if (ignoreDuplicates == null) {
-        ignoreDuplicates = false;
-      }
-      if (priority == null) {
-        priority = 0;
-      }
       if (cb == null) {
         throw new Error("RAF(null)");
       }
@@ -6199,10 +6449,15 @@
       (callbacksByPriority[priority] != null ? callbacksByPriority[priority] : callbacksByPriority[priority] = []).push(cb);
       runRequested = true;
       attemptToRun();
-      return cb;
+      return cb; // Composable
     });
   })();
 
+  
+    // The Registry allows us to advertise the existence of global maps and arrays of stuff,
+  // with explicit control over when things can be registered and when they can be requested.
+  // If you register something after registration closes, or request something before it closes,
+  // you get slapped on the wrist.
   (function() {
     var Registry, closed, named, unnamed;
     named = {};
@@ -6212,16 +6467,13 @@
       add: function(type, item) {
         if (closed[type]) {
           console.log(item);
-          throw new Error("^^^ This " + type + " was registered too late.");
+          throw new Error(`^^^ This ${type} was registered too late.`);
         }
         return (unnamed[type] != null ? unnamed[type] : unnamed[type] = []).push(item);
       },
-      all: function(type, byName) {
-        if (byName == null) {
-          byName = false;
-        }
+      all: function(type, byName = false) {
         if (!closed[type]) {
-          throw new Error("Registry.all(" + type + ", " + byName + ") was called before registration closed.");
+          throw new Error(`Registry.all(${type}, ${byName}) was called before registration closed.`);
         }
         if (byName) {
           return named[type];
@@ -6233,17 +6485,17 @@
         var ref;
         if (closed[type]) {
           console.log(item);
-          throw new Error("^^^ This " + type + " named \"" + name + "\" was registered too late.");
+          throw new Error(`^^^ This ${type} named \"${name}\" was registered too late.`);
         }
         if (((ref = named[type]) != null ? ref[name] : void 0) != null) {
           console.log(item);
-          throw new Error("^^^ This " + type + " is using the name \"" + name + "\", which is already in use.");
+          throw new Error(`^^^ This ${type} is using the name \"${name}\", which is already in use.`);
         }
         return (named[type] != null ? named[type] : named[type] = {})[name] = item;
       },
       get: function(type, name) {
         if (!closed[type]) {
-          throw new Error("Registry.get(" + type + ", " + name + ") was called before registration closed.");
+          throw new Error(`Registry.get(${type}, ${name}) was called before registration closed.`);
         }
         return named[type][name];
       },
@@ -6253,20 +6505,21 @@
     });
   })();
 
-  Make("ScopeCheck", function() {
-    var len, m, prop, props, scope;
-    scope = arguments[0], props = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+  Make("ScopeCheck", function(scope, ...props) {
+    var len, m, prop;
     for (m = 0, len = props.length; m < len; m++) {
       prop = props[m];
       if (!(scope[prop] != null)) {
         continue;
       }
       console.log(scope.element);
-      throw new Error("^ @" + prop + " is a reserved name. Please choose a different name for your child/property \"" + prop + "\".");
+      throw new Error(`^ @${prop} is a reserved name. Please choose a different name for your child/property \"${prop}\".`);
     }
     return void 0;
   });
 
+  // This is a very minimal wrapper around localStorage.
+  // You are expected to do your own type conversions when getting values back.
   Make("Storage", Storage = function(k, v) {
     if (v != null) {
       return window.top.localStorage["SVGA-" + k] = v.toString();
@@ -6275,22 +6528,40 @@
     }
   });
 
+  // These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
+  // They're not to be used by content, since they might endure breaking changes at any time.
   Take("DOMContentLoaded", function() {
     var CheckSVGReady, SVG, SVGReady, attrNames, defs, propNames, root, svg, svgNS, xlinkNS;
+    
+    // We give the main SVG an id in cd-core's gulpfile, so that we know which SVG to target.
+    // There's only ever one SVGA in the current context, but there might be other SVGs
+    // (eg: the header logo if this is a standalone deployed SVGA).
+    // Also, we can't use getElementById because gulp-rev-all thinks it's a URL *facepalm*
     svg = document.querySelector("svg#svga");
     defs = svg.querySelector("defs");
     root = svg.getElementById("root");
     svgNS = "http://www.w3.org/2000/svg";
     xlinkNS = "http://www.w3.org/1999/xlink";
+    
+    // This is used to distinguish props from attrs, so we can set both with SVG.attr
     propNames = {
       textContent: true
     };
+    // additional prop names will be listed here as needed
+
+    // This is used to cache normalized keys, and to provide defaults for keys that shouldn't be normalized
     attrNames = {
       gradientUnits: "gradientUnits",
       viewBox: "viewBox",
       SCOPE: "SCOPE",
       SYMBOL: "SYMBOL"
     };
+    // additional attr names will be listed here as needed
+
+    // We want to wait until SVGReady fires before we change the structure of the DOM.
+    // However, we can't just Take "SVGReady" at the top, because other systems want
+    // to use these SVG tools in safe, non-structural ways before SVGReady has fired.
+    // So we do this:
     SVGReady = false;
     CheckSVGReady = function() {
       return SVGReady || (SVGReady = Take("SVGReady"));
@@ -6308,7 +6579,7 @@
         if (parent != null) {
           SVG.append(parent, elm);
         }
-        return elm;
+        return elm; // Composable
       },
       clone: function(source, parent, attrs) {
         var attr, child, elm, len, len1, m, n, ref, ref1;
@@ -6338,14 +6609,14 @@
         if (parent != null) {
           SVG.append(parent, elm);
         }
-        return elm;
+        return elm; // Composable
       },
       append: function(parent, child) {
         if (!CheckSVGReady()) {
           throw new Error("SVG.append() called before SVGReady");
         }
         parent.appendChild(child);
-        return child;
+        return child; // Composable
       },
       prepend: function(parent, child) {
         if (!CheckSVGReady()) {
@@ -6356,7 +6627,7 @@
         } else {
           parent.appendChild(child);
         }
-        return child;
+        return child; // Composable
       },
       remove: function(parent, child) {
         if (!CheckSVGReady()) {
@@ -6389,7 +6660,7 @@
           v = attrs[k];
           SVG.attr(elm, k, v);
         }
-        return elm;
+        return elm; // Composable
       },
       attr: function(elm, k, v) {
         var base1, ns;
@@ -6407,24 +6678,27 @@
         if (elm._SVG_attr == null) {
           elm._SVG_attr = {};
         }
-        if (v === void 0) {
+        if (v === void 0) { // Read
+          // Note that we only do DOM->cache on a read call (not on a write call),
+          // to slightly avoid intermingling DOM reads and writes, which causes thrashing.
           return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
         }
-        if (elm._SVG_attr[k] === v) {
+        if (elm._SVG_attr[k] === v) { // cache hit — bail
           return v;
         }
-        elm._SVG_attr[k] = v;
+        elm._SVG_attr[k] = v; // update cache
         if (propNames[k] != null) {
           return elm[k] = v;
         }
         ns = k === "xlink:href" ? xlinkNS : null;
-        k = attrNames[k] != null ? attrNames[k] : attrNames[k] = k.replace(/([A-Z])/g, "-$1").toLowerCase();
+        k = attrNames[k] != null ? attrNames[k] : attrNames[k] = k.replace(/([A-Z])/g, "-$1").toLowerCase(); // Normalize camelCase into kebab-case
         if (v != null) {
-          elm.setAttributeNS(ns, k, v);
+          elm.setAttributeNS(ns, k, v); // set DOM attribute
+// v is explicitly set to null (not undefined)
         } else {
-          elm.removeAttributeNS(ns, k);
+          elm.removeAttributeNS(ns, k); // remove DOM attribute
         }
-        return v;
+        return v; // Not Composable
       },
       styles: function(elm, styles) {
         var k, v;
@@ -6439,7 +6713,7 @@
           v = styles[k];
           SVG.style(elm, k, v);
         }
-        return elm;
+        return elm; // Composable
       },
       style: function(elm, k, v) {
         var base1;
@@ -6463,7 +6737,7 @@
         if (elm._SVG_style[k] !== v) {
           elm.style[k] = elm._SVG_style[k] = v;
         }
-        return v;
+        return v; // Not Composable
       }
     });
   });
@@ -6489,8 +6763,12 @@
     return Make("Symbol", Symbol);
   });
 
+  // Tick is used for every-frame requestAnimationFrame callbacks.
+  // For 1-time requestAnimationFrame callbacks, use system/raf.coffee
   Take(["Mode", "ParentData", "RAF"], function(Mode, ParentData, RAF) {
     var callbacks, internalTime, maximumDt, tick, wallTime;
+    // We go all the way down to 2 FPS, but no lower, to avoid weirdness if the JS thread is paused.
+    // Below 2 FPS, we'll start to get temporal skew where the internal time and the wall time diverge.
     maximumDt = 0.5;
     callbacks = [];
     wallTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
@@ -6508,11 +6786,8 @@
       }
       return RAF(tick);
     });
-    return Make("Tick", function(cb, ignoreDuplicates) {
+    return Make("Tick", function(cb, ignoreDuplicates = false) {
       var c, len, m;
-      if (ignoreDuplicates == null) {
-        ignoreDuplicates = false;
-      }
       for (m = 0, len = callbacks.length; m < len; m++) {
         c = callbacks[m];
         if (!(c === cb)) {
@@ -6525,10 +6800,14 @@
         throw new Error("^ Tick was called more than once with this function. You can use Tick(fn, true) to drop duplicates and bypass this error.");
       }
       callbacks.push(cb);
-      return cb;
+      return cb; // Composable
     });
   });
 
+  
+  // These are Ivan's SVG tools. They're private APIs, part of the implementation of SVGA.
+  // They're not to be used by content, since they might endure breaking changes at any time.
+  // They may be used by Controls, since those are a more advanced feature of SVGA.
   Take(["RAF", "SVG"], function(RAF, SVG) {
     var TRS;
     TRS = function(elm, debugColor) {
@@ -6543,7 +6822,7 @@
       SVG.append(wrapper, elm);
       if (debugColor != null) {
         SVG.create("rect", wrapper, {
-          "class": "Debug",
+          class: "Debug",
           x: -2,
           y: -2,
           width: 4,
@@ -6560,11 +6839,11 @@
         ox: 0,
         oy: 0,
         apply: function() {
-          SVG.attr(wrapper, "transform", "translate(" + v.x + "," + v.y + ") rotate(" + (v.r * 360) + ") scale(" + v.sx + "," + v.sy + ")");
-          return SVG.attr(elm, "transform", "translate(" + (-v.ox) + "," + (-v.oy) + ")");
+          SVG.attr(wrapper, "transform", `translate(${v.x},${v.y}) rotate(${v.r * 360}) scale(${v.sx},${v.sy})`);
+          return SVG.attr(elm, "transform", `translate(${-v.ox},${-v.oy})`);
         }
       };
-      return elm;
+      return elm; // Composable
     };
     TRS.abs = function(elm, attrs) {
       var delta;
@@ -6577,6 +6856,8 @@
         throw new Error("^ Null attrs passed to TRS.abs(elm, attrs)");
       }
       if (attrs.scale != null) {
+        // The order in which these are applied is super important.
+        // If we change the order, it'll change the outcome of everything that uses this to do more than one operation per call.
         attrs.sx = attrs.sy = attrs.scale;
       }
       if (attrs.x != null) {
@@ -6609,7 +6890,7 @@
       } else {
         RAF(elm._trs.apply, true, 1);
       }
-      return elm;
+      return elm; // Composable
     };
     TRS.rel = function(elm, attrs) {
       if ((elm != null ? elm._trs : void 0) == null) {
@@ -6621,6 +6902,8 @@
         throw new Error("^ Null attrs passed to TRS.abs(elm, attrs)");
       }
       if (attrs.x != null) {
+        // The order in which these are applied is super important.
+        // If we change the order, it'll change the outcome of everything that uses this to do more than one operation per call.
         elm._trs.x += attrs.x;
       }
       if (attrs.y != null) {
@@ -6648,86 +6931,71 @@
       } else {
         RAF(elm._trs.apply, true, 1);
       }
-      return elm;
+      return elm; // Composable
     };
-    TRS.move = function(elm, x, y) {
-      if (x == null) {
-        x = 0;
-      }
-      if (y == null) {
-        y = 0;
-      }
+    TRS.move = function(elm, x = 0, y = 0) {
       if (elm._trs == null) {
         console.log(elm);
         throw new Error("^ Non-TRS element passed to TRS.move");
       }
       return TRS.abs(elm, {
         x: x,
-        y: y
+        y: y // Composable
       });
     };
-    TRS.rotate = function(elm, r) {
-      if (r == null) {
-        r = 0;
-      }
+    TRS.rotate = function(elm, r = 0) {
       if (elm._trs == null) {
         console.log(elm);
         throw new Error("^ Non-TRS element passed to TRS.rotate");
       }
       return TRS.abs(elm, {
-        r: r
+        r: r // Composable
       });
     };
-    TRS.scale = function(elm, sx, sy) {
-      if (sx == null) {
-        sx = 1;
-      }
-      if (sy == null) {
-        sy = sx;
-      }
+    TRS.scale = function(elm, sx = 1, sy = sx) {
       if (elm._trs == null) {
         console.log(elm);
         throw new Error("^ Non-TRS element passed to TRS.scale");
       }
       return TRS.abs(elm, {
         sx: sx,
-        sy: sy
+        sy: sy // Composable
       });
     };
-    TRS.origin = function(elm, ox, oy) {
-      if (ox == null) {
-        ox = 0;
-      }
-      if (oy == null) {
-        oy = 0;
-      }
+    TRS.origin = function(elm, ox = 0, oy = 0) {
       if (elm._trs == null) {
         console.log(elm);
         throw new Error("^ Non-TRS element passed to TRS.origin");
       }
       return TRS.abs(elm, {
         ox: ox,
-        oy: oy
+        oy: oy // Composable
       });
     };
     return Make("TRS", TRS);
   });
 
+  // Tween
+  // This is a half-decent value interpolator.
+  // Note: If you aren't super good with CoffeeScript precedence rules, turn back now!
   Take(["Tick"], function(Tick) {
     var Tween, clone, dist, eases, gc, getEaseFn, getKeys, skipGC, tweens;
     tweens = [];
     skipGC = false;
-    Tween = function(from, to, time, tween) {
+    Tween = function(from, to, time, tween = {}) {
       var keys;
-      if (tween == null) {
-        tween = {};
-      }
       if (typeof tween === "function") {
+        
+        // The 4th arg can be a tick function or an options object
         tween = {
           tick: tween
         };
       }
+      
+      // from/to can be numbers or objects. Internally, we'll work with objects.
       tween.multi = typeof from === "object";
+      
+      // If you don't provide a tick function, we'll assume we're mutating the from object.
       if (tween.mutate == null) {
         tween.mutate = tween.tick == null;
       }
@@ -6745,9 +7013,11 @@
       tween.pos = Math.min(1, tween.pos || 0);
       tween.completed = false;
       tween.cancelled = false;
+      
+      // Now is a great time to do some GC
       gc(tween.tick, tween.from);
       tweens.push(tween);
-      return tween;
+      return tween; // Composable
     };
     getKeys = function(o) {
       var k, results;
@@ -6778,7 +7048,7 @@
     getEaseFn = function(given) {
       if (typeof given === "string") {
         return eases[given] || (function() {
-          throw new Error("Tween: \"" + given + "\" is not a value ease type.");
+          throw new Error(`Tween: \"${given}\" is not a value ease type.`);
         })();
       } else if (typeof given === "function") {
         return given;
@@ -6800,7 +7070,7 @@
       }
     };
     gc = function(tick, from) {
-      if (skipGC) {
+      if (skipGC) { // Don't GC if we're in the middle of a tick!
         return;
       }
       return tweens = tweens.filter(function(tween) {
@@ -6810,27 +7080,26 @@
         if (tween.cancelled) {
           return false;
         }
-        if ((tick != null) && tick === tween.tick) {
+        if ((tick != null) && tick === tween.tick) { // this makes interruptions work normally
           return false;
         }
-        if ((from != null) && from === tween.from) {
+        if ((from != null) && from === tween.from) { // this makes interruptions work with mutate
           return false;
         }
         return true;
       });
     };
-    Tween.cancel = function() {
-      var len, m, tween, tweensToCancel;
-      tweensToCancel = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+    Tween.cancel = function(...tweensToCancel) {
+      var len, m, tween;
       for (m = 0, len = tweensToCancel.length; m < len; m++) {
         tween = tweensToCancel[m];
         tween.cancelled = true;
       }
-      return gc();
+      return gc(); // Aww sure, let's do a GC!
     };
     Tick(function(t, dt) {
       var e, k, len, len1, m, n, ref, tween, v;
-      skipGC = true;
+      skipGC = true; // It's probably not safe to GC in the middle of our tick loop
       for (m = 0, len = tweens.length; m < len; m++) {
         tween = tweens[m];
         if (!(!tween.cancelled)) {
@@ -6853,6 +7122,7 @@
           }
         }
       }
+      // Hey, another great time to do some GC!
       skipGC = false;
       return gc();
     });
@@ -6861,25 +7131,29 @@
 
   Take("Ease", function(Ease) {
     var Voltage, renderHSLString, renderString;
-    Voltage = function(voltage, alpha) {
+    Voltage = function(voltage, alpha = 1) {
       var h;
-      if (alpha == null) {
-        alpha = 1;
-      }
       switch (false) {
+        // Pass-through for string values
         case typeof voltage !== "string":
           return voltage;
+        // Schematic — black
         case voltage !== Voltage.black:
           return renderString(0, 0, 0, alpha);
+        // Schematic — white
         case voltage !== Voltage.white:
           return renderString(255, 255, 255, alpha);
+        // Legacy Electric
         case voltage !== Voltage.electric:
           return renderString(0, 218, 255, alpha);
+        // Magnetic
         case voltage !== Voltage.magnetic:
           return renderString(141, 2, 155, alpha);
+        // Zero voltage
         case voltage !== Voltage.zero:
           return renderString(0, 0, 0, alpha);
         default:
+          // Normal — green to blue
           h = Ease.linear(voltage, Voltage.min, Voltage.max, 100, 180);
           return renderHSLString(h, 100, 50, alpha);
       }
@@ -6895,16 +7169,16 @@
     Voltage.magnetic = 1001;
     renderString = function(r, g, b, a) {
       if (a >= .99) {
-        return "rgb(" + r + "," + g + "," + b + ")";
+        return `rgb(${r},${g},${b})`;
       } else {
-        return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+        return `rgba(${r},${g},${b},${a})`;
       }
     };
     renderHSLString = function(h, s, l, a) {
       if (a >= .99) {
-        return "hsl(" + h + "," + s + "%," + l + "%)";
+        return `hsl(${h},${s}%,${l}%)`;
       } else {
-        return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
+        return `hsla(${h},${s}%,${l}%,${a})`;
       }
     };
     return Make("Voltage", Voltage);
@@ -6912,6 +7186,8 @@
 
   (function() {
     var WrapText;
+    // This is a basic text-wrapping utility that works fine for monospace,
+    // but does not account for text metrics with variable width fonts.
     return Make("WrapText", WrapText = function(string, maxLineLength) {
       var currentLine, currentWord, i, len, line, lineLength, lines, m, words;
       if (!((string != null) && string.length > 0)) {
@@ -6923,16 +7199,23 @@
       words = string.split(" ");
       while (words.length > 0) {
         currentWord = words.shift();
+        // If there's already stuff on the current line,
+        // and the current word would push us past the right edge,
+        // start a new line
         if ((lines[currentLine] != null) && lineLength + currentWord.length > maxLineLength) {
           currentLine++;
         }
+        // If the current line is empty, set it up
         if (!lines[currentLine]) {
           lines[currentLine] = [];
           lineLength = 0;
         }
+        // Add the current word to the current line
         lines[currentLine].push(currentWord);
+        // Update the length of the current line
         lineLength += currentWord.length;
         if (lines[currentLine].length > 1) {
+          // Also count spaces between words
           lineLength += 1;
         }
       }

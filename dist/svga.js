@@ -5125,10 +5125,13 @@
           }
         },
         setup: function() {
+          var ref;
           this.pressure = 0;
-          return Reaction("Schematic:Show", function() {
+          Reaction("Schematic:Show", function() {
             return this.pressure = Pressure.black;
           });
+          // If there's a dashed child of this HydraulicLine, turn it into a pilot line
+          return (ref = this.dashed) != null ? ref.dash.pilot() : void 0;
         }
       };
     });

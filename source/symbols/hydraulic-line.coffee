@@ -4,7 +4,6 @@ Take ["Pressure", "Reaction", "SVG", "Symbol", "Voltage"], (Pressure, Reaction, 
     fillElms = []
     highlightActive = false
 
-
     strip = (elm)->
       if elm.hasAttribute?("fill") and elm.getAttribute("fill") isnt "none"
         fillElms.push elm if elm isnt element
@@ -48,3 +47,6 @@ Take ["Pressure", "Reaction", "SVG", "Symbol", "Voltage"], (Pressure, Reaction, 
       setup: ()->
         @pressure = 0
         Reaction "Schematic:Show", ()-> @pressure = Pressure.black
+
+        # If there's a dashed child of this HydraulicLine, turn it into a pilot line
+        @dashed?.dash.pilot()

@@ -4,7 +4,7 @@
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
     "fonts": "cdig/fonts#v4-1",
-    "take-and-make": "cdig/take-and-make#v4-1"
+    "take-and-make": "cdig/take-and-make#93f4e15"
   },
   "devDependencies": {
     "coffeescript": "latest",

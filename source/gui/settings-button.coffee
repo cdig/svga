@@ -1,4 +1,4 @@
-Take ["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"], (Action, GUI, Input, Mode, Reaction, Scope, SVG)->
+Take ["Action", "GUI", "Input", "Mode", "Scope", "SVG", "ScopeReady"], (Action, GUI, Input, Mode, Scope, SVG)->
 
   return unless Mode.settings
 
@@ -22,7 +22,7 @@ Take ["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"
     width: width
     height: height
     rx: 3
-    fill: "hsl(220, 45%, 45%)"
+    fill: GUI.Colors.bg.l
 
   label = SVG.create "text", elm,
     textContent: "Settings"

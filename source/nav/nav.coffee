@@ -25,7 +25,7 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
     # ("Available space" means the size of the window, minus the space occupied by the control panel.)
     # Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
     # Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
-    SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{contentScale * Math.pow 2, pos.z}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
+    SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{Nav.rootScale()}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
 
 
   pickBestLayout = (totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo)->
@@ -147,32 +147,45 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
   requestRender = ()->
     RAF render, true
 
-  applyLimit = (l, v)->
-    Math.min l.max, Math.max l.min, v
+  applyLimit = (l, v, a = 0)->
+    Math.min l.max + a, Math.max l.min - a, v
 
   Make "Nav", Nav =
-    to: (p)->
-      Tween.cancel tween if tween?
+    center: ()-> center
+    pos: ()-> pos
+    rootScale: ()-> contentScale * Math.pow 2, pos.z
+
+    runResize: runResize
+
+    tweenTime: (p)->
       timeX = .03 * Math.sqrt(Math.abs(p.x-pos.x)) or 0
       timeY = .03 * Math.sqrt(Math.abs(p.y-pos.y)) or 0
       timeZ = .7 * Math.sqrt(Math.abs(p.z-pos.z)) or 0
-      time = Math.sqrt timeX*timeX + timeY*timeY + timeZ*timeZ
+      return Math.sqrt timeX*timeX + timeY*timeY + timeZ*timeZ
+
+    to: (p, time)->
+      Tween.cancel tween if tween?
+      time ?= Nav.tweenTime p
       tween = Tween pos, p, time, mutate:true, tick:render
 
     by: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, pos.z + p.z if p.z?
-      scale = contentScale * Math.pow 2, pos.z
-      pos.x = applyLimit limit.x, pos.x + p.x / scale if p.x?
-      pos.y = applyLimit limit.y, pos.y + p.y / scale if p.y?
+      scale = Nav.rootScale()
+      pos.x += p.x / scale if p.x?
+      pos.y += p.y / scale if p.y?
+      pos.x = applyLimit limit.x, pos.x, center.x / scale * .8
+      pos.y = applyLimit limit.y, pos.y, center.y / scale * .8
       requestRender()
 
     at: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, p.z if p.z?
-      scale = contentScale * Math.pow 2, pos.z
-      pos.x = applyLimit limit.x, p.x / scale if p.x?
-      pos.y = applyLimit limit.y, p.y / scale if p.y?
+      scale = Nav.rootScale()
+      pos.x = p.x / scale if p.x?
+      pos.y = p.y / scale if p.y?
+      pos.x = applyLimit limit.x, pos.x, center.x / scale * .8
+      pos.y = applyLimit limit.y, pos.y, center.y / scale * .8
       requestRender()
 
     startScale: ()->

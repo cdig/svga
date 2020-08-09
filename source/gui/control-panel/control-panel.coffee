@@ -18,8 +18,8 @@ Take ["ControlPanelLayout", "Gradient", "GUI", "SVG", "Scope", "TRS", "ControlRe
   panelBg = SVG.create "rect", panelElm,
     xPanelBg: ""
     rx: CP.panelBorderRadius
-    fill: "hsl(220, 45%, 45%)"
-  
+    fill: GUI.Colors.bg.l
+
   columnsElm = SVG.create "g", panelElm,
     xColumns: ""
     transform: "translate(#{CP.panelPadding},#{CP.panelPadding})"

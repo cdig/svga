@@ -1,6 +1,6 @@
-Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "WrapText", "ControlReady"], (Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG, WrapText)->
+Take ["Action", "Ease", "GUI", "Input", "Mode", "Registry", "Resize", "Scope", "SVG", "WrapText", "ControlReady"], (Action, Ease, GUI, Input, Mode, Registry, Resize, Scope, SVG, WrapText)->
 
-  panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2
+  panelWidth = GUI.Panel.itemWidth + GUI.Panel.panelPad * 2
   panelHeight = 0
   innerHeight = 0
 
@@ -15,8 +15,8 @@ Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize"
 
   metaBoxRect = SVG.create "rect", metaBoxElm,
     width: panelWidth
-    fill: "hsl(227, 45%, 35%)"
-    rx: GUI.Settings.panelBorderRadius
+    fill: GUI.Colors.bg.d
+    rx: GUI.Panel.panelBorderRadius
 
   titleLines = Mode.get("meta")?.title
   titleLines = [] unless titleLines?
@@ -67,11 +67,11 @@ Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize"
 
   bg = SVG.create "rect", elm,
     width: panelWidth
-    rx: GUI.Settings.panelBorderRadius
-    fill: "hsl(220, 45%, 45%)"
+    rx: GUI.Panel.panelBorderRadius
+    fill: GUI.Colors.bg.l
 
   items = SVG.create "g", elm,
-    transform: "translate(#{GUI.Settings.panelPad},#{GUI.Settings.panelPad})"
+    transform: "translate(#{GUI.Panel.panelPad},#{GUI.Panel.panelPad})"
 
   # Close Button
 
@@ -93,7 +93,7 @@ Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize"
 
   input = Input close, click: (e, state)->
     input.resetState() # Hack to fix https://github.com/cdig/svga/issues/154
-    Action "Settings:Toggle"
+    Action "Settings:Hide"
 
   Settings = Scope elm, ()->
     addSetting: (type, props)->
@@ -101,8 +101,8 @@ Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize"
       builder = Registry.get "SettingType", type
       scope = builder instance.element, props
       instance.y = innerHeight
-      innerHeight += GUI.Settings.unit + GUI.Settings.itemMargin
-      panelHeight = innerHeight + GUI.Settings.panelPad*2 - GUI.Settings.itemMargin
+      innerHeight += GUI.Panel.unit + GUI.Panel.itemMargin
+      panelHeight = innerHeight + GUI.Panel.panelPad*2 - GUI.Panel.itemMargin
       SVG.attrs bg, height: panelHeight
       SVG.attrs metaBoxRect, y: -panelHeight, height: panelHeight + metaBoxHeight
       metaBox.y = panelHeight
@@ -113,9 +113,6 @@ Take ["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize"
   Make "Settings", Settings
 
   Resize (info)->
-    Settings.scale = Ease.linear info.window.w, 0, panelWidth + GUI.Settings.panelMargin*2, 0, 1
+    Settings.scale = Ease.linear info.window.w, 0, panelWidth + GUI.Panel.panelMargin*2, 0, 1
     Settings.x = info.window.w/2 - panelWidth/2 * Settings.scale
     Settings.y = Ease.linear info.window.h, panelHeight, 1000, -10, 300, false
-
-  Reaction "Settings:Show", ()-> Settings.show .3
-  Reaction "Settings:Hide", ()-> Settings.hide .3

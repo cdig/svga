@@ -1,4 +1,4 @@
-Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Settings:GUI}, Input, SVG, TRS, Tween)->
+Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Panel:GUI}, Input, SVG, TRS, Tween)->
   Registry.set "SettingType", "switch", (elm, props)->
 
     strokeWidth = 2

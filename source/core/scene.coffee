@@ -25,14 +25,13 @@ Take ["Mode", "Scope", "SVG", "Symbol"], (Mode, Scope, SVG, Symbol)->
     return unless Mode.dev
     # By default, elements with an ID are added to the window object.
     # For the sake of better typo handling, we replace those references with a proxy.
-    if Proxy? # The old office iPad doesn't support Proxy
-      for element in elm.querySelectorAll "[id]"
-        if window[element.id]?
-          do (element)->
-            handlers =
-              get: ()-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
-              set: (val)-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
-            window[element.id] = new Proxy {}, handlers
+    for element in elm.querySelectorAll "[id]"
+      if window[element.id]?
+        do (element)->
+          handlers =
+            get: ()-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
+            set: (val)-> console.log(element); throw "You forgot to use an @ when accessing the scope for this element ^^^"
+          window[element.id] = new Proxy {}, handlers
     undefined
 
 

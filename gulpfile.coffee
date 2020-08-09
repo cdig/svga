@@ -75,7 +75,6 @@ gulp.task "scss", ()->
     .pipe gulp_sass
       precision: 2
     .pipe gulp_autoprefixer
-      overrideBrowserslist: "Chrome >= 42, ChromeAndroid >= 64, Edge >= 14, Firefox >= 48, FirefoxAndroid >= 57, iOS >= 10, Opera >= 48, Safari >= 10, UCAndroid >= 11"
       cascade: false
       remove: false
     .on "error", logAndKillError

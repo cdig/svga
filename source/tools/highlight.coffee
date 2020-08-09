@@ -97,7 +97,7 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
       undefined
 
     # Delay running the Highlight setup code by one frame so that if fills / strokes are changed
-    # by the @animate() function (eg: an @linearGradient is created), we can capture those changes.
+    # by the @tick() function (eg: an @linearGradient is created), we can capture those changes.
     # See: https://github.com/cdig/svga/issues/133
     RAF ()->
       for target in targets

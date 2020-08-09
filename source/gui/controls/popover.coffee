@@ -4,7 +4,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
     # Config
     labelFill = props.fontColor or "hsl(220, 10%, 92%)"
     rectFill = "hsl(227, 45%, 25%)"
-    triangleFill = "hsl(220, 35%, 80%)" # Todo: Try $silver
+    triangleFill = "hsl(220, 35%, 80%)"
     activeFill = "hsl(92, 46%, 57%)"
     triangleSize = 24
     strokeWidth = 2
@@ -137,9 +137,6 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
         x: GUI.colInnerWidth/2 + (if name.length > 14 then 8 else 0)
       activeButtonCancelCb?()
       activeButtonCancelCb = unclick
-      if showing
-        showing = false
-        update()
 
     # Setup the bg stroke color for tweening
     bgc = blueBG = r:34, g:46, b:89
@@ -154,8 +151,12 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       if showing
         panel.show 0
         resize()
+        button.enable true for button in buttons
       else
         panel.hide 0.2
+        requestAnimationFrame ()->
+          button.enable false for button in buttons
+      undefined
 
     # Input event handling
     toNormal   = (e, state)-> Tween bgc, blueBG,  .2, tick:tickBG
@@ -170,7 +171,7 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       moveOut: toNormal
       dragOut: toNormal
       upOther: (e, state)->
-        if showing
+        if showing and not panel.element.contains e.target
           showing = false
           update()
       click: ()->
@@ -196,7 +197,6 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
         buttonScope.y = nextButtonOffsetY
         nextButtonOffsetY += GUI.unit + GUI.itemMargin
         SVG.attrs panelRect, height: nextButtonOffsetY + GUI.panelPadding*2 - GUI.itemMargin
-
         return buttonScope
 
       _highlight: (enable)->

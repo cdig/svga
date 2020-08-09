@@ -54,8 +54,9 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       props.setActive props.name, unclick
       isActive = true
       toActive()
-      handler() for handler in handlers
+      handler() for handler in handlers unless e is false
       undefined
+
     input = Input elm,
       moveIn:  (e, state)->    toHover e, state unless isActive
       dragIn:  (e, state)-> toClicking e, state if state.clicking and !isActive
@@ -64,7 +65,6 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       moveOut: (e, state)->   toNormal e, state unless isActive
       dragOut: (e, state)->   toNormal e, state unless isActive
       click:   (e, state)->      click e, state unless isActive
-
 
     # Set up click handling
     attachClick = (cb)-> handlers.push cb
@@ -76,6 +76,12 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
     return scope =
       click: attachClick
       input: input
+
+      enable: (v)->
+        input.enable v
+        toNormal() if v is false and not isActive
+
+      doClick: click # Trigger a click from outside code
 
       _highlight: (enable)->
         if highlighting = enable

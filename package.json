@@ -3,6 +3,7 @@
   "version": "4.1.0",
   "description": "A framework for creating interactive SVG animations",
   "dependencies": {
+    "doom": "ivanreese/doom",
     "fonts": "cdig/fonts#v4-1",
     "take-and-make": "cdig/take-and-make#93f4e15"
   },

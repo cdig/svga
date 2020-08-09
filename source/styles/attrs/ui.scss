@@ -1,0 +1,7 @@
+.ui, .ui *, [ui], [ui] * {
+  cursor: pointer;
+
+  &[disabled], &[disabled] * {
+    cursor: default;
+  }
+}

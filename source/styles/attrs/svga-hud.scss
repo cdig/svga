@@ -1,0 +1,12 @@
+// Remember: Keep this in sync with the svga-hud styles in cd-module
+[svga-hud] {
+  position: absolute;
+  margin-top: 2em; // These need to be margin, not position, since there's no relative container
+  margin-left: .4em;
+  font-family: sans-serif;
+  font-size: 10pt;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
+}

@@ -1,0 +1,101 @@
+#svga { // Needed for specificity
+  button,
+  .button {
+    display: inline-block;
+    margin-top: .3em;
+    margin-bottom: .3em;
+    padding: .6em .8em;
+    border: 2px solid transparent;
+    outline: none;
+    border-radius: 4px;
+    text-align: center;
+    text-decoration: none; // Override <a> default
+    color: white;
+    background-color: $bg-xl;
+    user-select: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(white, 0);
+
+    & + & {
+      margin-left: 1px;
+    }
+
+    &.border {
+      border-color: currentColor;
+    }
+
+    &.active {
+      background-color: $teal;
+      &:hover { background-color: darken($teal, 3%); }
+    }
+
+    &[disabled],
+    &.disabled {
+      background-color: $bg-xl; // Override any custom bg color
+      color: $bg-xxl;
+      pointer-events: none;
+    }
+
+    &.soft-disabled {
+      background-color: $bg-xl; // Override any custom bg color
+      color: $bg-xxl;
+    }
+
+    &.small {
+      padding: .3em .4em;
+    }
+
+    &:focus {
+      border-color: $smoke;
+    }
+
+    &:hover        { background-color: darken($bg-xl, 3%); }
+    &.black:hover  { background-color: lighten(black, 12%); }
+    &.blue:hover   { background-color: darken($blue, 3%); }
+    &.bronze:hover { background-color: darken($bronze, 7%); }
+    &.mist:hover   { background-color: darken($mist, 5%); }
+    &.green:hover  { background-color: darken($green, 3%); }
+    &.grey:hover   { background-color: darken($grey, 3%); }
+    &.mint:hover   { background-color: darken($mint, 3%); }
+    &.navy:hover   { background-color: lighten($navy, 10%); }
+    &.olive:hover  { background-color: lighten($olive, 5%); }
+    &.onyx:hover   { background-color: lighten($onyx, 10%); }
+    &.orange:hover { background-color: darken($orange, 4%); }
+    &.purple:hover { background-color: darken($purple, 5%); }
+    &.red:hover    { background-color: darken($red, 3%); }
+    &.silver:hover { background-color: darken($silver, 3%); }
+    &.smoke:hover  { background-color: lighten($smoke, 3%); }
+    &.tar:hover    { background-color: lighten($tar, 5%); }
+    &.teal:hover   { background-color: darken($teal, 3%); }
+    &.white:hover  { background-color: darken(white, 3%); }
+    &.yellow:hover { background-color: darken($yellow, 3%); }
+
+    &.white { color: $blue; }
+  }
+
+  .buttons {
+    display: inline-block;
+    vertical-align: middle;
+
+    @media (min-width: 500px) {
+      display: inline-flex;
+      flex-flow: row wrap;
+      border-radius: 4px;
+
+      & > * {
+        flex: 1 1 auto;
+        border-radius: 0;
+
+        &:first-child {
+          border-top-left-radius: 4px;
+          border-bottom-left-radius: 4px;
+        }
+
+        &:last-child {
+          border-top-right-radius: 4px;
+          border-bottom-right-radius: 4px;
+        }
+      }
+    }
+  }
+}

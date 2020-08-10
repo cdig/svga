@@ -7,10 +7,9 @@
   overflow: hidden;
   opacity: 0;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 
   * {
-    user-select: none;
-    cursor: default;
     touch-action: manipulation; // Safari
     touch-action: none; // Chrome
   }

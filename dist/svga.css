@@ -1,12 +1,3 @@
-html, body, #svga {
-  display: block;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  background: transparent;
-  overflow: hidden;
-  text-rendering: geometricPrecision; }
-
 [svga-hud] {
   position: absolute;
   margin-top: 2em;
@@ -21,18 +12,623 @@ html, body, #svga {
   user-select: none;
   cursor: default; }
 
-#svga {
+.ui, .ui *, [ui], [ui] * {
+  cursor: pointer; }
+  .ui[disabled], .ui[disabled] *, .ui *[disabled], .ui *[disabled] *, [ui][disabled], [ui][disabled] *, [ui] *[disabled], [ui] *[disabled] * {
+    cursor: default; }
+
+#svga button,
+#svga .button {
+  display: inline-block;
+  margin-top: .3em;
+  margin-bottom: .3em;
+  padding: .6em .8em;
+  border: 2px solid transparent;
+  outline: none;
+  border-radius: 4px;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  background-color: #507ed3;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0); }
+  #svga button + #svga button,
+  #svga .button + #svga button, #svga button +
+  #svga .button,
+  #svga .button +
+  #svga .button {
+    margin-left: 1px; }
+  #svga button.border,
+  #svga .button.border {
+    border-color: currentColor; }
+  #svga button.active,
+  #svga .button.active {
+    background-color: #00a3a3; }
+    #svga button.active:hover,
+    #svga .button.active:hover {
+      background-color: #009494; }
+  #svga button[disabled], #svga button.disabled,
+  #svga .button[disabled],
+  #svga .button.disabled {
+    background-color: #507ed3;
+    color: #7da6e8;
+    pointer-events: none; }
+  #svga button.soft-disabled,
+  #svga .button.soft-disabled {
+    background-color: #507ed3;
+    color: #7da6e8; }
+  #svga button.small,
+  #svga .button.small {
+    padding: .3em .4em; }
+  #svga button:focus,
+  #svga .button:focus {
+    border-color: #363a49; }
+  #svga button:hover,
+  #svga .button:hover {
+    background-color: #4375d0; }
+  #svga button.black:hover,
+  #svga .button.black:hover {
+    background-color: #1f1f1f; }
+  #svga button.blue:hover,
+  #svga .button.blue:hover {
+    background-color: #3b569b; }
+  #svga button.bronze:hover,
+  #svga .button.bronze:hover {
+    background-color: #d0b571; }
+  #svga button.mist:hover,
+  #svga .button.mist:hover {
+    background-color: #dbdde1; }
+  #svga button.green:hover,
+  #svga .button.green:hover {
+    background-color: #0c9723; }
+  #svga button.grey:hover,
+  #svga .button.grey:hover {
+    background-color: #727988; }
+  #svga button.mint:hover,
+  #svga .button.mint:hover {
+    background-color: #13ae69; }
+  #svga button.navy:hover,
+  #svga .button.navy:hover {
+    background-color: #272e7c; }
+  #svga button.olive:hover,
+  #svga .button.olive:hover {
+    background-color: #06795e; }
+  #svga button.onyx:hover,
+  #svga .button.onyx:hover {
+    background-color: #131339; }
+  #svga button.orange:hover,
+  #svga .button.orange:hover {
+    background-color: #ff781f; }
+  #svga button.purple:hover,
+  #svga .button.purple:hover {
+    background-color: #3e2a7a; }
+  #svga button.red:hover,
+  #svga .button.red:hover {
+    background-color: #e72329; }
+  #svga button.silver:hover,
+  #svga .button.silver:hover {
+    background-color: #bcc1cd; }
+  #svga button.smoke:hover,
+  #svga .button.smoke:hover {
+    background-color: #3d4152; }
+  #svga button.tar:hover,
+  #svga .button.tar:hover {
+    background-color: #272b49; }
+  #svga button.teal:hover,
+  #svga .button.teal:hover {
+    background-color: #009494; }
+  #svga button.white:hover,
+  #svga .button.white:hover {
+    background-color: #f7f7f7; }
+  #svga button.yellow:hover,
+  #svga .button.yellow:hover {
+    background-color: #f0ac00; }
+  #svga button.white,
+  #svga .button.white {
+    color: #3f5ca6; }
+
+#svga .buttons {
+  display: inline-block;
+  vertical-align: middle; }
+  @media (min-width: 500px) {
+    #svga .buttons {
+      display: inline-flex;
+      flex-flow: row wrap;
+      border-radius: 4px; }
+      #svga .buttons > * {
+        flex: 1 1 auto;
+        border-radius: 0; }
+        #svga .buttons > *:first-child {
+          border-top-left-radius: 4px;
+          border-bottom-left-radius: 4px; }
+        #svga .buttons > *:last-child {
+          border-top-right-radius: 4px;
+          border-bottom-right-radius: 4px; } }
+
+a {
+  cursor: pointer; }
+
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden; }
+
+h1 {
+  font-size: 1.953em; }
+
+h2 {
+  font-size: 1.563em; }
+
+h3 {
+  font-size: 1.25em; }
+
+h4 {
+  font-size: 1em; }
+
+h5 {
+  font-size: .8em; }
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.728em; }
+  h2 {
+    font-size: 1.44em; }
+  h3 {
+    font-size: 1.2em; }
+  h4 {
+    font-size: 1em; }
+  h5 {
+    font-size: .833em; } }
+
+@media (max-width: 450px) {
+  h1 {
+    font-size: 1.424em; }
+  h2 {
+    font-size: 1.266em; }
+  h3 {
+    font-size: 1.125em; }
+  h4 {
+    font-size: 1em; }
+  h5 {
+    font-size: .888em; } }
+
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  text-rendering: geometricPrecision; }
+
+#message-outer {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
   opacity: 0;
-  -webkit-tap-highlight-color: transparent; }
+  transition: .3s opacity;
+  pointer-events: none; }
+
+#message-inner {
+  position: relative;
+  top: -25vh;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 2rem;
+  border-radius: 1rem;
+  color: white;
+  font-size: 2em;
+  background-color: rgba(64, 106, 191, 0.2);
+  -webkit-backdrop-filter: blur(6px) brightness(30%);
+  backdrop-filter: blur(6px) brightness(30%); }
+  #message-inner > div {
+    margin-top: 1em; }
+
+#panel-outer {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: .3s opacity;
+  pointer-events: none; }
+
+#panel-inner {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 2em;
+  border-radius: 8px;
+  text-align: center;
+  color: white;
+  background-color: #406abf;
+  overflow-x: hidden;
+  overflow-y: auto; }
+  #panel-inner > div {
+    margin-top: 1em; }
+
+#svga {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  opacity: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; }
   #svga * {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    cursor: default;
     touch-action: manipulation;
     touch-action: none; }
-  #svga .ui, #svga .ui *, #svga [ui], #svga [ui] * {
-    cursor: pointer; }
-    #svga .ui[disabled], #svga .ui[disabled] *, #svga .ui *[disabled], #svga .ui *[disabled] *, #svga [ui][disabled], #svga [ui][disabled] *, #svga [ui] *[disabled], #svga [ui] *[disabled] * {
-      cursor: default; }
+
+/* Known limitation: by default, Chrome and Safari on OS X allow very limited styling of `select`, unless a `border` property is set. */
+/**** GENERAL [optional] NICENESS ****/
+/* Zero-out "matter of taste" styles (Ivan) */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0; }
+
+/* Disable text selection for UI... (Ivan) */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default; }
+
+/* ...but keep selection enabled for text! (Ivan) */
+p,
+p *,
+em,
+em *,
+input,
+textarea,
+.selectable,
+.selectable *,
+[contentEditable] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  cursor: inherit; }
+
+/* Editable elements deserve a text cursor (Ivan) */
+input, input.selectable, .selectable input,
+textarea,
+textarea.selectable, .selectable
+textarea,
+[contentEditable],
+[contentEditable].selectable, .selectable
+[contentEditable] {
+  cursor: text; }
+
+/* Links and inputs deserve a pointer (Ivan) */
+a, a *, a.selectable, a.selectable *, .selectable a, .selectable a *,
+label,
+label *,
+label.selectable,
+label.selectable *, .selectable
+label, .selectable
+label *,
+button,
+button *,
+button.selectable,
+button.selectable *, .selectable
+button, .selectable
+button *,
+input[type="button"],
+input[type="button"] *,
+input[type="button"].selectable,
+input[type="button"].selectable *, .selectable
+input[type="button"], .selectable
+input[type="button"] *,
+input[type="checkbox"],
+input[type="checkbox"] *,
+input[type="checkbox"].selectable,
+input[type="checkbox"].selectable *, .selectable
+input[type="checkbox"], .selectable
+input[type="checkbox"] *,
+input[type="file"],
+input[type="file"] *,
+input[type="file"].selectable,
+input[type="file"].selectable *, .selectable
+input[type="file"], .selectable
+input[type="file"] *,
+input[type="image"],
+input[type="image"] *,
+input[type="image"].selectable,
+input[type="image"].selectable *, .selectable
+input[type="image"], .selectable
+input[type="image"] *,
+input[type="radio"],
+input[type="radio"] *,
+input[type="radio"].selectable,
+input[type="radio"].selectable *, .selectable
+input[type="radio"], .selectable
+input[type="radio"] *,
+input[type="reset"],
+input[type="reset"] *,
+input[type="reset"].selectable,
+input[type="reset"].selectable *, .selectable
+input[type="reset"], .selectable
+input[type="reset"] *,
+input[type="submit"],
+input[type="submit"] *,
+input[type="submit"].selectable,
+input[type="submit"].selectable *, .selectable
+input[type="submit"], .selectable
+input[type="submit"] *,
+select,
+select *,
+select.selectable,
+select.selectable *, .selectable
+select, .selectable
+select * {
+  cursor: pointer; }
+
+/* Style links like their surrounding content (Ivan) */
+a {
+  color: inherit;
+  text-decoration: none; }
+
+/* Embedded contexts should be big and beefy! (Ivan) */
+iframe,
+object,
+canvas,
+progress,
+video {
+  display: block; }
+
+/* Remove the outline around GUI (Ivan) */
+input:not([type="checkbox"]),
+select,
+textarea {
+  outline: 0; }
+
+/* Remove the styling from fieldsets (Ivan) */
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0; }
+
+/**** BEST PRACTICES ****/
+/* The page should fill the page! (Ivan) */
+html {
+  width: 100%;
+  height: 100%; }
+
+/* Include padding and borders in width calculations (Paul Irish: paulirish.com/2012/box-sizing-border-box-ftw) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box; }
+
+/* Remove the 2px border around iframes (Ivan) */
+iframe {
+  border: 0; }
+
+/**** CROSS-BROWSER STANDARDIZATION ****/
+/* Set default font to Arial on Windows, Helvetica on Mac */
+html {
+  font-family: sans-serif; }
+
+/* Remove default margin */
+body {
+  margin: 0; }
+
+/* Set display: block
+ * 1. all HTML5 elements in IE 8/9
+ * 2. details and summary in IE 10/11 and Firefox
+ * 3. main in IE 11.
+ */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+main,
+menu,
+nav,
+section,
+summary {
+  display: block; }
+
+/* Fix IE 8/9. */
+progress,
+audio {
+  display: inline-block; }
+
+/* Fix Chrome, Firefox, and Opera. */
+progress {
+  vertical-align: baseline; }
+
+/* Prevent modern browsers from displaying audio without controls. */
+audio:not([controls]) {
+  display: none; }
+
+/* Address [hidden] styling not present in IE 8/9/10 */
+/* Hide the template element in IE 8/9/11, Safari, and Firefox < 22 */
+[hidden],
+template {
+  display: none; }
+
+/* Fix active links having a grey background in IE 10 */
+a {
+  background-color: transparent; }
+
+/* Remove those annoying link glows */
+a:active,
+a:hover {
+  outline: 0; }
+
+/* Don't default to bolder in Firefox, Safari, and Chrome */
+b,
+strong {
+  font-weight: bold; }
+
+/* Standarize h1 values within section and article contexts in Firefox, Safari, and Chrome. */
+h1 {
+  font-size: 2em; }
+
+/* Fix inconsistent and variable font size in all browsers. */
+small {
+  font-size: 80%; }
+
+/* Prevent `sub` and `sup` affecting `line-height` in all browsers. */
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline; }
+
+sup {
+  top: -.5em; }
+
+sub {
+  bottom: -.25em; }
+
+/* Remove border when inside `a` element in IE 8/9/10. */
+img {
+  border: 0; }
+
+/* Correct overflow not hidden in IE 9/10/11. */
+svg:not(:root) {
+  overflow: hidden; }
+
+/* Address margin not present in IE 8/9 and Safari. */
+figure {
+  margin: 1em 40px; }
+
+/* Address differences between Firefox and other browsers. */
+hr {
+  height: 0; }
+
+/* Contain overflow in all browsers. */
+pre {
+  overflow: auto; }
+
+/* Address odd `em`-unit font size rendering in all browsers. */
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, monospace;
+  font-size: 1em; }
+
+/* 1. Correct color not being inherited. Known issue: affects color of disabled elements.
+ * 2. Correct font properties not being inherited.
+ * 3. Address margins set differently in Firefox, Safari, and Chrome.
+ */
+button,
+input,
+optgroup,
+select,
+textarea {
+  color: inherit;
+  /* 1 */
+  font: inherit;
+  /* 2 */
+  margin: 0;
+  /* 3 */ }
+
+/* Address `overflow` set to `hidden` in IE 8/9/10/11. */
+button {
+  overflow: visible; }
+
+/* Address inconsistent `text-transform` inheritance for `button` and `select`.
+ * All other form control elements do not inherit `text-transform` values.
+ * Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera.
+ * Correct `select` style inheritance in Firefox.
+ */
+button,
+select {
+  text-transform: none; }
+
+/* 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio` and `video` controls.
+ * 2. Correct inability to style clickable `input` types in iOS.
+ * 3. Improve usability and consistency of cursor style between image-type `input` and others.
+ */
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  -webkit-appearance: button;
+  /* 2 */
+  cursor: pointer;
+  /* 3 */ }
+
+/* Re-set default cursor for disabled elements. */
+button[disabled],
+html input[disabled] {
+  cursor: default; }
+
+/* Remove inner padding and border in Firefox */
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0; }
+
+/* Address Firefox setting `line-height` on `input` using `!important` in the UA stylesheet. */
+input {
+  line-height: normal; }
+
+/* It's recommended that you don't attempt to style these elements.
+ * Firefox's implementation doesn't respect box-sizing, padding, or width.
+ *
+ * Remove excess padding in IE 8/9/10.
+ */
+input[type="checkbox"],
+input[type="radio"] {
+  padding: 0; }
+
+/* Fix the cursor style for Chrome's increment/decrement buttons. For certain
+ * `font-size` values of the `input`, it causes the cursor style of the
+ * decrement button to change from `default` to `text`.
+ */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  height: auto; }
+
+/* 1. Correct `color` not being inherited in IE 8/9/10/11.
+ * 2. Remove padding so people aren't caught out if they zero out fieldsets.
+ */
+legend {
+  border: 0;
+  /* 1 */
+  padding: 0;
+  /* 2 */ }
+
+/* Remove default vertical scrollbar in IE 8/9/10/11. */
+textarea {
+  overflow: auto; }
+
+/* Don't inherit the `font-weight` (applied by a rule above).
+ * NOTE: the default cannot safely be changed in Chrome and Safari on OS X.
+ */
+optgroup {
+  font-weight: bold; }
+
+/* Preserve spacing between table cells. */
+table {
+  border-collapse: separate;
+  border-spacing: 0; }
+
+td,
+th {
+  padding: 0; }

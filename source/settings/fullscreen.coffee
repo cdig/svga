@@ -45,7 +45,7 @@ Take ["Action", "Settings", "SVG"], (Action, Settings, SVG)->
 
 
     # Create the switch
-    fullScreenSwitch = Settings.addSetting "Switch",
+    fullScreenSwitch = Settings.addSetting "Switch", 5,
       name: "Full Screen"
       value: false
       update: switchChanged

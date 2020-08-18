@@ -6,7 +6,7 @@ Take ["Action", "Settings"], (Action, Settings)->
     else
       Action "FlowArrows:Hide"
 
-  arrowsSwitch = Settings.addSetting "Switch",
+  Settings.addSetting "Switch", 2,
     name: "Flow Arrows"
     value: true
     update: update

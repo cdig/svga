@@ -3415,9 +3415,26 @@
 
   Take(["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], function(Action, DOOM, GUI, Input, Mode, Panel, Scope, SVG) {
     var Settings, bg, controls, elm, height, hit, label, scope, width;
+    controls = [];
+    Make("Settings", Settings = {
+      addSetting: function(type, index, props) {
+        var builder, controlApi, controlScope, elm;
+        if (controls[index] != null) {
+          return;
+        }
+        elm = DOOM.create("svg", null);
+        controls[index] = elm;
+        controlScope = Scope(SVG.create("g", elm));
+        builder = Take(`Settings${type}`);
+        controlApi = builder(controlScope.element, props);
+        return controlApi;
+      }
+    });
     if (!Mode.settings) {
       return;
     }
+    // Create the Settings button
+
     // Eventually, the settings button at the top should be part of an HTML-based HUD so that we don't need all this nonsense
     elm = SVG.create("g", GUI.elm, {
       ui: true
@@ -3448,9 +3465,9 @@
       textAnchor: "middle",
       fill: "hsl(220, 10%, 92%)"
     });
-    Input(elm, {
+    return Input(elm, {
       click: function() {
-        var info, infoLines, line, panel, ref, ref1, title;
+        var control, controlsElm, info, infoLines, len, line, m, panel, ref, ref1, results, title;
         title = (ref = Mode.get("meta")) != null ? ref.title : void 0;
         if ((title == null) && !Mode.embed) {
           title = document.title.replace("| ", "").replace("LunchBox Sessions", "");
@@ -3467,21 +3484,18 @@
           })()).join("");
         }
         panel = Panel("settings", `<div settings-controls></div>
-<h3 settings-title>${title}</h3>
-<div settings-info>${info}</div>
+<h3 settings-title>${title || ""}</h3>
+<div settings-info>${info || ""}</div>
 <small settings-copyright>© CD Industrial Group Inc.</small>`);
-        return DOOM.append(panel.querySelector("[settings-controls]"), controls);
-      }
-    });
-    controls = DOOM.create("div", null);
-    return Make("Settings", Settings = {
-      addSetting: function(type, props) {
-        var builder, instance;
-        elm = DOOM.create("svg", controls);
-        instance = Scope(SVG.create("g", elm));
-        builder = Take(`Settings${type}`);
-        scope = builder(instance.element, props);
-        return scope;
+        controlsElm = panel.querySelector("[settings-controls]");
+        results = [];
+        for (m = 0, len = controls.length; m < len; m++) {
+          control = controls[m];
+          if (control != null) {
+            results.push(DOOM.append(controlsElm, control));
+          }
+        }
+        return results;
       }
     });
   });
@@ -4739,45 +4753,44 @@
   });
 
   Take(["Action", "Ease", "Fullscreen", "Mode", "Settings", "Storage"], function(Action, Ease, Fullscreen, Mode, Settings, Storage) {
-    var Background;
-    return Make("Background", Background = function(value) {
-      var apply, init;
-      if (value != null) {
-        return Action("Background:Set", value);
-      } else if (typeof Mode.background === "string") {
+    var Background, applyLightness, defaultLightness, lightness;
+    defaultLightness = .7;
+    lightness = defaultLightness;
+    applyLightness = function() {
+      return Action("Background:Lightness", Ease.linear(lightness, 0, 1, 0.25, 1));
+    };
+    if (Mode.background === true && Mode.settings) {
+      lightness = +Storage("Background");
+      if (isNaN(lightness)) {
+        lightness = defaultLightness;
+      }
+      Settings.addSetting("Slider", 1, {
+        name: "Background Color",
+        value: lightness,
+        snaps: [defaultLightness],
+        update: function(v) {
+          Storage("Background", lightness = v);
+          return applyLightness();
+        }
+      });
+    }
+    Background = function() {
+      if (typeof Mode.background === "string") { // Use a specific color
         return Action("Background:Set", Mode.background);
-      } else if (Mode.background === true) {
-        if (Mode.settings) {
-          init = +Storage("Background");
-        }
-        if (isNaN(init)) {
-          init = .7;
-        }
-        apply = function(v) {
-          Storage("Background", v);
-          return Action("Background:Lightness", Ease.linear(v, 0, 1, 0.25, 1));
-        };
-        if (Mode.background === true) {
-          Settings.addSetting("Slider", {
-            name: "Background Color",
-            value: init,
-            snaps: [.7],
-            update: apply
-          });
-        }
-        return Take("SceneReady", function() {
-          return apply(init);
-        });
-      } else if (Fullscreen.active()) {
-        return Action("Background:Set", "white");
+      } else if (Mode.background === true) { // Use lightness-based background
+        return applyLightness();
+      } else if (Fullscreen.active()) { // Default — fullscreen
+        return Action("Background:Set", "white"); // Default — windowed
       } else {
         return Action("Background:Set", "transparent");
       }
-    });
+    };
+    Background();
+    return Make("Background", Background);
   });
 
   Take(["Action", "Settings"], function(Action, Settings) {
-    var arrowsSwitch, update;
+    var update;
     update = function(active) {
       if (active) {
         return Action("FlowArrows:Show");
@@ -4785,7 +4798,7 @@
         return Action("FlowArrows:Hide");
       }
     };
-    arrowsSwitch = Settings.addSetting("Switch", {
+    Settings.addSetting("Switch", 2, {
       name: "Flow Arrows",
       value: true,
       update: update
@@ -4846,7 +4859,7 @@
         }
       };
       // Create the switch
-      return fullScreenSwitch = Settings.addSetting("Switch", {
+      return fullScreenSwitch = Settings.addSetting("Switch", 5, {
         name: "Full Screen",
         value: false,
         update: switchChanged
@@ -4859,7 +4872,7 @@
     update = function(active) {
       return Action("Highlights:Set", active);
     };
-    Settings.addSetting("Switch", {
+    Settings.addSetting("Switch", 3, {
       name: "Highlights",
       value: true,
       update: update
@@ -4870,7 +4883,7 @@
   });
 
   Take(["Action", "Settings"], function(Action, Settings) {
-    var arrowsSwitch, update;
+    var update;
     update = function(active) {
       if (active) {
         return Action("Labels:Show");
@@ -4878,7 +4891,7 @@
         return Action("Labels:Hide");
       }
     };
-    arrowsSwitch = Settings.addSetting("Switch", {
+    Settings.addSetting("Switch", 4, {
       name: "Labels",
       value: true,
       update: update
@@ -5197,7 +5210,7 @@
   })();
 
   Take(["Control", "Input", "Resize", "Scope", "SVG", "Vec"], function(Control, Input, Resize, Scope, SVG, Vec) {
-    var Nav, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, debugPoint, editClick, editing, gameClick, getFullPathId, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
+    var Nav, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, editClick, editing, gameClick, getFullPathId, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
     // Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
     // Symbols (like root, in the animation code) wouldn't be able to take Tracer.
     Nav = null;
@@ -5287,15 +5300,13 @@
       path.element.appendChild(elm);
       return Scope(elm, defn);
     };
-    Nav = null;
     hitDefn = function(elm) {
       var hitTick;
       return {
         tick: hitTick = function() {
-          if (Nav == null) {
-            Nav = Take("Nav");
+          if (Nav != null) {
+            return this.strokeWidth = Math.max(3, 20 / Nav.rootScale());
           }
-          return this.strokeWidth = Math.max(3, 20 / Nav.rootScale());
         }
       };
     };
@@ -5477,25 +5488,8 @@
       return incorrectPaths.length === 0;
     };
     // EDITING #######################################################################################
-    debugPoint = Scope(SVG.create("g", SVG.svg));
-    debugPoint.debug.point();
-    debugPoint.hide(0);
-    Resize(function() {
-      debugPoint.x = Nav.center().x;
-      return debugPoint.y = Nav.center().y;
-    });
-    window.addEventListener("keydown", function(e) {
-      if (e.keyCode === 32) {
-        return debugPoint.show(0);
-      }
-    });
-    window.addEventListener("keyup", function(e) {
-      if (e.keyCode === 32) {
-        debugPoint.hide(0);
-      }
-      return console.log(Nav.pos());
-    });
     setupEditing = function() {
+      var debugPoint;
       editing = true;
       Control.label({
         name: "Path Tracer Edit Mode",
@@ -5507,7 +5501,25 @@
         click: saveConfiguration
       });
       if (Nav != null) {
-        return Nav.runResize(); // This is needed to make the new panel buttons appear
+        Nav.runResize(); // This is needed to make the new panel buttons appear
+        debugPoint = Scope(SVG.create("g", SVG.svg));
+        debugPoint.debug.point();
+        debugPoint.hide(0);
+        Resize(function() {
+          debugPoint.x = Nav.center().x;
+          return debugPoint.y = Nav.center().y;
+        });
+        window.addEventListener("keydown", function(e) {
+          if (e.keyCode === 32) {
+            return debugPoint.show(0);
+          }
+        });
+        return window.addEventListener("keyup", function(e) {
+          if (e.keyCode === 32) {
+            debugPoint.hide(0);
+          }
+          return console.log(Nav.pos());
+        });
       }
     };
     saveConfiguration = function() {

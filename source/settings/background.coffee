@@ -1,32 +1,39 @@
 Take ["Action", "Ease", "Fullscreen", "Mode", "Settings", "Storage"], (Action, Ease, Fullscreen, Mode, Settings, Storage)->
 
-  Make "Background", Background = (value)->
-    if value?
-      Action "Background:Set", value
+  defaultLightness = .7
+  lightness = defaultLightness
 
-    else if typeof Mode.background is "string"
+
+  applyLightness = ()->
+    Action "Background:Lightness", Ease.linear lightness, 0, 1, 0.25, 1
+
+
+  if Mode.background is true and Mode.settings
+    lightness = +Storage "Background"
+    lightness = defaultLightness if isNaN lightness
+
+    Settings.addSetting "Slider", 1,
+      name: "Background Color"
+      value: lightness
+      snaps: [defaultLightness]
+      update: (v)->
+        Storage "Background", lightness = v
+        applyLightness()
+
+
+  Background = ()->
+    if typeof Mode.background is "string" # Use a specific color
       Action "Background:Set", Mode.background
 
-    else if Mode.background is true
+    else if Mode.background is true # Use lightness-based background
+      applyLightness()
 
-      init = +Storage "Background" if Mode.settings
-      init = .7 if isNaN init
-
-      apply = (v)->
-        Storage "Background", v
-        Action "Background:Lightness", Ease.linear v, 0, 1, 0.25, 1
-
-      if Mode.background is true
-        Settings.addSetting "Slider",
-          name: "Background Color"
-          value: init
-          snaps: [.7]
-          update: apply
-
-      Take "SceneReady", ()-> apply init
-
-    else if Fullscreen.active()
+    else if Fullscreen.active() # Default — fullscreen
       Action "Background:Set", "white"
 
-    else
+    else # Default — windowed
       Action "Background:Set", "transparent"
+
+
+  Background()
+  Make "Background", Background

@@ -1,6 +1,20 @@
 Take ["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], (Action, DOOM, GUI, Input, Mode, Panel, Scope, SVG)->
 
+  controls = []
+
+  Make "Settings", Settings =
+    addSetting: (type, index, props)->
+      return if controls[index]?
+      elm = DOOM.create "svg", null
+      controls[index] = elm
+      controlScope = Scope SVG.create "g", elm
+      builder = Take "Settings#{type}"
+      controlApi = builder controlScope.element, props
+      return controlApi
+
   return unless Mode.settings
+
+  # Create the Settings button
 
   # Eventually, the settings button at the top should be part of an HTML-based HUD so that we don't need all this nonsense
 
@@ -45,20 +59,11 @@ Take ["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeR
 
     panel = Panel "settings", """
       <div settings-controls></div>
-      <h3 settings-title>#{title}</h3>
-      <div settings-info>#{info}</div>
+      <h3 settings-title>#{title or ""}</h3>
+      <div settings-info>#{info or ""}</div>
       <small settings-copyright>© CD Industrial Group Inc.</small>
     """
 
-    DOOM.append panel.querySelector("[settings-controls]"), controls
-
-
-  controls = DOOM.create "div", null
-
-  Make "Settings", Settings =
-    addSetting: (type, props)->
-      elm = DOOM.create "svg", controls
-      instance = Scope SVG.create "g", elm
-      builder = Take "Settings#{type}"
-      scope = builder instance.element, props
-      return scope
+    controlsElm = panel.querySelector "[settings-controls]"
+    for control in controls when control?
+      DOOM.append controlsElm, control

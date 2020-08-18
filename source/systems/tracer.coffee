@@ -84,11 +84,9 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
     Scope elm, defn
 
 
-  Nav = null
   hitDefn = (elm)->
     tick: hitTick = ()->
-      Nav ?= Take "Nav"
-      @strokeWidth = Math.max 3, 20 / Nav.rootScale()
+      @strokeWidth = Math.max 3, 20 / Nav.rootScale() if Nav?
 
 
   # STYLE #########################################################################################
@@ -213,19 +211,6 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
   # EDITING #######################################################################################
 
 
-  debugPoint = Scope SVG.create "g", SVG.svg
-  debugPoint.debug.point()
-  debugPoint.hide 0
-
-  Resize ()->
-    debugPoint.x = Nav.center().x
-    debugPoint.y = Nav.center().y
-
-  window.addEventListener "keydown", (e)-> debugPoint.show 0 if e.keyCode is 32
-  window.addEventListener "keyup", (e)->
-    debugPoint.hide 0 if e.keyCode is 32
-    console.log Nav.pos()
-
   setupEditing = ()->
     editing = true
 
@@ -238,8 +223,21 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
       group: "#F80"
       click: saveConfiguration
 
-    Nav.runResize() if Nav? # This is needed to make the new panel buttons appear
+    if Nav?
+      Nav.runResize() # This is needed to make the new panel buttons appear
 
+      debugPoint = Scope SVG.create "g", SVG.svg
+      debugPoint.debug.point()
+      debugPoint.hide 0
+
+      Resize ()->
+        debugPoint.x = Nav.center().x
+        debugPoint.y = Nav.center().y
+
+      window.addEventListener "keydown", (e)-> debugPoint.show 0 if e.keyCode is 32
+      window.addEventListener "keyup", (e)->
+        debugPoint.hide 0 if e.keyCode is 32
+        console.log Nav.pos()
 
 
   saveConfiguration = ()->

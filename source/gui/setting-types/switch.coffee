@@ -1,5 +1,5 @@
-Take ["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, {Panel:GUI}, Input, SVG, TRS, Tween)->
-  Registry.set "SettingType", "switch", (elm, props)->
+Take ["GUI", "Input", "SVG", "TRS", "Tween"], ({Panel:GUI}, Input, SVG, TRS, Tween)->
+  Make "SettingsSwitch", SettingsSwitch = (elm, props)->
 
     strokeWidth = 2
     labelPad = 10

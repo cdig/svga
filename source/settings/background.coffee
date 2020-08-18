@@ -1,25 +1,32 @@
-Take ["Action", "Ease", "Mode", "Settings", "Storage"], (Action, Ease, Mode, Settings, Storage)->
+Take ["Action", "Ease", "Fullscreen", "Mode", "Settings", "Storage"], (Action, Ease, Fullscreen, Mode, Settings, Storage)->
 
-  if typeof Mode.background is "string"
-    Action "Background:Set", Mode.background
+  Make "Background", Background = (value)->
+    if value?
+      Action "Background:Set", value
 
-  else if Mode.background is true
+    else if typeof Mode.background is "string"
+      Action "Background:Set", Mode.background
 
-    init = +Storage "Background" if Mode.settings
-    init = .7 if isNaN init
+    else if Mode.background is true
 
-    apply = (v)->
-      Storage "Background", v
-      Action "Background:Lightness", Ease.linear v, 0, 1, 0.25, 1
+      init = +Storage "Background" if Mode.settings
+      init = .7 if isNaN init
 
-    if Mode.background is true
-      Settings.addSetting "slider",
-        name: "Background Color"
-        value: init
-        snaps: [.7]
-        update: apply
+      apply = (v)->
+        Storage "Background", v
+        Action "Background:Lightness", Ease.linear v, 0, 1, 0.25, 1
 
-    Take "SceneReady", ()-> apply init
+      if Mode.background is true
+        Settings.addSetting "Slider",
+          name: "Background Color"
+          value: init
+          snaps: [.7]
+          update: apply
 
-  else
-    Action "Background:Set", "transparent"
+      Take "SceneReady", ()-> apply init
+
+    else if Fullscreen.active()
+      Action "Background:Set", "white"
+
+    else
+      Action "Background:Set", "transparent"

@@ -203,14 +203,16 @@ html {
   overflow: hidden;
   text-rendering: geometricPrecision; }
 
+#message {
+  pointer-events: none; }
+
 #message-outer {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: .3s opacity;
-  pointer-events: none; }
+  transition: .3s opacity; }
 
 #message-inner {
   position: relative;
@@ -228,29 +230,56 @@ html {
   #message-inner > div {
     margin-top: 1em; }
 
+#panel {
+  pointer-events: none; }
+
 #panel-outer {
+  position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
-  opacity: 0;
   transition: .3s opacity;
-  pointer-events: none; }
+  z-index: 100; }
 
-#panel-inner {
-  position: relative;
-  display: inline-block;
-  max-width: 100%;
-  max-height: 100%;
-  padding: 2em;
+#panel-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  cursor: pointer; }
+
+#panel-frame {
+  position: relative; }
+
+#panel-close {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  top: -8px;
+  left: -8px;
+  z-index: 101; }
+
+#settings {
+  padding-bottom: 8px;
   border-radius: 8px;
   text-align: center;
   color: white;
-  background-color: #406abf;
-  overflow-x: hidden;
-  overflow-y: auto; }
-  #panel-inner > div {
-    margin-top: 1em; }
+  background-color: #384c94; }
+  #settings [settings-controls] {
+    padding: 8px;
+    border-radius: 8px;
+    background: #406abf; }
+    #settings [settings-controls] svg {
+      display: block;
+      width: 360px;
+      height: 32px; }
+      #settings [settings-controls] svg + svg {
+        margin-top: 8px; }
+  #settings [settings-title], #settings [settings-info], #settings [settings-copyright] {
+    margin: 8px 0; }
 
 #svga {
   display: block;
@@ -265,6 +294,15 @@ html {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none; }
+  #svga:-webkit-full-screen {
+    position: absolute;
+    top: 0; }
+  #svga:-ms-fullscreen {
+    position: absolute;
+    top: 0; }
+  #svga:fullscreen {
+    position: absolute;
+    top: 0; }
   #svga * {
     touch-action: manipulation;
     touch-action: none; }
@@ -405,11 +443,6 @@ fieldset {
   border: 0; }
 
 /**** BEST PRACTICES ****/
-/* The page should fill the page! (Ivan) */
-html {
-  width: 100%;
-  height: 100%; }
-
 /* Include padding and borders in width calculations (Paul Irish: paulirish.com/2012/box-sizing-border-box-ftw) */
 *,
 *::before,
@@ -421,55 +454,9 @@ iframe {
   border: 0; }
 
 /**** CROSS-BROWSER STANDARDIZATION ****/
-/* Set default font to Arial on Windows, Helvetica on Mac */
-html {
-  font-family: sans-serif; }
-
-/* Remove default margin */
-body {
-  margin: 0; }
-
-/* Set display: block
- * 1. all HTML5 elements in IE 8/9
- * 2. details and summary in IE 10/11 and Firefox
- * 3. main in IE 11.
- */
-article,
-aside,
-details,
-figcaption,
-figure,
-footer,
-header,
-main,
-menu,
-nav,
-section,
-summary {
-  display: block; }
-
-/* Fix IE 8/9. */
-progress,
-audio {
-  display: inline-block; }
-
-/* Fix Chrome, Firefox, and Opera. */
-progress {
-  vertical-align: baseline; }
-
 /* Prevent modern browsers from displaying audio without controls. */
 audio:not([controls]) {
   display: none; }
-
-/* Address [hidden] styling not present in IE 8/9/10 */
-/* Hide the template element in IE 8/9/11, Safari, and Firefox < 22 */
-[hidden],
-template {
-  display: none; }
-
-/* Fix active links having a grey background in IE 10 */
-a {
-  background-color: transparent; }
 
 /* Remove those annoying link glows */
 a:active,
@@ -503,18 +490,6 @@ sup {
 sub {
   bottom: -.25em; }
 
-/* Remove border when inside `a` element in IE 8/9/10. */
-img {
-  border: 0; }
-
-/* Correct overflow not hidden in IE 9/10/11. */
-svg:not(:root) {
-  overflow: hidden; }
-
-/* Address margin not present in IE 8/9 and Safari. */
-figure {
-  margin: 1em 40px; }
-
 /* Address differences between Firefox and other browsers. */
 hr {
   height: 0; }
@@ -546,10 +521,6 @@ textarea {
   /* 2 */
   margin: 0;
   /* 3 */ }
-
-/* Address `overflow` set to `hidden` in IE 8/9/10/11. */
-button {
-  overflow: visible; }
 
 /* Address inconsistent `text-transform` inheritance for `button` and `select`.
  * All other form control elements do not inherit `text-transform` values.
@@ -588,15 +559,6 @@ input::-moz-focus-inner {
 input {
   line-height: normal; }
 
-/* It's recommended that you don't attempt to style these elements.
- * Firefox's implementation doesn't respect box-sizing, padding, or width.
- *
- * Remove excess padding in IE 8/9/10.
- */
-input[type="checkbox"],
-input[type="radio"] {
-  padding: 0; }
-
 /* Fix the cursor style for Chrome's increment/decrement buttons. For certain
  * `font-size` values of the `input`, it causes the cursor style of the
  * decrement button to change from `default` to `text`.
@@ -604,25 +566,6 @@ input[type="radio"] {
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   height: auto; }
-
-/* 1. Correct `color` not being inherited in IE 8/9/10/11.
- * 2. Remove padding so people aren't caught out if they zero out fieldsets.
- */
-legend {
-  border: 0;
-  /* 1 */
-  padding: 0;
-  /* 2 */ }
-
-/* Remove default vertical scrollbar in IE 8/9/10/11. */
-textarea {
-  overflow: auto; }
-
-/* Don't inherit the `font-weight` (applied by a rule above).
- * NOTE: the default cannot safely be changed in Chrome and Safari on OS X.
- */
-optgroup {
-  font-weight: bold; }
 
 /* Preserve spacing between table cells. */
 table {

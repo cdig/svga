@@ -1,5 +1,5 @@
 (function() {
-  var Storage, base,
+  var Storage,
     indexOf = [].indexOf;
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
@@ -18,9 +18,8 @@
       Registry.closeRegistration("ScopeProcessor");
       // Inform all systems that it's now safe to use Scope.
       Make("ScopeReady");
-      // By now, we're assuming all Controls & Settings are ready.
+      // By now, we're assuming all Controls are ready.
       Registry.closeRegistration("Control");
-      Registry.closeRegistration("SettingType");
       // Inform all systems that we've just finished setting up Controls.
       Make("ControlReady");
       // We need to wait a bit for Symbols
@@ -87,29 +86,27 @@
       if (!Mode.dev) {
         return;
       }
+      ref = elm.querySelectorAll("[id]");
       // By default, elements with an ID are added to the window object.
       // For the sake of better typo handling, we replace those references with a proxy.
-      if (typeof Proxy !== "undefined" && Proxy !== null) {
-        ref = elm.querySelectorAll("[id]");
-        for (m = 0, len = ref.length; m < len; m++) {
-          element = ref[m];
-          if (window[element.id] != null) {
-            (function(element) {
-              var handlers;
-              handlers = {
-                get: function() {
-                  console.log(element);
-                  throw "You forgot to use an @ when accessing the scope for this element ^^^";
-                },
-                set: function(val) {
-                  console.log(element);
-                  throw "You forgot to use an @ when accessing the scope for this element ^^^";
-                }
-              };
-              return window[element.id] = new Proxy({}, handlers);
-            })(element);
-          }
-        } // The old office iPad doesn't support Proxy
+      for (m = 0, len = ref.length; m < len; m++) {
+        element = ref[m];
+        if (window[element.id] != null) {
+          (function(element) {
+            var handlers;
+            handlers = {
+              get: function() {
+                console.log(element);
+                throw "You forgot to use an @ when accessing the scope for this element ^^^";
+              },
+              set: function(val) {
+                console.log(element);
+                throw "You forgot to use an @ when accessing the scope for this element ^^^";
+              }
+            };
+            return window[element.id] = new Proxy({}, handlers);
+          })(element);
+        }
       }
       return void 0;
     };
@@ -473,21 +470,20 @@
   });
 
   Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
-    var animateMode, enableAll, sets, visible;
+    var enableAll, sets, visible;
     sets = [];
     visible = true; // Default to true, in case we don't have an arrows button
-    animateMode = true; // Default to true, in case we don't have a schematic mode
     enableAll = function() {
       var len, m, set;
       for (m = 0, len = sets.length; m < len; m++) {
         set = sets[m];
-        set.enabled = visible && animateMode;
+        set.enabled = visible;
       }
       return void 0;
     };
     Tick(function(time, dt) {
       var f, len, m, s, set;
-      if (visible && animateMode) {
+      if (visible) {
         for (m = 0, len = sets.length; m < len; m++) {
           set = sets[m];
           if (set.parentScope.alpha > 0) {
@@ -498,14 +494,6 @@
         }
       }
       return void 0;
-    });
-    Reaction("Schematic:Hide", function() {
-      return setTimeout(function() {
-        return enableAll(animateMode = true); // Wait one extra tick, to give the creator's symbol code a chance to init all the appropriate flow/pressure values before we appear
-      });
-    });
-    Reaction("Schematic:Show", function() {
-      return enableAll(animateMode = false);
     });
     Reaction("FlowArrows:Show", function() {
       return enableAll(visible = true);
@@ -520,7 +508,6 @@
         throw new Error("FlowArrows was called with a null target. ^^^ was the baked line data.");
       }
       elm = parentScope.element;
-      
       // This removes invisible lines (which have a child named markerBox)
       if (elm.querySelector("[id^=markerBox]")) { // ^= matches values by prefix, so we can match IDs like markerBox_FL
         while (elm.hasChildNodes()) {
@@ -535,8 +522,8 @@
     }));
   });
 
-  Take("FlowArrows:Config", function(Config) {
-    var angle, cullInlinePoints, cullShortEdges, cullShortSegments, distance, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
+  Take(["FlowArrows:Config", "Vec"], function(Config, Vec) {
+    var cullInlinePoints, cullShortEdges, cullShortSegments, formSegments, isConnected, isInline, joinSegments, log, reifySegments, reifyVectors, wrap;
     // PROCESSING STEPS ##############################################################################
     log = function(a) {
       console.dir(a);
@@ -551,7 +538,6 @@
       for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
         pointA = lineData[i];
         pointB = lineData[i + 1];
-        
         // if we're already making a segment, and the new edge is a continuation of the last edge
         if ((segmentEdges != null) && isConnected(pointA, segmentEdges[segmentEdges.length - 1])) {
           segmentEdges.push(pointB); // this edge is a continuation of the last edge
@@ -596,7 +582,6 @@
             segments.splice(j, 1);
             continue;
           }
-          
           // test the two segment ends
           pointA = segA[segA.length - 1];
           pointB = segB[segB.length - 1];
@@ -608,7 +593,6 @@
             segments.splice(j, 1);
             continue;
           }
-          
           // test endA-to-startB
           pointA = segA[segA.length - 1];
           pointB = segB[0];
@@ -618,7 +602,6 @@
             segments.splice(j, 1);
             continue;
           }
-          
           // test startA-to-endB
           pointA = segA[0];
           pointB = segB[segB.length - 1];
@@ -643,7 +626,7 @@
         while (j-- > 0) {
           pointA = seg[j];
           pointB = seg[j + 1];
-          if (distance(pointA, pointB) < Config.MIN_EDGE_LENGTH) {
+          if (Vec.distance(pointA, pointB) < Config.MIN_EDGE_LENGTH) {
             pointA.cull = true;
           }
         }
@@ -696,8 +679,8 @@
               results1.push(vector = {
                 x: pointA.x,
                 y: pointA.y,
-                dist: distance(pointA, pointB),
-                angle: angle(pointA, pointB)
+                dist: Vec.distance(pointA, pointB),
+                angle: Vec.angle(pointA, pointB)
               });
             }
           }
@@ -728,7 +711,6 @@
         return segment.dist >= Config.MIN_SEGMENT_LENGTH;
       });
     };
-    
     // HELPERS #######################################################################################
     wrap = function(data) {
       return {
@@ -760,16 +742,6 @@
       }
       return true;
     };
-    distance = function(a, b) {
-      var dx, dy;
-      dx = b.x - a.x;
-      dy = b.y - a.y;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-    angle = function(a, b) {
-      return Math.atan2(b.y - a.y, b.x - a.x);
-    };
-    
     // MAIN ##########################################################################################
     return Make("FlowArrows:Process", function(lineData) {
       return wrap(lineData).process(formSegments).process(joinSegments).process(cullShortEdges).process(cullInlinePoints).process(reifyVectors).process(reifySegments).process(cullShortSegments).result; // Wrap our data into a format suitable for the below processing pipeline // organize the points into an array of segment groups // combine segments that are visibly connected but whose points were listed in the wrong order // remove points that constitute an unusably short edge // remove points that lie on a line // create vectors with a position, dist, and angle // create segments with a dist and edges // remove vectors that are unusably short // return the result after all the above processing steps
@@ -895,17 +867,14 @@
     return hide(); // Fix a flicker on IE
   });
 
-  Take(["ControlPanelLayout", "Gradient", "GUI", "Reaction", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, Reaction, SVG, Scope, TRS, ControlReady) {
+  Take(["ControlPanelLayout", "Gradient", "GUI", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, SVG, Scope, TRS, ControlReady) {
     var CP, ControlPanel, columnElms, columnsElm, getColumnElm, groups, panelBg, panelElm, showing;
-    
     // Aliases
     CP = GUI.ControlPanel;
-    
     // State
     showing = false;
     groups = [];
     columnElms = [];
-    
     // Elements
     panelElm = SVG.create("g", GUI.elm, {
       xControls: "",
@@ -915,7 +884,7 @@
     panelBg = SVG.create("rect", panelElm, {
       xPanelBg: "",
       rx: CP.panelBorderRadius,
-      fill: "hsl(220, 45%, 45%)"
+      fill: GUI.Colors.bg.l
     });
     columnsElm = SVG.create("g", panelElm, {
       xColumns: "",
@@ -932,7 +901,7 @@
         return GUI.elm.removeChild(panelElm);
       }
     });
-    Make("ControlPanel", ControlPanel = Scope(panelElm, function() {
+    return Make("ControlPanel", ControlPanel = Scope(panelElm, function() {
       return {
         registerGroup: function(group) {
           return groups.push(group);
@@ -948,14 +917,12 @@
             h: totalAvailableSpace.h - CP.panelMargin * 2
           };
           [innerPanelSize, layout] = vertical ? ControlPanelLayout.vertical(groups, marginedSpace) : ControlPanelLayout.horizontal(groups, marginedSpace);
-          
           // If the panel is still way the hell too big, scale down
           scale = vertical && (innerPanelSize.w > marginedSpace.w / 2 || innerPanelSize.h > marginedSpace.h) ? Math.max(0.8, Math.min(marginedSpace.w / innerPanelSize.w / 2, marginedSpace.h / innerPanelSize.h)) : !vertical && (innerPanelSize.w > marginedSpace.w || innerPanelSize.h > marginedSpace.h / 2) ? Math.max(0.8, Math.min(marginedSpace.w / innerPanelSize.w, marginedSpace.h / innerPanelSize.h / 2)) : 1;
           outerPanelSize = {
             w: innerPanelSize.w * scale + CP.panelMargin * 2,
             h: innerPanelSize.h * scale + CP.panelMargin * 2
           };
-          
           // How much of the available content space does the panel use up?
           consumedSpace = {
             w: 0,
@@ -981,7 +948,6 @@
           if (!resizeInfo.panelInfo.showing) {
             return;
           }
-          
           // Now that we know which layout we're using, apply it to the SVG
           ControlPanelLayout.applyLayout(resizeInfo.panelInfo.layout, getColumnElm);
           if (resizeInfo.panelInfo.vertical) {
@@ -992,7 +958,6 @@
             ControlPanel.y = Math.round(totalAvailableSpace.h - resizeInfo.panelInfo.outerPanelSize.h + CP.panelMargin);
           }
           ControlPanel.scale = resizeInfo.panelInfo.scale;
-          
           // Apply the final size to our background elm
           return SVG.attrs(panelBg, {
             width: resizeInfo.panelInfo.innerPanelSize.w,
@@ -1001,12 +966,6 @@
         }
       };
     }));
-    Reaction("ControlPanel:Show", function() {
-      return ControlPanel.show(.5);
-    });
-    return Reaction("ControlPanel:Hide", function() {
-      return ControlPanel.hide(.5);
-    });
   });
 
   Take(["GUI", "Mode", "SVG"], function({
@@ -1170,11 +1129,12 @@
       ControlPanel: GUI
     }, Input, Registry, SVG, Tween) {
     return Registry.set("Control", "button", function(elm, props) {
-      var bg, bgFill, bgc, blueBG, handlers, input, label, labelFill, lightBG, orangeBG, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
+      var bg, bgFill, bgc, blueBG, click, handlers, input, label, labelFill, lightBG, orangeBG, outerWidth, scope, strokeWidth, tickBG, toClicked, toClicking, toHover, toNormal;
       // An array to hold all the click functions that have been attached to this button
       handlers = [];
-      bgFill = "hsl(220, 10%, 92%)";
+      bgFill = props.bgColor || "hsl(220, 10%, 92%)";
       labelFill = props.fontColor || "hsl(227, 16%, 24%)";
+      outerWidth = props.width || GUI.colInnerWidth;
       strokeWidth = 2;
       // Enable pointer cursor, other UI features
       SVG.attrs(elm, {
@@ -1184,7 +1144,7 @@
       bg = SVG.create("rect", elm, {
         x: strokeWidth / 2,
         y: strokeWidth / 2,
-        width: GUI.colInnerWidth - strokeWidth,
+        width: outerWidth - strokeWidth,
         height: GUI.unit - strokeWidth,
         rx: GUI.borderRadius,
         strokeWidth: strokeWidth,
@@ -1193,8 +1153,8 @@
       // Button text label
       label = SVG.create("text", elm, {
         textContent: props.name,
-        x: GUI.colInnerWidth / 2,
-        y: (props.fontSize || 16) + GUI.unit / 5,
+        x: outerWidth / 2,
+        y: props.valign || ((props.fontSize || 16) + GUI.unit / 5),
         fontSize: props.fontSize || 16,
         fontWeight: props.fontWeight || "normal",
         fontStyle: props.fontStyle || "normal",
@@ -1256,17 +1216,23 @@
         down: toClicking,
         up: toHover,
         moveOut: toNormal,
-        dragOut: toNormal,
-        click: function() {
-          var handler, len, m;
+        dragOut: toNormal
+      });
+      // Hack around bugginess in chrome
+      click = function() {
+        var handler, len, m, results;
+        if (input.state.clicking) {
           toClicked();
+          results = [];
           for (m = 0, len = handlers.length; m < len; m++) {
             handler = handlers[m];
-            handler();
+            results.push(handler());
           }
-          return void 0;
+          return results;
         }
-      });
+      };
+      elm.addEventListener("mouseup", click);
+      elm.addEventListener("touchend", click);
       // Our scope just has the 3 mandatory control functions, nothing special.
       return scope = {
         height: GUI.unit,
@@ -1338,7 +1304,7 @@
       // Config
       labelFill = props.fontColor || "hsl(220, 10%, 92%)";
       rectFill = "hsl(227, 45%, 25%)";
-      triangleFill = "hsl(220, 35%, 80%)"; // Todo: Try $silver
+      triangleFill = "hsl(220, 35%, 80%)";
       activeFill = "hsl(92, 46%, 57%)";
       triangleSize = 24;
       strokeWidth = 2;
@@ -1472,11 +1438,7 @@
         if (typeof activeButtonCancelCb === "function") {
           activeButtonCancelCb();
         }
-        activeButtonCancelCb = unclick;
-        if (showing) {
-          showing = false;
-          return update();
-        }
+        return activeButtonCancelCb = unclick;
       };
       // Setup the bg stroke color for tweening
       bgc = blueBG = {
@@ -1502,12 +1464,27 @@
       };
       tickBG(blueBG);
       update = function() {
+        var button, len, m;
         if (showing) {
           panel.show(0);
-          return resize();
+          resize();
+          for (m = 0, len = buttons.length; m < len; m++) {
+            button = buttons[m];
+            button.enable(true);
+          }
         } else {
-          return panel.hide(0.2);
+          panel.hide(0.2);
+          requestAnimationFrame(function() {
+            var len1, n, results;
+            results = [];
+            for (n = 0, len1 = buttons.length; n < len1; n++) {
+              button = buttons[n];
+              results.push(button.enable(false));
+            }
+            return results;
+          });
         }
+        return void 0;
       };
       // Input event handling
       toNormal = function(e, state) {
@@ -1544,7 +1521,7 @@
         moveOut: toNormal,
         dragOut: toNormal,
         upOther: function(e, state) {
-          if (showing) {
+          if (showing && !panel.element.contains(e.target)) {
             showing = false;
             return update();
           }
@@ -1718,9 +1695,11 @@
         props.setActive(props.name, unclick);
         isActive = true;
         toActive();
-        for (m = 0, len = handlers.length; m < len; m++) {
-          handler = handlers[m];
-          handler();
+        if (e !== false) {
+          for (m = 0, len = handlers.length; m < len; m++) {
+            handler = handlers[m];
+            handler();
+          }
         }
         return void 0;
       };
@@ -1776,6 +1755,13 @@
       return scope = {
         click: attachClick,
         input: input,
+        enable: function(v) {
+          input.enable(v);
+          if (v === false && !isActive) {
+            return toNormal();
+          }
+        },
+        doClick: click, // Trigger a click from outside code
         _highlight: function(enable) {
           if (highlighting = enable) {
             SVG.attrs(label, {
@@ -2838,13 +2824,50 @@
         colUnits: colUnits = 5,
         colInnerWidth: colInnerWidth = unit * colUnits // Width of items in a column
       },
-      Settings: {
+      Panel: {
         unit: 32,
         itemWidth: 360,
         itemMargin: 8, // Vertical space between two items
-        panelPad: 8,
-        panelMargin: 16,
+        panelPad: 8, // Space between the sides of the panel and items in the panel
+        panelMargin: 16, // Minimum space between the outside of the panel and the edge of the window
         panelBorderRadius: 8
+      },
+      Colors: {
+        bg: {
+          xxl: "hsl(217, 70%, 70%)",
+          xl: "hsl(219, 60%, 57%)",
+          l: "hsl(220, 50%, 50%)",
+          m: "hsl(224, 47%, 45%)",
+          d: "hsl(227, 45%, 40%)",
+          xd: "hsl(230, 50%, 30%)"
+        },
+        // SHADE
+        mist: "hsl(220, 10%, 92%)",
+        silver: "hsl(220, 15%, 80%)",
+        grey: "hsl(220, 9%, 52%)",
+        smoke: "hsl(227, 15%, 25%)",
+        tar: "hsl(233, 30%, 17%)",
+        onyx: "hsl(240, 50%, 5%)",
+        // KEY
+        red: "hsl(358, 80%, 55%)",
+        orange: "hsl(24, 100%, 60%)",
+        yellow: "hsl(43, 100%, 50%)",
+        green: "hsl(130, 85%, 35%)",
+        blue: "hsl(223, 45%, 45%)",
+        indigo: "hsl(270, 50%, 58%)",
+        violet: "hsl(330, 55%, 50%)",
+        // SPECIAL
+        blueberry: "hsl(259, 65%, 65%)",
+        bronze: "hsl(43,  50%, 70%)",
+        mint: "hsl(153, 80%, 41%)",
+        navy: "hsl(235, 52%, 22%)",
+        navydark: "hsl(227, 65%, 14%)",
+        olive: "hsl(166, 90%, 20%)",
+        purple: "hsl(255, 49%, 37%)",
+        teal: "hsl(180, 100%, 32%)",
+        fuscha: "hsl(340, 60%, 50%)",
+        ghost: "rgba(255, 255, 255, 0.05)",
+        demon: "rgba(0, 0, 0, 0.05)"
       }
     });
   });
@@ -2934,19 +2957,135 @@
     }
   });
 
-  Take(["Reaction", "SVG", "SceneReady"], function(Reaction, SVG) {
-    Reaction("Root:Show", function() {
-      return SVG.root._scope.show(.5);
+  Take(["DOOM", "GUI", "Resize", "SVG", "Wait", "SVGReady"], function(DOOM, GUI, Resize, SVG, Wait) {
+    var foreignObject, inner, outer;
+    foreignObject = SVG.create("foreignObject", GUI.elm, {
+      id: "message"
     });
-    return Reaction("Root:Hide", function() {
-      return SVG.root._scope.hide(.5, .2);
+    outer = DOOM.create("div", foreignObject, {
+      id: "message-outer"
+    });
+    inner = DOOM.create("div", outer, {
+      id: "message-inner"
+    });
+    Resize(function() {
+      return SVG.attrs(foreignObject, {
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    });
+    return Make("Message", function(html, time = 2) {
+      DOOM(inner, {
+        innerHTML: html
+      });
+      DOOM(outer, {
+        opacity: 1
+      });
+      return Wait(time, function() {
+        return DOOM(outer, {
+          opacity: 0
+        });
+      });
     });
   });
 
-  Take(["Registry", "Ease", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, Ease, {
-      Settings: GUI
+  Take(["Action", "DOOM", "GUI", "Resize", "SVG", "Scope", "ScopeReady"], function(Action, DOOM, GUI, Resize, SVG, Scope) {
+    var Panel, close, cover, foreignObject, frame, g, inner, outer;
+    foreignObject = SVG.create("foreignObject", GUI.elm, {
+      id: "panel"
+    });
+    outer = DOOM.create("div", foreignObject, {
+      id: "panel-outer"
+    });
+    cover = DOOM.create("div", outer, {
+      id: "panel-cover"
+    });
+    frame = DOOM.create("div", outer, {
+      id: "panel-frame"
+    });
+    close = DOOM.create("svg", frame, {
+      id: "panel-close"
+    });
+    inner = DOOM.create("div", frame);
+    g = SVG.create("g", close, {
+      ui: true,
+      transform: "translate(16,16)"
+    });
+    SVG.create("circle", g, {
+      r: 16,
+      fill: "#F00"
+    });
+    SVG.create("path", g, {
+      d: "M-6,-6 L6,6 M6,-6 L-6,6",
+      stroke: "#FFF",
+      strokeWidth: 3,
+      strokeLinecap: "round"
+    });
+    cover.addEventListener("click", function() {
+      return Action("Panel:Hide");
+    });
+    close.addEventListener("click", function() {
+      return Action("Panel:Hide");
+    });
+    Resize(function() {
+      return SVG.attrs(foreignObject, {
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    });
+    Panel = function(id, html) {
+      DOOM(inner, {
+        id: id,
+        innerHTML: html
+      });
+      Action("Panel:Show");
+      return inner;
+    };
+    Panel.show = function() {
+      DOOM(foreignObject, {
+        pointerEvents: "auto"
+      });
+      return DOOM(outer, {
+        opacity: 1
+      });
+    };
+    Panel.hide = function() {
+      DOOM(foreignObject, {
+        pointerEvents: null
+      });
+      return DOOM(outer, {
+        opacity: 0
+      });
+    };
+    Panel.alert = function(msg, cb) {
+      Panel(`<h3>${msg}</h3>
+<div><button>Okay</button></div>`);
+      return frame.querySelector("button").addEventListener("click", function() {
+        Action("Panel:Hide");
+        return typeof cb === "function" ? cb() : void 0;
+      });
+    };
+    Panel.hide();
+    return Make("Panel", Panel);
+  });
+
+  Take(["Action", "ControlPanel", "Panel", "Reaction", "SVG", "SVGReady"], function(Action, ControlPanel, Panel, Reaction, SVG) {
+    // It'd be better if this logic were in some sort of state machine with purview
+    // over the entire GUI, but things aren't complex enough to warrant that yet.
+    // Something like a router, I guess.
+    Reaction("Panel:Hide", function() {
+      return Panel.hide();
+    });
+    return Reaction("Panel:Show", function() {
+      return Panel.show();
+    });
+  });
+
+  Take(["Ease", "GUI", "Input", "SVG", "TRS", "Tween"], function(Ease, {
+      Panel: GUI
     }, Input, SVG, TRS, Tween) {
-    return Registry.set("SettingType", "slider", function(elm, props) {
+    var SettingsSlider;
+    return Make("SettingsSlider", SettingsSlider = function(elm, props) {
       var bgc, blueBG, handleDrag, label, labelPad, labelWidth, lightBG, lightDot, normalDot, orangeBG, range, snap, snapElms, snapTolerance, startDrag, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toMissed, toNormal, track, trackWidth, update, updateSnaps, v;
       snapElms = [];
       v = 0;
@@ -3004,7 +3143,6 @@
         textAnchor: "end",
         fill: "hsl(220, 10%, 92%)"
       });
-      
       // Setup the thumb stroke color for tweening
       bgc = blueBG = {
         r: 34,
@@ -3040,11 +3178,9 @@
           });
         }
         ref1 = props.snaps;
-        
         // Map our input to the right position, move the slider, and highlight the proper dot if needed
         for (i = n = 0, len1 = ref1.length; n < len1; i = ++n) {
           snap = ref1[i];
-          
           // Input is inside this snap point
           if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
             SVG.attrs(snapElms[i], {
@@ -3055,7 +3191,6 @@
               x: snap * range
             });
             return snap;
-          
           // Input is below this snap point
           } else if (input < snap - snapTolerance) {
             TRS.abs(thumb, {
@@ -3068,7 +3203,6 @@
             return Ease.linear(input, inMin, inMax, outMin, outMax);
           }
         }
-        
         // Snap is above the last snap point
         TRS.abs(thumb, {
           x: input * range
@@ -3079,7 +3213,6 @@
         outMax = 1;
         return Ease.linear(input, inMin, inMax, outMin, outMax);
       };
-      
       // Update and save the thumb position
       update = function(V) {
         if (V != null) {
@@ -3093,7 +3226,6 @@
           });
         }
       };
-      
       // Input event handling
       toNormal = function(e, state) {
         return Tween(bgc, blueBG, .2, {
@@ -3146,16 +3278,16 @@
         dragOther: handleDrag,
         click: toClicked
       });
-      
       // Init
       return update(props.value || 0);
     });
   });
 
-  Take(["Registry", "GUI", "Input", "SVG", "TRS", "Tween"], function(Registry, {
-      Settings: GUI
+  Take(["GUI", "Input", "SVG", "TRS", "Tween"], function({
+      Panel: GUI
     }, Input, SVG, TRS, Tween) {
-    return Registry.set("SettingType", "switch", function(elm, props) {
+    var SettingsSwitch;
+    return Make("SettingsSwitch", SettingsSwitch = function(elm, props) {
       var bgc, blueBG, isActive, label, labelPad, labelWidth, lightBG, lightTrack, normalTrack, orangeBG, scope, strokeWidth, thumb, thumbSize, tickBG, toClicked, toClicking, toHover, toNormal, toggle, track;
       strokeWidth = 2;
       labelPad = 10;
@@ -3281,148 +3413,12 @@
     });
   });
 
-  Take(["Action", "Ease", "GUI", "Input", "Mode", "Reaction", "Registry", "Resize", "Scope", "SVG", "WrapText", "ControlReady"], function(Action, Ease, GUI, Input, Mode, Reaction, Registry, Resize, Scope, SVG, WrapText) {
-    var Settings, bg, close, closeCircle, closeX, elm, infoLines, innerHeight, input, items, len, len1, line, m, metaBox, metaBoxElm, metaBoxHeight, metaBoxRect, n, panelHeight, panelWidth, ref, ref1, titleLines, titleString;
-    panelWidth = GUI.Settings.itemWidth + GUI.Settings.panelPad * 2;
-    panelHeight = 0;
-    innerHeight = 0;
-    elm = SVG.create("g", GUI.elm);
-    // Meta Info
-    metaBoxHeight = 20;
-    metaBoxElm = SVG.create("g", elm);
-    metaBox = Scope(metaBoxElm);
-    metaBoxRect = SVG.create("rect", metaBoxElm, {
-      width: panelWidth,
-      fill: "hsl(227, 45%, 35%)",
-      rx: GUI.Settings.panelBorderRadius
-    });
-    titleLines = (ref = Mode.get("meta")) != null ? ref.title : void 0;
-    if (titleLines == null) {
-      titleLines = [];
-    }
-    if (!Mode.embed && titleLines.length === 0) {
-      titleString = document.title.replace("| ", "").replace("LunchBox Sessions", "");
-      titleLines = WrapText(titleString, 28);
-    }
-    infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0;
-    if (infoLines == null) {
-      infoLines = [];
-    }
-    if (titleLines.length > 0 || infoLines.length > 0) {
-      metaBoxHeight += 10;
-    }
-    for (m = 0, len = titleLines.length; m < len; m++) {
-      line = titleLines[m];
-      SVG.create("text", metaBoxElm, {
-        x: panelWidth / 2,
-        y: metaBoxHeight,
-        textContent: line,
-        textAnchor: "middle",
-        fontSize: 18,
-        fontWeight: "bold",
-        fill: "#FFF"
-      });
-      metaBoxHeight += 24;
-    }
-    if (titleLines.length > 0) {
-      metaBoxHeight += 10;
-    }
-    for (n = 0, len1 = infoLines.length; n < len1; n++) {
-      line = infoLines[n];
-      SVG.create("text", metaBoxElm, {
-        x: panelWidth / 2,
-        y: metaBoxHeight,
-        textContent: line,
-        textAnchor: "middle",
-        fill: "#FFF"
-      });
-      metaBoxHeight += 20;
-    }
-    if (infoLines.length > 0) {
-      metaBoxHeight += 10;
-    }
-    SVG.create("text", metaBoxElm, {
-      x: panelWidth / 2,
-      y: metaBoxHeight,
-      textContent: "© CD Industrial Group Inc.",
-      textAnchor: "middle",
-      fontSize: "12",
-      fill: "#FFF"
-    });
-    metaBoxHeight += 10;
-    // Main Settings Panel
-    bg = SVG.create("rect", elm, {
-      width: panelWidth,
-      rx: GUI.Settings.panelBorderRadius,
-      fill: "hsl(220, 45%, 45%)"
-    });
-    items = SVG.create("g", elm, {
-      transform: `translate(${GUI.Settings.panelPad},${GUI.Settings.panelPad})`
-    });
-    // Close Button
-    close = SVG.create("g", elm, {
-      ui: true,
-      transform: "translate(8,8)"
-    });
-    closeCircle = SVG.create("circle", close, {
-      r: 16,
-      fill: "#F00"
-    });
-    closeX = SVG.create("path", close, {
-      d: "M-6,-6 L6,6 M6,-6 L-6,6",
-      strokeWidth: 3,
-      strokeLinecap: "round",
-      stroke: "#FFF"
-    });
-    // Finish Setup
-    input = Input(close, {
-      click: function(e, state) {
-        input.resetState(); // Hack to fix https://github.com/cdig/svga/issues/154
-        return Action("Settings:Toggle");
-      }
-    });
-    Settings = Scope(elm, function() {
-      return {
-        addSetting: function(type, props) {
-          var builder, instance, scope;
-          instance = Scope(SVG.create("g", items));
-          builder = Registry.get("SettingType", type);
-          scope = builder(instance.element, props);
-          instance.y = innerHeight;
-          innerHeight += GUI.Settings.unit + GUI.Settings.itemMargin;
-          panelHeight = innerHeight + GUI.Settings.panelPad * 2 - GUI.Settings.itemMargin;
-          SVG.attrs(bg, {
-            height: panelHeight
-          });
-          SVG.attrs(metaBoxRect, {
-            y: -panelHeight,
-            height: panelHeight + metaBoxHeight
-          });
-          metaBox.y = panelHeight;
-          return scope;
-        }
-      };
-    });
-    Settings.hide(0);
-    Make("Settings", Settings);
-    Resize(function(info) {
-      Settings.scale = Ease.linear(info.window.w, 0, panelWidth + GUI.Settings.panelMargin * 2, 0, 1);
-      Settings.x = info.window.w / 2 - panelWidth / 2 * Settings.scale;
-      return Settings.y = Ease.linear(info.window.h, panelHeight, 1000, -10, 300, false);
-    });
-    Reaction("Settings:Show", function() {
-      return Settings.show(.3);
-    });
-    return Reaction("Settings:Hide", function() {
-      return Settings.hide(.3);
-    });
-  });
-
-  Take(["Action", "GUI", "Input", "Mode", "Reaction", "Scope", "SVG", "ScopeReady"], function(Action, GUI, Input, Mode, Reaction, Scope, SVG) {
-    var bg, elm, height, hit, label, scope, width;
+  Take(["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], function(Action, DOOM, GUI, Input, Mode, Panel, Scope, SVG) {
+    var Settings, bg, controls, elm, height, hit, label, scope, width;
     if (!Mode.settings) {
       return;
     }
+    // Eventually, the settings button at the top should be part of an HTML-based HUD so that we don't need all this nonsense
     elm = SVG.create("g", GUI.elm, {
       ui: true
     });
@@ -3442,7 +3438,7 @@
       width: width,
       height: height,
       rx: 3,
-      fill: "hsl(220, 45%, 45%)"
+      fill: GUI.Colors.bg.l
     });
     label = SVG.create("text", elm, {
       textContent: "Settings",
@@ -3452,9 +3448,40 @@
       textAnchor: "middle",
       fill: "hsl(220, 10%, 92%)"
     });
-    return Input(elm, {
+    Input(elm, {
       click: function() {
-        return Action("Settings:Toggle");
+        var info, infoLines, line, panel, ref, ref1, title;
+        title = (ref = Mode.get("meta")) != null ? ref.title : void 0;
+        if ((title == null) && !Mode.embed) {
+          title = document.title.replace("| ", "").replace("LunchBox Sessions", "");
+        }
+        if (infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0) {
+          info = ((function() {
+            var len, m, results;
+            results = [];
+            for (m = 0, len = infoLines.length; m < len; m++) {
+              line = infoLines[m];
+              results.push(`<p>${line}</p>`);
+            }
+            return results;
+          })()).join("");
+        }
+        panel = Panel("settings", `<div settings-controls></div>
+<h3 settings-title>${title}</h3>
+<div settings-info>${info}</div>
+<small settings-copyright>© CD Industrial Group Inc.</small>`);
+        return DOOM.append(panel.querySelector("[settings-controls]"), controls);
+      }
+    });
+    controls = DOOM.create("div", null);
+    return Make("Settings", Settings = {
+      addSetting: function(type, props) {
+        var builder, instance;
+        elm = DOOM.create("svg", controls);
+        instance = Scope(SVG.create("g", elm));
+        builder = Take(`Settings${type}`);
+        scope = builder(instance.element, props);
+        return scope;
       }
     });
   });
@@ -3561,7 +3588,7 @@
   });
 
   Take(["Input", "Mode", "Nav"], function(Input, Mode, Nav) {
-    var calls, down, drag, dragging, up;
+    var blockDbl, calls, down, drag, dragging, up, wheel;
     if (!Mode.nav) {
       return;
     }
@@ -3592,8 +3619,20 @@
       upOther: up
     };
     Input(document, calls, true, false);
+    blockDbl = function(elm) {
+      while ((elm != null) && elm !== document) {
+        if (elm.hasAttribute("block-dbl")) {
+          return elm;
+        }
+        elm = elm.parentNode;
+      }
+      return null;
+    };
     document.addEventListener("dblclick", function(e) {
       if (e.button !== 0) {
+        return;
+      }
+      if (blockDbl(e.target)) {
         return;
       }
       if (Nav.eventInside(e)) {
@@ -3605,7 +3644,7 @@
         });
       }
     });
-    return document.addEventListener("wheel", function(e) {
+    wheel = function(e) {
       if (e.button !== 0) {
         return;
       }
@@ -3621,26 +3660,28 @@
           });
         }
       }
+    };
+    // Old code which was nice but sucked with mice
+    // # Is this a pixel-precise input device (eg: magic trackpad)?
+    // if e.deltaMode is WheelEvent.DOM_DELTA_PIXEL
+    //   if e.ctrlKey # Chrome, pinch to zoom
+    //     Nav.by z: -e.deltaY / 100
+    //   else if e.metaKey # Other browsers, meta+scroll to zoom
+    //     Nav.by z: -e.deltaY / 200
+    //   else
+    //     Nav.by
+    //       x: -e.deltaX
+    //       y: -e.deltaY
+    //       z: -e.deltaZ
+
+    // # This is probably a scroll wheel # DOESN'T WORK! :(
+    // else
+    //   Nav.by z: -e.deltaY / 500
+    return document.addEventListener("wheel", wheel, {
+      passive: false
     });
   });
 
-  
-  // Old code which was nice but sucked with mice
-  // # Is this a pixel-precise input device (eg: magic trackpad)?
-  // if e.deltaMode is WheelEvent.DOM_DELTA_PIXEL
-  //   if e.ctrlKey # Chrome, pinch to zoom
-  //     Nav.by z: -e.deltaY / 100
-  //   else if e.metaKey # Other browsers, meta+scroll to zoom
-  //     Nav.by z: -e.deltaY / 200
-  //   else
-  //     Nav.by
-  //       x: -e.deltaX
-  //       y: -e.deltaY
-  //       z: -e.deltaZ
-
-  // # This is probably a scroll wheel # DOESN'T WORK! :(
-  // else
-  //   Nav.by z: -e.deltaY / 500
   Take(["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween) {
     var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
     // Turn this on if we need to debug resizing
@@ -3688,7 +3729,7 @@
       // ("Available space" means the size of the window, minus the space occupied by the control panel.)
       // Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
       // Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
-      return SVG.attr(SVG.root, "transform", `translate(${center.x},${center.y}) scale(${contentScale * Math.pow(2, pos.z)}) translate(${pos.x - centerInverse.x},${pos.y - centerInverse.y})`);
+      return SVG.attr(SVG.root, "transform", `translate(${center.x},${center.y}) scale(${Nav.rootScale()}) translate(${pos.x - centerInverse.x},${pos.y - centerInverse.y})`);
     };
     pickBestLayout = function(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo) {
       var contentHeightWhenHorizontal, panelHeightWhenHorizontal;
@@ -3800,19 +3841,34 @@
     requestRender = function() {
       return RAF(render, true);
     };
-    applyLimit = function(l, v) {
-      return Math.min(l.max, Math.max(l.min, v));
+    applyLimit = function(l, v, a = 0) {
+      return Math.min(l.max + a, Math.max(l.min - a, v));
     };
     Make("Nav", Nav = {
-      to: function(p) {
-        var time, timeX, timeY, timeZ;
-        if (tween != null) {
-          Tween.cancel(tween);
-        }
+      center: function() {
+        return center;
+      },
+      pos: function() {
+        return pos;
+      },
+      rootScale: function() {
+        return contentScale * Math.pow(2, pos.z);
+      },
+      runResize: runResize,
+      tweenTime: function(p) {
+        var timeX, timeY, timeZ;
         timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
         timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
         timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
-        time = Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
+        return Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
+      },
+      to: function(p, time) {
+        if (tween != null) {
+          Tween.cancel(tween);
+        }
+        if (time == null) {
+          time = Nav.tweenTime(p);
+        }
         return tween = Tween(pos, p, time, {
           mutate: true,
           tick: render
@@ -3826,13 +3882,15 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, pos.z + p.z);
         }
-        scale = contentScale * Math.pow(2, pos.z);
+        scale = Nav.rootScale();
         if (p.x != null) {
-          pos.x = applyLimit(limit.x, pos.x + p.x / scale);
+          pos.x += p.x / scale;
         }
         if (p.y != null) {
-          pos.y = applyLimit(limit.y, pos.y + p.y / scale);
+          pos.y += p.y / scale;
         }
+        pos.x = applyLimit(limit.x, pos.x, center.x / scale * .8);
+        pos.y = applyLimit(limit.y, pos.y, center.y / scale * .8);
         return requestRender();
       },
       at: function(p) {
@@ -3843,13 +3901,15 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, p.z);
         }
-        scale = contentScale * Math.pow(2, pos.z);
+        scale = Nav.rootScale();
         if (p.x != null) {
-          pos.x = applyLimit(limit.x, p.x / scale);
+          pos.x = p.x / scale;
         }
         if (p.y != null) {
-          pos.y = applyLimit(limit.y, p.y / scale);
+          pos.y = p.y / scale;
         }
+        pos.x = applyLimit(limit.x, pos.x, center.x / scale * .8);
+        pos.y = applyLimit(limit.y, pos.y, center.y / scale * .8);
         return requestRender();
       },
       startScale: function() {
@@ -3885,31 +3945,6 @@
   // Take "Tick", (Tick)->
   //   Tick (t)->
   //     Nav.at z: Math.sin(t)/10 - .1
-  Take(["Mode", "Nav", "SVG"], function(Mode, Nav, SVG) {
-    var gesture;
-    if (!Mode.nav) {
-      return;
-    }
-    if (!(navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 1)) {
-      return;
-    }
-    gesture = new MSGesture();
-    gesture.target = SVG.svg;
-    gesture.target.addEventListener("pointerdown", function(e) {
-      if (Nav.eventInside(e)) {
-        return gesture.addPointer(e.pointerId);
-      }
-    });
-    return gesture.target.addEventListener("MSGestureChange", function(e) {
-      if (Nav.eventInside(e)) {
-        e.preventDefault();
-        return Nav.by({
-          z: Math.log2(e.scale)
-        });
-      }
-    });
-  });
-
   (function() {
     var Resize, cbs;
     cbs = [];
@@ -4044,101 +4079,7 @@
     });
   });
 
-  // This is needed because IE doesn't support Node.contains() on SVG elements. Not sure about Edge.
-  if ((base = SVGElement.prototype).contains == null) {
-    base.contains = function(node) {
-      while (node != null) {
-        if (this === node) {
-          return true;
-        }
-        node = node.parentNode;
-      }
-      return false;
-    };
-  }
-
-  if (Math.log2 == null) {
-    Math.log2 = function(x) {
-      return Math.log(x) / Math.LN2;
-    };
-  }
-
-  Take(["Action", "ControlPanel", "Reaction"], function(Action, ControlPanel, Reaction) {
-    var root, schematic, update;
-    root = true;
-    schematic = false;
-    update = function() {
-      if (root && !schematic) {
-        return Action("ControlPanel:Show");
-      } else {
-        return Action("ControlPanel:Hide");
-      }
-    };
-    Reaction("Schematic:Hide", function() {
-      return update(schematic = false);
-    });
-    Reaction("Schematic:Show", function() {
-      return update(schematic = true);
-    });
-    Reaction("Root:Hide", function() {
-      return update(root = false);
-    });
-    return Reaction("Root:Show", function() {
-      return update(root = true);
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var help, settings, update;
-    help = false;
-    settings = false;
-    update = function() {
-      if (help || settings) {
-        return Action("Root:Hide");
-      } else {
-        return Action("Root:Show");
-      }
-    };
-    Reaction("Settings:Show", function() {
-      return update(settings = true);
-    });
-    return Reaction("Settings:Hide", function() {
-      return update(settings = false);
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var schematicMode;
-    schematicMode = true;
-    Reaction("Schematic:Hide", function() {
-      return schematicMode = false;
-    });
-    Reaction("Schematic:Show", function() {
-      return schematicMode = true;
-    });
-    Reaction("Schematic:Toggle", function() {
-      return Action(schematicMode ? "Schematic:Hide" : "Schematic:Show");
-    });
-    return Take("AllReady", function() {
-      return Action("Schematic:Hide");
-    });
-  });
-
-  Take(["Action", "Reaction"], function(Action, Reaction) {
-    var showing;
-    showing = false;
-    Reaction("Settings:Hide", function() {
-      return showing = false;
-    });
-    Reaction("Settings:Show", function() {
-      return showing = true;
-    });
-    return Reaction("Settings:Toggle", function() {
-      return Action(showing ? "Settings:Hide" : "Settings:Show");
-    });
-  });
-
-  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+  Take(["Ease", "Registry", "ScopeCheck", "SVG"], function(Ease, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var alpha, element, placeholder;
       ScopeCheck(scope, "alpha");
@@ -4157,7 +4098,7 @@
             val = 0;
           }
           if (alpha !== val) {
-            SVG.style(element, "opacity", alpha = val);
+            SVG.style(element, "opacity", alpha = Ease.clip(val));
             if (alpha > 0) {
               if (placeholder.parentNode != null) {
                 return placeholder.parentNode.replaceChild(element, placeholder);
@@ -4169,54 +4110,6 @@
             }
           }
         }
-      });
-    });
-  });
-
-  // scope.animate
-  // An every-frame update function that only runs in animate mode.
-  Take(["Reaction", "Registry", "Tick"], function(Reaction, Registry, Tick) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var animate, running, startTime;
-      if (scope.animate == null) {
-        return;
-      }
-      running = false;
-      startTime = 0;
-      
-      // Replace the actual scope animate function with a warning
-      animate = scope.animate;
-      scope.animate = function() {
-        throw new Error("@animate() is called by the system. Please don't call it yourself.");
-      };
-      Tick(function(time, dt) {
-        if (!running) {
-          return;
-        }
-        if (startTime == null) {
-          startTime = time;
-        }
-        return animate.call(scope, time - startTime, dt);
-      });
-      Reaction("Schematic:Hide", function() {
-        startTime = null;
-        return running = true;
-      });
-      return Reaction("Schematic:Show", function() {
-        return running = false;
-      });
-    });
-  });
-
-  // scope.animateMode and scope.schematicMode
-  // Scope callbacks fired whenever we switch modes
-  Take(["Reaction", "Registry"], function(Reaction, Registry) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      Reaction("Schematic:Hide", function() {
-        return typeof scope.animateMode === "function" ? scope.animateMode() : void 0;
-      });
-      return Reaction("Schematic:Show", function() {
-        return typeof scope.schematicMode === "function" ? scope.schematicMode() : void 0;
       });
     });
   });
@@ -4845,35 +4738,42 @@
     });
   });
 
-  Take(["Action", "Ease", "Mode", "Settings", "Storage"], function(Action, Ease, Mode, Settings, Storage) {
-    var apply, init;
-    if (typeof Mode.background === "string") {
-      return Action("Background:Set", Mode.background);
-    } else if (Mode.background === true) {
-      if (Mode.settings) {
-        init = +Storage("Background");
-      }
-      if (isNaN(init)) {
-        init = .7;
-      }
-      apply = function(v) {
-        Storage("Background", v);
-        return Action("Background:Lightness", Ease.linear(v, 0, 1, 0.25, 1));
-      };
-      if (Mode.background === true) {
-        Settings.addSetting("slider", {
-          name: "Background Color",
-          value: init,
-          snaps: [.7],
-          update: apply
+  Take(["Action", "Ease", "Fullscreen", "Mode", "Settings", "Storage"], function(Action, Ease, Fullscreen, Mode, Settings, Storage) {
+    var Background;
+    return Make("Background", Background = function(value) {
+      var apply, init;
+      if (value != null) {
+        return Action("Background:Set", value);
+      } else if (typeof Mode.background === "string") {
+        return Action("Background:Set", Mode.background);
+      } else if (Mode.background === true) {
+        if (Mode.settings) {
+          init = +Storage("Background");
+        }
+        if (isNaN(init)) {
+          init = .7;
+        }
+        apply = function(v) {
+          Storage("Background", v);
+          return Action("Background:Lightness", Ease.linear(v, 0, 1, 0.25, 1));
+        };
+        if (Mode.background === true) {
+          Settings.addSetting("Slider", {
+            name: "Background Color",
+            value: init,
+            snaps: [.7],
+            update: apply
+          });
+        }
+        return Take("SceneReady", function() {
+          return apply(init);
         });
+      } else if (Fullscreen.active()) {
+        return Action("Background:Set", "white");
+      } else {
+        return Action("Background:Set", "transparent");
       }
-      return Take("SceneReady", function() {
-        return apply(init);
-      });
-    } else {
-      return Action("Background:Set", "transparent");
-    }
+    });
   });
 
   Take(["Action", "Settings"], function(Action, Settings) {
@@ -4885,7 +4785,7 @@
         return Action("FlowArrows:Hide");
       }
     };
-    arrowsSwitch = Settings.addSetting("switch", {
+    arrowsSwitch = Settings.addSetting("Switch", {
       name: "Flow Arrows",
       value: true,
       update: update
@@ -4896,22 +4796,24 @@
   });
 
   Take(["Action", "Settings", "SVG"], function(Action, Settings, SVG) {
-    var enterFullscreen, exitFullscreen, fullScreenSwitch, isFullscreen, switchChanged, updateSwitch;
+    var Background, enterFullscreen, exitFullscreen, fullScreenSwitch, isFullscreen, switchChanged, update;
+    // Break circular dependency
+    Background = null;
+    Take("Background", function(b) {
+      return Background = b;
+    });
     isFullscreen = function() {
-      return (document.fullscreenElement != null) || (document.msFullscreenElement != null) || (document.webkitFullscreenElement != null);
+      return (document.fullscreenElement != null) || (document.webkitFullscreenElement != null);
     };
     Make("Fullscreen", {
       active: isFullscreen
     });
     // If we support fullscreen in this browser, add a switch for it
-    if (document.fullscreenEnabled || document.msFullScreenEnabled || document.webkitFullscreenEnabled) {
+    if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
       // We can't use the ?() shorthand for these functions because that doesn't work in Safari (possibly elsewhere)
       enterFullscreen = function() {
         if (SVG.svg.requestFullscreen != null) {
           return SVG.svg.requestFullscreen();
-        }
-        if (SVG.svg.msRequestFullscreen != null) {
-          return SVG.svg.msRequestFullscreen();
         }
         if (SVG.svg.webkitRequestFullscreen != null) {
           return SVG.svg.webkitRequestFullscreen();
@@ -4921,20 +4823,17 @@
         if (document.exitFullscreen != null) {
           return document.exitFullscreen();
         }
-        if (document.msExitFullscreen != null) {
-          return document.msExitFullscreen();
-        }
         if (document.webkitExitFullscreen != null) {
           return document.webkitExitFullscreen();
         }
       };
-      // Whenever the fullscreen state changes, make sure the switch matches the new state
-      updateSwitch = function(e) {
-        return fullScreenSwitch.setValue(isFullscreen());
+      update = function(e) {
+        // Make sure the switch matches the new state
+        fullScreenSwitch.setValue(isFullscreen());
+        return typeof Background === "function" ? Background() : void 0;
       };
-      window.addEventListener("fullscreenchange", updateSwitch);
-      window.addEventListener("MSFullscreenChange", updateSwitch);
-      window.addEventListener("webkitfullscreenchange", updateSwitch);
+      window.addEventListener("fullscreenchange", update);
+      window.addEventListener("webkitfullscreenchange", update);
       // Whenever the switch state changes, update the fullscreen state to match
       switchChanged = function(switchActive) {
         if (switchActive === isFullscreen()) {
@@ -4947,7 +4846,7 @@
         }
       };
       // Create the switch
-      return fullScreenSwitch = Settings.addSetting("switch", {
+      return fullScreenSwitch = Settings.addSetting("Switch", {
         name: "Full Screen",
         value: false,
         update: switchChanged
@@ -4960,7 +4859,7 @@
     update = function(active) {
       return Action("Highlights:Set", active);
     };
-    Settings.addSetting("switch", {
+    Settings.addSetting("Switch", {
       name: "Highlights",
       value: true,
       update: update
@@ -4979,7 +4878,7 @@
         return Action("Labels:Hide");
       }
     };
-    arrowsSwitch = Settings.addSetting("switch", {
+    arrowsSwitch = Settings.addSetting("Switch", {
       name: "Labels",
       value: true,
       update: update
@@ -5038,7 +4937,7 @@
     });
   });
 
-  Take(["Pressure", "Reaction", "Symbol"], function(Pressure, Reaction, Symbol) {
+  Take(["Pressure", "Symbol"], function(Pressure, Symbol) {
     return Symbol("HydraulicField", [], function(svgElement) {
       var scope;
       return scope = {
@@ -5051,17 +4950,14 @@
             p = p.parent;
           }
           if (!isInsideOtherField) {
-            this.pressure = 0;
-            return Reaction("Schematic:Show", function() {
-              return this.pressure = Pressure.white;
-            });
+            return this.pressure = 0;
           }
         }
       };
     });
   });
 
-  Take(["Pressure", "Reaction", "SVG", "Symbol", "Voltage"], function(Pressure, Reaction, SVG, Symbol, Voltage) {
+  Take(["Pressure", "SVG", "Symbol", "Voltage"], function(Pressure, SVG, Symbol, Voltage) {
     return Symbol("HydraulicLine", [], function(element) {
       var applyColor, fillElms, highlightActive, scope, strip, strokeElms;
       strokeElms = [];
@@ -5127,9 +5023,6 @@
         setup: function() {
           var ref;
           this.pressure = 0;
-          Reaction("Schematic:Show", function() {
-            return this.pressure = Pressure.black;
-          });
           // If there's a dashed child of this HydraulicLine, turn it into a pilot line
           return (ref = this.dashed) != null ? ref.dash.pilot() : void 0;
         }
@@ -5303,6 +5196,400 @@
     return port.start();
   })();
 
+  Take(["Control", "Input", "Resize", "Scope", "SVG", "Vec"], function(Control, Input, Resize, Scope, SVG, Vec) {
+    var Nav, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, debugPoint, editClick, editing, gameClick, getFullPathId, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
+    // Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
+    // Symbols (like root, in the animation code) wouldn't be able to take Tracer.
+    Nav = null;
+    Take("Nav", function(N) {
+      return Nav = N;
+    });
+    editing = false;
+    activeConfig = null;
+    // HELPERS #########################################################################################
+    getFullPathId = function(path) {
+      var fullId, parent;
+      fullId = path.id;
+      parent = path.parent;
+      while ((parent != null) && parent.id !== "root") {
+        fullId = parent.id + "." + fullId;
+        parent = parent.parent;
+      }
+      return `@${fullId}`;
+    };
+    // SETUP #########################################################################################
+    setupPaths = function() {
+      var len, m, path, ref;
+      ref = activeConfig.paths;
+      for (m = 0, len = ref.length; m < len; m++) {
+        path = ref[m];
+        if (path == null) {
+          throw "One of the paths given to Tracer is null";
+        }
+        if (path.tracer == null) {
+          initializePath(path);
+        }
+        stylePath(path);
+      }
+      return null;
+    };
+    initializePath = function(path) {
+      var calls, child, len, m, ref;
+      if (path.tracer != null) {
+        return;
+      }
+      path.tracer = {
+        glows: [],
+        hits: [],
+        clicking: false,
+        hovering: false,
+        clickCount: 0,
+        desiredClicks: 0
+      };
+      // Sort to top
+      path.element.parentNode.appendChild(path.element);
+      // Block double-click nav reset
+      path.element.setAttribute("block-dbl", true);
+      ref = path.children;
+      // Build decorations
+      for (m = 0, len = ref.length; m < len; m++) {
+        child = ref[m];
+        buildGlow(path, child);
+        buildHit(path, child);
+      }
+      calls = {
+        down: startClick(path),
+        drag: cancelClick(path),
+        click: clickPath(path)
+      };
+      return Input(path.element, calls, true, false);
+    };
+    buildGlow = function(path, child) {
+      var scope;
+      scope = cloneChild(path, child);
+      path.tracer.glows.push(scope);
+      return scope.strokeWidth = 3;
+    };
+    buildHit = function(path, child) {
+      var calls, scope;
+      scope = cloneChild(path, child, hitDefn);
+      path.tracer.hits.push(scope);
+      scope.strokeWidth = 10;
+      calls = {
+        moveIn: hitMoveIn(path),
+        moveOut: hitMoveOut(path)
+      };
+      return Input(scope.element, calls, true, false);
+    };
+    cloneChild = function(path, child, defn) {
+      var elm;
+      elm = child.element.cloneNode(true);
+      path.element.appendChild(elm);
+      return Scope(elm, defn);
+    };
+    Nav = null;
+    hitDefn = function(elm) {
+      var hitTick;
+      return {
+        tick: hitTick = function() {
+          if (Nav == null) {
+            Nav = Take("Nav");
+          }
+          return this.strokeWidth = Math.max(3, 20 / Nav.rootScale());
+        }
+      };
+    };
+    // STYLE #########################################################################################
+    stylePath = function(path) {
+      var child, color, colorIndex, glow, hit, isDefault, isHover, isUncolored, len, len1, len2, m, n, q, ref, ref1, ref2, results;
+      colorIndex = path.tracer.clickCount % activeConfig.colors.length;
+      color = activeConfig.colors[colorIndex] || "#000";
+      isUncolored = colorIndex === 0;
+      isHover = path.tracer.hovering;
+      isDefault = isUncolored && !isHover;
+      path.stroke = color;
+      ref = path.children;
+      for (m = 0, len = ref.length; m < len; m++) {
+        child = ref[m];
+        child.alpha = (function() {
+          switch (false) {
+            case !(isUncolored && !isHover):
+              return 0;
+            case !(isUncolored && isHover):
+              return 0;
+            case !(!isUncolored && isHover):
+              return 1;
+            case !(!isUncolored && !isHover):
+              return 1;
+          }
+        })();
+      }
+      ref1 = path.tracer.glows;
+      for (n = 0, len1 = ref1.length; n < len1; n++) {
+        glow = ref1[n];
+        glow.stroke = color;
+        glow.alpha = (function() {
+          switch (false) {
+            case !(isUncolored && !isHover):
+              return .08;
+            case !(isUncolored && isHover):
+              return .3;
+            case !(!isUncolored && isHover):
+              return 0;
+            case !(!isUncolored && !isHover):
+              return 0;
+          }
+        })();
+      }
+      ref2 = path.tracer.hits;
+      results = [];
+      for (q = 0, len2 = ref2.length; q < len2; q++) {
+        hit = ref2[q];
+        hit.stroke = color;
+        hit.alpha = isHover ? .2 : 0.001;
+        results.push(hit.alpha = (function() {
+          switch (false) {
+            case !(isUncolored && !isHover):
+              return .001;
+            case !(isUncolored && isHover):
+              return .07;
+            case !(!isUncolored && isHover):
+              return .15;
+            case !(!isUncolored && !isHover):
+              return .001;
+          }
+        })());
+      }
+      return results;
+    };
+    // EVENTS ########################################################################################
+    hitMoveIn = function(path) {
+      return function() {
+        if (!activeConfig) {
+          return;
+        }
+        path.tracer.hovering = true;
+        return stylePath(path);
+      };
+    };
+    hitMoveOut = function(path) {
+      return function() {
+        if (!activeConfig) {
+          return;
+        }
+        path.tracer.hovering = false;
+        return stylePath(path);
+      };
+    };
+    startClick = function(path) {
+      return function(e) {
+        if (!activeConfig) {
+          return;
+        }
+        return path.tracer.clicking = {
+          x: e.clientX,
+          y: e.clientY
+        };
+      };
+    };
+    cancelClick = function(path) {
+      return function(e) {
+        var d;
+        if (!activeConfig) {
+          return;
+        }
+        if (path.tracer.clicking != null) {
+          d = Vec.distance(path.tracer.clicking, {
+            x: e.clientX,
+            y: e.clientY
+          });
+          if (d >= 5) {
+            return path.tracer.clicking = null;
+          }
+        }
+      };
+    };
+    clickPath = function(path) {
+      return function(e) {
+        var id;
+        if (!activeConfig) {
+          return;
+        }
+        if (path.tracer.clicking == null) {
+          return;
+        }
+        id = getFullPathId(path);
+        if (editing) {
+          return editClick(path, id, e);
+        } else {
+          return gameClick(path, id);
+        }
+      };
+    };
+    editClick = function(path, id, e) {
+      if (e.altKey) {
+        return console.log(`Clicked ${id}`);
+      } else {
+        return incPath(path);
+      }
+    };
+    gameClick = function(path, id) {
+      var reaction;
+      if ((reaction = activeConfig.reactions[id]) != null) {
+        return reaction();
+      } else {
+        incPath(path);
+        if (checkForSolution(path)) {
+          return activeConfig.onWin();
+        }
+      }
+    };
+    incPath = function(path) {
+      path.tracer.clickCount++;
+      return stylePath(path);
+    };
+    // GAMEPLAY ######################################################################################
+    setupGame = function() {
+      var colorIndex, len, len1, m, n, path, ref, set, setIndex;
+      ref = activeConfig.solution;
+      // For the paths that are part of a solution, set them to the correct color
+      for (setIndex = m = 0, len = ref.length; m < len; setIndex = ++m) {
+        set = ref[setIndex];
+        colorIndex = setIndex + 1;
+        for (n = 0, len1 = set.length; n < len1; n++) {
+          path = set[n];
+          path.tracer.desiredClicks = colorIndex;
+        }
+      }
+      return null;
+    };
+    checkForSolution = function() {
+      var incorrectPaths, len, m, nSets, path, ref;
+      incorrectPaths = [];
+      nSets = activeConfig.colors.length;
+      ref = activeConfig.paths;
+      for (m = 0, len = ref.length; m < len; m++) {
+        path = ref[m];
+        if (path.tracer.clickCount % nSets !== path.tracer.desiredClicks) {
+          incorrectPaths.push(path);
+        }
+      }
+      return incorrectPaths.length === 0;
+    };
+    // EDITING #######################################################################################
+    debugPoint = Scope(SVG.create("g", SVG.svg));
+    debugPoint.debug.point();
+    debugPoint.hide(0);
+    Resize(function() {
+      debugPoint.x = Nav.center().x;
+      return debugPoint.y = Nav.center().y;
+    });
+    window.addEventListener("keydown", function(e) {
+      if (e.keyCode === 32) {
+        return debugPoint.show(0);
+      }
+    });
+    window.addEventListener("keyup", function(e) {
+      if (e.keyCode === 32) {
+        debugPoint.hide(0);
+      }
+      return console.log(Nav.pos());
+    });
+    setupEditing = function() {
+      editing = true;
+      Control.label({
+        name: "Path Tracer Edit Mode",
+        group: "#F80"
+      });
+      Control.button({
+        name: "Copy Solution",
+        group: "#F80",
+        click: saveConfiguration
+      });
+      if (Nav != null) {
+        return Nav.runResize(); // This is needed to make the new panel buttons appear
+      }
+    };
+    saveConfiguration = function() {
+      var c, colorIndex, len, lines, m, nSets, path, paths, pathsString, ref, solution, text;
+      // Sort all selected paths into solution sets
+      nSets = activeConfig.colors.length;
+      solution = (function() {
+        var m, ref, results;
+        results = [];
+        for (c = m = 0, ref = nSets; (0 <= ref ? m < ref : m > ref); c = 0 <= ref ? ++m : --m) {
+          results.push([]);
+        }
+        return results;
+      })();
+      ref = activeConfig.paths;
+      for (m = 0, len = ref.length; m < len; m++) {
+        path = ref[m];
+        colorIndex = path.tracer.clickCount % nSets;
+        solution[colorIndex].push(path);
+      }
+      // We don't care about the paths in the default / un-clicked set
+      solution.shift();
+      // Format the solution sets into coffeescript text
+      lines = (function() {
+        var len1, n, results;
+        results = [];
+        for (n = 0, len1 = solution.length; n < len1; n++) {
+          paths = solution[n];
+          pathsString = paths.map(getFullPathId).join(", ");
+          results.push(`          [\"${pathsString}\"]\n`);
+        }
+        return results;
+      })();
+      text = `solution: [\n${lines.join('')}        ]`;
+      // Put the solution coffeescript text onto the clipboard
+      return navigator.clipboard.writeText(text).then(function() {
+        return console.log("Copied current configuration to clipboard");
+      });
+    };
+    // MAIN ##########################################################################################
+    return Make("Tracer", {
+      edit: function(config) {
+        if (editing) {
+          return;
+        }
+        activeConfig = config;
+        setupPaths();
+        return setupEditing();
+      },
+      play: function(config) {
+        if (editing) {
+          return;
+        }
+        activeConfig = config;
+        setupPaths();
+        return setupGame();
+      },
+      stop: function() {
+        var len, m, needsStyle, path, ref;
+        if (activeConfig != null) {
+          if (editing) {
+            saveConfiguration();
+          }
+          editing = false;
+          ref = activeConfig.paths;
+          for (m = 0, len = ref.length; m < len; m++) {
+            path = ref[m];
+            needsStyle = path.tracer.clickCount !== 0;
+            path.tracer.clicking = false;
+            path.tracer.hovering = false;
+            path.tracer.clickCount = 0;
+            path.tracer.desiredClicks = 0;
+            if (needsStyle) {
+              stylePath(path);
+            }
+          }
+        }
+        return activeConfig = null;
+      }
+    });
+  });
+
   (function() {
     var cbs;
     cbs = [];
@@ -5366,7 +5653,7 @@
     };
     setup = function(type, defn) {
       return Control[type] = function(props = {}) {
-        var base1, elm, group, scope;
+        var base, elm, group, scope;
         if (typeof props !== "object") {
           console.log(props);
           throw new Error(`Control.${type}(props) takes a optional props object. Got ^^^, which is not an object.`);
@@ -5374,8 +5661,8 @@
         
         // Re-using an existing ID? Just attach to the existing control.
         if ((props.id != null) && (instances[props.id] != null)) {
-          if (typeof (base1 = instances[props.id]).attach === "function") {
-            base1.attach(props);
+          if (typeof (base = instances[props.id]).attach === "function") {
+            base.attach(props);
           }
           return instances[props.id];
         } else {
@@ -5765,7 +6052,7 @@
         return void 0;
       };
       // Delay running the Highlight setup code by one frame so that if fills / strokes are changed
-      // by the @animate() function (eg: an @linearGradient is created), we can capture those changes.
+      // by the @tick() function (eg: an @linearGradient is created), we can capture those changes.
       // See: https://github.com/cdig/svga/issues/133
       return RAF(function() {
         var len, len1, m, mouseProps, n, t, target, touchProps;
@@ -6666,7 +6953,7 @@
         return elm; // Composable
       },
       attr: function(elm, k, v) {
-        var base1, ns;
+        var base, ns;
         if (!elm) {
           throw new Error("SVG.attr was called with a null element");
         }
@@ -6684,7 +6971,7 @@
         if (v === void 0) { // Read
           // Note that we only do DOM->cache on a read call (not on a write call),
           // to slightly avoid intermingling DOM reads and writes, which causes thrashing.
-          return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
+          return (base = elm._SVG_attr)[k] != null ? base[k] : base[k] = elm.getAttribute(k);
         }
         if (elm._SVG_attr[k] === v) { // cache hit — bail
           return v;
@@ -6719,7 +7006,7 @@
         return elm; // Composable
       },
       style: function(elm, k, v) {
-        var base1;
+        var base;
         if (!elm) {
           throw new Error("SVG.style was called with a null element");
         }
@@ -6735,7 +7022,7 @@
           elm._SVG_style = {};
         }
         if (v === void 0) {
-          return (base1 = elm._SVG_style)[k] != null ? base1[k] : base1[k] = elm.style[k];
+          return (base = elm._SVG_style)[k] != null ? base[k] : base[k] = elm.style[k];
         }
         if (elm._SVG_style[k] !== v) {
           elm.style[k] = elm._SVG_style[k] = v;
@@ -6978,26 +7265,29 @@
     return Make("TRS", TRS);
   });
 
-  // Tween
-  // This is a half-decent value interpolator.
-  // Note: If you aren't super good with CoffeeScript precedence rules, turn back now!
-  Take(["Tick"], function(Tick) {
-    var Tween, clone, dist, eases, gc, getEaseFn, getKeys, skipGC, tweens;
+  // Keep this in sync with Tween in LBS
+  Take(["Ease", "Tick"], function(Ease, Tick) {
+    var Tween, clone, dist, gc, getEaseFn, getKeys, skipGC, timeScale, tweens;
+    timeScale = 1;
     tweens = [];
     skipGC = false;
-    Tween = function(from, to, time, tween = {}) {
-      var keys;
-      if (typeof tween === "function") {
-        
-        // The 4th arg can be a tick function or an options object
-        tween = {
-          tick: tween
-        };
+    Make("Tween", Tween = function(from, to, time, props = {}) {
+      var k, keys, tween, v;
+      // This object will hold all the state for this tween
+      tween = {};
+      // The 4th arg can be a tick function or an options object
+      if (typeof props === "function") {
+        tween.tick = props;
+      } else {
+// Copy to avoid mutating props, since we don't own it
+        for (k in props) {
+          v = props[k];
+          tween[k] = v;
+        }
       }
       
       // from/to can be numbers or objects. Internally, we'll work with objects.
       tween.multi = typeof from === "object";
-      
       // If you don't provide a tick function, we'll assume we're mutating the from object.
       if (tween.mutate == null) {
         tween.mutate = tween.tick == null;
@@ -7014,14 +7304,18 @@
       tween.time = Math.max(0, time);
       tween.ease = getEaseFn(tween.ease);
       tween.pos = Math.min(1, tween.pos || 0);
+      tween.delay = Math.max(0, tween.delay || 0);
       tween.completed = false;
       tween.cancelled = false;
-      
+      // Scale all time-affecting values
+      tween.time *= timeScale;
+      tween.pos *= timeScale;
+      tween.delay *= timeScale;
       // Now is a great time to do some GC
       gc(tween.tick, tween.from);
       tweens.push(tween);
       return tween; // Composable
-    };
+    });
     getKeys = function(o) {
       var k, results;
       results = [];
@@ -7050,33 +7344,20 @@
     };
     getEaseFn = function(given) {
       if (typeof given === "string") {
-        return eases[given] || (function() {
-          throw new Error(`Tween: \"${given}\" is not a value ease type.`);
+        return Ease[given] || (function() {
+          throw new Error(`Tween: \"${given}\" is not a valid ease type.`);
         })();
       } else if (typeof given === "function") {
         return given;
       } else {
-        return eases.cubic;
-      }
-    };
-    eases = {
-      linear: function(v) {
-        return v;
-      },
-      cubic: function(input) {
-        input = 2 * Math.min(1, Math.abs(input));
-        if (input < 1) {
-          return 0.5 * Math.pow(input, 3);
-        } else {
-          return 1 - 0.5 * Math.abs(Math.pow(input - 2, 3));
-        }
+        return Ease.cubic;
       }
     };
     gc = function(tick, from) {
       if (skipGC) { // Don't GC if we're in the middle of a tick!
         return;
       }
-      return tweens = tweens.filter(function(tween) {
+      tweens = tweens.filter(function(tween) {
         if (tween.completed) {
           return false;
         }
@@ -7091,37 +7372,55 @@
         }
         return true;
       });
+      return null;
     };
     Tween.cancel = function(...tweensToCancel) {
       var len, m, tween;
       for (m = 0, len = tweensToCancel.length; m < len; m++) {
         tween = tweensToCancel[m];
-        tween.cancelled = true;
+        if (tween != null) {
+          tween.cancelled = true;
+        }
       }
       return gc(); // Aww sure, let's do a GC!
     };
-    Tick(function(t, dt) {
-      var e, k, len, len1, m, n, ref, tween, v;
+    Tween.timeScale = function(ts) {
+      if (ts != null) {
+        timeScale = ts;
+      }
+      return timeScale;
+    };
+    return Tick(function(t, dt) {
+      var e, k, len, len1, m, n, ref, remainingDt, tween, v;
       skipGC = true; // It's probably not safe to GC in the middle of our tick loop
       for (m = 0, len = tweens.length; m < len; m++) {
         tween = tweens[m];
         if (!(!tween.cancelled)) {
           continue;
         }
-        tween.pos = tween.time <= 0 ? 1 : Math.min(1, tween.pos + dt / tween.time);
-        e = tween.ease(tween.pos);
-        ref = tween.keys;
-        for (n = 0, len1 = ref.length; n < len1; n++) {
-          k = ref[n];
-          tween.value[k] = tween.from[k] + tween.delta[k] * e;
+        remainingDt = dt;
+        if (tween.delay > 0) {
+          tween.delay -= dt;
+          if (tween.delay < 0) {
+            remainingDt = -tween.delay;
+          }
         }
-        v = tween.multi ? tween.value : tween.value.v;
-        if (typeof tween.tick === "function") {
-          tween.tick(v, tween);
-        }
-        if (tween.completed = tween.pos === 1) {
-          if (typeof tween.then === "function") {
-            tween.then(v, tween);
+        if (tween.delay <= 0) {
+          tween.pos = tween.time <= 0 ? 1 : Math.min(1, tween.pos + remainingDt / tween.time);
+          e = tween.ease(tween.pos);
+          ref = tween.keys;
+          for (n = 0, len1 = ref.length; n < len1; n++) {
+            k = ref[n];
+            tween.value[k] = tween.from[k] + tween.delta[k] * e;
+          }
+          v = tween.multi ? tween.value : tween.value.v;
+          if (typeof tween.tick === "function") {
+            tween.tick(v, tween);
+          }
+          if (tween.completed = tween.pos === 1) {
+            if (typeof tween.then === "function") {
+              tween.then(v, tween);
+            }
           }
         }
       }
@@ -7129,7 +7428,21 @@
       skipGC = false;
       return gc();
     });
-    return Make("Tween", Tween);
+  });
+
+  Take([], function() {
+    var Vec;
+    return Make("Vec", Vec = {
+      angle: function(a, b) {
+        return Math.atan2(b.y - a.y, b.x - a.x);
+      },
+      distance: function(a, b) {
+        var dx, dy;
+        dx = b.x - a.x;
+        dy = b.y - a.y;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+    });
   });
 
   Take("Ease", function(Ease) {
@@ -7185,6 +7498,15 @@
       }
     };
     return Make("Voltage", Voltage);
+  });
+
+  Take("Tween", function(Tween) {
+    return Make("Wait", function(delay, next) {
+      return Tween(0, 0, 0, {
+        delay: delay,
+        then: next
+      });
+    });
   });
 
   (function() {

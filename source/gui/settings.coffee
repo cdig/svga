@@ -1,118 +1,64 @@
-Take ["Action", "Ease", "GUI", "Input", "Mode", "Registry", "Resize", "Scope", "SVG", "WrapText", "ControlReady"], (Action, Ease, GUI, Input, Mode, Registry, Resize, Scope, SVG, WrapText)->
+Take ["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], (Action, DOOM, GUI, Input, Mode, Panel, Scope, SVG)->
 
-  panelWidth = GUI.Panel.itemWidth + GUI.Panel.panelPad * 2
-  panelHeight = 0
-  innerHeight = 0
+  return unless Mode.settings
 
-  elm = SVG.create "g", GUI.elm
+  # Eventually, the settings button at the top should be part of an HTML-based HUD so that we don't need all this nonsense
 
-  # Meta Info
+  elm = SVG.create "g", GUI.elm, ui: true
+  scope = Scope elm
 
-  metaBoxHeight = 20
+  scope.x = GUI.ControlPanel.panelMargin
+  scope.y = GUI.ControlPanel.panelMargin
 
-  metaBoxElm = SVG.create "g", elm
-  metaBox = Scope metaBoxElm
+  width = 60
+  height = 22
 
-  metaBoxRect = SVG.create "rect", metaBoxElm,
-    width: panelWidth
-    fill: GUI.Colors.bg.d
-    rx: GUI.Panel.panelBorderRadius
-
-  titleLines = Mode.get("meta")?.title
-  titleLines = [] unless titleLines?
-  if not Mode.embed and titleLines.length is 0
-    titleString = document.title.replace("| ", "").replace("LunchBox Sessions", "")
-    titleLines = WrapText titleString, 28
-
-  infoLines = Mode.get("meta")?.info
-  infoLines = [] if not infoLines?
-
-  metaBoxHeight += 10 if titleLines.length > 0 or infoLines.length > 0
-
-  for line in titleLines
-    SVG.create "text", metaBoxElm,
-      x: panelWidth/2
-      y: metaBoxHeight
-      textContent: line
-      textAnchor: "middle"
-      fontSize: 18
-      fontWeight: "bold"
-      fill: "#FFF"
-    metaBoxHeight += 24
-
-  metaBoxHeight += 10 if titleLines.length > 0
-
-  for line in infoLines
-    SVG.create "text", metaBoxElm,
-      x: panelWidth/2
-      y: metaBoxHeight
-      textContent: line
-      textAnchor: "middle"
-      fill: "#FFF"
-    metaBoxHeight += 20
-
-  metaBoxHeight += 10 if infoLines.length > 0
-
-  SVG.create "text", metaBoxElm,
-    x: panelWidth/2
-    y: metaBoxHeight
-    textContent: "© CD Industrial Group Inc."
-    textAnchor: "middle"
-    fontSize: "12"
-    fill: "#FFF"
-
-  metaBoxHeight += 10
-
-  # Main Settings Panel
+  hit = SVG.create "rect", elm,
+    x: -GUI.ControlPanel.panelMargin
+    y: -GUI.ControlPanel.panelMargin
+    width: width + 16
+    height: height + 16
+    fill: "transparent"
 
   bg = SVG.create "rect", elm,
-    width: panelWidth
-    rx: GUI.Panel.panelBorderRadius
+    width: width
+    height: height
+    rx: 3
     fill: GUI.Colors.bg.l
 
-  items = SVG.create "g", elm,
-    transform: "translate(#{GUI.Panel.panelPad},#{GUI.Panel.panelPad})"
+  label = SVG.create "text", elm,
+    textContent: "Settings"
+    x: width/2
+    y: height * 0.7
+    fontSize: 14
+    textAnchor: "middle"
+    fill: "hsl(220, 10%, 92%)"
 
-  # Close Button
+  Input elm, click: ()->
 
-  close = SVG.create "g", elm,
-    ui: true
-    transform: "translate(8,8)"
+    title = Mode.get("meta")?.title
+    if not title? and not Mode.embed
+      title = document.title.replace("| ", "").replace("LunchBox Sessions", "")
 
-  closeCircle = SVG.create "circle", close,
-    r: 16
-    fill: "#F00"
+    if infoLines = Mode.get("meta")?.info
+      info = ("<p>#{line}</p>" for line in infoLines).join ""
 
-  closeX = SVG.create "path", close,
-    d: "M-6,-6 L6,6 M6,-6 L-6,6"
-    strokeWidth: 3
-    strokeLinecap: "round"
-    stroke: "#FFF"
+    panel = Panel "settings", """
+      <div settings-controls></div>
+      <h3 settings-title>#{title}</h3>
+      <div settings-info>#{info}</div>
+      <small settings-copyright>© CD Industrial Group Inc.</small>
+    """
 
-  # Finish Setup
+    DOOM.append panel.querySelector("[settings-controls]"), controls
 
-  input = Input close, click: (e, state)->
-    input.resetState() # Hack to fix https://github.com/cdig/svga/issues/154
-    Action "Settings:Hide"
 
-  Settings = Scope elm, ()->
+  controls = DOOM.create "div", null
+
+  Make "Settings", Settings =
     addSetting: (type, props)->
-      instance = Scope SVG.create "g", items
-      builder = Registry.get "SettingType", type
+      elm = DOOM.create "svg", controls
+      instance = Scope SVG.create "g", elm
+      builder = Take "Settings#{type}"
       scope = builder instance.element, props
-      instance.y = innerHeight
-      innerHeight += GUI.Panel.unit + GUI.Panel.itemMargin
-      panelHeight = innerHeight + GUI.Panel.panelPad*2 - GUI.Panel.itemMargin
-      SVG.attrs bg, height: panelHeight
-      SVG.attrs metaBoxRect, y: -panelHeight, height: panelHeight + metaBoxHeight
-      metaBox.y = panelHeight
       return scope
-
-  Settings.hide 0
-
-  Make "Settings", Settings
-
-  Resize (info)->
-    Settings.scale = Ease.linear info.window.w, 0, panelWidth + GUI.Panel.panelMargin*2, 0, 1
-    Settings.x = info.window.w/2 - panelWidth/2 * Settings.scale
-    Settings.y = Ease.linear info.window.h, panelHeight, 1000, -10, 300, false

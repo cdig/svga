@@ -1,5 +1,5 @@
-Take ["Registry", "Ease", "GUI", "Input", "SVG", "TRS", "Tween"], (Registry, Ease, {Panel:GUI}, Input, SVG, TRS, Tween)->
-  Registry.set "SettingType", "slider", (elm, props)->
+Take ["Ease", "GUI", "Input", "SVG", "TRS", "Tween"], (Ease, {Panel:GUI}, Input, SVG, TRS, Tween)->
+  Make "SettingsSlider", SettingsSlider = (elm, props)->
 
     snapElms = []
 

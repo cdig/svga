@@ -108,13 +108,6 @@ fieldset {
 /**** BEST PRACTICES ****/
 
 
-/* The page should fill the page! (Ivan) */
-html {
-  width: 100%;
-  height: 100%;
-}
-
-
 /* Include padding and borders in width calculations (Paul Irish: paulirish.com/2012/box-sizing-border-box-ftw) */
 *,
 *::before,
@@ -132,69 +125,9 @@ iframe {
 /**** CROSS-BROWSER STANDARDIZATION ****/
 
 
-/* Set default font to Arial on Windows, Helvetica on Mac */
-html {
-  font-family: sans-serif;
-}
-
-
-/* Remove default margin */
-body {
-  margin: 0;
-}
-
-
-/* Set display: block
- * 1. all HTML5 elements in IE 8/9
- * 2. details and summary in IE 10/11 and Firefox
- * 3. main in IE 11.
- */
-article,
-aside,
-details,
-figcaption,
-figure,
-footer,
-header,
-main,
-menu,
-nav,
-section,
-summary {
-  display: block;
-}
-
-
-/* Fix IE 8/9. */
-progress,
-audio {
-  display: inline-block;
-}
-
-
-/* Fix Chrome, Firefox, and Opera. */
-progress {
-  vertical-align: baseline;
-}
-
-
 /* Prevent modern browsers from displaying audio without controls. */
 audio:not([controls]) {
   display: none;
-}
-
-
-/* Address [hidden] styling not present in IE 8/9/10 */
-/* Hide the template element in IE 8/9/11, Safari, and Firefox < 22 */
-[hidden],
-template {
-  display: none;
-}
-
-
-/* Fix active links having a grey background in IE 10 */
-a {
-  background-color: transparent;
 }
 
 
@@ -242,24 +175,6 @@ sub {
 }
 
 
-/* Remove border when inside `a` element in IE 8/9/10. */
-img {
-  border: 0;
-}
-
-
-/* Correct overflow not hidden in IE 9/10/11. */
-svg:not(:root) {
-  overflow: hidden;
-}
-
-
-/* Address margin not present in IE 8/9 and Safari. */
-figure {
-  margin: 1em 40px;
-}
-
-
 /* Address differences between Firefox and other browsers. */
 hr {
   height: 0;
@@ -294,12 +209,6 @@ textarea {
   color: inherit; /* 1 */
   font: inherit; /* 2 */
   margin: 0; /* 3 */
-}
-
-
-/* Address `overflow` set to `hidden` in IE 8/9/10/11. */
-button {
-  overflow: visible;
 }
 
 
@@ -348,17 +257,6 @@ input {
 }
 
 
-/* It's recommended that you don't attempt to style these elements.
- * Firefox's implementation doesn't respect box-sizing, padding, or width.
- *
- * Remove excess padding in IE 8/9/10.
- */
-input[type="checkbox"],
-input[type="radio"] {
-  padding: 0;
-}
-
-
 /* Fix the cursor style for Chrome's increment/decrement buttons. For certain
  * `font-size` values of the `input`, it causes the cursor style of the
  * decrement button to change from `default` to `text`.
@@ -366,29 +264,6 @@ input[type="radio"] {
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   height: auto;
-}
-
-
-/* 1. Correct `color` not being inherited in IE 8/9/10/11.
- * 2. Remove padding so people aren't caught out if they zero out fieldsets.
- */
-legend {
-  border: 0; /* 1 */
-  padding: 0; /* 2 */
-}
-
-
-/* Remove default vertical scrollbar in IE 8/9/10/11. */
-textarea {
-  overflow: auto;
-}
-
-
-/* Don't inherit the `font-weight` (applied by a rule above).
- * NOTE: the default cannot safely be changed in Chrome and Safari on OS X.
- */
-optgroup {
-  font-weight: bold;
 }
 
 

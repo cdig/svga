@@ -18,9 +18,8 @@ Take ["Registry", "Scene", "SVG", "ParentData"], (Registry, Scene, SVG)->
     # Inform all systems that it's now safe to use Scope.
     Make "ScopeReady"
 
-    # By now, we're assuming all Controls & Settings are ready.
+    # By now, we're assuming all Controls are ready.
     Registry.closeRegistration "Control"
-    Registry.closeRegistration "SettingType"
 
     # Inform all systems that we've just finished setting up Controls.
     Make "ControlReady"

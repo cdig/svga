@@ -256,7 +256,7 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
     # Format the solution sets into coffeescript text
     lines = for paths in solution
       pathsString = paths.map(getFullPathId).join ", "
-      "          [#{pathsString}]\n"
+      "          [\"#{pathsString}\"]\n"
     text = "solution: [\n#{lines.join('')}        ]"
 
     # Put the solution coffeescript text onto the clipboard

@@ -1,6 +1,6 @@
 Take ["DOOM", "GUI", "Resize", "SVG", "Wait", "SVGReady"], (DOOM, GUI, Resize, SVG, Wait)->
 
-  foreignObject = SVG.create "foreignObject", GUI.elm
+  foreignObject = SVG.create "foreignObject", GUI.elm, id: "message"
   outer = DOOM.create "div", foreignObject, id: "message-outer"
   inner = DOOM.create "div", outer, id: "message-inner"
 

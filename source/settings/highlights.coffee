@@ -3,7 +3,7 @@ Take ["Action", "Settings"], (Action, Settings)->
   update = (active)->
     Action "Highlights:Set", active
 
-  Settings.addSetting "switch",
+  Settings.addSetting "Switch",
     name: "Highlights"
     value: true
     update: update

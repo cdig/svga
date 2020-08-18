@@ -6,7 +6,7 @@ Take ["Action", "Settings"], (Action, Settings)->
     else
       Action "Labels:Hide"
 
-  arrowsSwitch = Settings.addSetting "switch",
+  arrowsSwitch = Settings.addSetting "Switch",
     name: "Labels"
     value: true
     update: update

@@ -1,0 +1,25 @@
+#settings {
+  padding-bottom: 8px;
+  border-radius: 8px;
+  text-align: center;
+  color: white;
+  background-color: $bg-d;
+
+  [settings-controls] {
+    padding: 8px;
+    border-radius: 8px;
+    background: $bg-l;
+
+    svg {
+      display: block;
+      width: 360px;
+      height: 32px;
+
+      & + svg { margin-top: 8px; }
+    }
+  }
+
+  [settings-title], [settings-info], [settings-copyright] {
+    margin: 8px 0;
+  }
+}

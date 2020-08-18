@@ -55,11 +55,14 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
       up: toHover
       moveOut: toNormal
       dragOut: toNormal
-      click: ()->
+
+    # Hack around bugginess in chrome
+    click = ()->
+      if input.state.clicking
         toClicked()
         handler() for handler in handlers
-        undefined
-
+    elm.addEventListener "mouseup", click
+    elm.addEventListener "touchend", click
 
     # Our scope just has the 3 mandatory control functions, nothing special.
     return scope =

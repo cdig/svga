@@ -9,6 +9,12 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 
+  // Without this, fullscreen is broken in Chrome (Last tested on version 86)
+  &:fullscreen {
+    position: absolute;
+    top: 0;
+  }
+
   * {
     touch-action: manipulation; // Safari
     touch-action: none; // Chrome

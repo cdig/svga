@@ -247,7 +247,7 @@
         parentScope.attachScope(scope);
       }
       // Add some info to help devs locate scope elements in the DOM
-      if (Mode.dev && !(navigator.userAgent.indexOf("Trident") >= 0 || navigator.userAgent.indexOf("Edge") >= 0)) {
+      if (!(navigator.userAgent.indexOf("Edge") >= 0)) {
         // Add some helpful dev names to the element
         element.setAttribute("SCOPE", scope.id || "");
         if ((symbol != null ? symbol.symbolName : void 0) != null) {
@@ -264,11 +264,12 @@
           element.setAttributeNS(attr.namespaceURI, attr.name, attr.value);
         }
       }
-      // Forcing a reflow fixes an IE bug
-      window.getComputedStyle(element);
       ref = Registry.all("ScopeProcessor");
       for (n = 0, len1 = ref.length; n < len1; n++) {
         scopeProcessor = ref[n];
+        // Forcing a reflow fixes an IE bug — disabled, not deleted, until we can verify this doesn't affect Edge
+        // window.getComputedStyle element
+
         // Run this scope through all the processors, which add special properties, callbacks, and other fanciness
         scopeProcessor(scope, props);
       }
@@ -815,7 +816,6 @@
   Take(["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], function(GUI, Mode, Resize, SVG, TRS) {
     var g, hide, show;
     return;
-    
     // We're just going to disable this for now,
     // since keyboard input is not well-known
     if (!Mode.nav) {
@@ -856,15 +856,7 @@
     window.addEventListener("focus", hide);
     window.addEventListener("touchstart", hide);
     window.addEventListener("blur", show);
-    
-    // This makes IE happier
-    window.addEventListener("mousedown", function() {
-      if (document.activeElement === SVG.svg) {
-        return window.focus();
-      }
-    });
-    window.focus(); // Focus by default
-    return hide(); // Fix a flicker on IE
+    return window.focus(); // Focus by default
   });
 
   Take(["ControlPanelLayout", "Gradient", "GUI", "SVG", "Scope", "TRS", "ControlReady"], function(ControlPanelLayout, Gradient, GUI, SVG, Scope, TRS, ControlReady) {

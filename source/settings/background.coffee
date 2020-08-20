@@ -35,5 +35,7 @@ Take ["Action", "Ease", "Fullscreen", "Mode", "Settings", "Storage"], (Action, E
       Action "Background:Set", "transparent"
 
 
-  Background()
   Make "Background", Background
+
+  # Run after the scene is ready, to set the initial color for ManifoldBackground
+  Take "SceneReady", Background

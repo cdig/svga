@@ -4785,8 +4785,9 @@
         return Action("Background:Set", "transparent");
       }
     };
-    Background();
-    return Make("Background", Background);
+    Make("Background", Background);
+    // Run after the scene is ready, to set the initial color for ManifoldBackground
+    return Take("SceneReady", Background);
   });
 
   Take(["Action", "Settings"], function(Action, Settings) {

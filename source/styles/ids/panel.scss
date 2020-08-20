@@ -24,13 +24,14 @@
 
 #panel-frame {
   position: relative;
+  padding: 16px; // Space between the panel and the edge of the window on small screens
 }
 
 #panel-close {
   position: absolute;
   width: 32px;
   height: 32px;
-  top: -8px;
-  left: -8px;
+  top: 8px;
+  left: 8px;
   z-index: 101;
 }

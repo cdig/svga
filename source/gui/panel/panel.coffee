@@ -1,4 +1,4 @@
-Take ["Action", "DOOM", "GUI", "Resize", "SVG", "Scope", "ScopeReady"], (Action, DOOM, GUI, Resize, SVG, Scope)->
+Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (Action, DOOM, Ease, GUI, Input, Resize, SVG)->
 
   foreignObject = SVG.create "foreignObject", GUI.elm, id: "panel"
   outer = DOOM.create "div", foreignObject, id: "panel-outer"
@@ -15,13 +15,23 @@ Take ["Action", "DOOM", "GUI", "Resize", "SVG", "Scope", "ScopeReady"], (Action,
     strokeWidth: 3
     strokeLinecap: "round"
 
-  cover.addEventListener "click", ()-> Action "Panel:Hide"
-  close.addEventListener "click", ()-> Action "Panel:Hide"
+  Input cover, click: ()-> Action "Panel:Hide"
+  Input close, click: ()-> Action "Panel:Hide"
 
   Resize ()->
     SVG.attrs foreignObject,
       width: window.innerWidth
       height: window.innerHeight
+
+  # Elements inside foreignObject don't inherit scaling, so to shrink the panel on narrow screens
+  # we need to apply scaling using CSS transform to the HTML elements. Due to the CSS grid layout
+  # pushing the panel off the right side, we introduce a negative offset to keep it centered.
+  Resize (info)->
+    panelWidth = frame.offsetWidth
+    offset = Math.max 0, (panelWidth - window.innerWidth)/2
+    scale = Ease.linear info.window.w, 0, panelWidth, 0, 1
+    DOOM frame, transform: "translateX(-#{offset}px) scale(#{scale})"
+
 
   Panel = (id, html)->
     DOOM inner,

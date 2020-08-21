@@ -1,4 +1,4 @@
-Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"], (Ease, FPS, Gradient, Input, RAF, Reaction, SVG, Tick)->
+Take ["FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"], (FPS, Gradient, Input, RAF, Reaction, SVG, Tick)->
 
   enabled = true
   activeHighlight = null
@@ -10,17 +10,18 @@ Take ["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVG
 
 
   Tick (time)->
-    if activeHighlight? and FPS() > 20
-      if ++counter%3 is 0
-        props =
-          x1:Math.cos(time * Math.PI) * -60 - 50
-          y1:Math.sin(time * Math.PI) * -60 - 50
-          x2:Math.cos(time * Math.PI) *  60 - 50
-          y2:Math.sin(time * Math.PI) *  60 - 50
-        Gradient.updateProps lgradient, props
-        Gradient.updateProps mgradient, props
-        Gradient.updateProps dgradient, props
-        Gradient.updateProps tgradient, props
+    return unless activeHighlight?
+    step = Math.max 1, Math.round 60 / FPS()
+    return unless ++counter%step is 0
+    props =
+      x1:Math.cos(time * Math.PI) * -60 - 50
+      y1:Math.sin(time * Math.PI) * -60 - 50
+      x2:Math.cos(time * Math.PI) *  60 - 50
+      y2:Math.sin(time * Math.PI) *  60 - 50
+    Gradient.updateProps lgradient, props
+    Gradient.updateProps mgradient, props
+    Gradient.updateProps dgradient, props
+    Gradient.updateProps tgradient, props
 
 
   Make "Highlight", (targets...)->

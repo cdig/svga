@@ -5908,7 +5908,7 @@
     });
   });
 
-  Take(["Ease", "FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"], function(Ease, FPS, Gradient, Input, RAF, Reaction, SVG, Tick) {
+  Take(["FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"], function(FPS, Gradient, Input, RAF, Reaction, SVG, Tick) {
     var activeHighlight, counter, dgradient, enabled, lgradient, mgradient, tgradient;
     enabled = true;
     activeHighlight = null;
@@ -5926,21 +5926,24 @@
       gradientUnits: "userSpaceOnUse"
     }, "#091", "#BB0", "#B30");
     Tick(function(time) {
-      var props;
-      if ((activeHighlight != null) && FPS() > 20) {
-        if (++counter % 3 === 0) {
-          props = {
-            x1: Math.cos(time * Math.PI) * -60 - 50,
-            y1: Math.sin(time * Math.PI) * -60 - 50,
-            x2: Math.cos(time * Math.PI) * 60 - 50,
-            y2: Math.sin(time * Math.PI) * 60 - 50
-          };
-          Gradient.updateProps(lgradient, props);
-          Gradient.updateProps(mgradient, props);
-          Gradient.updateProps(dgradient, props);
-          return Gradient.updateProps(tgradient, props);
-        }
+      var props, step;
+      if (activeHighlight == null) {
+        return;
       }
+      step = Math.max(1, Math.round(60 / FPS()));
+      if (++counter % step !== 0) {
+        return;
+      }
+      props = {
+        x1: Math.cos(time * Math.PI) * -60 - 50,
+        y1: Math.sin(time * Math.PI) * -60 - 50,
+        x2: Math.cos(time * Math.PI) * 60 - 50,
+        y2: Math.sin(time * Math.PI) * 60 - 50
+      };
+      Gradient.updateProps(lgradient, props);
+      Gradient.updateProps(mgradient, props);
+      Gradient.updateProps(dgradient, props);
+      return Gradient.updateProps(tgradient, props);
     });
     Make("Highlight", function(...targets) {
       var activate, active, deactivate, highlights, setup, timeout;

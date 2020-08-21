@@ -3705,7 +3705,7 @@
   });
 
   Take(["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween) {
-    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, limit, pickBestLayout, pos, render, requestRender, resize, runResize, scaleStartPosZ, tween;
+    var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, limit, pickBestLayout, pos, render, requestRender, resize, rootScale, runResize, scaleStartPosZ, tween;
     // Turn this on if we need to debug resizing
     // debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
 
@@ -3746,12 +3746,15 @@
     contentScale = 1;
     scaleStartPosZ = 0;
     tween = null;
+    rootScale = function() {
+      return contentScale * Math.pow(2, pos.z);
+    };
     render = function() {
       // First, we move SVG.root so the top left corner is in the middle of our available space.
       // ("Available space" means the size of the window, minus the space occupied by the control panel.)
       // Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
       // Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
-      return SVG.attr(SVG.root, "transform", `translate(${center.x},${center.y}) scale(${Nav.rootScale()}) translate(${pos.x - centerInverse.x},${pos.y - centerInverse.y})`);
+      return SVG.attr(SVG.root, "transform", `translate(${center.x},${center.y}) scale(${rootScale()}) translate(${pos.x - centerInverse.x},${pos.y - centerInverse.y})`);
     };
     pickBestLayout = function(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo) {
       var contentHeightWhenHorizontal, panelHeightWhenHorizontal;
@@ -3873,9 +3876,7 @@
       pos: function() {
         return pos;
       },
-      rootScale: function() {
-        return contentScale * Math.pow(2, pos.z);
-      },
+      rootScale: rootScale,
       runResize: runResize,
       tweenTime: function(p) {
         var timeX, timeY, timeZ;
@@ -3904,7 +3905,7 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, pos.z + p.z);
         }
-        scale = Nav.rootScale();
+        scale = rootScale();
         if (p.x != null) {
           pos.x += p.x / scale;
         }
@@ -3923,7 +3924,7 @@
         if (p.z != null) {
           pos.z = applyLimit(limit.z, p.z);
         }
-        scale = Nav.rootScale();
+        scale = rootScale();
         if (p.x != null) {
           pos.x = p.x / scale;
         }

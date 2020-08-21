@@ -20,12 +20,14 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
   scaleStartPosZ = 0
   tween = null
 
+  rootScale = ()-> contentScale * Math.pow 2, pos.z
+
   render = ()->
     # First, we move SVG.root so the top left corner is in the middle of our available space.
     # ("Available space" means the size of the window, minus the space occupied by the control panel.)
     # Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
     # Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
-    SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{Nav.rootScale()}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
+    SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{rootScale()}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
 
 
   pickBestLayout = (totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo)->
@@ -153,7 +155,7 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
   Make "Nav", Nav =
     center: ()-> center
     pos: ()-> pos
-    rootScale: ()-> contentScale * Math.pow 2, pos.z
+    rootScale: rootScale
 
     runResize: runResize
 
@@ -171,7 +173,7 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
     by: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, pos.z + p.z if p.z?
-      scale = Nav.rootScale()
+      scale = rootScale()
       pos.x += p.x / scale if p.x?
       pos.y += p.y / scale if p.y?
       pos.x = applyLimit limit.x, pos.x, center.x / scale * .8
@@ -181,7 +183,7 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
     at: (p)->
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, p.z if p.z?
-      scale = Nav.rootScale()
+      scale = rootScale()
       pos.x = p.x / scale if p.x?
       pos.y = p.y / scale if p.y?
       pos.x = applyLimit limit.x, pos.x, center.x / scale * .8

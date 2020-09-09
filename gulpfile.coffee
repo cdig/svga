@@ -13,7 +13,10 @@ gulp_sass = require "gulp-sass"
 
 paths =
   coffee: "source/**/*.coffee"
-  scss: "source/**/*.scss"
+  scss: [
+    "lib/_vars.scss"
+    "source/**/*.scss"
+  ]
   static: [
     "source/index.html"
     "source/fonts/*"

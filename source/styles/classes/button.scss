@@ -8,6 +8,7 @@
     border: 2px solid transparent;
     outline: none;
     border-radius: 4px;
+    line-height: 1; // If you don't have this, buttons will sometimes be different heights if they contain characters that aren't included in our subset version of Lato
     text-align: center;
     text-decoration: none; // Override <a> default
     color: white;

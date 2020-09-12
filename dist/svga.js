@@ -3878,12 +3878,12 @@
       },
       rootScale: rootScale,
       runResize: runResize,
-      tweenTime: function(p) {
-        var timeX, timeY, timeZ;
-        timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
-        timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
-        timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
-        return Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
+      reset: function(time) {
+        return Nav.to({
+          x: 0,
+          y: 0,
+          z: 0
+        }, time);
       },
       to: function(p, time) {
         if (tween != null) {
@@ -3944,6 +3944,13 @@
         }
         pos.z = applyLimit(limit.z, Math.log2(Math.pow(2, scaleStartPosZ) * s));
         return requestRender();
+      },
+      tweenTime: function(p) {
+        var timeX, timeY, timeZ;
+        timeX = .03 * Math.sqrt(Math.abs(p.x - pos.x)) || 0;
+        timeY = .03 * Math.sqrt(Math.abs(p.y - pos.y)) || 0;
+        timeZ = .7 * Math.sqrt(Math.abs(p.z - pos.z)) || 0;
+        return Math.sqrt(timeX * timeX + timeY * timeY + timeZ * timeZ);
       },
       eventInside: function(e) {
         var ref;
@@ -5220,7 +5227,7 @@
   })();
 
   Take(["Control", "Input", "Resize", "Scope", "SVG", "Vec"], function(Control, Input, Resize, Scope, SVG, Vec) {
-    var Nav, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, editClick, editing, gameClick, getFullPathId, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
+    var Nav, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, editClick, editing, editingSetupDone, gameClick, getFullPathId, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
     // Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
     // Symbols (like root, in the animation code) wouldn't be able to take Tracer.
     Nav = null;
@@ -5228,6 +5235,7 @@
       return Nav = N;
     });
     editing = false;
+    editingSetupDone = false;
     activeConfig = null;
     // HELPERS #########################################################################################
     getFullPathId = function(path) {
@@ -5242,7 +5250,7 @@
     };
     // SETUP #########################################################################################
     setupPaths = function() {
-      var len, m, path, ref;
+      var colorIndex, len, len1, len2, m, n, path, q, ref, ref1, set, setIndex;
       ref = activeConfig.paths;
       for (m = 0, len = ref.length; m < len; m++) {
         path = ref[m];
@@ -5253,6 +5261,20 @@
           initializePath(path);
         }
         stylePath(path);
+      }
+      ref1 = activeConfig.solution;
+      // For the paths that are part of a solution, set them to the correct color
+      for (setIndex = n = 0, len1 = ref1.length; n < len1; setIndex = ++n) {
+        set = ref1[setIndex];
+        colorIndex = setIndex + 1;
+        for (q = 0, len2 = set.length; q < len2; q++) {
+          path = set[q];
+          path.tracer.desiredClicks = colorIndex;
+          if (editing) {
+            path.tracer.clickCount = colorIndex;
+          }
+          stylePath(path);
+        }
       }
       return null;
     };
@@ -5455,8 +5477,8 @@
       }
     };
     gameClick = function(path, id) {
-      var reaction;
-      if ((reaction = activeConfig.reactions[id]) != null) {
+      var reaction, ref;
+      if ((reaction = (ref = activeConfig.reactions) != null ? ref[id] : void 0) != null) {
         return reaction();
       } else {
         incPath(path);
@@ -5471,17 +5493,6 @@
     };
     // GAMEPLAY ######################################################################################
     setupGame = function() {
-      var colorIndex, len, len1, m, n, path, ref, set, setIndex;
-      ref = activeConfig.solution;
-      // For the paths that are part of a solution, set them to the correct color
-      for (setIndex = m = 0, len = ref.length; m < len; setIndex = ++m) {
-        set = ref[setIndex];
-        colorIndex = setIndex + 1;
-        for (n = 0, len1 = set.length; n < len1; n++) {
-          path = set[n];
-          path.tracer.desiredClicks = colorIndex;
-        }
-      }
       return null;
     };
     checkForSolution = function() {
@@ -5501,6 +5512,10 @@
     setupEditing = function() {
       var debugPoint;
       editing = true;
+      if (editingSetupDone) {
+        return;
+      }
+      editingSetupDone = true;
       Control.label({
         name: "Path Tracer Edit Mode",
         group: "#F80"
@@ -5512,28 +5527,28 @@
       });
       if (Nav != null) {
         Nav.runResize(); // This is needed to make the new panel buttons appear
-        debugPoint = Scope(SVG.create("g", SVG.svg));
-        debugPoint.debug.point();
-        debugPoint.hide(0);
-        Resize(function() {
-          debugPoint.x = Nav.center().x;
-          return debugPoint.y = Nav.center().y;
-        });
-        window.addEventListener("keydown", function(e) {
-          if (e.keyCode === 32) {
-            return debugPoint.show(0);
-          }
-        });
-        return window.addEventListener("keyup", function(e) {
-          if (e.keyCode === 32) {
-            debugPoint.hide(0);
-          }
-          return console.log(Nav.pos());
-        });
       }
+      debugPoint = Scope(SVG.create("g", SVG.svg));
+      debugPoint.debug.point();
+      debugPoint.hide(0);
+      Resize(function() {
+        debugPoint.x = Nav.center().x;
+        return debugPoint.y = Nav.center().y;
+      });
+      window.addEventListener("keydown", function(e) {
+        if (e.keyCode === 32) {
+          return debugPoint.show(0);
+        }
+      });
+      return window.addEventListener("keyup", function(e) {
+        if (e.keyCode === 32) {
+          debugPoint.hide(0);
+          return console.log(Nav.pos());
+        }
+      });
     };
     saveConfiguration = function() {
-      var c, colorIndex, len, lines, m, nSets, path, paths, pathsString, ref, solution, text;
+      var c, colorIndex, len, m, nSets, path, ref, solution, text;
       // Sort all selected paths into solution sets
       nSets = activeConfig.colors.length;
       solution = (function() {
@@ -5553,17 +5568,16 @@
       // We don't care about the paths in the default / un-clicked set
       solution.shift();
       // Format the solution sets into coffeescript text
-      lines = (function() {
-        var len1, n, results;
-        results = [];
-        for (n = 0, len1 = solution.length; n < len1; n++) {
-          paths = solution[n];
-          pathsString = paths.map(getFullPathId).join(", ");
-          results.push(`          [\"${pathsString}\"]\n`);
-        }
-        return results;
-      })();
-      text = `solution: [\n${lines.join('')}        ]`;
+      text = JSON.stringify({
+        solution: solution.map(function(paths) {
+          return paths.map(getFullPathId);
+        })
+      });
+      // lines = for paths in solution
+      //   pathsString = paths.map(getFullPathId).join ", "
+      //   "          [\"#{pathsString}\"]\n"
+      // text = "solution: [\n#{lines.join('')}        ]"
+
       // Put the solution coffeescript text onto the clipboard
       return navigator.clipboard.writeText(text).then(function() {
         return console.log("Copied current configuration to clipboard");
@@ -5576,8 +5590,8 @@
           return;
         }
         activeConfig = config;
-        setupPaths();
-        return setupEditing();
+        setupEditing();
+        return setupPaths();
       },
       play: function(config) {
         if (editing) {
@@ -5592,8 +5606,8 @@
         if (activeConfig != null) {
           if (editing) {
             saveConfiguration();
+            editing = false;
           }
-          editing = false;
           ref = activeConfig.paths;
           for (m = 0, len = ref.length; m < len; m++) {
             path = ref[m];

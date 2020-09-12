@@ -6,6 +6,7 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
   Take "Nav", (N)-> Nav = N
 
   editing = false
+  editingSetupDone = false
 
   activeConfig = null
 
@@ -30,6 +31,15 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
       if not path? then throw "One of the paths given to Tracer is null"
       initializePath path unless path.tracer?
       stylePath path
+
+    # For the paths that are part of a solution, set them to the correct color
+    for set, setIndex in activeConfig.solution
+      colorIndex = setIndex + 1
+      for path in set
+        path.tracer.desiredClicks = colorIndex
+        path.tracer.clickCount = colorIndex if editing
+        stylePath path
+
     null
 
 
@@ -173,7 +183,7 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
 
 
   gameClick = (path, id)->
-    if (reaction = activeConfig.reactions[id])?
+    if (reaction = activeConfig.reactions?[id])?
       reaction()
     else
       incPath path
@@ -189,11 +199,6 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
 
 
   setupGame = ()->
-    # For the paths that are part of a solution, set them to the correct color
-    for set, setIndex in activeConfig.solution
-      colorIndex = setIndex + 1
-      for path in set
-        path.tracer.desiredClicks = colorIndex
 
     null
 
@@ -214,6 +219,9 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
   setupEditing = ()->
     editing = true
 
+    return if editingSetupDone
+    editingSetupDone = true
+
     Control.label
       name: "Path Tracer Edit Mode"
       group: "#F80"
@@ -223,20 +231,20 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
       group: "#F80"
       click: saveConfiguration
 
-    if Nav?
-      Nav.runResize() # This is needed to make the new panel buttons appear
+    Nav?.runResize() # This is needed to make the new panel buttons appear
 
-      debugPoint = Scope SVG.create "g", SVG.svg
-      debugPoint.debug.point()
-      debugPoint.hide 0
+    debugPoint = Scope SVG.create "g", SVG.svg
+    debugPoint.debug.point()
+    debugPoint.hide 0
 
-      Resize ()->
-        debugPoint.x = Nav.center().x
-        debugPoint.y = Nav.center().y
+    Resize ()->
+      debugPoint.x = Nav.center().x
+      debugPoint.y = Nav.center().y
 
-      window.addEventListener "keydown", (e)-> debugPoint.show 0 if e.keyCode is 32
-      window.addEventListener "keyup", (e)->
-        debugPoint.hide 0 if e.keyCode is 32
+    window.addEventListener "keydown", (e)-> debugPoint.show 0 if e.keyCode is 32
+    window.addEventListener "keyup", (e)->
+      if e.keyCode is 32
+        debugPoint.hide 0
         console.log Nav.pos()
 
 
@@ -252,10 +260,12 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
     solution.shift()
 
     # Format the solution sets into coffeescript text
-    lines = for paths in solution
-      pathsString = paths.map(getFullPathId).join ", "
-      "          [\"#{pathsString}\"]\n"
-    text = "solution: [\n#{lines.join('')}        ]"
+    text = JSON.stringify solution: solution.map (paths)-> paths.map(getFullPathId)
+
+    # lines = for paths in solution
+    #   pathsString = paths.map(getFullPathId).join ", "
+    #   "          [\"#{pathsString}\"]\n"
+    # text = "solution: [\n#{lines.join('')}        ]"
 
     # Put the solution coffeescript text onto the clipboard
     navigator.clipboard.writeText(text).then ()-> console.log "Copied current configuration to clipboard"
@@ -268,8 +278,8 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
     edit: (config)->
       return if editing
       activeConfig = config
-      setupPaths()
       setupEditing()
+      setupPaths()
 
     play: (config)->
       return if editing
@@ -279,8 +289,10 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
 
     stop: ()->
       if activeConfig?
-        saveConfiguration() if editing
-        editing = false
+
+        if editing
+          saveConfiguration()
+          editing = false
 
         for path in activeConfig.paths
           needsStyle = path.tracer.clickCount isnt 0

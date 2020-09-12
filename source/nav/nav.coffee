@@ -159,11 +159,7 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
 
     runResize: runResize
 
-    tweenTime: (p)->
-      timeX = .03 * Math.sqrt(Math.abs(p.x-pos.x)) or 0
-      timeY = .03 * Math.sqrt(Math.abs(p.y-pos.y)) or 0
-      timeZ = .7 * Math.sqrt(Math.abs(p.z-pos.z)) or 0
-      return Math.sqrt timeX*timeX + timeY*timeY + timeZ*timeZ
+    reset: (time)-> Nav.to {x:0, y:0, z:0}, time
 
     to: (p, time)->
       Tween.cancel tween if tween?
@@ -197,6 +193,12 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
       Tween.cancel tween if tween?
       pos.z = applyLimit limit.z, Math.log2(Math.pow(2, scaleStartPosZ) * s)
       requestRender()
+
+    tweenTime: (p)->
+      timeX = .03 * Math.sqrt(Math.abs(p.x-pos.x)) or 0
+      timeY = .03 * Math.sqrt(Math.abs(p.y-pos.y)) or 0
+      timeZ = .7 * Math.sqrt(Math.abs(p.z-pos.z)) or 0
+      return Math.sqrt timeX*timeX + timeY*timeY + timeZ*timeZ
 
     eventInside: (e)->
       e = e.touches[0] if e.touches?.length > 0

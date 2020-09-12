@@ -750,12 +750,12 @@
   });
 
   Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize", "Mode"], function(Arrow, Config, Containerize, Mode) {
-    return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName) {
+    return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName, arrowsName) {
       return Containerize(parentElm, function(scope) { // This function must return an array of children
         var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
         if (Mode.dev) {
           scope.element.addEventListener("mouseover", function() {
-            return console.log(segmentName);
+            return console.log(`@${arrowsName}.${segmentName}`);
           });
         }
         arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
@@ -791,7 +791,7 @@
             throw new Error(`You have a FlowArrows segment that is only ${Math.round(segmentData.dist)} units long, which is clashing with your fade length of ${Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.`);
           }
           childName = "segment" + i;
-          child = Segment(scope.element, segmentData, childName);
+          child = Segment(scope.element, segmentData, childName, parentElm.id);
           results.push(scope[childName] = child);
         }
         return results;

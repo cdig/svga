@@ -18,6 +18,10 @@ Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (A
   Input cover, click: ()-> Action "Panel:Hide"
   Input close, click: ()-> Action "Panel:Hide"
 
+  window.addEventListener "keydown", (e)->
+    if e.keyCode is 27 # esc
+      Action "Panel:Hide"
+
   Resize ()->
     SVG.attrs foreignObject,
       width: window.innerWidth

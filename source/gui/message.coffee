@@ -13,4 +13,4 @@ Take ["DOOM", "GUI", "Resize", "SVG", "Wait", "SVGReady"], (DOOM, GUI, Resize, S
     DOOM inner, innerHTML: html
     DOOM outer, opacity: 1
 
-    Wait time, ()-> DOOM outer, opacity: 0
+    # Wait time, ()-> DOOM outer, opacity: 0

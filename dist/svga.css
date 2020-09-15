@@ -17,8 +17,8 @@
   .ui[disabled], .ui[disabled] *, .ui *[disabled], .ui *[disabled] *, [ui][disabled], [ui][disabled] *, [ui] *[disabled], [ui] *[disabled] * {
     cursor: default; }
 
-#svga button,
-#svga .button {
+button,
+.button {
   display: inline-block;
   margin-top: .3em;
   margin-bottom: .3em;
@@ -37,393 +37,393 @@
   user-select: none;
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0); }
-  #svga button + #svga button,
-  #svga .button + #svga button, #svga button +
-  #svga .button,
-  #svga .button +
-  #svga .button {
+  button + button,
+  .button + button, button +
+  .button,
+  .button +
+  .button {
     margin-left: 1px; }
-  #svga button.border,
-  #svga .button.border {
+  button.border,
+  .button.border {
     border-color: currentColor; }
-  #svga button.active,
-  #svga .button.active {
+  button.active,
+  .button.active {
     background-color: #00a3a3; }
-    #svga button.active:hover,
-    #svga .button.active:hover {
+    button.active:hover,
+    .button.active:hover {
       background-color: #009494; }
-  #svga button[disabled], #svga button.disabled,
-  #svga .button[disabled],
-  #svga .button.disabled {
+  button[disabled], button.disabled,
+  .button[disabled],
+  .button.disabled {
     background-color: #507ed3;
     color: #7da6e8;
     pointer-events: none; }
-  #svga button.soft-disabled,
-  #svga .button.soft-disabled {
+  button.soft-disabled,
+  .button.soft-disabled {
     background-color: #507ed3;
     color: #7da6e8; }
-  #svga button.small,
-  #svga .button.small {
+  button.small,
+  .button.small {
     padding: .3em .4em; }
-  #svga button:focus,
-  #svga .button:focus {
+  button:focus,
+  .button:focus {
     border-color: #363a49; }
-  #svga button:hover,
-  #svga .button:hover {
+  button:hover,
+  .button:hover {
     background-color: #4375d0; }
-  #svga button.black:hover,
-  #svga .button.black:hover {
+  button.black:hover,
+  .button.black:hover {
     background-color: #1f1f1f; }
-  #svga button.blue:hover,
-  #svga .button.blue:hover {
+  button.blue:hover,
+  .button.blue:hover {
     background-color: #3b569b; }
-  #svga button.bronze:hover,
-  #svga .button.bronze:hover {
+  button.bronze:hover,
+  .button.bronze:hover {
     background-color: #d0b571; }
-  #svga button.mist:hover,
-  #svga .button.mist:hover {
+  button.mist:hover,
+  .button.mist:hover {
     background-color: #dbdde1; }
-  #svga button.green:hover,
-  #svga .button.green:hover {
+  button.green:hover,
+  .button.green:hover {
     background-color: #0c9723; }
-  #svga button.grey:hover,
-  #svga .button.grey:hover {
+  button.grey:hover,
+  .button.grey:hover {
     background-color: #727988; }
-  #svga button.mint:hover,
-  #svga .button.mint:hover {
+  button.mint:hover,
+  .button.mint:hover {
     background-color: #13ae69; }
-  #svga button.navy:hover,
-  #svga .button.navy:hover {
+  button.navy:hover,
+  .button.navy:hover {
     background-color: #272e7c; }
-  #svga button.olive:hover,
-  #svga .button.olive:hover {
+  button.olive:hover,
+  .button.olive:hover {
     background-color: #06795e; }
-  #svga button.onyx:hover,
-  #svga .button.onyx:hover {
+  button.onyx:hover,
+  .button.onyx:hover {
     background-color: #131339; }
-  #svga button.orange:hover,
-  #svga .button.orange:hover {
+  button.orange:hover,
+  .button.orange:hover {
     background-color: #ff781f; }
-  #svga button.purple:hover,
-  #svga .button.purple:hover {
+  button.purple:hover,
+  .button.purple:hover {
     background-color: #3e2a7a; }
-  #svga button.red:hover,
-  #svga .button.red:hover {
+  button.red:hover,
+  .button.red:hover {
     background-color: #e72329; }
-  #svga button.silver:hover,
-  #svga .button.silver:hover {
+  button.silver:hover,
+  .button.silver:hover {
     background-color: #bcc1cd; }
-  #svga button.smoke:hover,
-  #svga .button.smoke:hover {
+  button.smoke:hover,
+  .button.smoke:hover {
     background-color: #3d4152; }
-  #svga button.tar:hover,
-  #svga .button.tar:hover {
+  button.tar:hover,
+  .button.tar:hover {
     background-color: #272b49; }
-  #svga button.teal:hover,
-  #svga .button.teal:hover {
+  button.teal:hover,
+  .button.teal:hover {
     background-color: #009494; }
-  #svga button.white:hover,
-  #svga .button.white:hover {
+  button.white:hover,
+  .button.white:hover {
     background-color: #f7f7f7; }
-  #svga button.yellow:hover,
-  #svga .button.yellow:hover {
+  button.yellow:hover,
+  .button.yellow:hover {
     background-color: #f0ac00; }
-  #svga button.white,
-  #svga .button.white {
+  button.white,
+  .button.white {
     color: #3f5ca6; }
 
-#svga .buttons {
+.buttons {
   display: inline-block;
   vertical-align: middle; }
   @media (min-width: 500px) {
-    #svga .buttons {
+    .buttons {
       display: inline-flex;
       flex-flow: row wrap;
       border-radius: 4px; }
-      #svga .buttons > * {
+      .buttons > * {
         flex: 1 1 auto;
         border-radius: 0; }
-        #svga .buttons > *:first-child {
+        .buttons > *:first-child {
           border-top-left-radius: 4px;
           border-bottom-left-radius: 4px; }
-        #svga .buttons > *:last-child {
+        .buttons > *:last-child {
           border-top-right-radius: 4px;
           border-bottom-right-radius: 4px; } }
 
-#svga .bg-xxl {
+.bg-xxl {
   background-color: #7da6e8; }
 
-#svga .bg-xl {
+.bg-xl {
   background-color: #507ed3; }
 
-#svga .bg-l {
+.bg-l {
   background-color: #406abf; }
 
-#svga .bg-m {
+.bg-m {
   background-color: #3d5aa9; }
 
-#svga .bg-d {
+.bg-d {
   background-color: #384c94; }
 
-#svga .bg-xd {
+.bg-xd {
   background-color: #263373; }
 
-#svga .white {
+.white {
   background-color: white; }
 
-#svga .mist {
+.mist {
   background-color: #e9eaed; }
 
-#svga .silver {
+.silver {
   background-color: #c4c9d4; }
 
-#svga .grey {
+.grey {
   background-color: #7a8190; }
 
-#svga .smoke {
+.smoke {
   background-color: #363a49; }
 
-#svga .onyx {
+.onyx {
   background-color: #060613; }
 
-#svga .tar {
+.tar {
   background-color: #1e2138; }
 
-#svga .black {
+.black {
   background-color: black; }
 
-#svga .red {
+.red {
   background-color: #e83037; }
 
-#svga .orange {
+.orange {
   background-color: #ff8533; }
 
-#svga .yellow {
+.yellow {
   background-color: #ffb700; }
 
-#svga .green {
+.green {
   background-color: #0da527; }
 
-#svga .blue {
+.blue {
   background-color: #3f5ca6; }
 
-#svga .indigo {
+.indigo {
   background-color: #945ec9; }
 
-#svga .violet {
+.violet {
   background-color: #c63980; }
 
-#svga .blueberry {
+.blueberry {
   background-color: #906ce0; }
 
-#svga .bronze {
+.bronze {
   background-color: #d9c38c; }
 
-#svga .mint {
+.mint {
   background-color: #15bc71; }
 
-#svga .navy {
+.navy {
   background-color: #1b2055; }
 
-#svga .navy-dark {
+.navy-dark {
   background-color: #0c173b; }
 
-#svga .olive {
+.olive {
   background-color: #05614b; }
 
-#svga .purple {
+.purple {
   background-color: #47308d; }
 
-#svga .teal {
+.teal {
   background-color: #00a3a3; }
 
-#svga .fuscha {
+.fuscha {
   background-color: #cc3366; }
 
-#svga .ghost {
+.ghost {
   background-color: rgba(255, 255, 255, 0.05); }
 
-#svga .demon {
+.demon {
   background-color: rgba(0, 0, 0, 0.05); }
 
-#svga .bg-xxl-text {
+.bg-xxl-text {
   color: #7da6e8; }
 
-#svga .bg-xl-text {
+.bg-xl-text {
   color: #507ed3; }
 
-#svga .bg-l-text {
+.bg-l-text {
   color: #406abf; }
 
-#svga .bg-m-text {
+.bg-m-text {
   color: #3d5aa9; }
 
-#svga .bg-d-text {
+.bg-d-text {
   color: #384c94; }
 
-#svga .bg-xd-text {
+.bg-xd-text {
   color: #263373; }
 
-#svga .white-text {
+.white-text {
   color: white; }
 
-#svga .mist-text {
+.mist-text {
   color: #e9eaed; }
 
-#svga .silver-text {
+.silver-text {
   color: #c4c9d4; }
 
-#svga .grey-text {
+.grey-text {
   color: #7a8190; }
 
-#svga .smoke-text {
+.smoke-text {
   color: #363a49; }
 
-#svga .tar-text {
+.tar-text {
   color: #1e2138; }
 
-#svga .onyx-text {
+.onyx-text {
   color: #060613; }
 
-#svga .black-text {
+.black-text {
   color: black; }
 
-#svga .red-text {
+.red-text {
   color: #e83037; }
 
-#svga .orange-text {
+.orange-text {
   color: #ff8533; }
 
-#svga .yellow-text {
+.yellow-text {
   color: #ffb700; }
 
-#svga .green-text {
+.green-text {
   color: #0da527; }
 
-#svga .blue-text {
+.blue-text {
   color: #3f5ca6; }
 
-#svga .indigo-text {
+.indigo-text {
   color: #945ec9; }
 
-#svga .violet-text {
+.violet-text {
   color: #c63980; }
 
-#svga .blueberry-text {
+.blueberry-text {
   color: #906ce0; }
 
-#svga .bronze-text {
+.bronze-text {
   color: #d9c38c; }
 
-#svga .mint-text {
+.mint-text {
   color: #15bc71; }
 
-#svga .navy-text {
+.navy-text {
   color: #1b2055; }
 
-#svga .navy-dark-text {
+.navy-dark-text {
   color: #0c173b; }
 
-#svga .olive-text {
+.olive-text {
   color: #05614b; }
 
-#svga .purple-text {
+.purple-text {
   color: #47308d; }
 
-#svga .teal-text {
+.teal-text {
   color: #00a3a3; }
 
-#svga .fuscha-text {
+.fuscha-text {
   color: #cc3366; }
 
-#svga .bg-xxl-em em {
+.bg-xxl-em em {
   color: #7da6e8; }
 
-#svga .bg-xl-em em {
+.bg-xl-em em {
   color: #507ed3; }
 
-#svga .bg-l-em em {
+.bg-l-em em {
   color: #406abf; }
 
-#svga .bg-m-em em {
+.bg-m-em em {
   color: #3d5aa9; }
 
-#svga .bg-d-em em {
+.bg-d-em em {
   color: #384c94; }
 
-#svga .bg-xd-em em {
+.bg-xd-em em {
   color: #263373; }
 
-#svga .white-em em {
+.white-em em {
   color: white; }
 
-#svga .mist-em em {
+.mist-em em {
   color: #e9eaed; }
 
-#svga .silver-em em {
+.silver-em em {
   color: #c4c9d4; }
 
-#svga .grey-em em {
+.grey-em em {
   color: #7a8190; }
 
-#svga .smoke-em em {
+.smoke-em em {
   color: #363a49; }
 
-#svga .tar-em em {
+.tar-em em {
   color: #1e2138; }
 
-#svga .onyx-em em {
+.onyx-em em {
   color: #060613; }
 
-#svga .black-em em {
+.black-em em {
   color: black; }
 
-#svga .red-em em {
+.red-em em {
   color: #e83037; }
 
-#svga .orange-em em {
+.orange-em em {
   color: #ff8533; }
 
-#svga .yellow-em em {
+.yellow-em em {
   color: #ffb700; }
 
-#svga .green-em em {
+.green-em em {
   color: #0da527; }
 
-#svga .blue-em em {
+.blue-em em {
   color: #3f5ca6; }
 
-#svga .indigo-em em {
+.indigo-em em {
   color: #945ec9; }
 
-#svga .violet-em em {
+.violet-em em {
   color: #c63980; }
 
-#svga .blueberry-em em {
+.blueberry-em em {
   color: #906ce0; }
 
-#svga .bronze-em em {
+.bronze-em em {
   color: #d9c38c; }
 
-#svga .mint-em em {
+.mint-em em {
   color: #15bc71; }
 
-#svga .navy-em em {
+.navy-em em {
   color: #1b2055; }
 
-#svga .navy-dark-em em {
+.navy-dark-em em {
   color: #0c173b; }
 
-#svga .olive-em em {
+.olive-em em {
   color: #05614b; }
 
-#svga .purple-em em {
+.purple-em em {
   color: #47308d; }
 
-#svga .teal-em em {
+.teal-em em {
   color: #00a3a3; }
 
-#svga .fuscha-em em {
+.fuscha-em em {
   color: #cc3366; }
 
 a {

@@ -1,10 +1,18 @@
 Take ["FlowArrows:Arrow","FlowArrows:Config","FlowArrows:Containerize","Mode"],
 (                 Arrow ,            Config ,            Containerize , Mode)->
-  Make "FlowArrows:Segment", (parentElm, segmentData, segmentName, arrowsName)->
+  Make "FlowArrows:Segment", (parentElm, segmentData, segmentName, topElm)->
     Containerize parentElm, (scope)-> # This function must return an array of children
       if Mode.dev
         scope.element.addEventListener "mouseover", ()->
-          console.log "@#{arrowsName}.#{segmentName}"
+
+          ids = []
+          currentElm = topElm
+          while currentElm?
+            ids.push currentElm.id if currentElm.id?
+            break if currentElm.id is "root"
+            currentElm = currentElm.parentElement
+          
+          console.log "#{segmentName} in the arrows for @#{ids.join '.'}"
 
       arrowCount = Math.max 1, Math.round segmentData.dist / Config.SPACING
       segmentSpacing = segmentData.dist / arrowCount

@@ -750,12 +750,24 @@
   });
 
   Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize", "Mode"], function(Arrow, Config, Containerize, Mode) {
-    return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName, arrowsName) {
+    return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName, topElm) {
       return Containerize(parentElm, function(scope) { // This function must return an array of children
         var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
         if (Mode.dev) {
           scope.element.addEventListener("mouseover", function() {
-            return console.log(`@${arrowsName}.${segmentName}`);
+            var currentElm, ids;
+            ids = [];
+            currentElm = topElm;
+            while (currentElm != null) {
+              if (currentElm.id != null) {
+                ids.push(currentElm.id);
+              }
+              if (currentElm.id === "root") {
+                break;
+              }
+              currentElm = currentElm.parentElement;
+            }
+            return console.log(`${segmentName} in the arrows for @${ids.join('.')}`);
           });
         }
         arrowCount = Math.max(1, Math.round(segmentData.dist / Config.SPACING));
@@ -791,7 +803,7 @@
             throw new Error(`You have a FlowArrows segment that is only ${Math.round(segmentData.dist)} units long, which is clashing with your fade length of ${Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.`);
           }
           childName = "segment" + i;
-          child = Segment(scope.element, segmentData, childName, parentElm.id);
+          child = Segment(scope.element, segmentData, childName, parentElm);
           results.push(scope[childName] = child);
         }
         return results;
@@ -2970,17 +2982,13 @@
       DOOM(inner, {
         innerHTML: html
       });
-      DOOM(outer, {
+      return DOOM(outer, {
         opacity: 1
-      });
-      return Wait(time, function() {
-        return DOOM(outer, {
-          opacity: 0
-        });
       });
     });
   });
 
+  // Wait time, ()-> DOOM outer, opacity: 0
   Take(["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], function(Action, DOOM, Ease, GUI, Input, Resize, SVG) {
     var Panel, close, cover, foreignObject, frame, g, hideCallback, inner, outer;
     hideCallback = null;

@@ -183,11 +183,19 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
 
 
   gameClick = (path, id)->
-    if (reaction = activeConfig.reactions?[id])?
-      reaction()
+    if reaction = getReaction path
+      reaction path, id
     else
       incPath path
       activeConfig.onWin() if checkForSolution path
+
+
+  getReaction = (path)->
+    if activeConfig.reactions?.length > 0
+      for reaction in activeConfig.reactions
+        if path in reaction.paths
+          return reaction.fn
+    return null
 
 
   incPath = (path)->
@@ -262,11 +270,6 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
     # Format the solution sets into coffeescript text
     text = JSON.stringify solution: solution.map (paths)-> paths.map(getFullPathId)
 
-    # lines = for paths in solution
-    #   pathsString = paths.map(getFullPathId).join ", "
-    #   "          [\"#{pathsString}\"]\n"
-    # text = "solution: [\n#{lines.join('')}        ]"
-
     # Put the solution coffeescript text onto the clipboard
     navigator.clipboard.writeText(text).then ()-> console.log "Copied current configuration to clipboard"
 
@@ -274,16 +277,16 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
   # MAIN ##########################################################################################
 
 
-  Make "Tracer",
+  Make "Tracer", Tracer =
     edit: (config)->
-      return if editing
-      activeConfig = config
+      Tracer.stop()
+      activeConfig = config # We should probably clone the config, so we can mutate it without fear
       setupEditing()
       setupPaths()
 
     play: (config)->
-      return if editing
-      activeConfig = config
+      Tracer.stop()
+      activeConfig = config # We should probably clone the config, so we can mutate it without fear
       setupPaths()
       setupGame()
 
@@ -291,7 +294,6 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
       if activeConfig?
 
         if editing
-          saveConfiguration()
           editing = false
 
         for path in activeConfig.paths

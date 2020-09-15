@@ -1,5 +1,7 @@
 Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (Action, DOOM, Ease, GUI, Input, Resize, SVG)->
 
+  hideCallback = null
+
   foreignObject = SVG.create "foreignObject", GUI.elm, id: "panel"
   outer = DOOM.create "div", foreignObject, id: "panel-outer"
   cover = DOOM.create "div", outer, id: "panel-cover"
@@ -38,9 +40,8 @@ Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (A
 
 
   Panel = (id, html)->
-    DOOM inner,
-      id: id
-      innerHTML: html
+    DOOM inner, id: id
+    inner.innerHTML = html # Force the panel to be re-built from scratch, rather than using DOOM's caching, since code following this call will expect fresh DOM nodes to add event handlers to
     Action "Panel:Show"
     return inner
 
@@ -51,15 +52,17 @@ Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (A
   Panel.hide = ()->
     DOOM foreignObject, pointerEvents: null
     DOOM outer, opacity: 0
+    hideCallback?()
+    hideCallback = null
 
   Panel.alert = (msg, cb)->
-    Panel """
+    hideCallback = cb
+    inner = Panel "Alert", """
       <h3>#{msg}</h3>
       <div><button>Okay</button></div>
     """
-    frame.querySelector("button").addEventListener "click", ()->
+    inner.querySelector("button").addEventListener "click", ()->
       Action "Panel:Hide"
-      cb?()
 
   Panel.hide()
   Make "Panel", Panel

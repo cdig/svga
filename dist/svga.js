@@ -2982,7 +2982,8 @@
   });
 
   Take(["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], function(Action, DOOM, Ease, GUI, Input, Resize, SVG) {
-    var Panel, close, cover, foreignObject, frame, g, inner, outer;
+    var Panel, close, cover, foreignObject, frame, g, hideCallback, inner, outer;
+    hideCallback = null;
     foreignObject = SVG.create("foreignObject", GUI.elm, {
       id: "panel"
     });
@@ -3023,6 +3024,11 @@
         return Action("Panel:Hide");
       }
     });
+    window.addEventListener("keydown", function(e) {
+      if (e.keyCode === 27) { // esc
+        return Action("Panel:Hide");
+      }
+    });
     Resize(function() {
       return SVG.attrs(foreignObject, {
         width: window.innerWidth,
@@ -3043,9 +3049,9 @@
     });
     Panel = function(id, html) {
       DOOM(inner, {
-        id: id,
-        innerHTML: html
+        id: id
       });
+      inner.innerHTML = html; // Force the panel to be re-built from scratch, rather than using DOOM's caching, since code following this call will expect fresh DOM nodes to add event handlers to
       Action("Panel:Show");
       return inner;
     };
@@ -3061,16 +3067,20 @@
       DOOM(foreignObject, {
         pointerEvents: null
       });
-      return DOOM(outer, {
+      DOOM(outer, {
         opacity: 0
       });
+      if (typeof hideCallback === "function") {
+        hideCallback();
+      }
+      return hideCallback = null;
     };
     Panel.alert = function(msg, cb) {
-      Panel(`<h3>${msg}</h3>
+      hideCallback = cb;
+      inner = Panel("Alert", `<h3>${msg}</h3>
 <div><button>Okay</button></div>`);
-      return frame.querySelector("button").addEventListener("click", function() {
-        Action("Panel:Hide");
-        return typeof cb === "function" ? cb() : void 0;
+      return inner.querySelector("button").addEventListener("click", function() {
+        return Action("Panel:Hide");
       });
     };
     Panel.hide();
@@ -5227,7 +5237,7 @@
   })();
 
   Take(["Control", "Input", "Resize", "Scope", "SVG", "Vec"], function(Control, Input, Resize, Scope, SVG, Vec) {
-    var Nav, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, editClick, editing, editingSetupDone, gameClick, getFullPathId, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
+    var Nav, Tracer, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, editClick, editing, editingSetupDone, gameClick, getFullPathId, getReaction, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
     // Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
     // Symbols (like root, in the animation code) wouldn't be able to take Tracer.
     Nav = null;
@@ -5477,15 +5487,28 @@
       }
     };
     gameClick = function(path, id) {
-      var reaction, ref;
-      if ((reaction = (ref = activeConfig.reactions) != null ? ref[id] : void 0) != null) {
-        return reaction();
+      var reaction;
+      if (reaction = getReaction(path)) {
+        return reaction(path, id);
       } else {
         incPath(path);
         if (checkForSolution(path)) {
           return activeConfig.onWin();
         }
       }
+    };
+    getReaction = function(path) {
+      var len, m, reaction, ref, ref1;
+      if (((ref = activeConfig.reactions) != null ? ref.length : void 0) > 0) {
+        ref1 = activeConfig.reactions;
+        for (m = 0, len = ref1.length; m < len; m++) {
+          reaction = ref1[m];
+          if (indexOf.call(reaction.paths, path) >= 0) {
+            return reaction.fn;
+          }
+        }
+      }
+      return null;
     };
     incPath = function(path) {
       path.tracer.clickCount++;
@@ -5573,31 +5596,22 @@
           return paths.map(getFullPathId);
         })
       });
-      // lines = for paths in solution
-      //   pathsString = paths.map(getFullPathId).join ", "
-      //   "          [\"#{pathsString}\"]\n"
-      // text = "solution: [\n#{lines.join('')}        ]"
-
       // Put the solution coffeescript text onto the clipboard
       return navigator.clipboard.writeText(text).then(function() {
         return console.log("Copied current configuration to clipboard");
       });
     };
     // MAIN ##########################################################################################
-    return Make("Tracer", {
+    return Make("Tracer", Tracer = {
       edit: function(config) {
-        if (editing) {
-          return;
-        }
-        activeConfig = config;
+        Tracer.stop();
+        activeConfig = config; // We should probably clone the config, so we can mutate it without fear
         setupEditing();
         return setupPaths();
       },
       play: function(config) {
-        if (editing) {
-          return;
-        }
-        activeConfig = config;
+        Tracer.stop();
+        activeConfig = config; // We should probably clone the config, so we can mutate it without fear
         setupPaths();
         return setupGame();
       },
@@ -5605,7 +5619,6 @@
         var len, m, needsStyle, path, ref;
         if (activeConfig != null) {
           if (editing) {
-            saveConfiguration();
             editing = false;
           }
           ref = activeConfig.paths;

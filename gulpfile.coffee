@@ -4,7 +4,6 @@ gulp_autoprefixer = require "gulp-autoprefixer"
 gulp_coffee = require "gulp-coffee"
 gulp_concat = require "gulp-concat"
 gulp_natural_sort = require "gulp-natural-sort"
-gulp_notify = require "gulp-notify"
 gulp_sass = require "gulp-sass"
 
 
@@ -17,40 +16,15 @@ paths =
     "lib/_vars.scss"
     "source/**/*.scss"
   ]
-  static: [
-    "source/index.html"
-    "source/fonts/*"
-  ]
-
-
-gulp_notify.logLevel(0)
+  static: "source/index.html"
 
 
 # HELPER FUNCTIONS ################################################################################
 
 
-del = (path)->
-  if fs.existsSync path
-    for file in fs.readdirSync path
-      curPath = path + "/" + file
-      if fs.lstatSync(curPath).isDirectory()
-        del curPath
-      else
-        fs.unlinkSync curPath
-      null
-    fs.rmdirSync path
-
-
 logAndKillError = (err)->
   console.log "\n## Error ##"
   console.log err.toString() + "\n"
-  gulp_notify.onError(
-    emitError: true
-    icon: false
-    message: err.message
-    title: "👻"
-    wait: true
-    )(err)
   @emit "end"
 
 
@@ -87,11 +61,6 @@ gulp.task "scss", ()->
 # TASKS: SYSTEM ###################################################################################
 
 
-gulp.task "del:dist", (cb)->
-  del "dist"
-  cb()
-
-
 gulp.task "watch", (cb)->
   gulp.watch paths.coffee, gulp.series "coffee"
   gulp.watch paths.static, gulp.series "static"
@@ -100,7 +69,7 @@ gulp.task "watch", (cb)->
 
 
 gulp.task "compile",
-  gulp.series "del:dist", "coffee", "static", "scss"
+  gulp.series "coffee", "static", "scss"
 
 
 gulp.task "default",

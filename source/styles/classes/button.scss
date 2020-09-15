@@ -1,4 +1,4 @@
-#svga { // Needed for specificity
+#svga { // Needed for specificity — This sucks. Why?
   button,
   .button {
     display: inline-block;

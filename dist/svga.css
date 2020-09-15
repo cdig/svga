@@ -150,6 +150,282 @@
           border-top-right-radius: 4px;
           border-bottom-right-radius: 4px; } }
 
+#svga .bg-xxl {
+  background-color: #7da6e8; }
+
+#svga .bg-xl {
+  background-color: #507ed3; }
+
+#svga .bg-l {
+  background-color: #406abf; }
+
+#svga .bg-m {
+  background-color: #3d5aa9; }
+
+#svga .bg-d {
+  background-color: #384c94; }
+
+#svga .bg-xd {
+  background-color: #263373; }
+
+#svga .white {
+  background-color: white; }
+
+#svga .mist {
+  background-color: #e9eaed; }
+
+#svga .silver {
+  background-color: #c4c9d4; }
+
+#svga .grey {
+  background-color: #7a8190; }
+
+#svga .smoke {
+  background-color: #363a49; }
+
+#svga .onyx {
+  background-color: #060613; }
+
+#svga .tar {
+  background-color: #1e2138; }
+
+#svga .black {
+  background-color: black; }
+
+#svga .red {
+  background-color: #e83037; }
+
+#svga .orange {
+  background-color: #ff8533; }
+
+#svga .yellow {
+  background-color: #ffb700; }
+
+#svga .green {
+  background-color: #0da527; }
+
+#svga .blue {
+  background-color: #3f5ca6; }
+
+#svga .indigo {
+  background-color: #945ec9; }
+
+#svga .violet {
+  background-color: #c63980; }
+
+#svga .blueberry {
+  background-color: #906ce0; }
+
+#svga .bronze {
+  background-color: #d9c38c; }
+
+#svga .mint {
+  background-color: #15bc71; }
+
+#svga .navy {
+  background-color: #1b2055; }
+
+#svga .navy-dark {
+  background-color: #0c173b; }
+
+#svga .olive {
+  background-color: #05614b; }
+
+#svga .purple {
+  background-color: #47308d; }
+
+#svga .teal {
+  background-color: #00a3a3; }
+
+#svga .fuscha {
+  background-color: #cc3366; }
+
+#svga .ghost {
+  background-color: rgba(255, 255, 255, 0.05); }
+
+#svga .demon {
+  background-color: rgba(0, 0, 0, 0.05); }
+
+#svga .bg-xxl-text {
+  color: #7da6e8; }
+
+#svga .bg-xl-text {
+  color: #507ed3; }
+
+#svga .bg-l-text {
+  color: #406abf; }
+
+#svga .bg-m-text {
+  color: #3d5aa9; }
+
+#svga .bg-d-text {
+  color: #384c94; }
+
+#svga .bg-xd-text {
+  color: #263373; }
+
+#svga .white-text {
+  color: white; }
+
+#svga .mist-text {
+  color: #e9eaed; }
+
+#svga .silver-text {
+  color: #c4c9d4; }
+
+#svga .grey-text {
+  color: #7a8190; }
+
+#svga .smoke-text {
+  color: #363a49; }
+
+#svga .tar-text {
+  color: #1e2138; }
+
+#svga .onyx-text {
+  color: #060613; }
+
+#svga .black-text {
+  color: black; }
+
+#svga .red-text {
+  color: #e83037; }
+
+#svga .orange-text {
+  color: #ff8533; }
+
+#svga .yellow-text {
+  color: #ffb700; }
+
+#svga .green-text {
+  color: #0da527; }
+
+#svga .blue-text {
+  color: #3f5ca6; }
+
+#svga .indigo-text {
+  color: #945ec9; }
+
+#svga .violet-text {
+  color: #c63980; }
+
+#svga .blueberry-text {
+  color: #906ce0; }
+
+#svga .bronze-text {
+  color: #d9c38c; }
+
+#svga .mint-text {
+  color: #15bc71; }
+
+#svga .navy-text {
+  color: #1b2055; }
+
+#svga .navy-dark-text {
+  color: #0c173b; }
+
+#svga .olive-text {
+  color: #05614b; }
+
+#svga .purple-text {
+  color: #47308d; }
+
+#svga .teal-text {
+  color: #00a3a3; }
+
+#svga .fuscha-text {
+  color: #cc3366; }
+
+#svga .bg-xxl-em em {
+  color: #7da6e8; }
+
+#svga .bg-xl-em em {
+  color: #507ed3; }
+
+#svga .bg-l-em em {
+  color: #406abf; }
+
+#svga .bg-m-em em {
+  color: #3d5aa9; }
+
+#svga .bg-d-em em {
+  color: #384c94; }
+
+#svga .bg-xd-em em {
+  color: #263373; }
+
+#svga .white-em em {
+  color: white; }
+
+#svga .mist-em em {
+  color: #e9eaed; }
+
+#svga .silver-em em {
+  color: #c4c9d4; }
+
+#svga .grey-em em {
+  color: #7a8190; }
+
+#svga .smoke-em em {
+  color: #363a49; }
+
+#svga .tar-em em {
+  color: #1e2138; }
+
+#svga .onyx-em em {
+  color: #060613; }
+
+#svga .black-em em {
+  color: black; }
+
+#svga .red-em em {
+  color: #e83037; }
+
+#svga .orange-em em {
+  color: #ff8533; }
+
+#svga .yellow-em em {
+  color: #ffb700; }
+
+#svga .green-em em {
+  color: #0da527; }
+
+#svga .blue-em em {
+  color: #3f5ca6; }
+
+#svga .indigo-em em {
+  color: #945ec9; }
+
+#svga .violet-em em {
+  color: #c63980; }
+
+#svga .blueberry-em em {
+  color: #906ce0; }
+
+#svga .bronze-em em {
+  color: #d9c38c; }
+
+#svga .mint-em em {
+  color: #15bc71; }
+
+#svga .navy-em em {
+  color: #1b2055; }
+
+#svga .navy-dark-em em {
+  color: #0c173b; }
+
+#svga .olive-em em {
+  color: #05614b; }
+
+#svga .purple-em em {
+  color: #47308d; }
+
+#svga .teal-em em {
+  color: #00a3a3; }
+
+#svga .fuscha-em em {
+  color: #cc3366; }
+
 a {
   cursor: pointer; }
 
@@ -263,6 +539,14 @@ html {
   top: 8px;
   left: 8px;
   z-index: 101; }
+
+#Alert {
+  max-width: 30em;
+  padding: 2em;
+  border-radius: 8px;
+  text-align: center;
+  color: white;
+  background: #406abf; }
 
 #settings {
   padding-bottom: 8px;

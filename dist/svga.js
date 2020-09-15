@@ -755,17 +755,19 @@
         var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
         if (Mode.dev) {
           scope.element.addEventListener("mouseover", function() {
-            var currentElm, ids;
+            var counter, currentElm, ids;
             ids = [];
             currentElm = topElm;
-            while (currentElm != null) {
+            counter = 0;
+            while ((currentElm != null) && currentElm.id !== "root") {
+              counter++;
               if (currentElm.id != null) {
-                ids.push(currentElm.id);
-              }
-              if (currentElm.id === "root") {
-                break;
+                ids.unshift(currentElm.id);
               }
               currentElm = currentElm.parentElement;
+              if (counter > 50) {
+                throw "FlowArrows:Segment while loop counter overflow — tell Ivan";
+              }
             }
             return console.log(`${segmentName} in the arrows for @${ids.join('.')}`);
           });

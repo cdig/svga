@@ -4,14 +4,14 @@ Take ["FlowArrows:Arrow","FlowArrows:Config","FlowArrows:Containerize","Mode"],
     Containerize parentElm, (scope)-> # This function must return an array of children
       if Mode.dev
         scope.element.addEventListener "mouseover", ()->
-
           ids = []
           currentElm = topElm
-          while currentElm?
-            ids.push currentElm.id if currentElm.id?
-            break if currentElm.id is "root"
+          counter = 0
+          while currentElm? and currentElm.id isnt "root"
+            counter++
+            ids.unshift currentElm.id if currentElm.id?
             currentElm = currentElm.parentElement
-          
+            throw "FlowArrows:Segment while loop counter overflow — tell Ivan" if counter > 50
           console.log "#{segmentName} in the arrows for @#{ids.join '.'}"
 
       arrowCount = Math.max 1, Math.round segmentData.dist / Config.SPACING

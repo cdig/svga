@@ -58,9 +58,9 @@ Take ["GUI", "Input", "Registry", "SVG", "Tween"], ({ControlPanel:GUI}, Input, R
 
     # Hack around bugginess in chrome
     click = ()->
-      if input.state.clicking
-        toClicked()
-        handler() for handler in handlers
+      # if input.state.clicking # breaks control disabling/enabling
+      toClicked()
+      handler() for handler in handlers
     elm.addEventListener "mouseup", click
     elm.addEventListener "touchend", click
 

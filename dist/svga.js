@@ -1227,15 +1227,14 @@
       // Hack around bugginess in chrome
       click = function() {
         var handler, len, m, results;
-        if (input.state.clicking) {
-          toClicked();
-          results = [];
-          for (m = 0, len = handlers.length; m < len; m++) {
-            handler = handlers[m];
-            results.push(handler());
-          }
-          return results;
+        // if input.state.clicking # breaks control disabling/enabling
+        toClicked();
+        results = [];
+        for (m = 0, len = handlers.length; m < len; m++) {
+          handler = handlers[m];
+          results.push(handler());
         }
+        return results;
       };
       elm.addEventListener("mouseup", click);
       elm.addEventListener("touchend", click);

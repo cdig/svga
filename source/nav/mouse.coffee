@@ -29,18 +29,19 @@ Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
 
   Input document, calls, true, false
 
-  blockDbl = (elm)->
-    while elm? and elm isnt document
-      return elm if elm.hasAttribute "block-dbl"
-      elm = elm.parentNode
-    return null
+  unless Mode.noNavDbl
+    blockDbl = (elm)->
+      while elm? and elm isnt document
+        return elm if elm.hasAttribute "block-dbl"
+        elm = elm.parentNode
+      return null
 
-  document.addEventListener "dblclick", (e)->
-    return unless e.button is 0
-    return if blockDbl e.target
-    if Nav.eventInside e
-      e.preventDefault()
-      Nav.to x:0, y:0, z:0
+    document.addEventListener "dblclick", (e)->
+      return unless e.button is 0
+      return if blockDbl e.target
+      if Nav.eventInside e
+        e.preventDefault()
+        Nav.to x:0, y:0, z:0
 
   wheel = (e)->
     return unless e.button is 0

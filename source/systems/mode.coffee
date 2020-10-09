@@ -1,9 +1,9 @@
 # Config is defined in the config.coffee in every SVGA
 
 Take ["Config", "ParentData"], (Config, ParentData)->
-  
+
   embedded = window isnt window.top
-  
+
   fetchAttribute = (name)->
     if embedded and val = ParentData.get name
       # This isn't ideal, but it is good enough for now
@@ -13,7 +13,7 @@ Take ["Config", "ParentData"], (Config, ParentData)->
       return val
     else
       Config[name]
-  
+
   isDev = ()->
     loc = window.top.location
     # Allow turning off dev mode when running locally
@@ -22,16 +22,17 @@ Take ["Config", "ParentData"], (Config, ParentData)->
     return true if loc.search.indexOf("dev=true") > 0
     # By default, dev mode is active when we have a URL with a port number
     return loc.port?.length >= 4
-  
+
   Mode =
     get: fetchAttribute
     background: fetchAttribute "background"
     dev: isDev()
+    noNavDbl: fetchAttribute "noNavDbl"
     nav: fetchAttribute "nav"
     embed: embedded
     settings: fetchAttribute "settings"
-  
+
   # We always disallow nav in embed mode
   Mode.nav = false if Mode.embed
-  
+
   Make "Mode", Mode

@@ -1,4 +1,4 @@
-Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween)->
+Take ["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], (Action, ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween)->
 
   # Turn this on if we need to debug resizing
   # debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
@@ -22,12 +22,16 @@ Take ["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG"
 
   rootScale = ()-> contentScale * Math.pow 2, pos.z
 
+
   render = ()->
     # First, we move SVG.root so the top left corner is in the middle of our available space.
     # ("Available space" means the size of the window, minus the space occupied by the control panel.)
     # Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
     # Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
     SVG.attr SVG.root, "transform", "translate(#{center.x},#{center.y}) scale(#{rootScale()}) translate(#{pos.x - centerInverse.x},#{pos.y - centerInverse.y})"
+
+    # Also notifiy any listeners that the Nav was just updated
+    Action "Nav"
 
 
   pickBestLayout = (totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo)->

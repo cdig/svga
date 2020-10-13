@@ -22,17 +22,18 @@ Take ["Action", "Ease", "Fullscreen", "Mode", "Settings", "Storage"], (Action, E
 
 
   Background = ()->
-    if typeof Mode.background is "string" # Use a specific color
+    if Mode.background is "none" # Special transparent mode for layering SVGA atop something else
+      Action "Background:Set", "transparent"
+
+    else if typeof Mode.background is "string" # Use a specific color
       Action "Background:Set", Mode.background
 
     else if Mode.background is true # Use lightness-based background
       applyLightness()
 
-    else if Fullscreen.active() # Default — fullscreen
-      Action "Background:Set", "white"
-
-    else # Default — windowed
-      Action "Background:Set", "transparent"
+    else # By default, make the background white
+      lightness = 1
+      applyLightness()
 
 
   Make "Background", Background

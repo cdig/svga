@@ -31,16 +31,20 @@
   position: absolute;
   width: 32px;
   height: 32px;
-  top: 8px;
-  left: 8px;
+  top: 4px;
+  left: 4px;
   z-index: 101;
 }
 
 #Alert {
   max-width: 30em;
-  padding: 2em;
+  padding: 1em;
   border-radius: 8px;
   text-align: center;
   color: white;
   background: $bg-l;
+
+  div:last-child { margin-top: 1em; }
+
+  & + #panel-close { display: none; }
 }

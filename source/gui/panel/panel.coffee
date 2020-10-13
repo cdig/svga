@@ -1,13 +1,14 @@
-Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (Action, DOOM, Ease, GUI, Input, Resize, SVG)->
+Take ["Action", "DOOM", "Ease", "GUI", "Resize", "SVG", "SVGReady"], (Action, DOOM, Ease, GUI, Resize, SVG)->
 
   hideCallback = null
+  showing = false
 
   foreignObject = SVG.create "foreignObject", GUI.elm, id: "panel"
   outer = DOOM.create "div", foreignObject, id: "panel-outer"
   cover = DOOM.create "div", outer, id: "panel-cover"
   frame = DOOM.create "div", outer, id: "panel-frame"
-  close = DOOM.create "svg", frame, id: "panel-close"
   inner = DOOM.create "div", frame
+  close = DOOM.create "svg", frame, id: "panel-close"
 
   g = SVG.create "g", close, ui: true, transform: "translate(16,16)"
   SVG.create "circle", g, r: 16, fill: "#F00"
@@ -17,12 +18,14 @@ Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (A
     strokeWidth: 3
     strokeLinecap: "round"
 
-  Input cover, click: ()-> Action "Panel:Hide"
-  Input close, click: ()-> Action "Panel:Hide"
+  cover.addEventListener "click", ()-> Action "Panel:Hide"
+  close.addEventListener "click", ()-> Action "Panel:Hide"
 
   window.addEventListener "keydown", (e)->
-    if e.keyCode is 27 # esc
-      Action "Panel:Hide"
+    return unless showing
+    Action "Panel:Hide" if e.keyCode is 27
+    Action "Panel:Hide" if e.keyCode is 13 and DOOM(inner, "id") is "Alert"
+
 
   Resize ()->
     SVG.attrs foreignObject,
@@ -48,19 +51,19 @@ Take ["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], (A
   Panel.show = ()->
     DOOM foreignObject, pointerEvents: "auto"
     DOOM outer, opacity: 1
+    showing = true
 
   Panel.hide = ()->
     DOOM foreignObject, pointerEvents: null
     DOOM outer, opacity: 0
     hideCallback?()
     hideCallback = null
+    showing = false
 
-  Panel.alert = (msg, cb)->
+  Panel.alert = (msg, btn, cb)->
+    [cb, btn] = [btn, "Okay"] unless cb? # The middle argument is optional
     hideCallback = cb
-    inner = Panel "Alert", """
-      <h3>#{msg}</h3>
-      <div><button>Okay</button></div>
-    """
+    inner = Panel "Alert", "#{msg}<div><button>#{btn}</button></div>"
     inner.querySelector("button").addEventListener "click", ()->
       Action "Panel:Hide"
 

@@ -1,14 +1,15 @@
-Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Resize, Scope, SVG, Vec)->
+Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick", "Tween", "Vec", "Wait"], (Control, Input, Panel, Resize, Reaction, Scope, SVG, Tick, Tween, Vec, Wait)->
 
   # Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
   # Symbols (like root, in the animation code) wouldn't be able to take Tracer.
   Nav = null
   Take "Nav", (N)-> Nav = N
 
-  editing = false
-  editingSetupDone = false
-
   activeConfig = null
+  hoveredPath = null
+  editing = false
+  xShape = "M-1,-1 L1,1 M-1,1 L1,-1"
+  checkShape = "M-1,0 L-.3,.8 L1,-1"
 
 
   # HELPERS #########################################################################################
@@ -23,118 +24,212 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
     "@#{fullId}"
 
 
+  cloneChild = (path, child)->
+    elm = child.element.cloneNode true
+    path.element.appendChild elm
+    elm
+
+
   # SETUP #########################################################################################
 
 
   setupPaths = ()->
     for path in activeConfig.paths
       if not path? then throw "One of the paths given to Tracer is null"
-      initializePath path unless path.tracer?
+      unless path.tracer?
+        setupPathEvents path
+        createTracerProp path
+      resetTracerProp path
+
+    for set, setIndex in activeConfig.solution
+      setupSolutionSet set, setIndex
+
+    for path in activeConfig.paths
       stylePath path
 
-    # For the paths that are part of a solution, set them to the correct color
-    for set, setIndex in activeConfig.solution
-      colorIndex = setIndex + 1
-      for path in set
-        path.tracer.desiredClicks = colorIndex
-        path.tracer.clickCount = colorIndex if editing
-        stylePath path
-
-    null
+    updateZoomScaling true, true
 
 
-  initializePath = (path)->
-    return if path.tracer?
-
-    path.tracer =
-      glows: []
-      hits: []
-      clicking: false
-      hovering: false
-      clickCount: 0
-      desiredClicks: 0
-
-    # Sort to top
-    path.element.parentNode.appendChild path.element
-
-    # Block double-click nav reset
-    path.element.setAttribute "block-dbl", true
-
-    # Build decorations
-    for child in path.children
-      buildGlow path, child
-      buildHit path, child
-
+  setupPathEvents = (path)->
+    # TODO: Replace this with our own event handling code
     calls =
       down: startClick path
       drag: cancelClick path
-      click: clickPath path
     Input path.element, calls, true, false
+    path.element.addEventListener "click", clickPath path
+
+
+  createTracerProp = (path)->
+    path.tracer =
+      originalChildren: Array.from path.element.children
+      glows: buildGlow path, child for child in path.children
+      hits: buildHit path, child for child in path.children
+      badge: buildBadge path
+      bb: path.children[0].element.getBBox()
+
+
+  resetTracerProp = (path)->
+    path.tracer.clicking = false
+    path.tracer.hovering = false
+    path.tracer.clickCount = 0
+    path.tracer.desiredClicks = 0
+    path.tracer.clickPos = null
+    path.tracer.animstate = null
+    path.tracer.isCorrect = null
+    path.tracer.isMistake = null
+    path.tracer.tween = null
 
 
   buildGlow = (path, child)->
-    scope = cloneChild path, child
-    path.tracer.glows.push scope
+    scope = Scope cloneChild path, child
     scope.strokeWidth = 3
+    scope
 
 
   buildHit = (path, child)->
-    scope = cloneChild path, child, hitDefn
-    path.tracer.hits.push scope
+    scope = Scope cloneChild path, child
     scope.strokeWidth = 10
+    # TODO: Replace this with our own event code
     calls =
       moveIn: hitMoveIn path
       moveOut: hitMoveOut path
     Input scope.element, calls, true, false
+    scope
 
 
-  cloneChild = (path, child, defn)->
-    elm = child.element.cloneNode true
-    path.element.appendChild elm
-    Scope elm, defn
+  buildBadge = (path)->
+    # The transform on this element is used to put it in the right position
+    scope = Scope SVG.create "g", path.element,
+      class: "tracer-badge"
+      fill: "none"
+      strokeLinecap: "round"
+    scope.alpha = false
+
+    # The transform on this element is used for zoom-based scaling
+    scope.zoomScale = SVG.create "g", scope.element
+
+    # And the transform on these elements is used by the pulse effect
+    scope.shadow = SVG.create "path", scope.zoomScale, class: "pulse", strokeWidth: 1, stroke: "white"
+    scope.shape = SVG.create "path", scope.zoomScale, class: "pulse", strokeWidth: .5
+    scope
 
 
-  hitDefn = (elm)->
-    tick: hitTick = ()->
-      @strokeWidth = Math.max 3, 20 / Nav.rootScale() if Nav?
+  setupSolutionSet = (set, setIndex)->
+    colorIndex = setIndex + 1
+    for path in set
+      path.tracer.desiredClicks = colorIndex
+      path.tracer.clickCount = colorIndex if editing
+
+      # Sort this wire to the top, so that it's easier to click on than unused wires
+      path.element.parentNode.appendChild path.element
 
 
-  # STYLE #########################################################################################
+  # ZOOM-BASED SCALING ############################################################################
+  lastScale = null
+  stableCounter = 10
+
+
+  Reaction "Nav", ()->
+    return unless activeConfig?
+    scale = Nav.rootScale()
+    if scale isnt lastScale
+      lastScale = scale
+      stableCounter = 0
+      updateZoomScaling false, true
+
+
+  Tick ()->
+    return unless activeConfig? and stableCounter?
+    scale = Nav.rootScale()
+    stableCounter++
+    if stableCounter >= 10
+      stableCounter = null
+      updateZoomScaling true, false
+
+
+  updateZoomScaling = (updateHits, updateBadges)->
+    return unless activeConfig?
+    scale = Nav.rootScale()
+    badgeScale = Math.max 3, 8 / Math.pow scale, .5
+    hitScale = Math.max 3, 20 / scale
+    # path.parent.alpha is how we support multiple sheets — avoid scaling stuff on sheets that aren't visible
+    for path in activeConfig.paths when path.parent.alpha > 0
+      if updateHits or path is hoveredPath
+        hit.strokeWidth = hitScale for hit in path.tracer.hits
+      if updateBadges
+        SVG.attrs path.tracer.badge.zoomScale, transform: "scale(#{badgeScale})"
+    null
+
+
+  # STYLING #######################################################################################
 
 
   stylePath = (path)->
     colorIndex = path.tracer.clickCount % activeConfig.colors.length
+
     color = activeConfig.colors[colorIndex] or "#000"
 
-    isUncolored = colorIndex is 0
     isHover = path.tracer.hovering
-    isDefault = isUncolored and !isHover
+    isColored = colorIndex isnt 0
 
     path.stroke = color
 
-    for child in path.children
-      child.alpha = switch
-        when isUncolored and !isHover then 0
-        when isUncolored and isHover then 0
-        when !isUncolored and isHover then 1
-        when !isUncolored and !isHover then 1
+    for child in path.children when child isnt path.tracer.badge
+      child.alpha = isColored
 
     for glow in path.tracer.glows
       glow.stroke = color
       glow.alpha = switch
-        when isUncolored and !isHover then .08
-        when isUncolored and isHover then .3
-        when !isUncolored and isHover then 0
-        when !isUncolored and !isHover then 0
+        when !isColored and !isHover then .08
+        when !isColored and isHover then .3
+        when isColored and isHover then 0
+        when isColored and !isHover then .15
 
     for hit in path.tracer.hits
-      hit.stroke = color
-      hit.alpha = if isHover then .2 else 0.001
-      hit.alpha = switch
-        when isUncolored and !isHover then .001
-        when isUncolored and isHover then .07
-        when !isUncolored and isHover then .15
-        when !isUncolored and !isHover then .001
+      # Even when the color is "transparent", there's a sizable perf benefit to having opaque alpha
+      hit.stroke = if isHover then color else "transparent"
+      hit.alpha = if isHover then .2 else 1
+
+    null
+
+
+  updateBadge = (path)->
+    if path.tracer.isMistake
+      unless path.tracer.animstate is "incorrect"
+        path.tracer.animstate = "incorrect"
+        path.tracer.badge.stroke = "hsl(358, 80%, 55%)" # $red
+        path.tracer.badge.scale = 2
+        path.tracer.badge.alpha = 0
+        path.tracer.badge.x = path.tracer.clickPos.x
+        path.tracer.badge.y = path.tracer.clickPos.y
+        SVG.attrs path.tracer.badge.shape, d: xShape
+        SVG.attrs path.tracer.badge.shadow, d: xShape
+        props =
+          scale: 1
+          alpha: 1
+        Tween.cancel path.tracer.tween
+        path.tracer.tween = Tween path.tracer.badge, props, .2
+    else
+      if path.tracer.animstate?
+        path.tracer.animstate = null
+        path.tracer.badge.stroke = "hsl(153, 80%, 41%)" # $mint
+        SVG.attrs path.tracer.badge.shape, d: checkShape
+        SVG.attrs path.tracer.badge.shadow, d: checkShape
+        props =
+          scale: 2
+          alpha: 0
+        Tween.cancel path.tracer.tween
+        path.tracer.tween = Tween path.tracer.badge, props, 1
+
+
+  unstylePath = (path)->
+    path.stroke = "#000"
+    Tween.cancel path.tracer.tween
+    path.tracer.badge.alpha = 0
+    child.alpha = 1 for child in path.children
+    glow.alpha = 0 for glow in path.tracer.glows
+    hit.alpha = 0 for hit in path.tracer.hits
+    null
 
 
   # EVENTS ########################################################################################
@@ -143,12 +238,14 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
   hitMoveIn = (path)-> ()->
     return unless activeConfig
     path.tracer.hovering = true
+    hoveredPath = path
     stylePath path
 
 
   hitMoveOut = (path)-> ()->
     return unless activeConfig
     path.tracer.hovering = false
+    hoveredPath = null if hoveredPath is path
     stylePath path
 
 
@@ -172,22 +269,67 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
     if editing
       editClick path, id, e
     else
-      gameClick path, id
+      gameClick path, id, e
+
+
+  setPathClickPos = (path, e)->
+    # Create a point at the root of the SVG, and move it to the screen coords of the mouse position
+    p_screen = SVG.svg.createSVGPoint()
+    p_screen.x = e.clientX
+    p_screen.y = e.clientY
+    # Get a matrix that transfroms from screen coords to the coords of the path
+    screenToPath = path.element.getScreenCTM().inverse()
+    # Transform the point by that matrix
+    p_path = p_screen.matrixTransform screenToPath
+    # Now, find the point on the path that is closest to the mouse point
+    path.tracer.clickPos = closestPointOnPathToPoint path, p_path
+
+
+  closestPointOnPathToPoint = (path, target, stepSize = 10)->
+    closestPoint = null
+    closestDist = Infinity
+    # This is assuming that each path will originally contain a single g elm,
+    # which will contain one or more path elms.
+    # This might not be true of all Tracer games. We'd need to revise it to,
+    # perhaps, locate all <path> elements using querySelector or somesuch.
+    for groupElm in path.tracer.originalChildren
+      for pathElm in groupElm.children
+        i = pathElm.getTotalLength()
+        while i > 0
+          p = pathElm.getPointAtLength i
+          d = Vec.distance p, target
+          if d < closestDist
+            closestDist = d
+            closestPoint = p
+          i -= stepSize
+    return closestPoint
+
+
+  # GAMEPLAY ######################################################################################
 
 
   editClick = (path, id, e)->
     if e.altKey
       console.log "Clicked #{id}"
     else
+      setPathClickPos path, e
       incPath path
+      scorePath path
+      stylePath path
 
 
-  gameClick = (path, id)->
+  gameClick = (path, id, e)->
+    console.log getIncorrectPaths()
     if reaction = getReaction path
       reaction path, id
     else
+      setPathClickPos path, e
       incPath path
-      activeConfig.onWin() if checkForSolution path
+      scorePath path
+      stylePath path
+      updateBadge path
+      checkForFirstMistakeEver path
+      checkForWin()
 
 
   getReaction = (path)->
@@ -200,28 +342,81 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
 
   incPath = (path)->
     path.tracer.clickCount++
-    stylePath path
 
 
-  # GAMEPLAY ######################################################################################
+  delayedMistakePath = null
 
 
-  setupGame = ()->
-
-    null
-
-
-
-  checkForSolution = ()->
-    incorrectPaths = []
+  scorePath = (path)->
     nSets = activeConfig.colors.length
-    for path in activeConfig.paths
-      if path.tracer.clickCount % nSets isnt path.tracer.desiredClicks
-        incorrectPaths.push path
-    return incorrectPaths.length is 0
+    isCorrect = path.tracer.clickCount % nSets is path.tracer.desiredClicks
+    clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks
+
+    # Reset the path state
+    path.tracer.isCorrect = false
+    path.tracer.isMistake = false
+    delayedMistakePath = null if delayedMistakePath is path
+
+    # Now, set the path to the correct state
+    if isCorrect
+      path.tracer.isCorrect = true
+    else if clickedPastCorrect
+      path.tracer.isMistake = true
+    else
+      delayedMistakePath = path
+
+
+  checkForIncorrectPaths = (e)->
+    return unless activeConfig?
+    return unless delayedMistakePath?
+    return if delayedMistakePath.element.contains e.target
+    delayedMistakePath.tracer.isMistake = true
+    stylePath delayedMistakePath
+    updateBadge delayedMistakePath
+    checkForFirstMistakeEver delayedMistakePath, true
+    delayedMistakePath = null
+    null
+  window.addEventListener "click", checkForIncorrectPaths, true
+
+
+  getIncorrectPaths = ()->
+    path for path in activeConfig.paths when not path.tracer.isCorrect
+
+
+  checkForWin = ()->
+    if getIncorrectPaths().length is 0
+      activeConfig.onWin activeConfig
+
+
+  # FEEDBACK ######################################################################################
+  noMistakesEver = true
+
+
+  checkForFirstMistakeEver = (path, forced)->
+    return unless noMistakesEver
+    isIncorrect = path.tracer.clickPos? and not path.tracer.isCorrect
+    clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks
+    if isIncorrect and (clickedPastCorrect or forced)
+      Wait .7, ()-> Panel.alert """
+        <h3>That Path Is Incorrect</h3>
+        <p style="margin-top:.5em">
+          To fix it, keep clicking the path.
+        </p>
+        <p style="margin-top:.5em">
+          Once it is set correctly for this circuit,<br>
+          the
+          <svg class="pulse" style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
+            <path stroke="#FFF" stroke-width="1.2" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
+            <path stroke-width=".7" stroke="hsl(358, 80%, 55%)" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
+          </svg>
+          mark will disappear.
+        </p>
+      """
+      noMistakesEver = false
 
 
   # EDITING #######################################################################################
+  editingSetupDone = false
 
 
   setupEditing = ()->
@@ -288,20 +483,11 @@ Take ["Control", "Input", "Resize", "Scope", "SVG", "Vec"], (Control, Input, Res
       Tracer.stop()
       activeConfig = config # We should probably clone the config, so we can mutate it without fear
       setupPaths()
-      setupGame()
 
     stop: ()->
       if activeConfig?
+        editing = false
+        unstylePath path for path in activeConfig.paths
+        activeConfig = null
 
-        if editing
-          editing = false
-
-        for path in activeConfig.paths
-          needsStyle = path.tracer.clickCount isnt 0
-          path.tracer.clicking = false
-          path.tracer.hovering = false
-          path.tracer.clickCount = 0
-          path.tracer.desiredClicks = 0
-          stylePath path if needsStyle
-
-      activeConfig = null
+    refresh: ()-> updateZoomScaling true, true

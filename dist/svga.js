@@ -827,6 +827,42 @@
     });
   });
 
+  Take(["DOOM", "GUI", "Resize", "SVG", "Wait", "SVGReady"], function(DOOM, GUI, Resize, SVG, Wait) {
+    var Banner, foreignObject, inner, outer;
+    foreignObject = SVG.create("foreignObject", GUI.elm, {
+      id: "svga-banner"
+    });
+    outer = DOOM.create("div", foreignObject, {
+      id: "svga-banner-outer"
+    });
+    inner = DOOM.create("div", outer, {
+      id: "svga-banner-inner"
+    });
+    Resize(function() {
+      return SVG.attrs(foreignObject, {
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    });
+    Banner = function(html, time) {
+      DOOM(inner, {
+        innerHTML: html
+      });
+      DOOM(outer, {
+        opacity: 1
+      });
+      if (time != null) {
+        return Wait(time, Banner.hide);
+      }
+    };
+    Banner.hide = function() {
+      return DOOM(outer, {
+        opacity: 0
+      });
+    };
+    return Make("Banner", Banner);
+  });
+
   Take(["GUI", "Mode", "Resize", "SVG", "TRS", "SVGReady"], function(GUI, Mode, Resize, SVG, TRS) {
     var g, hide, show;
     return;
@@ -2903,7 +2939,7 @@
     values = {};
     elm = document.createElement("div");
     elm.setAttribute("svga-hud", "true");
-    document.body.insertBefore(elm, SVG.svg);
+    SVG.svg.parentElement.insertBefore(elm, SVG.svg);
     Tick(function(time, dt) {
       var html, k, v;
       elapsed += dt;
@@ -2922,14 +2958,12 @@
     });
     return Make("HUD", HUD = function(k, v, c = "#000") {
       var _k, _v;
-      
       // Allow passing an object of k-v pairs, with the 2nd arg as the optional color
       if (typeof k === "object") {
         for (_k in k) {
           _v = k[_k];
           HUD(_k, _v, v);
         }
-      
       // Pretty-print nested objects (and avoid infinite loops if there's a reference cycle)
       } else if (typeof v === "object" && !v._hud_visited) {
         v._hud_visited = true;
@@ -2983,16 +3017,21 @@
       DOOM(inner, {
         innerHTML: html
       });
-      return DOOM(outer, {
+      DOOM(outer, {
         opacity: 1
+      });
+      return Wait(time, function() {
+        return DOOM(outer, {
+          opacity: 0
+        });
       });
     });
   });
 
-  // Wait time, ()-> DOOM outer, opacity: 0
-  Take(["Action", "DOOM", "Ease", "GUI", "Input", "Resize", "SVG", "SVGReady"], function(Action, DOOM, Ease, GUI, Input, Resize, SVG) {
-    var Panel, close, cover, foreignObject, frame, g, hideCallback, inner, outer;
+  Take(["Action", "DOOM", "Ease", "GUI", "Resize", "SVG", "SVGReady"], function(Action, DOOM, Ease, GUI, Resize, SVG) {
+    var Panel, close, cover, foreignObject, frame, g, hideCallback, inner, outer, showing;
     hideCallback = null;
+    showing = false;
     foreignObject = SVG.create("foreignObject", GUI.elm, {
       id: "panel"
     });
@@ -3005,10 +3044,10 @@
     frame = DOOM.create("div", outer, {
       id: "panel-frame"
     });
+    inner = DOOM.create("div", frame);
     close = DOOM.create("svg", frame, {
       id: "panel-close"
     });
-    inner = DOOM.create("div", frame);
     g = SVG.create("g", close, {
       ui: true,
       transform: "translate(16,16)"
@@ -3023,18 +3062,20 @@
       strokeWidth: 3,
       strokeLinecap: "round"
     });
-    Input(cover, {
-      click: function() {
-        return Action("Panel:Hide");
-      }
+    cover.addEventListener("click", function() {
+      return Action("Panel:Hide");
     });
-    Input(close, {
-      click: function() {
-        return Action("Panel:Hide");
-      }
+    close.addEventListener("click", function() {
+      return Action("Panel:Hide");
     });
     window.addEventListener("keydown", function(e) {
-      if (e.keyCode === 27) { // esc
+      if (!showing) {
+        return;
+      }
+      if (e.keyCode === 27) {
+        Action("Panel:Hide");
+      }
+      if (e.keyCode === 13 && DOOM(inner, "id") === "Alert") {
         return Action("Panel:Hide");
       }
     });
@@ -3068,9 +3109,10 @@
       DOOM(foreignObject, {
         pointerEvents: "auto"
       });
-      return DOOM(outer, {
+      DOOM(outer, {
         opacity: 1
       });
+      return showing = true;
     };
     Panel.hide = function() {
       DOOM(foreignObject, {
@@ -3082,12 +3124,15 @@
       if (typeof hideCallback === "function") {
         hideCallback();
       }
-      return hideCallback = null;
+      hideCallback = null;
+      return showing = false;
     };
-    Panel.alert = function(msg, cb) {
+    Panel.alert = function(msg, btn, cb) {
+      if (cb == null) {
+        [cb, btn] = [btn, "Okay"]; // The middle argument is optional
+      }
       hideCallback = cb;
-      inner = Panel("Alert", `<h3>${msg}</h3>
-<div><button>Okay</button></div>`);
+      inner = Panel("Alert", `${msg}<div><button>${btn}</button></div>`);
       return inner.querySelector("button").addEventListener("click", function() {
         return Action("Panel:Hide");
       });
@@ -3660,31 +3705,33 @@
       upOther: up
     };
     Input(document, calls, true, false);
-    blockDbl = function(elm) {
-      while ((elm != null) && elm !== document) {
-        if (elm.hasAttribute("block-dbl")) {
-          return elm;
+    if (!Mode.noNavDbl) {
+      blockDbl = function(elm) {
+        while ((elm != null) && elm !== document) {
+          if (elm.hasAttribute("block-dbl")) {
+            return elm;
+          }
+          elm = elm.parentNode;
         }
-        elm = elm.parentNode;
-      }
-      return null;
-    };
-    document.addEventListener("dblclick", function(e) {
-      if (e.button !== 0) {
-        return;
-      }
-      if (blockDbl(e.target)) {
-        return;
-      }
-      if (Nav.eventInside(e)) {
-        e.preventDefault();
-        return Nav.to({
-          x: 0,
-          y: 0,
-          z: 0
-        });
-      }
-    });
+        return null;
+      };
+      document.addEventListener("dblclick", function(e) {
+        if (e.button !== 0) {
+          return;
+        }
+        if (blockDbl(e.target)) {
+          return;
+        }
+        if (Nav.eventInside(e)) {
+          e.preventDefault();
+          return Nav.to({
+            x: 0,
+            y: 0,
+            z: 0
+          });
+        }
+      });
+    }
     wheel = function(e) {
       if (e.button !== 0) {
         return;
@@ -3723,7 +3770,7 @@
     });
   });
 
-  Take(["ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween) {
+  Take(["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resize", "SVG", "Tween", "SceneReady"], function(Action, ControlPanel, Fullscreen, Mode, ParentData, RAF, Resize, SVG, Tween) {
     var Nav, applyLimit, center, centerInverse, computeResizeInfo, contentHeight, contentScale, contentWidth, dist, distTo, limit, pickBestLayout, pos, render, requestRender, resize, rootScale, runResize, scaleStartPosZ, tween;
     // Turn this on if we need to debug resizing
     // debugBox = SVG.create "rect", SVG.root, fill:"none", stroke:"#0F0A", strokeWidth: 6
@@ -3773,7 +3820,9 @@
       // ("Available space" means the size of the window, minus the space occupied by the control panel.)
       // Then, we scale to fit to the available space (contentScale) and desired zoom level (Math.pow 2, pos.z).
       // Then we shift back up and to the left to compensate for the first step (centerInverse), and then move to the desired nav position (pos).
-      return SVG.attr(SVG.root, "transform", `translate(${center.x},${center.y}) scale(${rootScale()}) translate(${pos.x - centerInverse.x},${pos.y - centerInverse.y})`);
+      SVG.attr(SVG.root, "transform", `translate(${center.x},${center.y}) scale(${rootScale()}) translate(${pos.x - centerInverse.x},${pos.y - centerInverse.y})`);
+      // Also notifiy any listeners that the Nav was just updated
+      return Action("Nav");
     };
     pickBestLayout = function(totalAvailableSpace, horizontalResizeInfo, verticalResizeInfo) {
       var contentHeightWhenHorizontal, panelHeightWhenHorizontal;
@@ -4514,7 +4563,7 @@
     return Registry.add("ScopeProcessor", function(scope) {
       var size;
       ScopeCheck(scope, "initialWidth", "initialHeight");
-      size = scope.element.getBoundingClientRect();
+      size = scope.element.getBBox(); // Note: Changed on 2020-09-29 from getBoundingClientRect
       scope.initialWidth = size.width;
       return scope.initialHeight = size.height;
     });
@@ -4810,14 +4859,15 @@
       });
     }
     Background = function() {
-      if (typeof Mode.background === "string") { // Use a specific color
+      if (Mode.background === "none") { // Special transparent mode for layering SVGA atop something else
+        return Action("Background:Set", "transparent");
+      } else if (typeof Mode.background === "string") { // Use a specific color
         return Action("Background:Set", Mode.background);
       } else if (Mode.background === true) { // Use lightness-based background
-        return applyLightness();
-      } else if (Fullscreen.active()) { // Default — fullscreen
-        return Action("Background:Set", "white"); // Default — windowed
+        return applyLightness(); // By default, make the background white
       } else {
-        return Action("Background:Set", "transparent");
+        lightness = 1;
+        return applyLightness();
       }
     };
     Make("Background", Background);
@@ -5178,12 +5228,12 @@
       get: fetchAttribute,
       background: fetchAttribute("background"),
       dev: isDev(),
+      noNavDbl: fetchAttribute("noNavDbl"),
       nav: fetchAttribute("nav"),
       embed: embedded,
       settings: fetchAttribute("settings")
     };
     if (Mode.embed) {
-      
       // We always disallow nav in embed mode
       Mode.nav = false;
     }
@@ -5245,17 +5295,19 @@
     return port.start();
   })();
 
-  Take(["Control", "Input", "Resize", "Scope", "SVG", "Vec"], function(Control, Input, Resize, Scope, SVG, Vec) {
-    var Nav, Tracer, activeConfig, buildGlow, buildHit, cancelClick, checkForSolution, clickPath, cloneChild, editClick, editing, editingSetupDone, gameClick, getFullPathId, getReaction, hitDefn, hitMoveIn, hitMoveOut, incPath, initializePath, saveConfiguration, setupEditing, setupGame, setupPaths, startClick, stylePath;
+  Take(["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick", "Tween", "Vec", "Wait"], function(Control, Input, Panel, Resize, Reaction, Scope, SVG, Tick, Tween, Vec, Wait) {
+    var Nav, Tracer, activeConfig, buildBadge, buildGlow, buildHit, cancelClick, checkForFirstMistakeEver, checkForIncorrectPaths, checkForWin, checkShape, clickPath, cloneChild, closestPointOnPathToPoint, createTracerProp, delayedMistakePath, editClick, editing, editingSetupDone, gameClick, getFullPathId, getIncorrectPaths, getReaction, hitMoveIn, hitMoveOut, hoveredPath, incPath, lastScale, noMistakesEver, resetTracerProp, saveConfiguration, scorePath, setPathClickPos, setupEditing, setupPathEvents, setupPaths, setupSolutionSet, stableCounter, startClick, stylePath, unstylePath, updateBadge, updateZoomScaling, xShape;
     // Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
     // Symbols (like root, in the animation code) wouldn't be able to take Tracer.
     Nav = null;
     Take("Nav", function(N) {
       return Nav = N;
     });
-    editing = false;
-    editingSetupDone = false;
     activeConfig = null;
+    hoveredPath = null;
+    editing = false;
+    xShape = "M-1,-1 L1,1 M-1,1 L1,-1";
+    checkShape = "M-1,0 L-.3,.8 L1,-1";
     // HELPERS #########################################################################################
     getFullPathId = function(path) {
       var fullId, parent;
@@ -5267,9 +5319,15 @@
       }
       return `@${fullId}`;
     };
+    cloneChild = function(path, child) {
+      var elm;
+      elm = child.element.cloneNode(true);
+      path.element.appendChild(elm);
+      return elm;
+    };
     // SETUP #########################################################################################
     setupPaths = function() {
-      var colorIndex, len, len1, len2, m, n, path, q, ref, ref1, set, setIndex;
+      var len, len1, len2, m, n, path, q, ref, ref1, ref2, set, setIndex;
       ref = activeConfig.paths;
       for (m = 0, len = ref.length; m < len; m++) {
         path = ref[m];
@@ -5277,114 +5335,199 @@
           throw "One of the paths given to Tracer is null";
         }
         if (path.tracer == null) {
-          initializePath(path);
+          setupPathEvents(path);
+          createTracerProp(path);
         }
-        stylePath(path);
+        resetTracerProp(path);
       }
       ref1 = activeConfig.solution;
-      // For the paths that are part of a solution, set them to the correct color
       for (setIndex = n = 0, len1 = ref1.length; n < len1; setIndex = ++n) {
         set = ref1[setIndex];
-        colorIndex = setIndex + 1;
-        for (q = 0, len2 = set.length; q < len2; q++) {
-          path = set[q];
-          path.tracer.desiredClicks = colorIndex;
-          if (editing) {
-            path.tracer.clickCount = colorIndex;
-          }
-          stylePath(path);
-        }
+        setupSolutionSet(set, setIndex);
       }
-      return null;
+      ref2 = activeConfig.paths;
+      for (q = 0, len2 = ref2.length; q < len2; q++) {
+        path = ref2[q];
+        stylePath(path);
+      }
+      return updateZoomScaling(true, true);
     };
-    initializePath = function(path) {
-      var calls, child, len, m, ref;
-      if (path.tracer != null) {
-        return;
-      }
-      path.tracer = {
-        glows: [],
-        hits: [],
-        clicking: false,
-        hovering: false,
-        clickCount: 0,
-        desiredClicks: 0
-      };
-      // Sort to top
-      path.element.parentNode.appendChild(path.element);
-      // Block double-click nav reset
-      path.element.setAttribute("block-dbl", true);
-      ref = path.children;
-      // Build decorations
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
-        buildGlow(path, child);
-        buildHit(path, child);
-      }
+    setupPathEvents = function(path) {
+      var calls;
+      // TODO: Replace this with our own event handling code
       calls = {
         down: startClick(path),
-        drag: cancelClick(path),
-        click: clickPath(path)
+        drag: cancelClick(path)
       };
-      return Input(path.element, calls, true, false);
+      Input(path.element, calls, true, false);
+      return path.element.addEventListener("click", clickPath(path));
+    };
+    createTracerProp = function(path) {
+      var child;
+      return path.tracer = {
+        originalChildren: Array.from(path.element.children),
+        glows: (function() {
+          var len, m, ref, results;
+          ref = path.children;
+          results = [];
+          for (m = 0, len = ref.length; m < len; m++) {
+            child = ref[m];
+            results.push(buildGlow(path, child));
+          }
+          return results;
+        })(),
+        hits: (function() {
+          var len, m, ref, results;
+          ref = path.children;
+          results = [];
+          for (m = 0, len = ref.length; m < len; m++) {
+            child = ref[m];
+            results.push(buildHit(path, child));
+          }
+          return results;
+        })(),
+        badge: buildBadge(path),
+        bb: path.children[0].element.getBBox()
+      };
+    };
+    resetTracerProp = function(path) {
+      path.tracer.clicking = false;
+      path.tracer.hovering = false;
+      path.tracer.clickCount = 0;
+      path.tracer.desiredClicks = 0;
+      path.tracer.clickPos = null;
+      path.tracer.animstate = null;
+      path.tracer.isCorrect = null;
+      path.tracer.isMistake = null;
+      return path.tracer.tween = null;
     };
     buildGlow = function(path, child) {
       var scope;
-      scope = cloneChild(path, child);
-      path.tracer.glows.push(scope);
-      return scope.strokeWidth = 3;
+      scope = Scope(cloneChild(path, child));
+      scope.strokeWidth = 3;
+      return scope;
     };
     buildHit = function(path, child) {
       var calls, scope;
-      scope = cloneChild(path, child, hitDefn);
-      path.tracer.hits.push(scope);
+      scope = Scope(cloneChild(path, child));
       scope.strokeWidth = 10;
+      // TODO: Replace this with our own event code
       calls = {
         moveIn: hitMoveIn(path),
         moveOut: hitMoveOut(path)
       };
-      return Input(scope.element, calls, true, false);
+      Input(scope.element, calls, true, false);
+      return scope;
     };
-    cloneChild = function(path, child, defn) {
-      var elm;
-      elm = child.element.cloneNode(true);
-      path.element.appendChild(elm);
-      return Scope(elm, defn);
+    buildBadge = function(path) {
+      var scope;
+      // The transform on this element is used to put it in the right position
+      scope = Scope(SVG.create("g", path.element, {
+        class: "tracer-badge",
+        fill: "none",
+        strokeLinecap: "round"
+      }));
+      scope.alpha = false;
+      // The transform on this element is used for zoom-based scaling
+      scope.zoomScale = SVG.create("g", scope.element);
+      // And the transform on these elements is used by the pulse effect
+      scope.shadow = SVG.create("path", scope.zoomScale, {
+        class: "pulse",
+        strokeWidth: 1,
+        stroke: "white"
+      });
+      scope.shape = SVG.create("path", scope.zoomScale, {
+        class: "pulse",
+        strokeWidth: .5
+      });
+      return scope;
     };
-    hitDefn = function(elm) {
-      var hitTick;
-      return {
-        tick: hitTick = function() {
-          if (Nav != null) {
-            return this.strokeWidth = Math.max(3, 20 / Nav.rootScale());
+    setupSolutionSet = function(set, setIndex) {
+      var colorIndex, len, m, path, results;
+      colorIndex = setIndex + 1;
+      results = [];
+      for (m = 0, len = set.length; m < len; m++) {
+        path = set[m];
+        path.tracer.desiredClicks = colorIndex;
+        if (editing) {
+          path.tracer.clickCount = colorIndex;
+        }
+        // Sort this wire to the top, so that it's easier to click on than unused wires
+        results.push(path.element.parentNode.appendChild(path.element));
+      }
+      return results;
+    };
+    // ZOOM-BASED SCALING ############################################################################
+    lastScale = null;
+    stableCounter = 10;
+    Reaction("Nav", function() {
+      var scale;
+      if (activeConfig == null) {
+        return;
+      }
+      scale = Nav.rootScale();
+      if (scale !== lastScale) {
+        lastScale = scale;
+        stableCounter = 0;
+        return updateZoomScaling(false, true);
+      }
+    });
+    Tick(function() {
+      var scale;
+      if (!((activeConfig != null) && (stableCounter != null))) {
+        return;
+      }
+      scale = Nav.rootScale();
+      stableCounter++;
+      if (stableCounter >= 10) {
+        stableCounter = null;
+        return updateZoomScaling(true, false);
+      }
+    });
+    updateZoomScaling = function(updateHits, updateBadges) {
+      var badgeScale, hit, hitScale, len, len1, m, n, path, ref, ref1, scale;
+      if (activeConfig == null) {
+        return;
+      }
+      scale = Nav.rootScale();
+      badgeScale = Math.max(3, 8 / Math.pow(scale, .5));
+      hitScale = Math.max(3, 20 / scale);
+      ref = activeConfig.paths;
+      // path.parent.alpha is how we support multiple sheets — avoid scaling stuff on sheets that aren't visible
+      for (m = 0, len = ref.length; m < len; m++) {
+        path = ref[m];
+        if (!(path.parent.alpha > 0)) {
+          continue;
+        }
+        if (updateHits || path === hoveredPath) {
+          ref1 = path.tracer.hits;
+          for (n = 0, len1 = ref1.length; n < len1; n++) {
+            hit = ref1[n];
+            hit.strokeWidth = hitScale;
           }
         }
-      };
+        if (updateBadges) {
+          SVG.attrs(path.tracer.badge.zoomScale, {
+            transform: `scale(${badgeScale})`
+          });
+        }
+      }
+      return null;
     };
-    // STYLE #########################################################################################
+    // STYLING #######################################################################################
     stylePath = function(path) {
-      var child, color, colorIndex, glow, hit, isDefault, isHover, isUncolored, len, len1, len2, m, n, q, ref, ref1, ref2, results;
+      var child, color, colorIndex, glow, hit, isColored, isHover, len, len1, len2, m, n, q, ref, ref1, ref2;
       colorIndex = path.tracer.clickCount % activeConfig.colors.length;
       color = activeConfig.colors[colorIndex] || "#000";
-      isUncolored = colorIndex === 0;
       isHover = path.tracer.hovering;
-      isDefault = isUncolored && !isHover;
+      isColored = colorIndex !== 0;
       path.stroke = color;
       ref = path.children;
       for (m = 0, len = ref.length; m < len; m++) {
         child = ref[m];
-        child.alpha = (function() {
-          switch (false) {
-            case !(isUncolored && !isHover):
-              return 0;
-            case !(isUncolored && isHover):
-              return 0;
-            case !(!isUncolored && isHover):
-              return 1;
-            case !(!isUncolored && !isHover):
-              return 1;
-          }
-        })();
+        if (child !== path.tracer.badge) {
+          child.alpha = isColored;
+        }
       }
       ref1 = path.tracer.glows;
       for (n = 0, len1 = ref1.length; n < len1; n++) {
@@ -5392,37 +5535,89 @@
         glow.stroke = color;
         glow.alpha = (function() {
           switch (false) {
-            case !(isUncolored && !isHover):
+            case !(!isColored && !isHover):
               return .08;
-            case !(isUncolored && isHover):
+            case !(!isColored && isHover):
               return .3;
-            case !(!isUncolored && isHover):
+            case !(isColored && isHover):
               return 0;
-            case !(!isUncolored && !isHover):
-              return 0;
+            case !(isColored && !isHover):
+              return .15;
           }
         })();
       }
       ref2 = path.tracer.hits;
-      results = [];
       for (q = 0, len2 = ref2.length; q < len2; q++) {
         hit = ref2[q];
-        hit.stroke = color;
-        hit.alpha = isHover ? .2 : 0.001;
-        results.push(hit.alpha = (function() {
-          switch (false) {
-            case !(isUncolored && !isHover):
-              return .001;
-            case !(isUncolored && isHover):
-              return .07;
-            case !(!isUncolored && isHover):
-              return .15;
-            case !(!isUncolored && !isHover):
-              return .001;
-          }
-        })());
+        // Even when the color is "transparent", there's a sizable perf benefit to having opaque alpha
+        hit.stroke = isHover ? color : "transparent";
+        hit.alpha = isHover ? .2 : 1;
       }
-      return results;
+      return null;
+    };
+    updateBadge = function(path) {
+      var props;
+      if (path.tracer.isMistake) {
+        if (path.tracer.animstate !== "incorrect") {
+          path.tracer.animstate = "incorrect";
+          path.tracer.badge.stroke = "hsl(358, 80%, 55%)"; // $red
+          path.tracer.badge.scale = 2;
+          path.tracer.badge.alpha = 0;
+          path.tracer.badge.x = path.tracer.clickPos.x;
+          path.tracer.badge.y = path.tracer.clickPos.y;
+          SVG.attrs(path.tracer.badge.shape, {
+            d: xShape
+          });
+          SVG.attrs(path.tracer.badge.shadow, {
+            d: xShape
+          });
+          props = {
+            scale: 1,
+            alpha: 1
+          };
+          Tween.cancel(path.tracer.tween);
+          return path.tracer.tween = Tween(path.tracer.badge, props, .2);
+        }
+      } else {
+        if (path.tracer.animstate != null) {
+          path.tracer.animstate = null;
+          path.tracer.badge.stroke = "hsl(153, 80%, 41%)"; // $mint
+          SVG.attrs(path.tracer.badge.shape, {
+            d: checkShape
+          });
+          SVG.attrs(path.tracer.badge.shadow, {
+            d: checkShape
+          });
+          props = {
+            scale: 2,
+            alpha: 0
+          };
+          Tween.cancel(path.tracer.tween);
+          return path.tracer.tween = Tween(path.tracer.badge, props, 1);
+        }
+      }
+    };
+    unstylePath = function(path) {
+      var child, glow, hit, len, len1, len2, m, n, q, ref, ref1, ref2;
+      path.stroke = "#000";
+      Tween.cancel(path.tracer.tween);
+      path.tracer.badge.alpha = 0;
+      ref = path.children;
+      for (m = 0, len = ref.length; m < len; m++) {
+        child = ref[m];
+        child.alpha = 1;
+      }
+      ref1 = path.tracer.glows;
+      for (n = 0, len1 = ref1.length; n < len1; n++) {
+        glow = ref1[n];
+        glow.alpha = 0;
+      }
+      ref2 = path.tracer.hits;
+      for (q = 0, len2 = ref2.length; q < len2; q++) {
+        hit = ref2[q];
+        hit.alpha = 0;
+      }
+      return null;
     };
     // EVENTS ########################################################################################
     hitMoveIn = function(path) {
@@ -5431,6 +5626,7 @@
           return;
         }
         path.tracer.hovering = true;
+        hoveredPath = path;
         return stylePath(path);
       };
     };
@@ -5440,6 +5636,9 @@
           return;
         }
         path.tracer.hovering = false;
+        if (hoveredPath === path) {
+          hoveredPath = null;
+        }
         return stylePath(path);
       };
     };
@@ -5484,26 +5683,75 @@
         if (editing) {
           return editClick(path, id, e);
         } else {
-          return gameClick(path, id);
+          return gameClick(path, id, e);
         }
       };
     };
+    setPathClickPos = function(path, e) {
+      var p_path, p_screen, screenToPath;
+      // Create a point at the root of the SVG, and move it to the screen coords of the mouse position
+      p_screen = SVG.svg.createSVGPoint();
+      p_screen.x = e.clientX;
+      p_screen.y = e.clientY;
+      // Get a matrix that transfroms from screen coords to the coords of the path
+      screenToPath = path.element.getScreenCTM().inverse();
+      // Transform the point by that matrix
+      p_path = p_screen.matrixTransform(screenToPath);
+      // Now, find the point on the path that is closest to the mouse point
+      return path.tracer.clickPos = closestPointOnPathToPoint(path, p_path);
+    };
+    closestPointOnPathToPoint = function(path, target, stepSize = 10) {
+      var closestDist, closestPoint, d, groupElm, i, len, len1, m, n, p, pathElm, ref, ref1;
+      closestPoint = null;
+      closestDist = 2e308;
+      ref = path.tracer.originalChildren;
+      // This is assuming that each path will originally contain a single g elm,
+      // which will contain one or more path elms.
+      // This might not be true of all Tracer games. We'd need to revise it to,
+      // perhaps, locate all <path> elements using querySelector or somesuch.
+      for (m = 0, len = ref.length; m < len; m++) {
+        groupElm = ref[m];
+        ref1 = groupElm.children;
+        for (n = 0, len1 = ref1.length; n < len1; n++) {
+          pathElm = ref1[n];
+          i = pathElm.getTotalLength();
+          while (i > 0) {
+            p = pathElm.getPointAtLength(i);
+            d = Vec.distance(p, target);
+            if (d < closestDist) {
+              closestDist = d;
+              closestPoint = p;
+            }
+            i -= stepSize;
+          }
+        }
+      }
+      return closestPoint;
+    };
+    // GAMEPLAY ######################################################################################
     editClick = function(path, id, e) {
       if (e.altKey) {
         return console.log(`Clicked ${id}`);
       } else {
-        return incPath(path);
+        setPathClickPos(path, e);
+        incPath(path);
+        scorePath(path);
+        return stylePath(path);
       }
     };
-    gameClick = function(path, id) {
+    gameClick = function(path, id, e) {
       var reaction;
+      console.log(getIncorrectPaths());
       if (reaction = getReaction(path)) {
         return reaction(path, id);
       } else {
+        setPathClickPos(path, e);
         incPath(path);
-        if (checkForSolution(path)) {
-          return activeConfig.onWin();
-        }
+        scorePath(path);
+        stylePath(path);
+        updateBadge(path);
+        checkForFirstMistakeEver(path);
+        return checkForWin();
       }
     };
     getReaction = function(path) {
@@ -5520,27 +5768,94 @@
       return null;
     };
     incPath = function(path) {
-      path.tracer.clickCount++;
-      return stylePath(path);
+      return path.tracer.clickCount++;
     };
-    // GAMEPLAY ######################################################################################
-    setupGame = function() {
+    delayedMistakePath = null;
+    scorePath = function(path) {
+      var clickedPastCorrect, isCorrect, nSets;
+      nSets = activeConfig.colors.length;
+      isCorrect = path.tracer.clickCount % nSets === path.tracer.desiredClicks;
+      clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks;
+      // Reset the path state
+      path.tracer.isCorrect = false;
+      path.tracer.isMistake = false;
+      if (delayedMistakePath === path) {
+        delayedMistakePath = null;
+      }
+      // Now, set the path to the correct state
+      if (isCorrect) {
+        return path.tracer.isCorrect = true;
+      } else if (clickedPastCorrect) {
+        return path.tracer.isMistake = true;
+      } else {
+        return delayedMistakePath = path;
+      }
+    };
+    checkForIncorrectPaths = function(e) {
+      if (activeConfig == null) {
+        return;
+      }
+      if (delayedMistakePath == null) {
+        return;
+      }
+      if (delayedMistakePath.element.contains(e.target)) {
+        return;
+      }
+      delayedMistakePath.tracer.isMistake = true;
+      stylePath(delayedMistakePath);
+      updateBadge(delayedMistakePath);
+      checkForFirstMistakeEver(delayedMistakePath, true);
+      delayedMistakePath = null;
       return null;
     };
-    checkForSolution = function() {
-      var incorrectPaths, len, m, nSets, path, ref;
-      incorrectPaths = [];
-      nSets = activeConfig.colors.length;
+    window.addEventListener("click", checkForIncorrectPaths, true);
+    getIncorrectPaths = function() {
+      var len, m, path, ref, results;
       ref = activeConfig.paths;
+      results = [];
       for (m = 0, len = ref.length; m < len; m++) {
         path = ref[m];
-        if (path.tracer.clickCount % nSets !== path.tracer.desiredClicks) {
-          incorrectPaths.push(path);
+        if (!path.tracer.isCorrect) {
+          results.push(path);
         }
       }
-      return incorrectPaths.length === 0;
+      return results;
+    };
+    checkForWin = function() {
+      if (getIncorrectPaths().length === 0) {
+        return activeConfig.onWin(activeConfig);
+      }
+    };
+    // FEEDBACK ######################################################################################
+    noMistakesEver = true;
+    checkForFirstMistakeEver = function(path, forced) {
+      var clickedPastCorrect, isIncorrect;
+      if (!noMistakesEver) {
+        return;
+      }
+      isIncorrect = (path.tracer.clickPos != null) && !path.tracer.isCorrect;
+      clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks;
+      if (isIncorrect && (clickedPastCorrect || forced)) {
+        Wait(.7, function() {
+          return Panel.alert(`<h3>That Path Is Incorrect</h3>
+<p style="margin-top:.5em">
+  To fix it, keep clicking the path.
+</p>
+<p style="margin-top:.5em">
+  Once it is set correctly for this circuit,<br>
+  the
+  <svg class="pulse" style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
+    <path stroke="#FFF" stroke-width="1.2" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
+    <path stroke-width=".7" stroke="hsl(358, 80%, 55%)" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
+  </svg>
+  mark will disappear.
+</p>`);
+        });
+        return noMistakesEver = false;
+      }
     };
     // EDITING #######################################################################################
+    editingSetupDone = false;
     setupEditing = function() {
       var debugPoint;
       editing = true;
@@ -5621,36 +5936,29 @@
       play: function(config) {
         Tracer.stop();
         activeConfig = config; // We should probably clone the config, so we can mutate it without fear
-        setupPaths();
-        return setupGame();
+        return setupPaths();
       },
       stop: function() {
-        var len, m, needsStyle, path, ref;
+        var len, m, path, ref;
         if (activeConfig != null) {
-          if (editing) {
-            editing = false;
-          }
+          editing = false;
           ref = activeConfig.paths;
           for (m = 0, len = ref.length; m < len; m++) {
             path = ref[m];
-            needsStyle = path.tracer.clickCount !== 0;
-            path.tracer.clicking = false;
-            path.tracer.hovering = false;
-            path.tracer.clickCount = 0;
-            path.tracer.desiredClicks = 0;
-            if (needsStyle) {
-              stylePath(path);
-            }
+            unstylePath(path);
           }
+          return activeConfig = null;
         }
-        return activeConfig = null;
+      },
+      refresh: function() {
+        return updateZoomScaling(true, true);
       }
     });
   });
 
   (function() {
     var cbs;
-    cbs = [];
+    cbs = {};
     Make("Reaction", function(name, cb) {
       if (cb != null) {
         return (cbs[name] != null ? cbs[name] : cbs[name] = []).push(cb);

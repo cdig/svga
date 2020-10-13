@@ -480,6 +480,31 @@ html {
   overflow: hidden;
   text-rendering: geometricPrecision; }
 
+#svga-banner {
+  pointer-events: none; }
+
+#svga-banner-outer {
+  width: 100%;
+  opacity: 0;
+  padding: 4px;
+  font-size: 11pt;
+  text-align: center;
+  line-height: 1;
+  background: black;
+  padding-left: 68px;
+  transition: .3s opacity; }
+
+#svga-banner-inner {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 .5em;
+  color: white;
+  line-height: 22px;
+  border-radius: 4px;
+  background-color: #363a49;
+  -webkit-backdrop-filter: blur(6px) brightness(30%);
+  backdrop-filter: blur(6px) brightness(30%); }
+
 #message {
   pointer-events: none; }
 
@@ -498,9 +523,10 @@ html {
   max-width: 100%;
   max-height: 100%;
   padding: 2rem;
+  text-align: center;
   border-radius: 1rem;
-  color: white;
   font-size: 2em;
+  color: white;
   background-color: rgba(64, 106, 191, 0.2);
   -webkit-backdrop-filter: blur(6px) brightness(30%);
   backdrop-filter: blur(6px) brightness(30%); }
@@ -536,17 +562,21 @@ html {
   position: absolute;
   width: 32px;
   height: 32px;
-  top: 8px;
-  left: 8px;
+  top: 4px;
+  left: 4px;
   z-index: 101; }
 
 #Alert {
   max-width: 30em;
-  padding: 2em;
+  padding: 1em;
   border-radius: 8px;
   text-align: center;
   color: white;
   background: #406abf; }
+  #Alert div:last-child {
+    margin-top: 1em; }
+  #Alert + #panel-close {
+    display: none; }
 
 #settings {
   padding-bottom: 8px;

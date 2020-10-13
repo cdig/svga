@@ -1,0 +1,26 @@
+#svga-banner {
+  pointer-events: none;
+}
+
+#svga-banner-outer {
+  width: 100%;
+  opacity: 0;
+  padding: 4px;
+  font-size: 11pt;
+  text-align: center;
+  line-height: 1;
+  background: black;
+  padding-left: 68px; // Leave room on the sides so we don't cover the Settings button
+  transition: .3s opacity;
+}
+
+#svga-banner-inner {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 .5em;
+  color: white;
+  line-height: 22px;
+  border-radius: 4px;
+  background-color: $smoke;
+  backdrop-filter: blur(6px) brightness(30%);
+}

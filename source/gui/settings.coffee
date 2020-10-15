@@ -1,4 +1,4 @@
-Take ["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], (Action, DOOM, GUI, Input, Mode, Panel, Scope, SVG)->
+Take ["Action", "DOOM", "GUI", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], (Action, DOOM, GUI, Mode, Panel, Scope, SVG)->
 
   controls = []
 
@@ -48,7 +48,7 @@ Take ["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeR
     textAnchor: "middle"
     fill: "hsl(220, 10%, 92%)"
 
-  Input elm, click: ()->
+  elm.addEventListener "click", ()->
 
     title = Mode.get("meta")?.title
     if not title? and not Mode.embed

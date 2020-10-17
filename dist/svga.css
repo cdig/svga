@@ -484,26 +484,26 @@ html {
   pointer-events: none; }
 
 #svga-banner-outer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  opacity: 0;
+  min-height: 30px;
   padding: 4px;
+  padding-left: 68px;
   font-size: 11pt;
   text-align: center;
   line-height: 1;
   background: black;
-  padding-left: 68px;
+  opacity: 0;
   transition: .3s opacity; }
 
 #svga-banner-inner {
-  display: inline-block;
   max-width: 100%;
-  padding: 0 .5em;
-  color: white;
-  line-height: 22px;
-  border-radius: 4px;
-  background-color: #363a49;
-  -webkit-backdrop-filter: blur(6px) brightness(30%);
-  backdrop-filter: blur(6px) brightness(30%); }
+  padding-left: .1em;
+  text-align: left;
+  line-height: 1.1;
+  color: white; }
 
 #message {
   pointer-events: none; }
@@ -518,23 +518,22 @@ html {
 
 #message-inner {
   position: relative;
-  top: -25vh;
   display: inline-block;
+  top: -25vh;
   max-width: 100%;
   max-height: 100%;
+  margin: 1rem 2rem;
   padding: 2rem;
-  margin: 2rem;
+  border-radius: 8px;
   text-align: center;
-  border-radius: 1rem;
   font-size: 2em;
+  font-weight: bold;
   color: white;
-  background-color: rgba(64, 106, 191, 0.2);
-  -webkit-backdrop-filter: blur(6px) brightness(30%);
-  backdrop-filter: blur(6px) brightness(30%); }
+  background: #406abf; }
   @media (max-width: 700px) {
     #message-inner {
       font-size: 1.5em;
-      padding: 1.5rem;
+      padding: 1rem 1.5rem;
       margin: 1.5rem; } }
   @media (max-width: 450px) {
     #message-inner {

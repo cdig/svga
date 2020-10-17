@@ -13,22 +13,22 @@
 
 #message-inner {
   position: relative;
-  top: -25vh;
   display: inline-block;
+  top: -25vh;
   max-width: 100%;
   max-height: 100%;
+  margin: 1rem 2rem;
   padding: 2rem;
-  margin: 2rem;
+  border-radius: 8px;
   text-align: center;
-  border-radius: 1rem;
   font-size: 2em;
+  font-weight: bold;
   color: white;
-  background-color: hsla(220, 50%, 50%, .2);
-  backdrop-filter: blur(6px) brightness(30%);
+  background: $bg-l;
 
   @media (max-width: 700px) {
     font-size: 1.5em;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     margin: 1.5rem;
   }
   @media (max-width: 450px) {

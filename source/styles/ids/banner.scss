@@ -3,24 +3,25 @@
 }
 
 #svga-banner-outer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  opacity: 0;
+  min-height: 30px;
   padding: 4px;
+  padding-left: 68px; // Don't cover the Settings button
   font-size: 11pt;
   text-align: center;
   line-height: 1;
   background: black;
-  padding-left: 68px; // Leave room on the sides so we don't cover the Settings button
+  opacity: 0;
   transition: .3s opacity;
 }
 
 #svga-banner-inner {
-  display: inline-block;
   max-width: 100%;
-  padding: 0 .5em;
+  padding-left: .1em;
+  text-align: left;
+  line-height: 1.1;
   color: white;
-  line-height: 22px;
-  border-radius: 4px;
-  background-color: $smoke;
-  backdrop-filter: blur(6px) brightness(30%);
 }

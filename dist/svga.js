@@ -3068,6 +3068,12 @@
     close.addEventListener("click", function() {
       return Action("Panel:Hide");
     });
+    cover.addEventListener("touchend", function() {
+      return Action("Panel:Hide"); // Hack: Input touchend preventDefault blocks click
+    });
+    close.addEventListener("touchend", function() {
+      return Action("Panel:Hide"); // Hack: Input touchend preventDefault blocks click
+    });
     window.addEventListener("keydown", function(e) {
       if (!showing) {
         return;
@@ -3485,7 +3491,7 @@
     });
   });
 
-  Take(["Action", "DOOM", "GUI", "Input", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], function(Action, DOOM, GUI, Input, Mode, Panel, Scope, SVG) {
+  Take(["Action", "DOOM", "GUI", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], function(Action, DOOM, GUI, Mode, Panel, Scope, SVG) {
     var Settings, bg, controls, elm, height, hit, label, scope, width;
     controls = [];
     Make("Settings", Settings = {
@@ -3537,38 +3543,36 @@
       textAnchor: "middle",
       fill: "hsl(220, 10%, 92%)"
     });
-    return Input(elm, {
-      click: function() {
-        var control, controlsElm, info, infoLines, len, line, m, panel, ref, ref1, results, title;
-        title = (ref = Mode.get("meta")) != null ? ref.title : void 0;
-        if ((title == null) && !Mode.embed) {
-          title = document.title.replace("| ", "").replace("LunchBox Sessions", "");
-        }
-        if (infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0) {
-          info = ((function() {
-            var len, m, results;
-            results = [];
-            for (m = 0, len = infoLines.length; m < len; m++) {
-              line = infoLines[m];
-              results.push(`<p>${line}</p>`);
-            }
-            return results;
-          })()).join("");
-        }
-        panel = Panel("settings", `<div settings-controls></div>
+    return elm.addEventListener("click", function() {
+      var control, controlsElm, info, infoLines, len, line, m, panel, ref, ref1, results, title;
+      title = (ref = Mode.get("meta")) != null ? ref.title : void 0;
+      if ((title == null) && !Mode.embed) {
+        title = document.title.replace("| ", "").replace("LunchBox Sessions", "");
+      }
+      if (infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0) {
+        info = ((function() {
+          var len, m, results;
+          results = [];
+          for (m = 0, len = infoLines.length; m < len; m++) {
+            line = infoLines[m];
+            results.push(`<p>${line}</p>`);
+          }
+          return results;
+        })()).join("");
+      }
+      panel = Panel("settings", `<div settings-controls></div>
 <h3 settings-title>${title || ""}</h3>
 <div settings-info>${info || ""}</div>
 <small settings-copyright>© CD Industrial Group Inc.</small>`);
-        controlsElm = panel.querySelector("[settings-controls]");
-        results = [];
-        for (m = 0, len = controls.length; m < len; m++) {
-          control = controls[m];
-          if (control != null) {
-            results.push(DOOM.append(controlsElm, control));
-          }
+      controlsElm = panel.querySelector("[settings-controls]");
+      results = [];
+      for (m = 0, len = controls.length; m < len; m++) {
+        control = controls[m];
+        if (control != null) {
+          results.push(DOOM.append(controlsElm, control));
         }
-        return results;
       }
+      return results;
     });
   });
 
@@ -4107,7 +4111,6 @@
         return TouchAcceleration.up();
       }
     };
-    
     // We are safe to use passive: false, because we only do nav when standalone
     window.addEventListener("touchstart", touchStart, {
       passive: false
@@ -5295,8 +5298,8 @@
     return port.start();
   })();
 
-  Take(["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick", "Tween", "Vec", "Wait"], function(Control, Input, Panel, Resize, Reaction, Scope, SVG, Tick, Tween, Vec, Wait) {
-    var Nav, Tracer, activeConfig, buildBadge, buildGlow, buildHit, cancelClick, checkForFirstMistakeEver, checkForIncorrectPaths, checkForWin, checkShape, clickPath, cloneChild, closestPointOnPathToPoint, createTracerProp, delayedMistakePath, editClick, editing, editingSetupDone, gameClick, getFullPathId, getIncorrectPaths, getReaction, hitMoveIn, hitMoveOut, hoveredPath, incPath, lastScale, noMistakesEver, resetTracerProp, saveConfiguration, scorePath, setPathClickPos, setupEditing, setupPathEvents, setupPaths, setupSolutionSet, stableCounter, startClick, stylePath, unstylePath, updateBadge, updateZoomScaling, xShape;
+  Take(["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween", "Vec", "Wait"], function(Control, Panel, Reaction, Resize, SVG, Scope, Tick, Tween, Vec, Wait) {
+    var Nav, Tracer, activeConfig, buildBadge, buildGlow, buildHit, cancelClick, checkForFirstMistakeEver, checkForIncorrectPaths, checkForWin, checkShape, clickPath, cloneChild, createTracerProp, delayedMistakePath, editClick, editing, editingSetupDone, eventInside, gameClick, getFullPathId, getIncorrectPaths, getReaction, hitMoveIn, hitMoveOut, hoveredPath, incPath, lastScale, noMistakesEver, resetTracerProp, saveConfiguration, scorePath, setPathClickPos, setupEditing, setupPathEvents, setupPaths, setupSolutionSet, stableCounter, startClick, stylePath, unstylePath, updateBadge, updateZoomScaling, xShape;
     // Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
     // Symbols (like root, in the animation code) wouldn't be able to take Tracer.
     Nav = null;
@@ -5324,6 +5327,13 @@
       elm = child.element.cloneNode(true);
       path.element.appendChild(elm);
       return elm;
+    };
+    eventInside = function(e) {
+      var ref;
+      if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+        e = e.touches[0];
+      }
+      return e.target === document.body || e.target === SVG.svg || SVG.root.contains(e.target);
     };
     // SETUP #########################################################################################
     setupPaths = function() {
@@ -5353,14 +5363,19 @@
       return updateZoomScaling(true, true);
     };
     setupPathEvents = function(path) {
-      var calls;
-      // TODO: Replace this with our own event handling code
-      calls = {
-        down: startClick(path),
-        drag: cancelClick(path)
-      };
-      Input(path.element, calls, true, false);
-      return path.element.addEventListener("click", clickPath(path));
+      var cancel, click, start;
+      // TODO: The move and up events need to go on window
+      // Maybe we do a single listener on window that just handles drag distance,
+      // and then a down and up handler on each element checks whether we should click it
+      start = startClick(path);
+      cancel = cancelClick(path);
+      click = clickPath(path);
+      path.element.addEventListener("mousedown", start);
+      path.element.addEventListener("mousemove", cancel);
+      path.element.addEventListener("mouseup", click);
+      path.element.addEventListener("touchstart", start);
+      path.element.addEventListener("touchmove", cancel);
+      return path.element.addEventListener("touchend", click); // Hack: Input touchend preventDefault blocks click
     };
     createTracerProp = function(path) {
       var child;
@@ -5397,9 +5412,10 @@
       path.tracer.desiredClicks = 0;
       path.tracer.clickPos = null;
       path.tracer.animstate = null;
-      path.tracer.isCorrect = null;
-      path.tracer.isMistake = null;
-      return path.tracer.tween = null;
+      path.tracer.isCorrect = true;
+      path.tracer.isMistake = false;
+      path.tracer.tween = null;
+      return path.tracer.badge.alpha = false;
     };
     buildGlow = function(path, child) {
       var scope;
@@ -5408,15 +5424,11 @@
       return scope;
     };
     buildHit = function(path, child) {
-      var calls, scope;
+      var scope;
       scope = Scope(cloneChild(path, child));
       scope.strokeWidth = 10;
-      // TODO: Replace this with our own event code
-      calls = {
-        moveIn: hitMoveIn(path),
-        moveOut: hitMoveOut(path)
-      };
-      Input(scope.element, calls, true, false);
+      scope.element.addEventListener("mouseenter", hitMoveIn(path));
+      scope.element.addEventListener("mouseleave", hitMoveOut(path));
       return scope;
     };
     buildBadge = function(path) {
@@ -5430,14 +5442,11 @@
       scope.alpha = false;
       // The transform on this element is used for zoom-based scaling
       scope.zoomScale = SVG.create("g", scope.element);
-      // And the transform on these elements is used by the pulse effect
       scope.shadow = SVG.create("path", scope.zoomScale, {
-        class: "pulse",
         strokeWidth: 1,
         stroke: "white"
       });
       scope.shape = SVG.create("path", scope.zoomScale, {
-        class: "pulse",
         strokeWidth: .5
       });
       return scope;
@@ -5452,6 +5461,7 @@
         if (editing) {
           path.tracer.clickCount = colorIndex;
         }
+        path.tracer.isCorrect = false;
         // Sort this wire to the top, so that it's easier to click on than unused wires
         results.push(path.element.parentNode.appendChild(path.element));
       }
@@ -5600,8 +5610,6 @@
     unstylePath = function(path) {
       var child, glow, hit, len, len1, len2, m, n, q, ref, ref1, ref2;
       path.stroke = "#000";
-      Tween.cancel(path.tracer.tween);
-      path.tracer.badge.alpha = 0;
       ref = path.children;
       for (m = 0, len = ref.length; m < len; m++) {
         child = ref[m];
@@ -5617,6 +5625,8 @@
         hit = ref2[q];
         hit.alpha = 0;
       }
+      Tween.cancel(path.tracer.tween);
+      path.tracer.badge.alpha = 0;
       return null;
     };
     // EVENTS ########################################################################################
@@ -5644,8 +5654,15 @@
     };
     startClick = function(path) {
       return function(e) {
+        var ref;
         if (!activeConfig) {
           return;
+        }
+        if (!eventInside(e)) {
+          return;
+        }
+        if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+          e = e.touches[0];
         }
         return path.tracer.clicking = {
           x: e.clientX,
@@ -5655,9 +5672,15 @@
     };
     cancelClick = function(path) {
       return function(e) {
-        var d;
+        var d, ref;
         if (!activeConfig) {
           return;
+        }
+        if (!eventInside(e)) {
+          return;
+        }
+        if (((ref = e.touches) != null ? ref.length : void 0) > 0) {
+          e = e.touches[0];
         }
         if (path.tracer.clicking != null) {
           d = Vec.distance(path.tracer.clicking, {
@@ -5672,36 +5695,34 @@
     };
     clickPath = function(path) {
       return function(e) {
-        var id;
         if (!activeConfig) {
           return;
         }
         if (path.tracer.clicking == null) {
           return;
         }
-        id = getFullPathId(path);
+        if (!eventInside(e)) {
+          return;
+        }
         if (editing) {
-          return editClick(path, id, e);
+          return editClick(path);
         } else {
-          return gameClick(path, id, e);
+          return gameClick(path);
         }
       };
     };
-    setPathClickPos = function(path, e) {
-      var p_path, p_screen, screenToPath;
+    setPathClickPos = function(path) {
+      var closestDist, closestPoint, d, groupElm, i, len, len1, m, n, p, p_path, p_screen, pathElm, ref, ref1, screenToPath, stepSize;
       // Create a point at the root of the SVG, and move it to the screen coords of the mouse position
       p_screen = SVG.svg.createSVGPoint();
-      p_screen.x = e.clientX;
-      p_screen.y = e.clientY;
+      p_screen.x = path.tracer.clicking.x;
+      p_screen.y = path.tracer.clicking.y;
       // Get a matrix that transfroms from screen coords to the coords of the path
       screenToPath = path.element.getScreenCTM().inverse();
       // Transform the point by that matrix
       p_path = p_screen.matrixTransform(screenToPath);
       // Now, find the point on the path that is closest to the mouse point
-      return path.tracer.clickPos = closestPointOnPathToPoint(path, p_path);
-    };
-    closestPointOnPathToPoint = function(path, target, stepSize = 10) {
-      var closestDist, closestPoint, d, groupElm, i, len, len1, m, n, p, pathElm, ref, ref1;
+      stepSize = 10;
       closestPoint = null;
       closestDist = 2e308;
       ref = path.tracer.originalChildren;
@@ -5717,7 +5738,7 @@
           i = pathElm.getTotalLength();
           while (i > 0) {
             p = pathElm.getPointAtLength(i);
-            d = Vec.distance(p, target);
+            d = Vec.distance(p, p_path);
             if (d < closestDist) {
               closestDist = d;
               closestPoint = p;
@@ -5726,26 +5747,25 @@
           }
         }
       }
-      return closestPoint;
+      return path.tracer.clickPos = closestPoint;
     };
     // GAMEPLAY ######################################################################################
-    editClick = function(path, id, e) {
+    editClick = function(path) {
       if (e.altKey) {
-        return console.log(`Clicked ${id}`);
+        return console.log(`Clicked ${getFullPathId(path)}`);
       } else {
-        setPathClickPos(path, e);
+        setPathClickPos(path);
         incPath(path);
         scorePath(path);
         return stylePath(path);
       }
     };
-    gameClick = function(path, id, e) {
+    gameClick = function(path) {
       var reaction;
-      console.log(getIncorrectPaths());
       if (reaction = getReaction(path)) {
-        return reaction(path, id);
+        return reaction(path);
       } else {
-        setPathClickPos(path, e);
+        setPathClickPos(path);
         incPath(path);
         scorePath(path);
         stylePath(path);
@@ -5836,7 +5856,7 @@
       isIncorrect = (path.tracer.clickPos != null) && !path.tracer.isCorrect;
       clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks;
       if (isIncorrect && (clickedPastCorrect || forced)) {
-        Wait(.7, function() {
+        Wait(.5, function() {
           return Panel.alert(`<h3>That Path Is Incorrect</h3>
 <p style="margin-top:.5em">
   To fix it, keep clicking the path.
@@ -5844,7 +5864,7 @@
 <p style="margin-top:.5em">
   Once it is set correctly for this circuit,<br>
   the
-  <svg class="pulse" style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
+  <svg style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
     <path stroke="#FFF" stroke-width="1.2" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
     <path stroke-width=".7" stroke="hsl(358, 80%, 55%)" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
   </svg>

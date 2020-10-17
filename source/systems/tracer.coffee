@@ -1,4 +1,4 @@
-Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick", "Tween", "Vec", "Wait"], (Control, Input, Panel, Resize, Reaction, Scope, SVG, Tick, Tween, Vec, Wait)->
+Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween", "Vec", "Wait"], (Control, Panel, Reaction, Resize, SVG, Scope, Tick, Tween, Vec, Wait)->
 
   # Nav doesn't exist until after Symbol registration closes, so if we added it to Take,
   # Symbols (like root, in the animation code) wouldn't be able to take Tracer.
@@ -30,6 +30,11 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
     elm
 
 
+  eventInside = (e)->
+    e = e.touches[0] if e.touches?.length > 0
+    e.target is document.body or e.target is SVG.svg or SVG.root.contains e.target
+
+
   # SETUP #########################################################################################
 
 
@@ -51,12 +56,18 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
 
 
   setupPathEvents = (path)->
-    # TODO: Replace this with our own event handling code
-    calls =
-      down: startClick path
-      drag: cancelClick path
-    Input path.element, calls, true, false
-    path.element.addEventListener "click", clickPath path
+    # TODO: The move and up events need to go on window
+    # Maybe we do a single listener on window that just handles drag distance,
+    # and then a down and up handler on each element checks whether we should click it
+    start = startClick path
+    cancel = cancelClick path
+    click = clickPath path
+    path.element.addEventListener "mousedown", start
+    path.element.addEventListener "mousemove", cancel
+    path.element.addEventListener "mouseup", click
+    path.element.addEventListener "touchstart", start
+    path.element.addEventListener "touchmove", cancel
+    path.element.addEventListener "touchend", click # Hack: Input touchend preventDefault blocks click
 
 
   createTracerProp = (path)->
@@ -75,9 +86,10 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
     path.tracer.desiredClicks = 0
     path.tracer.clickPos = null
     path.tracer.animstate = null
-    path.tracer.isCorrect = null
-    path.tracer.isMistake = null
+    path.tracer.isCorrect = true
+    path.tracer.isMistake = false
     path.tracer.tween = null
+    path.tracer.badge.alpha = false
 
 
   buildGlow = (path, child)->
@@ -89,11 +101,8 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
   buildHit = (path, child)->
     scope = Scope cloneChild path, child
     scope.strokeWidth = 10
-    # TODO: Replace this with our own event code
-    calls =
-      moveIn: hitMoveIn path
-      moveOut: hitMoveOut path
-    Input scope.element, calls, true, false
+    scope.element.addEventListener "mouseenter", hitMoveIn path
+    scope.element.addEventListener "mouseleave", hitMoveOut path
     scope
 
 
@@ -108,9 +117,8 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
     # The transform on this element is used for zoom-based scaling
     scope.zoomScale = SVG.create "g", scope.element
 
-    # And the transform on these elements is used by the pulse effect
-    scope.shadow = SVG.create "path", scope.zoomScale, class: "pulse", strokeWidth: 1, stroke: "white"
-    scope.shape = SVG.create "path", scope.zoomScale, class: "pulse", strokeWidth: .5
+    scope.shadow = SVG.create "path", scope.zoomScale, strokeWidth: 1, stroke: "white"
+    scope.shape = SVG.create "path", scope.zoomScale, strokeWidth: .5
     scope
 
 
@@ -119,6 +127,7 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
     for path in set
       path.tracer.desiredClicks = colorIndex
       path.tracer.clickCount = colorIndex if editing
+      path.tracer.isCorrect = false
 
       # Sort this wire to the top, so that it's easier to click on than unused wires
       path.element.parentNode.appendChild path.element
@@ -224,11 +233,11 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
 
   unstylePath = (path)->
     path.stroke = "#000"
-    Tween.cancel path.tracer.tween
-    path.tracer.badge.alpha = 0
     child.alpha = 1 for child in path.children
     glow.alpha = 0 for glow in path.tracer.glows
     hit.alpha = 0 for hit in path.tracer.hits
+    Tween.cancel path.tracer.tween
+    path.tracer.badge.alpha = 0
     null
 
 
@@ -251,11 +260,15 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
 
   startClick = (path)-> (e)->
     return unless activeConfig
+    return unless eventInside e
+    e = e.touches[0] if e.touches?.length > 0
     path.tracer.clicking = x: e.clientX, y: e.clientY
 
 
   cancelClick = (path)-> (e)->
     return unless activeConfig
+    return unless eventInside e
+    e = e.touches[0] if e.touches?.length > 0
     if path.tracer.clicking?
       d = Vec.distance path.tracer.clicking, x: e.clientX, y: e.clientY
       path.tracer.clicking = null if d >= 5
@@ -264,28 +277,24 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
   clickPath = (path)-> (e)->
     return unless activeConfig
     return unless path.tracer.clicking?
-    id = getFullPathId path
-
+    return unless eventInside e
     if editing
-      editClick path, id, e
+      editClick path
     else
-      gameClick path, id, e
+      gameClick path
 
 
-  setPathClickPos = (path, e)->
+  setPathClickPos = (path)->
     # Create a point at the root of the SVG, and move it to the screen coords of the mouse position
     p_screen = SVG.svg.createSVGPoint()
-    p_screen.x = e.clientX
-    p_screen.y = e.clientY
+    p_screen.x = path.tracer.clicking.x
+    p_screen.y = path.tracer.clicking.y
     # Get a matrix that transfroms from screen coords to the coords of the path
     screenToPath = path.element.getScreenCTM().inverse()
     # Transform the point by that matrix
     p_path = p_screen.matrixTransform screenToPath
     # Now, find the point on the path that is closest to the mouse point
-    path.tracer.clickPos = closestPointOnPathToPoint path, p_path
-
-
-  closestPointOnPathToPoint = (path, target, stepSize = 10)->
+    stepSize = 10
     closestPoint = null
     closestDist = Infinity
     # This is assuming that each path will originally contain a single g elm,
@@ -297,33 +306,32 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
         i = pathElm.getTotalLength()
         while i > 0
           p = pathElm.getPointAtLength i
-          d = Vec.distance p, target
+          d = Vec.distance p, p_path
           if d < closestDist
             closestDist = d
             closestPoint = p
           i -= stepSize
-    return closestPoint
+    path.tracer.clickPos = closestPoint
 
 
   # GAMEPLAY ######################################################################################
 
 
-  editClick = (path, id, e)->
+  editClick = (path)->
     if e.altKey
-      console.log "Clicked #{id}"
+      console.log "Clicked #{getFullPathId path}"
     else
-      setPathClickPos path, e
+      setPathClickPos path
       incPath path
       scorePath path
       stylePath path
 
 
-  gameClick = (path, id, e)->
-    console.log getIncorrectPaths()
+  gameClick = (path)->
     if reaction = getReaction path
-      reaction path, id
+      reaction path
     else
-      setPathClickPos path, e
+      setPathClickPos path
       incPath path
       scorePath path
       stylePath path
@@ -397,7 +405,7 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
     isIncorrect = path.tracer.clickPos? and not path.tracer.isCorrect
     clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks
     if isIncorrect and (clickedPastCorrect or forced)
-      Wait .7, ()-> Panel.alert """
+      Wait .5, ()-> Panel.alert """
         <h3>That Path Is Incorrect</h3>
         <p style="margin-top:.5em">
           To fix it, keep clicking the path.
@@ -405,7 +413,7 @@ Take ["Control", "Input", "Panel", "Resize", "Reaction", "Scope", "SVG", "Tick",
         <p style="margin-top:.5em">
           Once it is set correctly for this circuit,<br>
           the
-          <svg class="pulse" style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
+          <svg style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
             <path stroke="#FFF" stroke-width="1.2" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
             <path stroke-width=".7" stroke="hsl(358, 80%, 55%)" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
           </svg>

@@ -523,6 +523,7 @@ html {
   max-width: 100%;
   max-height: 100%;
   padding: 2rem;
+  margin: 2rem;
   text-align: center;
   border-radius: 1rem;
   font-size: 2em;
@@ -530,6 +531,16 @@ html {
   background-color: rgba(64, 106, 191, 0.2);
   -webkit-backdrop-filter: blur(6px) brightness(30%);
   backdrop-filter: blur(6px) brightness(30%); }
+  @media (max-width: 700px) {
+    #message-inner {
+      font-size: 1.5em;
+      padding: 1.5rem;
+      margin: 1.5rem; } }
+  @media (max-width: 450px) {
+    #message-inner {
+      font-size: 1.25em;
+      padding: 1rem;
+      margin: 1rem; } }
   #message-inner > div {
     margin-top: 1em; }
 

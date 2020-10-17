@@ -20,6 +20,8 @@ Take ["Action", "DOOM", "Ease", "GUI", "Resize", "SVG", "SVGReady"], (Action, DO
 
   cover.addEventListener "click", ()-> Action "Panel:Hide"
   close.addEventListener "click", ()-> Action "Panel:Hide"
+  cover.addEventListener "touchend", ()-> Action "Panel:Hide" # Hack: Input touchend preventDefault blocks click
+  close.addEventListener "touchend", ()-> Action "Panel:Hide" # Hack: Input touchend preventDefault blocks click
 
   window.addEventListener "keydown", (e)->
     return unless showing

@@ -7,13 +7,15 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 30px;
+  min-height: 31px;
   padding: 4px;
   padding-left: 68px; // Don't cover the Settings button
-  font-size: 11pt;
+  border-bottom: 1px solid rgba($bg-xd, .6);
   text-align: center;
+  font-size: 11pt;
   line-height: 1;
-  background: black;
+  color: white;
+  background: linear-gradient(to right, $bg-xd, $bg-m, $bg-xd);
   opacity: 0;
   transition: .3s opacity;
 }
@@ -23,5 +25,4 @@
   padding-left: .1em;
   text-align: left;
   line-height: 1.1;
-  color: white;
 }

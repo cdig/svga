@@ -384,7 +384,9 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
     checkForFirstMistakeEver delayedMistakePath, true
     delayedMistakePath = null
     null
+
   window.addEventListener "click", checkForIncorrectPaths, true
+  window.addEventListener "touchend", checkForIncorrectPaths, true # Hack: Input touchend preventDefault blocks click
 
 
   getIncorrectPaths = ()->
@@ -406,13 +408,13 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
     clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks
     if isIncorrect and (clickedPastCorrect or forced)
       Wait .5, ()-> Panel.alert """
-        <h3>That Path Is Incorrect</h3>
+        <h3>That path is incorrect.</h3>
         <p style="margin-top:.5em">
           To fix it, keep clicking the path.
         </p>
         <p style="margin-top:.5em">
-          Once it is set correctly for this circuit,<br>
-          the
+          Once the path is set correctly for<br>
+          this circuit, the
           <svg style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
             <path stroke="#FFF" stroke-width="1.2" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
             <path stroke-width=".7" stroke="hsl(358, 80%, 55%)" d="M-1,-1 L1,1 M-1,1 L1,-1"/>

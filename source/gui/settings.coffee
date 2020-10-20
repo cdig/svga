@@ -48,7 +48,7 @@ Take ["Action", "DOOM", "GUI", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], (
     textAnchor: "middle"
     fill: "hsl(220, 10%, 92%)"
 
-  elm.addEventListener "click", ()->
+  click = ()->
 
     title = Mode.get("meta")?.title
     if not title? and not Mode.embed
@@ -67,3 +67,6 @@ Take ["Action", "DOOM", "GUI", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], (
     controlsElm = panel.querySelector "[settings-controls]"
     for control in controls when control?
       DOOM.append controlsElm, control
+
+  elm.addEventListener "click", click
+  elm.addEventListener "touchend", click # Hack: Input touchend preventDefault blocks click

@@ -1263,7 +1263,10 @@
       // Hack around bugginess in chrome
       click = function() {
         var handler, len, m, results;
-        // if input.state.clicking # breaks control disabling/enabling
+        // if input.state.clicking # breaks control disabling/enabling...
+        if (!scope.enabled) { // ...so we do this instead (see enabled.coffee)
+          return;
+        }
         toClicked();
         results = [];
         for (m = 0, len = handlers.length; m < len; m++) {
@@ -3134,13 +3137,18 @@
       return showing = false;
     };
     Panel.alert = function(msg, btn, cb) {
+      var buttonElm;
       if (cb == null) {
         [cb, btn] = [btn, "Okay"]; // The middle argument is optional
       }
       hideCallback = cb;
       inner = Panel("Alert", `${msg}<div><button>${btn}</button></div>`);
-      return inner.querySelector("button").addEventListener("click", function() {
+      buttonElm = inner.querySelector("button");
+      buttonElm.addEventListener("click", function() {
         return Action("Panel:Hide");
+      });
+      return buttonElm.addEventListener("touchend", function() {
+        return Action("Panel:Hide"); // Hack: Input touchend preventDefault blocks click
       });
     };
     Panel.hide();
@@ -3492,7 +3500,7 @@
   });
 
   Take(["Action", "DOOM", "GUI", "Mode", "Panel", "Scope", "SVG", "ScopeReady"], function(Action, DOOM, GUI, Mode, Panel, Scope, SVG) {
-    var Settings, bg, controls, elm, height, hit, label, scope, width;
+    var Settings, bg, click, controls, elm, height, hit, label, scope, width;
     controls = [];
     Make("Settings", Settings = {
       addSetting: function(type, index, props) {
@@ -3543,7 +3551,7 @@
       textAnchor: "middle",
       fill: "hsl(220, 10%, 92%)"
     });
-    return elm.addEventListener("click", function() {
+    click = function() {
       var control, controlsElm, info, infoLines, len, line, m, panel, ref, ref1, results, title;
       title = (ref = Mode.get("meta")) != null ? ref.title : void 0;
       if ((title == null) && !Mode.embed) {
@@ -3573,9 +3581,12 @@
         }
       }
       return results;
-    });
+    };
+    elm.addEventListener("click", click);
+    return elm.addEventListener("touchend", click); // Hack: Input touchend preventDefault blocks click
   });
 
+  
   // The SVG starts off hidden. We unhide it when the time comes.
   Take(["Mode", "RAF", "SVG", "Tween", "AllReady"], function(Mode, RAF, SVG, Tween) {
     if (Mode.dev) {
@@ -5829,6 +5840,7 @@
       return null;
     };
     window.addEventListener("click", checkForIncorrectPaths, true);
+    window.addEventListener("touchend", checkForIncorrectPaths, true); // Hack: Input touchend preventDefault blocks click
     getIncorrectPaths = function() {
       var len, m, path, ref, results;
       ref = activeConfig.paths;
@@ -5857,13 +5869,13 @@
       clickedPastCorrect = path.tracer.clickCount > path.tracer.desiredClicks;
       if (isIncorrect && (clickedPastCorrect || forced)) {
         Wait(.5, function() {
-          return Panel.alert(`<h3>That Path Is Incorrect</h3>
+          return Panel.alert(`<h3>That path is incorrect.</h3>
 <p style="margin-top:.5em">
   To fix it, keep clicking the path.
 </p>
 <p style="margin-top:.5em">
-  Once it is set correctly for this circuit,<br>
-  the
+  Once the path is set correctly for<br>
+  this circuit, the
   <svg style="vertical-align:middle" width="1.2em" height="1.2em" viewBox="-2 -2 4 4" fill="none" stroke-linecap="round">
     <path stroke="#FFF" stroke-width="1.2" d="M-1,-1 L1,1 M-1,1 L1,-1"/>
     <path stroke-width=".7" stroke="hsl(358, 80%, 55%)" d="M-1,-1 L1,1 M-1,1 L1,-1"/>

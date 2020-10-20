@@ -66,8 +66,9 @@ Take ["Action", "DOOM", "Ease", "GUI", "Resize", "SVG", "SVGReady"], (Action, DO
     [cb, btn] = [btn, "Okay"] unless cb? # The middle argument is optional
     hideCallback = cb
     inner = Panel "Alert", "#{msg}<div><button>#{btn}</button></div>"
-    inner.querySelector("button").addEventListener "click", ()->
-      Action "Panel:Hide"
+    buttonElm = inner.querySelector "button"
+    buttonElm.addEventListener "click", ()-> Action "Panel:Hide"
+    buttonElm.addEventListener "touchend", ()-> Action "Panel:Hide" # Hack: Input touchend preventDefault blocks click
 
   Panel.hide()
   Make "Panel", Panel

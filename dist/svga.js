@@ -2999,9 +2999,10 @@
     }
   });
 
-  Take(["DOOM", "GUI", "Resize", "SVG", "Wait", "SVGReady"], function(DOOM, GUI, Resize, SVG, Wait) {
-    var foreignObject, inner, outer;
-    foreignObject = SVG.create("foreignObject", GUI.elm, {
+  Take(["DOOM", "Resize", "SVG", "Wait", "SVGReady"], function(DOOM, Resize, SVG, Wait) {
+    var Message, foreignObject, inner, outer;
+    // This is added to SVG.svg, not GUI.elm, so that it floats above spotlights
+    foreignObject = SVG.create("foreignObject", SVG.svg, {
       id: "message"
     });
     outer = DOOM.create("div", foreignObject, {
@@ -3016,7 +3017,7 @@
         height: window.innerHeight
       });
     });
-    return Make("Message", function(html, time = 2) {
+    Message = function(html, time = 2) {
       DOOM(inner, {
         innerHTML: html
       });
@@ -3028,7 +3029,10 @@
           opacity: 0
         });
       });
-    });
+    };
+    // This is used so that spotlights can be prepended before it
+    Message.elm = foreignObject;
+    return Make("Message", Message);
   });
 
   Take(["Action", "DOOM", "Ease", "GUI", "Resize", "SVG", "SVGReady"], function(Action, DOOM, Ease, GUI, Resize, SVG) {
@@ -5716,7 +5720,7 @@
           return;
         }
         if (editing) {
-          return editClick(path);
+          return editClick(path, e);
         } else {
           return gameClick(path);
         }
@@ -5761,7 +5765,7 @@
       return path.tracer.clickPos = closestPoint;
     };
     // GAMEPLAY ######################################################################################
-    editClick = function(path) {
+    editClick = function(path, e) {
       if (e.altKey) {
         return console.log(`Clicked ${getFullPathId(path)}`);
       } else {

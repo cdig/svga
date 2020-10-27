@@ -279,7 +279,7 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
     return unless path.tracer.clicking?
     return unless eventInside e
     if editing
-      editClick path
+      editClick path, e
     else
       gameClick path
 
@@ -317,7 +317,7 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
   # GAMEPLAY ######################################################################################
 
 
-  editClick = (path)->
+  editClick = (path, e)->
     if e.altKey
       console.log "Clicked #{getFullPathId path}"
     else

@@ -3886,7 +3886,7 @@
       };
     };
     resize = function() {
-      var horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
+      var forcedHeight, forcedWidth, horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
       // This is the largest our SVGA can ever be
       totalAvailableSpace = {
         w: SVG.svg.getBoundingClientRect().width,
@@ -3895,6 +3895,13 @@
       // When deployed, account for the floating header
       if (!Mode.dev && !Fullscreen.active()) {
         totalAvailableSpace.h -= 48;
+      }
+      if (forcedWidth = ParentData.get("forcedWidth")) {
+        // Sometimes the size will be explicitly set by our embedder, overriding the above
+        totalAvailableSpace.w = forcedWidth;
+      }
+      if (forcedHeight = ParentData.get("forcedHeight")) {
+        totalAvailableSpace.h = forcedHeight;
       }
       // Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
       verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
@@ -3945,6 +3952,9 @@
     window.addEventListener("resize", runResize);
     window.top.addEventListener("resize", runResize);
     Take("AllReady", runResize);
+    // This is noisy, but we don't currently have a way to limit listeners to just
+    // resize-relevant events
+    ParentData.listen(runResize);
     // BAIL IF WE'RE NOT NAV-ING
     if (!Mode.nav) {
       Make("Nav", false);

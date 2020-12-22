@@ -88,6 +88,10 @@ Take ["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resi
     if not Mode.dev and not Fullscreen.active()
       totalAvailableSpace.h -= 48
 
+    # Sometimes the size will be explicitly set by our embedder, overriding the above
+    totalAvailableSpace.w = forcedWidth if forcedWidth = ParentData.get "forcedWidth"
+    totalAvailableSpace.h = forcedHeight if forcedHeight = ParentData.get "forcedHeight"
+
     # Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
     verticalPanelInfo = ControlPanel.computeLayout true, totalAvailableSpace
     horizontalPanelInfo = ControlPanel.computeLayout false, totalAvailableSpace
@@ -142,6 +146,10 @@ Take ["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resi
   window.addEventListener "resize", runResize
   window.top.addEventListener "resize", runResize
   Take "AllReady", runResize
+
+  # This is noisy, but we don't currently have a way to limit listeners to just
+  # resize-relevant events
+  ParentData.listen runResize
 
 
   # BAIL IF WE'RE NOT NAV-ING

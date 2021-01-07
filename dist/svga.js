@@ -3896,12 +3896,14 @@
       if (!Mode.dev && !Fullscreen.active()) {
         totalAvailableSpace.h -= 48;
       }
-      if (forcedWidth = ParentData.get("forcedWidth")) {
-        // Sometimes the size will be explicitly set by our embedder, overriding the above
-        totalAvailableSpace.w = forcedWidth;
-      }
-      if (forcedHeight = ParentData.get("forcedHeight")) {
-        totalAvailableSpace.h = forcedHeight;
+      // Sometimes the size will be explicitly set by our embedder, overriding the above
+      if (Mode.embed) {
+        if (forcedWidth = ParentData.get("forcedWidth")) {
+          totalAvailableSpace.w = forcedWidth;
+        }
+        if (forcedHeight = ParentData.get("forcedHeight")) {
+          totalAvailableSpace.h = forcedHeight;
+        }
       }
       // Build two layouts — we'll figure out which one is best for the current content, controls, and screen size.
       verticalPanelInfo = ControlPanel.computeLayout(true, totalAvailableSpace);
@@ -3952,9 +3954,10 @@
     window.addEventListener("resize", runResize);
     window.top.addEventListener("resize", runResize);
     Take("AllReady", runResize);
-    // This is noisy, but we don't currently have a way to limit listeners to just
-    // resize-relevant events
-    ParentData.listen(runResize);
+    if (Mode.embed) {
+      // This is noisy, but we don't currently have a way to limit listeners to just resize-relevant events
+      ParentData.listen(runResize);
+    }
     // BAIL IF WE'RE NOT NAV-ING
     if (!Mode.nav) {
       Make("Nav", false);
@@ -5219,7 +5222,7 @@
   // Config is defined in the config.coffee in every SVGA
   Take(["Config", "ParentData"], function(Config, ParentData) {
     var Mode, embedded, fetchAttribute, isDev;
-    embedded = window !== window.top;
+    embedded = window !== window.top; // This logic needs to mirror the logic in ParentData
     fetchAttribute = function(name) {
       var val;
       if (embedded && (val = ParentData.get(name))) {
@@ -5270,7 +5273,7 @@
 
   (function() {
     var channel, finishSetup, id, inbox, k, listeners, outbox, port, v;
-    if (window === window.top) {
+    if (window === window.top) { // This logic needs to mirror the logic for Mode.embed
       Make("ParentData", null); // Make sure you check Mode.embed before using ParentData, hey?
       return;
     }

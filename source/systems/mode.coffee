@@ -2,7 +2,7 @@
 
 Take ["Config", "ParentData"], (Config, ParentData)->
 
-  embedded = window isnt window.top
+  embedded = window isnt window.top # This logic needs to mirror the logic in ParentData
 
   fetchAttribute = (name)->
     if embedded and val = ParentData.get name

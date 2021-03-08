@@ -189,6 +189,18 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       height: height
       input: input
 
+      close: ()->
+        showing = false
+        update()
+
+      open: ()->
+        showing = true
+        update()
+
+      toggle: ()->
+        showing = !showing
+        update()
+
       button: (props)->
         props.setActive = setActive
         buttonElm = SVG.create "g", buttonContainer

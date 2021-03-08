@@ -1585,6 +1585,18 @@
       return scope = {
         height: height,
         input: input,
+        close: function() {
+          showing = false;
+          return update();
+        },
+        open: function() {
+          showing = true;
+          return update();
+        },
+        toggle: function() {
+          showing = !showing;
+          return update();
+        },
         button: function(props) {
           var buttonElm, buttonScope;
           props.setActive = setActive;

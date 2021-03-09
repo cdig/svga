@@ -4613,6 +4613,25 @@
   });
 
   // Depends on style
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var accessors, enabled;
+      ScopeCheck(scope, "pointerEvents");
+      enabled = true;
+      accessors = {
+        get: function() {
+          return enabled;
+        },
+        set: function(val) {
+          enabled = val;
+          return SVG.style(scope.element, "pointer-events", enabled ? null : "none");
+        }
+      };
+      return Object.defineProperty(scope, "pointerEvents", accessors);
+    });
+  });
+
+  // Depends on style
   Take(["Pressure", "Registry", "ScopeCheck", "SVG"], function(Pressure, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var accessors, pressure;

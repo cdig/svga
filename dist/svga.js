@@ -4727,12 +4727,13 @@
       }
       running = true;
       startTime = null;
-      
       // Replace the actual scope tick function with a warning
       tick = scope.tick;
       scope.tick = function() {
         throw new Error("@tick() is called by the system. Please don't call it yourself.");
       };
+      // Store a secret copy of the real tick function, so that warmup can use it
+      scope._tick = tick;
       Tick(function(time, dt) {
         if (!running) {
           return;
@@ -4895,6 +4896,37 @@
         }
       };
       return Object.defineProperty(scope, "voltage", accessors);
+    });
+  });
+
+  Take(["Registry", "ScopeCheck"], function(Registry, ScopeCheck) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var dt, runtimeLimit;
+      ScopeCheck(scope, "warmup");
+      runtimeLimit = 100; // ms
+      dt = 1 / 60; // seconds
+      return scope.warmup = function(duration, fn) {
+        var msg, runtime, start, time;
+        start = performance.now();
+        if (fn == null) {
+          fn = scope._tick;
+        }
+        time = -duration; // seconds
+        while (time <= 0) {
+          fn.call(scope, time, dt);
+          time += dt;
+          runtime = performance.now() - start;
+          if (runtime > runtimeLimit) {
+            console.log(`Warning: Warmup took longer than ${runtimeLimit}ms — aborting.`);
+            return;
+          }
+        }
+        msg = `@warmup took ${Math.round(runtime)}ms`;
+        if (runtime > runtimeLimit / 3) {
+          msg += " — please simplify your function or reduce the warmup duration";
+        }
+        return console.log(msg);
+      };
     });
   });
 

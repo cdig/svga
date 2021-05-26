@@ -1,7 +1,7 @@
 [svga-hud] {
   position: absolute;
   margin-top: 2em;
-  margin-left: .4em;
+  margin-left: 0.4em;
   font-family: sans-serif;
   font-size: 10pt;
   overflow: visible;
@@ -10,19 +10,22 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  cursor: default; }
+  cursor: default;
+}
 
 .ui, .ui *, [ui], [ui] * {
-  cursor: pointer; }
-  .ui[disabled], .ui[disabled] *, .ui *[disabled], .ui *[disabled] *, [ui][disabled], [ui][disabled] *, [ui] *[disabled], [ui] *[disabled] * {
-    cursor: default; }
+  cursor: pointer;
+}
+.ui[disabled], .ui[disabled] *, .ui *[disabled], .ui *[disabled] *, [ui][disabled], [ui][disabled] *, [ui] *[disabled], [ui] *[disabled] * {
+  cursor: default;
+}
 
 button,
 .button {
   display: inline-block;
-  margin-top: .3em;
-  margin-bottom: .3em;
-  padding: .6em .8em;
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+  padding: 0.6em 0.8em;
   border: 2px solid transparent;
   outline: none;
   border-radius: 4px;
@@ -36,452 +39,606 @@ button,
   -ms-user-select: none;
   user-select: none;
   cursor: pointer;
-  -webkit-tap-highlight-color: rgba(255, 255, 255, 0); }
-  button + button,
-  .button + button, button +
-  .button,
-  .button +
-  .button {
-    margin-left: 1px; }
-  button.border,
-  .button.border {
-    border-color: currentColor; }
-  button.active,
-  .button.active {
-    background-color: #00a3a3; }
-    button.active:hover,
-    .button.active:hover {
-      background-color: #009494; }
-  button[disabled], button.disabled,
-  .button[disabled],
-  .button.disabled {
-    background-color: #507ed3;
-    color: #7da6e8;
-    pointer-events: none; }
-  button.soft-disabled,
-  .button.soft-disabled {
-    background-color: #507ed3;
-    color: #7da6e8; }
-  button.small,
-  .button.small {
-    padding: .3em .4em; }
-  button:focus,
-  .button:focus {
-    border-color: #363a49; }
-  button:hover,
-  .button:hover {
-    background-color: #4375d0; }
-  button.black:hover,
-  .button.black:hover {
-    background-color: #1f1f1f; }
-  button.blue:hover,
-  .button.blue:hover {
-    background-color: #3b569b; }
-  button.bronze:hover,
-  .button.bronze:hover {
-    background-color: #d0b571; }
-  button.mist:hover,
-  .button.mist:hover {
-    background-color: #dbdde1; }
-  button.green:hover,
-  .button.green:hover {
-    background-color: #0c9723; }
-  button.grey:hover,
-  .button.grey:hover {
-    background-color: #727988; }
-  button.mint:hover,
-  .button.mint:hover {
-    background-color: #13ae69; }
-  button.navy:hover,
-  .button.navy:hover {
-    background-color: #272e7c; }
-  button.olive:hover,
-  .button.olive:hover {
-    background-color: #06795e; }
-  button.onyx:hover,
-  .button.onyx:hover {
-    background-color: #131339; }
-  button.orange:hover,
-  .button.orange:hover {
-    background-color: #ff781f; }
-  button.purple:hover,
-  .button.purple:hover {
-    background-color: #3e2a7a; }
-  button.red:hover,
-  .button.red:hover {
-    background-color: #e72329; }
-  button.silver:hover,
-  .button.silver:hover {
-    background-color: #bcc1cd; }
-  button.smoke:hover,
-  .button.smoke:hover {
-    background-color: #3d4152; }
-  button.tar:hover,
-  .button.tar:hover {
-    background-color: #272b49; }
-  button.teal:hover,
-  .button.teal:hover {
-    background-color: #009494; }
-  button.white:hover,
-  .button.white:hover {
-    background-color: #f7f7f7; }
-  button.yellow:hover,
-  .button.yellow:hover {
-    background-color: #f0ac00; }
-  button.white,
-  .button.white {
-    color: #3f5ca6; }
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+}
+button + button,
+button + .button,
+.button + button,
+.button + .button {
+  margin-left: 1px;
+}
+button.border,
+.button.border {
+  border-color: currentColor;
+}
+button.active,
+.button.active {
+  background-color: #00a3a3;
+}
+button.active:hover,
+.button.active:hover {
+  background-color: #009494;
+}
+button[disabled], button.disabled,
+.button[disabled],
+.button.disabled {
+  background-color: #507ed3;
+  color: #7da6e8;
+  pointer-events: none;
+}
+button.soft-disabled,
+.button.soft-disabled {
+  background-color: #507ed3;
+  color: #7da6e8;
+}
+button.small,
+.button.small {
+  padding: 0.3em 0.4em;
+}
+button:focus,
+.button:focus {
+  border-color: #363a49;
+}
+button:hover,
+.button:hover {
+  background-color: #4375d0;
+}
+button.black:hover,
+.button.black:hover {
+  background-color: #1f1f1f;
+}
+button.blue:hover,
+.button.blue:hover {
+  background-color: #3b569b;
+}
+button.bronze:hover,
+.button.bronze:hover {
+  background-color: #d0b571;
+}
+button.mist:hover,
+.button.mist:hover {
+  background-color: #dbdde1;
+}
+button.green:hover,
+.button.green:hover {
+  background-color: #0c9723;
+}
+button.grey:hover,
+.button.grey:hover {
+  background-color: #727988;
+}
+button.mint:hover,
+.button.mint:hover {
+  background-color: #13ae69;
+}
+button.navy:hover,
+.button.navy:hover {
+  background-color: #272e7c;
+}
+button.olive:hover,
+.button.olive:hover {
+  background-color: #06795e;
+}
+button.onyx:hover,
+.button.onyx:hover {
+  background-color: #131339;
+}
+button.orange:hover,
+.button.orange:hover {
+  background-color: #ff781f;
+}
+button.purple:hover,
+.button.purple:hover {
+  background-color: #3e2a7a;
+}
+button.red:hover,
+.button.red:hover {
+  background-color: #e72329;
+}
+button.silver:hover,
+.button.silver:hover {
+  background-color: #bcc1cd;
+}
+button.smoke:hover,
+.button.smoke:hover {
+  background-color: #3d4152;
+}
+button.tar:hover,
+.button.tar:hover {
+  background-color: #272b49;
+}
+button.teal:hover,
+.button.teal:hover {
+  background-color: #009494;
+}
+button.white:hover,
+.button.white:hover {
+  background-color: #f7f7f7;
+}
+button.yellow:hover,
+.button.yellow:hover {
+  background-color: #f0ac00;
+}
+button.white,
+.button.white {
+  color: #3f5ca6;
+}
 
 .buttons {
   display: inline-block;
-  vertical-align: middle; }
-  @media (min-width: 500px) {
-    .buttons {
-      display: inline-flex;
-      flex-flow: row wrap;
-      border-radius: 4px; }
-      .buttons > * {
-        flex: 1 1 auto;
-        border-radius: 0; }
-        .buttons > *:first-child {
-          border-top-left-radius: 4px;
-          border-bottom-left-radius: 4px; }
-        .buttons > *:last-child {
-          border-top-right-radius: 4px;
-          border-bottom-right-radius: 4px; } }
+  vertical-align: middle;
+}
+@media (min-width: 500px) {
+  .buttons {
+    display: inline-flex;
+    flex-flow: row wrap;
+    border-radius: 4px;
+  }
+  .buttons > * {
+    flex: 1 1 auto;
+    border-radius: 0;
+  }
+  .buttons > *:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+  .buttons > *:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+}
 
 .bg-xxl {
-  background-color: #7da6e8; }
+  background-color: #7da6e8;
+}
 
 .bg-xl {
-  background-color: #507ed3; }
+  background-color: #507ed3;
+}
 
 .bg-l {
-  background-color: #406abf; }
+  background-color: #406abf;
+}
 
 .bg-m {
-  background-color: #3d5aa9; }
+  background-color: #3d5aa9;
+}
 
 .bg-d {
-  background-color: #384c94; }
+  background-color: #384c94;
+}
 
 .bg-xd {
-  background-color: #263373; }
+  background-color: #263373;
+}
 
 .white {
-  background-color: white; }
+  background-color: white;
+}
 
 .mist {
-  background-color: #e9eaed; }
+  background-color: #e9eaed;
+}
 
 .silver {
-  background-color: #c4c9d4; }
+  background-color: #c4c9d4;
+}
 
 .grey {
-  background-color: #7a8190; }
+  background-color: #7a8190;
+}
 
 .smoke {
-  background-color: #363a49; }
+  background-color: #363a49;
+}
 
 .onyx {
-  background-color: #060613; }
+  background-color: #060613;
+}
 
 .tar {
-  background-color: #1e2138; }
+  background-color: #1e2138;
+}
 
 .black {
-  background-color: black; }
+  background-color: black;
+}
 
 .red {
-  background-color: #e83037; }
+  background-color: #e83037;
+}
 
 .orange {
-  background-color: #ff8533; }
+  background-color: #ff8533;
+}
 
 .yellow {
-  background-color: #ffb700; }
+  background-color: #ffb700;
+}
 
 .green {
-  background-color: #0da527; }
+  background-color: #0da527;
+}
 
 .blue {
-  background-color: #3f5ca6; }
+  background-color: #3f5ca6;
+}
 
 .indigo {
-  background-color: #945ec9; }
+  background-color: #945ec9;
+}
 
 .violet {
-  background-color: #c63980; }
+  background-color: #c63980;
+}
 
 .blueberry {
-  background-color: #906ce0; }
+  background-color: #906ce0;
+}
 
 .bronze {
-  background-color: #d9c38c; }
+  background-color: #d9c38c;
+}
 
 .mint {
-  background-color: #15bc71; }
+  background-color: #15bc71;
+}
 
 .navy {
-  background-color: #1b2055; }
+  background-color: #1b2055;
+}
 
 .navy-dark {
-  background-color: #0c173b; }
+  background-color: #0c173b;
+}
 
 .olive {
-  background-color: #05614b; }
+  background-color: #05614b;
+}
 
 .purple {
-  background-color: #47308d; }
+  background-color: #47308d;
+}
 
 .teal {
-  background-color: #00a3a3; }
+  background-color: #00a3a3;
+}
 
 .fuscha {
-  background-color: #cc3366; }
+  background-color: #cc3366;
+}
 
 .ghost {
-  background-color: rgba(255, 255, 255, 0.05); }
+  background-color: rgba(255, 255, 255, 0.05);
+}
 
 .demon {
-  background-color: rgba(0, 0, 0, 0.05); }
+  background-color: rgba(0, 0, 0, 0.05);
+}
 
 .bg-xxl-text {
-  color: #7da6e8; }
+  color: #7da6e8;
+}
 
 .bg-xl-text {
-  color: #507ed3; }
+  color: #507ed3;
+}
 
 .bg-l-text {
-  color: #406abf; }
+  color: #406abf;
+}
 
 .bg-m-text {
-  color: #3d5aa9; }
+  color: #3d5aa9;
+}
 
 .bg-d-text {
-  color: #384c94; }
+  color: #384c94;
+}
 
 .bg-xd-text {
-  color: #263373; }
+  color: #263373;
+}
 
 .white-text {
-  color: white; }
+  color: white;
+}
 
 .mist-text {
-  color: #e9eaed; }
+  color: #e9eaed;
+}
 
 .silver-text {
-  color: #c4c9d4; }
+  color: #c4c9d4;
+}
 
 .grey-text {
-  color: #7a8190; }
+  color: #7a8190;
+}
 
 .smoke-text {
-  color: #363a49; }
+  color: #363a49;
+}
 
 .tar-text {
-  color: #1e2138; }
+  color: #1e2138;
+}
 
 .onyx-text {
-  color: #060613; }
+  color: #060613;
+}
 
 .black-text {
-  color: black; }
+  color: black;
+}
 
 .red-text {
-  color: #e83037; }
+  color: #e83037;
+}
 
 .orange-text {
-  color: #ff8533; }
+  color: #ff8533;
+}
 
 .yellow-text {
-  color: #ffb700; }
+  color: #ffb700;
+}
 
 .green-text {
-  color: #0da527; }
+  color: #0da527;
+}
 
 .blue-text {
-  color: #3f5ca6; }
+  color: #3f5ca6;
+}
 
 .indigo-text {
-  color: #945ec9; }
+  color: #945ec9;
+}
 
 .violet-text {
-  color: #c63980; }
+  color: #c63980;
+}
 
 .blueberry-text {
-  color: #906ce0; }
+  color: #906ce0;
+}
 
 .bronze-text {
-  color: #d9c38c; }
+  color: #d9c38c;
+}
 
 .mint-text {
-  color: #15bc71; }
+  color: #15bc71;
+}
 
 .navy-text {
-  color: #1b2055; }
+  color: #1b2055;
+}
 
 .navy-dark-text {
-  color: #0c173b; }
+  color: #0c173b;
+}
 
 .olive-text {
-  color: #05614b; }
+  color: #05614b;
+}
 
 .purple-text {
-  color: #47308d; }
+  color: #47308d;
+}
 
 .teal-text {
-  color: #00a3a3; }
+  color: #00a3a3;
+}
 
 .fuscha-text {
-  color: #cc3366; }
+  color: #cc3366;
+}
 
 .bg-xxl-em em {
-  color: #7da6e8; }
+  color: #7da6e8;
+}
 
 .bg-xl-em em {
-  color: #507ed3; }
+  color: #507ed3;
+}
 
 .bg-l-em em {
-  color: #406abf; }
+  color: #406abf;
+}
 
 .bg-m-em em {
-  color: #3d5aa9; }
+  color: #3d5aa9;
+}
 
 .bg-d-em em {
-  color: #384c94; }
+  color: #384c94;
+}
 
 .bg-xd-em em {
-  color: #263373; }
+  color: #263373;
+}
 
 .white-em em {
-  color: white; }
+  color: white;
+}
 
 .mist-em em {
-  color: #e9eaed; }
+  color: #e9eaed;
+}
 
 .silver-em em {
-  color: #c4c9d4; }
+  color: #c4c9d4;
+}
 
 .grey-em em {
-  color: #7a8190; }
+  color: #7a8190;
+}
 
 .smoke-em em {
-  color: #363a49; }
+  color: #363a49;
+}
 
 .tar-em em {
-  color: #1e2138; }
+  color: #1e2138;
+}
 
 .onyx-em em {
-  color: #060613; }
+  color: #060613;
+}
 
 .black-em em {
-  color: black; }
+  color: black;
+}
 
 .red-em em {
-  color: #e83037; }
+  color: #e83037;
+}
 
 .orange-em em {
-  color: #ff8533; }
+  color: #ff8533;
+}
 
 .yellow-em em {
-  color: #ffb700; }
+  color: #ffb700;
+}
 
 .green-em em {
-  color: #0da527; }
+  color: #0da527;
+}
 
 .blue-em em {
-  color: #3f5ca6; }
+  color: #3f5ca6;
+}
 
 .indigo-em em {
-  color: #945ec9; }
+  color: #945ec9;
+}
 
 .violet-em em {
-  color: #c63980; }
+  color: #c63980;
+}
 
 .blueberry-em em {
-  color: #906ce0; }
+  color: #906ce0;
+}
 
 .bronze-em em {
-  color: #d9c38c; }
+  color: #d9c38c;
+}
 
 .mint-em em {
-  color: #15bc71; }
+  color: #15bc71;
+}
 
 .navy-em em {
-  color: #1b2055; }
+  color: #1b2055;
+}
 
 .navy-dark-em em {
-  color: #0c173b; }
+  color: #0c173b;
+}
 
 .olive-em em {
-  color: #05614b; }
+  color: #05614b;
+}
 
 .purple-em em {
-  color: #47308d; }
+  color: #47308d;
+}
 
 .teal-em em {
-  color: #00a3a3; }
+  color: #00a3a3;
+}
 
 .fuscha-em em {
-  color: #cc3366; }
+  color: #cc3366;
+}
 
 a {
-  cursor: pointer; }
+  cursor: pointer;
+}
 
 body {
   width: 100%;
   height: 100%;
   margin: 0;
-  overflow: hidden; }
+  overflow: hidden;
+}
 
 h1 {
-  font-size: 1.953em; }
+  font-size: 1.953em;
+}
 
 h2 {
-  font-size: 1.563em; }
+  font-size: 1.563em;
+}
 
 h3 {
-  font-size: 1.25em; }
+  font-size: 1.25em;
+}
 
 h4 {
-  font-size: 1em; }
+  font-size: 1em;
+}
 
 h5 {
-  font-size: .8em; }
+  font-size: 0.8em;
+}
 
 @media (max-width: 700px) {
   h1 {
-    font-size: 1.728em; }
-  h2 {
-    font-size: 1.44em; }
-  h3 {
-    font-size: 1.2em; }
-  h4 {
-    font-size: 1em; }
-  h5 {
-    font-size: .833em; } }
+    font-size: 1.728em;
+  }
 
+  h2 {
+    font-size: 1.44em;
+  }
+
+  h3 {
+    font-size: 1.2em;
+  }
+
+  h4 {
+    font-size: 1em;
+  }
+
+  h5 {
+    font-size: 0.833em;
+  }
+}
 @media (max-width: 450px) {
   h1 {
-    font-size: 1.424em; }
-  h2 {
-    font-size: 1.266em; }
-  h3 {
-    font-size: 1.125em; }
-  h4 {
-    font-size: 1em; }
-  h5 {
-    font-size: .888em; } }
+    font-size: 1.424em;
+  }
 
+  h2 {
+    font-size: 1.266em;
+  }
+
+  h3 {
+    font-size: 1.125em;
+  }
+
+  h4 {
+    font-size: 1em;
+  }
+
+  h5 {
+    font-size: 0.888em;
+  }
+}
 html {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  text-rendering: geometricPrecision; }
+  text-rendering: geometricPrecision;
+}
 
 #svga-banner {
-  pointer-events: none; }
+  pointer-events: none;
+}
 
 #svga-banner-outer {
   display: flex;
@@ -498,16 +655,19 @@ html {
   color: white;
   background: linear-gradient(to right, #263373, #3d5aa9, #263373);
   opacity: 0;
-  transition: .3s opacity; }
+  transition: 0.3s opacity;
+}
 
 #svga-banner-inner {
   max-width: 100%;
-  padding-left: .1em;
+  padding-left: 0.1em;
   text-align: left;
-  line-height: 1.1; }
+  line-height: 1.1;
+}
 
 #message {
-  pointer-events: none; }
+  pointer-events: none;
+}
 
 #message-outer {
   display: grid;
@@ -515,7 +675,8 @@ html {
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: .3s opacity; }
+  transition: 0.3s opacity;
+}
 
 #message-inner {
   position: relative;
@@ -530,22 +691,29 @@ html {
   font-size: 2em;
   font-weight: bold;
   color: white;
-  background: #406abf; }
-  @media (max-width: 700px) {
-    #message-inner {
-      font-size: 1.5em;
-      padding: 1rem 1.5rem;
-      margin: 1.5rem; } }
-  @media (max-width: 450px) {
-    #message-inner {
-      font-size: 1.25em;
-      padding: 1rem;
-      margin: 1rem; } }
-  #message-inner > div {
-    margin-top: 1em; }
+  background: #406abf;
+}
+@media (max-width: 700px) {
+  #message-inner {
+    font-size: 1.5em;
+    padding: 1rem 1.5rem;
+    margin: 1.5rem;
+  }
+}
+@media (max-width: 450px) {
+  #message-inner {
+    font-size: 1.25em;
+    padding: 1rem;
+    margin: 1rem;
+  }
+}
+#message-inner > div {
+  margin-top: 1em;
+}
 
 #panel {
-  pointer-events: none; }
+  pointer-events: none;
+}
 
 #panel-outer {
   position: relative;
@@ -553,8 +721,9 @@ html {
   place-items: center;
   width: 100%;
   height: 100%;
-  transition: .3s opacity;
-  z-index: 100; }
+  transition: 0.3s opacity;
+  z-index: 100;
+}
 
 #panel-cover {
   position: absolute;
@@ -563,11 +732,13 @@ html {
   width: 100%;
   height: 100%;
   background: rgba(255, 255, 255, 0.8);
-  cursor: pointer; }
+  cursor: pointer;
+}
 
 #panel-frame {
   position: relative;
-  padding: 16px; }
+  padding: 16px;
+}
 
 #panel-close {
   position: absolute;
@@ -575,7 +746,8 @@ html {
   height: 32px;
   top: 4px;
   left: 4px;
-  z-index: 101; }
+  z-index: 101;
+}
 
 #Alert {
   max-width: 30em;
@@ -583,30 +755,38 @@ html {
   border-radius: 8px;
   text-align: center;
   color: white;
-  background: #406abf; }
-  #Alert div:last-child {
-    margin-top: 1em; }
-  #Alert + #panel-close {
-    display: none; }
+  background: #406abf;
+}
+#Alert div:last-child {
+  margin-top: 1em;
+}
+#Alert + #panel-close {
+  display: none;
+}
 
 #settings {
   padding-bottom: 8px;
   border-radius: 8px;
   text-align: center;
   color: white;
-  background-color: #384c94; }
-  #settings [settings-controls] {
-    padding: 8px;
-    border-radius: 8px;
-    background: #406abf; }
-    #settings [settings-controls] svg {
-      display: block;
-      width: 360px;
-      height: 32px; }
-      #settings [settings-controls] svg + svg {
-        margin-top: 8px; }
-  #settings [settings-title], #settings [settings-info], #settings [settings-copyright] {
-    margin: 8px 0; }
+  background-color: #384c94;
+}
+#settings [settings-controls] {
+  padding: 8px;
+  border-radius: 8px;
+  background: #406abf;
+}
+#settings [settings-controls] svg {
+  display: block;
+  width: 360px;
+  height: 32px;
+}
+#settings [settings-controls] svg + svg {
+  margin-top: 8px;
+}
+#settings [settings-title], #settings [settings-info], #settings [settings-copyright] {
+  margin: 8px 0;
+}
 
 #svga {
   display: block;
@@ -620,19 +800,24 @@ html {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  user-select: none; }
-  #svga:-webkit-full-screen {
-    position: absolute;
-    top: 0; }
-  #svga:-ms-fullscreen {
-    position: absolute;
-    top: 0; }
-  #svga:fullscreen {
-    position: absolute;
-    top: 0; }
-  #svga * {
-    touch-action: manipulation;
-    touch-action: none; }
+  user-select: none;
+}
+#svga:-webkit-full-screen {
+  position: absolute;
+  top: 0;
+}
+#svga:-ms-fullscreen {
+  position: absolute;
+  top: 0;
+}
+#svga:fullscreen {
+  position: absolute;
+  top: 0;
+}
+#svga * {
+  touch-action: manipulation;
+  touch-action: none;
+}
 
 /* Known limitation: by default, Chrome and Safari on OS X allow very limited styling of `select`, unless a `border` property is set. */
 /**** GENERAL [optional] NICENESS ****/
@@ -644,7 +829,8 @@ h4,
 h5,
 h6,
 p {
-  margin: 0; }
+  margin: 0;
+}
 
 /* Disable text selection for UI... (Ivan) */
 * {
@@ -652,7 +838,8 @@ p {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  cursor: default; }
+  cursor: default;
+}
 
 /* ...but keep selection enabled for text! (Ivan) */
 p,
@@ -668,86 +855,90 @@ textarea,
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
-  cursor: inherit; }
+  cursor: inherit;
+}
 
 /* Editable elements deserve a text cursor (Ivan) */
 input, input.selectable, .selectable input,
 textarea,
-textarea.selectable, .selectable
-textarea,
+textarea.selectable,
+.selectable textarea,
 [contentEditable],
-[contentEditable].selectable, .selectable
-[contentEditable] {
-  cursor: text; }
+[contentEditable].selectable,
+.selectable [contentEditable] {
+  cursor: text;
+}
 
 /* Links and inputs deserve a pointer (Ivan) */
 a, a *, a.selectable, a.selectable *, .selectable a, .selectable a *,
 label,
 label *,
 label.selectable,
-label.selectable *, .selectable
-label, .selectable
-label *,
+label.selectable *,
+.selectable label,
+.selectable label *,
 button,
 button *,
 button.selectable,
-button.selectable *, .selectable
-button, .selectable
-button *,
-input[type="button"],
-input[type="button"] *,
-input[type="button"].selectable,
-input[type="button"].selectable *, .selectable
-input[type="button"], .selectable
-input[type="button"] *,
-input[type="checkbox"],
-input[type="checkbox"] *,
-input[type="checkbox"].selectable,
-input[type="checkbox"].selectable *, .selectable
-input[type="checkbox"], .selectable
-input[type="checkbox"] *,
-input[type="file"],
-input[type="file"] *,
-input[type="file"].selectable,
-input[type="file"].selectable *, .selectable
-input[type="file"], .selectable
-input[type="file"] *,
-input[type="image"],
-input[type="image"] *,
-input[type="image"].selectable,
-input[type="image"].selectable *, .selectable
-input[type="image"], .selectable
-input[type="image"] *,
-input[type="radio"],
-input[type="radio"] *,
-input[type="radio"].selectable,
-input[type="radio"].selectable *, .selectable
-input[type="radio"], .selectable
-input[type="radio"] *,
-input[type="reset"],
-input[type="reset"] *,
-input[type="reset"].selectable,
-input[type="reset"].selectable *, .selectable
-input[type="reset"], .selectable
-input[type="reset"] *,
-input[type="submit"],
-input[type="submit"] *,
-input[type="submit"].selectable,
-input[type="submit"].selectable *, .selectable
-input[type="submit"], .selectable
-input[type="submit"] *,
+button.selectable *,
+.selectable button,
+.selectable button *,
+input[type=button],
+input[type=button] *,
+input[type=button].selectable,
+input[type=button].selectable *,
+.selectable input[type=button],
+.selectable input[type=button] *,
+input[type=checkbox],
+input[type=checkbox] *,
+input[type=checkbox].selectable,
+input[type=checkbox].selectable *,
+.selectable input[type=checkbox],
+.selectable input[type=checkbox] *,
+input[type=file],
+input[type=file] *,
+input[type=file].selectable,
+input[type=file].selectable *,
+.selectable input[type=file],
+.selectable input[type=file] *,
+input[type=image],
+input[type=image] *,
+input[type=image].selectable,
+input[type=image].selectable *,
+.selectable input[type=image],
+.selectable input[type=image] *,
+input[type=radio],
+input[type=radio] *,
+input[type=radio].selectable,
+input[type=radio].selectable *,
+.selectable input[type=radio],
+.selectable input[type=radio] *,
+input[type=reset],
+input[type=reset] *,
+input[type=reset].selectable,
+input[type=reset].selectable *,
+.selectable input[type=reset],
+.selectable input[type=reset] *,
+input[type=submit],
+input[type=submit] *,
+input[type=submit].selectable,
+input[type=submit].selectable *,
+.selectable input[type=submit],
+.selectable input[type=submit] *,
 select,
 select *,
 select.selectable,
-select.selectable *, .selectable
-select, .selectable
-select * {
-  cursor: pointer; }
+select.selectable *,
+.selectable select,
+.selectable select * {
+  cursor: pointer;
+}
 
 /* Style links like their surrounding content (Ivan) */
 a {
   color: inherit;
-  text-decoration: none; }
+  text-decoration: none;
+}
 
 /* Embedded contexts should be big and beefy! (Ivan) */
 iframe,
@@ -755,53 +946,63 @@ object,
 canvas,
 progress,
 video {
-  display: block; }
+  display: block;
+}
 
 /* Remove the outline around GUI (Ivan) */
-input:not([type="checkbox"]),
+input:not([type=checkbox]),
 select,
 textarea {
-  outline: 0; }
+  outline: 0;
+}
 
 /* Remove the styling from fieldsets (Ivan) */
 fieldset {
   margin: 0;
   padding: 0;
-  border: 0; }
+  border: 0;
+}
 
 /**** BEST PRACTICES ****/
 /* Include padding and borders in width calculations (Paul Irish: paulirish.com/2012/box-sizing-border-box-ftw) */
 *,
 *::before,
 *::after {
-  box-sizing: border-box; }
+  box-sizing: border-box;
+}
 
 /* Remove the 2px border around iframes (Ivan) */
 iframe {
-  border: 0; }
+  border: 0;
+}
 
 /**** CROSS-BROWSER STANDARDIZATION ****/
 /* Prevent modern browsers from displaying audio without controls. */
 audio:not([controls]) {
-  display: none; }
+  display: none;
+}
 
 /* Remove those annoying link glows */
 a:active,
 a:hover {
-  outline: 0; }
+  outline: 0;
+}
 
 /* Don't default to bolder in Firefox, Safari, and Chrome */
 b,
 strong {
-  font-weight: bold; }
+  font-weight: bold;
+}
 
 /* Standarize h1 values within section and article contexts in Firefox, Safari, and Chrome. */
 h1 {
-  font-size: 2em; }
+  font-size: 2em;
+}
 
 /* Fix inconsistent and variable font size in all browsers. */
 small {
-  font-size: 80%; }
+  font-size: 80%;
+}
 
 /* Prevent `sub` and `sup` affecting `line-height` in all browsers. */
 sub,
@@ -809,21 +1010,26 @@ sup {
   font-size: 75%;
   line-height: 0;
   position: relative;
-  vertical-align: baseline; }
+  vertical-align: baseline;
+}
 
 sup {
-  top: -.5em; }
+  top: -0.5em;
+}
 
 sub {
-  bottom: -.25em; }
+  bottom: -0.25em;
+}
 
 /* Address differences between Firefox and other browsers. */
 hr {
-  height: 0; }
+  height: 0;
+}
 
 /* Contain overflow in all browsers. */
 pre {
-  overflow: auto; }
+  overflow: auto;
+}
 
 /* Address odd `em`-unit font size rendering in all browsers. */
 code,
@@ -831,7 +1037,8 @@ kbd,
 pre,
 samp {
   font-family: monospace, monospace;
-  font-size: 1em; }
+  font-size: 1em;
+}
 
 /* 1. Correct color not being inherited. Known issue: affects color of disabled elements.
  * 2. Correct font properties not being inherited.
@@ -847,7 +1054,8 @@ textarea {
   font: inherit;
   /* 2 */
   margin: 0;
-  /* 3 */ }
+  /* 3 */
+}
 
 /* Address inconsistent `text-transform` inheritance for `button` and `select`.
  * All other form control elements do not inherit `text-transform` values.
@@ -856,49 +1064,57 @@ textarea {
  */
 button,
 select {
-  text-transform: none; }
+  text-transform: none;
+}
 
 /* 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio` and `video` controls.
  * 2. Correct inability to style clickable `input` types in iOS.
  * 3. Improve usability and consistency of cursor style between image-type `input` and others.
  */
 button,
-html input[type="button"],
-input[type="reset"],
-input[type="submit"] {
+html input[type=button],
+input[type=reset],
+input[type=submit] {
   -webkit-appearance: button;
   /* 2 */
   cursor: pointer;
-  /* 3 */ }
+  /* 3 */
+}
 
 /* Re-set default cursor for disabled elements. */
 button[disabled],
 html input[disabled] {
-  cursor: default; }
+  cursor: default;
+}
 
 /* Remove inner padding and border in Firefox */
 button::-moz-focus-inner,
 input::-moz-focus-inner {
   border: 0;
-  padding: 0; }
+  padding: 0;
+}
 
 /* Address Firefox setting `line-height` on `input` using `!important` in the UA stylesheet. */
 input {
-  line-height: normal; }
+  line-height: normal;
+}
 
 /* Fix the cursor style for Chrome's increment/decrement buttons. For certain
  * `font-size` values of the `input`, it causes the cursor style of the
  * decrement button to change from `default` to `text`.
  */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  height: auto; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  height: auto;
+}
 
 /* Preserve spacing between table cells. */
 table {
   border-collapse: separate;
-  border-spacing: 0; }
+  border-spacing: 0;
+}
 
 td,
 th {
-  padding: 0; }
+  padding: 0;
+}

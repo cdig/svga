@@ -8,13 +8,13 @@
     "take-and-make": "cdig/take-and-make#93f4e15"
   },
   "devDependencies": {
+    "@mr-hope/gulp-sass": "latest",
     "coffeescript": "latest",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-autoprefixer": "latest",
     "gulp-coffee": "latest",
     "gulp-concat": "latest",
-    "gulp-natural-sort": "latest",
-    "gulp-sass": "latest"
+    "gulp-natural-sort": "latest"
   },
   "license": "UNLICENSED",
   "private": true

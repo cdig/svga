@@ -4602,7 +4602,10 @@
     });
   });
 
-  Take(["Registry", "ScopeCheck"], function(Registry, ScopeCheck) {
+  Take(["Config", "Registry", "ScopeCheck"], function(Config, Registry, ScopeCheck) {
+    if (Config.skipInitialSize) { // This is a workaround for a bug in Chrome Canary
+      return;
+    }
     return Registry.add("ScopeProcessor", function(scope) {
       var size;
       ScopeCheck(scope, "initialWidth", "initialHeight");
@@ -5492,10 +5495,11 @@
           }
           return results;
         })(),
-        badge: buildBadge(path),
-        bb: path.children[0].element.getBBox()
+        badge: buildBadge(path)
       };
     };
+    // Not sure if we need this anymore, and it causes a layout/paint
+    // bb: path.children[0].element.getBBox()
     resetTracerProp = function(path) {
       path.tracer.clicking = false;
       path.tracer.hovering = false;

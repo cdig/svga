@@ -76,7 +76,8 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
       glows: buildGlow path, child for child in path.children
       hits: buildHit path, child for child in path.children
       badge: buildBadge path
-      bb: path.children[0].element.getBBox()
+      # Not sure if we need this anymore, and it causes a layout/paint
+      # bb: path.children[0].element.getBBox()
 
 
   resetTracerProp = (path)->

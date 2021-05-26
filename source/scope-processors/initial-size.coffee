@@ -1,4 +1,5 @@
-Take ["Registry", "ScopeCheck"], (Registry, ScopeCheck)->
+Take ["Config", "Registry", "ScopeCheck"], (Config, Registry, ScopeCheck)->
+  return if Config.skipInitialSize # This is a workaround for a bug in Chrome Canary
   Registry.add "ScopeProcessor", (scope)->
     ScopeCheck scope, "initialWidth", "initialHeight"
 

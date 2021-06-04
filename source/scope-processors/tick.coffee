@@ -1,12 +1,14 @@
 # scope.tick
 # An every-frame update function that can be turned on and off by the content creator.
+# The frame rate is capped to 60 Hz.
 
 Take ["Registry", "Tick"], (Registry, Tick)->
   Registry.add "ScopeProcessor", (scope)->
     return unless scope.tick?
 
     running = true
-    startTime = null
+    acc = 0
+    accTime = 0
 
     # Replace the actual scope tick function with a warning
     tick = scope.tick
@@ -17,8 +19,11 @@ Take ["Registry", "Tick"], (Registry, Tick)->
 
     Tick (time, dt)->
       return unless running
-      startTime ?= time
-      tick.call scope, time - startTime, dt
+      acc += dt
+      while acc > 1/60
+        acc -= 1/60
+        accTime += 1/60
+        tick.call scope, accTime, 1/60
 
     scope.tick.start = ()->
       running = true

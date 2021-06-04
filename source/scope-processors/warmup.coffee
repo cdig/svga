@@ -5,14 +5,16 @@ Take ["Registry", "ScopeCheck"], (Registry, ScopeCheck)->
     runtimeLimit = 100 # ms
     dt = 1/60 # seconds
 
-    scope.warmup = (duration, fn)->
+    scope.warmup = (duration, ...fns)->
       start = performance.now()
 
-      fn ?= scope._tick
+      unless fns?.length
+        fns = [scope._tick, scope._rawTick]
+
       time = -duration # seconds
 
       while time <= 0
-        fn.call scope, time, dt
+        fn?.call scope, time, dt for fn in fns
         time += dt
 
         runtime = performance.now() - start

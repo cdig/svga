@@ -4659,6 +4659,32 @@
     });
   });
 
+  // scope.rawTick
+  // An every-frame update function.
+  // The frame rate is uncapped, and will run at the native refresh rate in supporting browsers.
+  Take(["Registry", "Tick"], function(Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var rawTick, startTime;
+      if (scope.rawTick == null) {
+        return;
+      }
+      startTime = null;
+      // Replace the actual scope rawTick function with a warning
+      rawTick = scope.rawTick;
+      scope.rawTick = function() {
+        throw new Error("@rawTick() is called by the system. Please don't call it yourself.");
+      };
+      // Store a secret copy of the real rawTick function, so that warmup can use it
+      scope._rawTick = rawTick;
+      return Tick(function(time, dt) {
+        if (startTime == null) {
+          startTime = time;
+        }
+        return rawTick.call(scope, time - startTime, dt);
+      });
+    });
+  });
+
   // This processor depends on the Style processor
   Take(["Registry", "ScopeCheck", "Tween"], function(Registry, ScopeCheck, Tween) {
     return Registry.add("ScopeProcessor", function(scope) {
@@ -4722,14 +4748,16 @@
 
   // scope.tick
   // An every-frame update function that can be turned on and off by the content creator.
+  // The frame rate is capped to 60 Hz.
   Take(["Registry", "Tick"], function(Registry, Tick) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var running, startTime, tick;
+      var acc, accTime, running, tick;
       if (scope.tick == null) {
         return;
       }
       running = true;
-      startTime = null;
+      acc = 0;
+      accTime = 0;
       // Replace the actual scope tick function with a warning
       tick = scope.tick;
       scope.tick = function() {
@@ -4738,13 +4766,18 @@
       // Store a secret copy of the real tick function, so that warmup can use it
       scope._tick = tick;
       Tick(function(time, dt) {
+        var results;
         if (!running) {
           return;
         }
-        if (startTime == null) {
-          startTime = time;
+        acc += dt;
+        results = [];
+        while (acc > 1 / 60) {
+          acc -= 1 / 60;
+          accTime += 1 / 60;
+          results.push(tick.call(scope, accTime, 1 / 60));
         }
-        return tick.call(scope, time - startTime, dt);
+        return results;
       });
       scope.tick.start = function() {
         return running = true;
@@ -4760,6 +4793,7 @@
         }
       };
       return scope.tick.restart = function() {
+        var startTime;
         return startTime = null;
       };
     });
@@ -4908,15 +4942,20 @@
       ScopeCheck(scope, "warmup");
       runtimeLimit = 100; // ms
       dt = 1 / 60; // seconds
-      return scope.warmup = function(duration, fn) {
-        var msg, runtime, start, time;
+      return scope.warmup = function(duration, ...fns) {
+        var fn, len, m, msg, runtime, start, time;
         start = performance.now();
-        if (fn == null) {
-          fn = scope._tick;
+        if (!(fns != null ? fns.length : void 0)) {
+          fns = [scope._tick, scope._rawTick];
         }
         time = -duration; // seconds
         while (time <= 0) {
-          fn.call(scope, time, dt);
+          for (m = 0, len = fns.length; m < len; m++) {
+            fn = fns[m];
+            if (fn != null) {
+              fn.call(scope, time, dt);
+            }
+          }
           time += dt;
           runtime = performance.now() - start;
           if (runtime > runtimeLimit) {
@@ -7543,8 +7582,8 @@
   Take(["Mode", "ParentData", "RAF"], function(Mode, ParentData, RAF) {
     var callbacks, internalTime, maximumDt, tick, wallTime;
     // We go all the way down to 2 FPS, but no lower, to avoid weirdness if the JS thread is paused.
-    // Below 2 FPS, we'll start to get temporal skew where the internal time and the wall time diverge.
-    maximumDt = 0.5;
+    // Below 10 FPS, we'll start to get temporal skew where the internal time and the wall time diverge.
+    maximumDt = 1 / 10;
     callbacks = [];
     wallTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
     internalTime = 0;

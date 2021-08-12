@@ -4603,15 +4603,19 @@
   });
 
   Take(["Config", "Registry", "ScopeCheck"], function(Config, Registry, ScopeCheck) {
-    if (Config.skipInitialSize) { // This is a workaround for a bug in Chrome Canary
-      return;
-    }
     return Registry.add("ScopeProcessor", function(scope) {
       var size;
       ScopeCheck(scope, "initialWidth", "initialHeight");
-      size = scope.element.getBBox(); // Note: Changed on 2020-09-29 from getBoundingClientRect
-      scope.initialWidth = size.width;
-      return scope.initialHeight = size.height;
+      // In Chrome, calculating the BBox takes something like 16ms per element (as of v92, at least).
+      // But we don't ever really use the initial size, so we're moving this feature behind a flag.
+      // If you need it, enable it via config, but do me a favor: Do a performance profile,
+      // and look for excess time spent inside the buildScopes function (from source/core/scene.coffee)
+      // during the initial load. Don't ship something that has a huge pause at init time.
+      if (Config.enableInitialSize) {
+        size = scope.element.getBBox();
+        scope.initialWidth = size.width;
+        return scope.initialHeight = size.height;
+      }
     });
   });
 

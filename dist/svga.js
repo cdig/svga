@@ -4477,71 +4477,6 @@
     });
   });
 
-  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var childPathFills, childPathStrokeWidths, childPathStrokes, fill, stroke, strokeWidth;
-      ScopeCheck(scope, "stroke", "strokeWidth", "fill");
-      childPathStrokes = childPathStrokeWidths = childPathFills = scope.element.querySelectorAll("path");
-      stroke = null;
-      Object.defineProperty(scope, 'stroke', {
-        get: function() {
-          return stroke;
-        },
-        set: function(val) {
-          var childPathStroke, len, m;
-          if (stroke !== val) {
-            SVG.attr(scope.element, "stroke", stroke = val);
-            if (childPathStrokes.length > 0) {
-              for (m = 0, len = childPathStrokes.length; m < len; m++) {
-                childPathStroke = childPathStrokes[m];
-                SVG.attr(childPathStroke, "stroke", null);
-              }
-              return childPathStrokes = [];
-            }
-          }
-        }
-      });
-      strokeWidth = null;
-      Object.defineProperty(scope, 'strokeWidth', {
-        get: function() {
-          return strokeWidth;
-        },
-        set: function(val) {
-          var childPathStrokeWidth, len, m;
-          if (strokeWidth !== val) {
-            SVG.attr(scope.element, "strokeWidth", strokeWidth = val);
-            if (childPathStrokeWidths.length > 0) {
-              for (m = 0, len = childPathStrokeWidths.length; m < len; m++) {
-                childPathStrokeWidth = childPathStrokeWidths[m];
-                SVG.attr(childPathStrokeWidth, "strokeWidth", null);
-              }
-              return childPathStrokeWidths = [];
-            }
-          }
-        }
-      });
-      fill = null;
-      return Object.defineProperty(scope, 'fill', {
-        get: function() {
-          return fill;
-        },
-        set: function(val) {
-          var childPathFill, len, m;
-          if (fill !== val) {
-            SVG.attr(scope.element, "fill", fill = val);
-            if (childPathFills.length > 0) {
-              for (m = 0, len = childPathFills.length; m < len; m++) {
-                childPathFill = childPathFills[m];
-                SVG.attr(childPathFill, "fill", null);
-              }
-              return childPathFills = [];
-            }
-          }
-        }
-      });
-    });
-  });
-
   // Depends on style
   Take(["Gradient", "Registry", "ScopeCheck"], function(Gradient, Registry, ScopeCheck) {
     var gradientCount;
@@ -4616,6 +4551,40 @@
         scope.initialWidth = size.width;
         return scope.initialHeight = size.height;
       }
+    });
+  });
+
+  Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var childPaths, props;
+      props = ["fill", "stroke", "strokeLinecap", "strokeLinejoin", "strokeWidth"];
+      childPaths = scope.element.querySelectorAll("path");
+      return props.forEach(function(prop) {
+        var childPropsCleared, value;
+        ScopeCheck(scope, prop);
+        value = null;
+        childPropsCleared = false;
+        return Object.defineProperty(scope, prop, {
+          get: function() {
+            return value;
+          },
+          set: function(v) {
+            var childPath, len, m, results;
+            if (value !== v) {
+              SVG.attr(scope.element, prop, value = v);
+              if (!childPropsCleared) {
+                childPropsCleared = true;
+                results = [];
+                for (m = 0, len = childPaths.length; m < len; m++) {
+                  childPath = childPaths[m];
+                  results.push(SVG.attr(childPath, prop, null));
+                }
+                return results;
+              }
+            }
+          }
+        });
+      });
     });
   });
 
@@ -5559,12 +5528,16 @@
       var scope;
       scope = Scope(cloneChild(path, child));
       scope.strokeWidth = 3;
+      scope.strokeLinejoin = "round";
+      scope.strokeLinecap = "round";
       return scope;
     };
     buildHit = function(path, child) {
       var scope;
       scope = Scope(cloneChild(path, child));
       scope.strokeWidth = 10;
+      scope.strokeLinejoin = "round";
+      scope.strokeLinecap = "round";
       scope.element.addEventListener("mouseenter", hitMoveIn(path));
       scope.element.addEventListener("mouseleave", hitMoveOut(path));
       return scope;

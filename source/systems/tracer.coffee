@@ -96,12 +96,16 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
   buildGlow = (path, child)->
     scope = Scope cloneChild path, child
     scope.strokeWidth = 3
+    scope.strokeLinejoin = "round"
+    scope.strokeLinecap = "round"
     scope
 
 
   buildHit = (path, child)->
     scope = Scope cloneChild path, child
     scope.strokeWidth = 10
+    scope.strokeLinejoin = "round"
+    scope.strokeLinecap = "round"
     scope.element.addEventListener "mouseenter", hitMoveIn path
     scope.element.addEventListener "mouseleave", hitMoveOut path
     scope

@@ -298,12 +298,11 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
     stepSize = 10
     closestPoint = null
     closestDist = Infinity
-    # This is assuming that each path will originally contain a single g elm,
-    # which will contain one or more path elms.
-    # This might not be true of all Tracer games. We'd need to revise it to,
-    # perhaps, locate all <path> elements using querySelector or somesuch.
-    for groupElm in path.tracer.originalChildren
-      for pathElm in groupElm.children
+
+    startTime = performance.now() # Measure the perf because querySelectorAll might be slow
+    for child in path.tracer.originalChildren
+      child._tracer_paths ?= child.querySelectorAll "path"
+      for pathElm in child._tracer_paths
         i = pathElm.getTotalLength()
         while i > 0
           p = pathElm.getPointAtLength i
@@ -312,6 +311,8 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
             closestDist = d
             closestPoint = p
           i -= stepSize
+    runtime = performance.now() - startTime
+    console.log "Slow tracer click: #{runtime} ms" if runtime > 5
     path.tracer.clickPos = closestPoint
 
 

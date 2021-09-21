@@ -5850,7 +5850,7 @@
       };
     };
     setPathClickPos = function(path) {
-      var closestDist, closestPoint, d, groupElm, i, len, len1, m, n, p, p_path, p_screen, pathElm, ref, ref1, screenToPath, stepSize;
+      var child, closestDist, closestPoint, d, i, len, len1, m, n, p, p_path, p_screen, pathElm, ref, ref1, runtime, screenToPath, startTime, stepSize;
       // Create a point at the root of the SVG, and move it to the screen coords of the mouse position
       p_screen = SVG.svg.createSVGPoint();
       p_screen.x = path.tracer.clicking.x;
@@ -5863,14 +5863,14 @@
       stepSize = 10;
       closestPoint = null;
       closestDist = 2e308;
+      startTime = performance.now(); // Measure the perf because querySelectorAll might be slow
       ref = path.tracer.originalChildren;
-      // This is assuming that each path will originally contain a single g elm,
-      // which will contain one or more path elms.
-      // This might not be true of all Tracer games. We'd need to revise it to,
-      // perhaps, locate all <path> elements using querySelector or somesuch.
       for (m = 0, len = ref.length; m < len; m++) {
-        groupElm = ref[m];
-        ref1 = groupElm.children;
+        child = ref[m];
+        if (child._tracer_paths == null) {
+          child._tracer_paths = child.querySelectorAll("path");
+        }
+        ref1 = child._tracer_paths;
         for (n = 0, len1 = ref1.length; n < len1; n++) {
           pathElm = ref1[n];
           i = pathElm.getTotalLength();
@@ -5884,6 +5884,10 @@
             i -= stepSize;
           }
         }
+      }
+      runtime = performance.now() - startTime;
+      if (runtime > 5) {
+        console.log(`Slow tracer click: ${runtime} ms`);
       }
       return path.tracer.clickPos = closestPoint;
     };

@@ -6088,7 +6088,8 @@
       },
       refresh: function() {
         return updateZoomScaling(true, true);
-      }
+      },
+      getIncorrectPaths: getIncorrectPaths
     });
   });
 

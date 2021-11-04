@@ -507,3 +507,5 @@ Take ["Control", "Panel", "Reaction", "Resize", "SVG", "Scope", "Tick", "Tween",
         activeConfig = null
 
     refresh: ()-> updateZoomScaling true, true
+
+    getIncorrectPaths: getIncorrectPaths

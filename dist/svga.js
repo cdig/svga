@@ -1015,7 +1015,7 @@
     }, Mode, SVG) {
     var checkPanelSize, constructLayout;
     constructLayout = function(groups, desiredColumnHeight, vertical) {
-      var column, columns, group, innerPanelSize, len, len1, len2, m, n, q, tallestColumnHeight;
+      var column, columns, group, innerPanelSize, len, len1, len2, m, n, tallestColumnHeight, u;
       columns = [];
       column = null;
 
@@ -1057,8 +1057,8 @@
       }
 
       // Set the y position for each column
-      for (q = 0, len2 = columns.length; q < len2; q++) {
-        column = columns[q];
+      for (u = 0, len2 = columns.length; u < len2; u++) {
+        column = columns[u];
         // In vertical orientation, center-align
         // In horizontal orientation, bottom-align
         column.y = vertical ? tallestColumnHeight / 2 - column.height / 2 : tallestColumnHeight - column.height;
@@ -5443,7 +5443,7 @@
     };
     // SETUP #########################################################################################
     setupPaths = function() {
-      var len, len1, len2, m, n, path, q, ref, ref1, ref2, set, setIndex;
+      var len, len1, len2, m, n, path, ref, ref1, ref2, set, setIndex, u;
       ref = activeConfig.paths;
       for (m = 0, len = ref.length; m < len; m++) {
         path = ref[m];
@@ -5462,8 +5462,8 @@
         setupSolutionSet(set, setIndex);
       }
       ref2 = activeConfig.paths;
-      for (q = 0, len2 = ref2.length; q < len2; q++) {
-        path = ref2[q];
+      for (u = 0, len2 = ref2.length; u < len2; u++) {
+        path = ref2[u];
         stylePath(path);
       }
       return updateZoomScaling(true, true);
@@ -5637,7 +5637,7 @@
     };
     // STYLING #######################################################################################
     stylePath = function(path) {
-      var child, color, colorIndex, glow, hit, isColored, isHover, len, len1, len2, m, n, q, ref, ref1, ref2;
+      var child, color, colorIndex, glow, hit, isColored, isHover, len, len1, len2, m, n, ref, ref1, ref2, u;
       colorIndex = path.tracer.clickCount % activeConfig.colors.length;
       color = activeConfig.colors[colorIndex] || "#000";
       isHover = path.tracer.hovering;
@@ -5668,8 +5668,8 @@
         })();
       }
       ref2 = path.tracer.hits;
-      for (q = 0, len2 = ref2.length; q < len2; q++) {
-        hit = ref2[q];
+      for (u = 0, len2 = ref2.length; u < len2; u++) {
+        hit = ref2[u];
         // Even when the color is "transparent", there's a sizable perf benefit to having opaque alpha
         hit.stroke = isHover ? color : "transparent";
         hit.alpha = isHover ? .2 : 1;
@@ -5719,7 +5719,7 @@
       }
     };
     unstylePath = function(path) {
-      var child, glow, hit, len, len1, len2, m, n, q, ref, ref1, ref2;
+      var child, glow, hit, len, len1, len2, m, n, ref, ref1, ref2, u;
       path.stroke = "#000";
       ref = path.children;
       for (m = 0, len = ref.length; m < len; m++) {
@@ -5732,8 +5732,8 @@
         glow.alpha = 0;
       }
       ref2 = path.tracer.hits;
-      for (q = 0, len2 = ref2.length; q < len2; q++) {
-        hit = ref2[q];
+      for (u = 0, len2 = ref2.length; u < len2; u++) {
+        hit = ref2[u];
         hit.alpha = 0;
       }
       Tween.cancel(path.tracer.tween);
@@ -6199,6 +6199,80 @@
     }
     return Make("Control", Control);
   });
+
+  (function() {
+    var Convert, a, b, bs, mappings, q;
+    mappings = {
+      // Pressure
+      psi: {
+        kPa: 6.894757,
+        bar: 0.06894757 // For bar, use metric units for all non-bar values
+      },
+      
+      // Volume
+      gal: {
+        L: 3.7854 // US gallon
+      },
+      cc: {
+        in3: 0.06102374
+      },
+      // Distance
+      in: {
+        mm: 25.4,
+        cm: 2.54,
+        m: 0.0254
+      },
+      // Area
+      in2: {
+        mm2: 645.16,
+        cm2: 6.4516
+      },
+      // Weight
+      lb: {
+        kg: 0.4535924
+      }
+    };
+    Convert = {};
+    for (a in mappings) {
+      bs = mappings[a];
+      for (b in bs) {
+        q = bs[b];
+        (function(q) {
+          (Convert[a] != null ? Convert[a] : Convert[a] = {})[b] = function(v) {
+            return v * q;
+          };
+          return (Convert[b] != null ? Convert[b] : Convert[b] = {})[a] = function(v) {
+            return v * 1 / q;
+          };
+        })(q);
+      }
+    }
+    Convert.psi.kpa = function() {
+      throw "You must use Convert.psi.kPa — with a capital P";
+    };
+    Convert.kpa = {
+      psi: function() {
+        throw "You must use Convert.kPa.psi — with a capital P";
+      }
+    };
+    Convert.gal.l = function() {
+      throw "You must use Convert.gal.L — with a capital L";
+    };
+    Convert.l = {
+      gal: function() {
+        throw "You must use Convert.L.gal — with a capital L";
+      }
+    };
+    Convert.lbs = {
+      kg: function() {
+        throw "You must use Convert.lb.kg — lb is singular";
+      }
+    };
+    Convert.kg.lbs = function() {
+      throw "You must use Convert.kg.lb — lb is singular";
+    };
+    return Make("Convert", Convert);
+  })();
 
   // Ease
   // Unlike other easing functions you'll find through Google, these easing functions are ALMOST human-

@@ -22,6 +22,10 @@ Take "Ease", (Ease)->
       when voltage is Voltage.magnetic
         return renderString 141, 2, 155, alpha
 
+      # Inert
+      when voltage is Voltage.inert
+        return renderHSLString 184, 9, 50, alpha
+
       # Zero voltage
       when voltage is Voltage.zero
         return renderString 0, 0, 0, alpha
@@ -34,6 +38,7 @@ Take "Ease", (Ease)->
 
   Voltage.black = 101
   Voltage.white = -101
+  Voltage.inert = -1
   Voltage.ground = 0
   Voltage.zero = 0
   Voltage.min = 1

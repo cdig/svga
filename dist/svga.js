@@ -8045,6 +8045,9 @@
         // Magnetic
         case voltage !== Voltage.magnetic:
           return renderString(141, 2, 155, alpha);
+        // Inert
+        case voltage !== Voltage.inert:
+          return renderHSLString(184, 9, 50, alpha);
         // Zero voltage
         case voltage !== Voltage.zero:
           return renderString(0, 0, 0, alpha);
@@ -8056,6 +8059,7 @@
     };
     Voltage.black = 101;
     Voltage.white = -101;
+    Voltage.inert = -1;
     Voltage.ground = 0;
     Voltage.zero = 0;
     Voltage.min = 1;

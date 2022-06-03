@@ -9,7 +9,7 @@ Take ["Registry", "ScopeCheck"], (Registry, ScopeCheck)->
       start = performance.now()
 
       unless fns?.length
-        fns = [scope._tick, scope._rawTick]
+        fns = [scope._tick, scope._milliTick]
 
       time = -duration # seconds
 

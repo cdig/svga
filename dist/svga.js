@@ -41,6 +41,7 @@
       // The root bounds will be zero if the export from Flash was bad, or if this SVGA is loaded in Chrome with display: none.
       initialRootRect = SVG.root.getBoundingClientRect();
       if (initialRootRect.width < 1 || initialRootRect.height < 1) {
+        console.log(initialRootRect);
         return setTimeout(checkBounds, 500); // Keep re-checking until whatever loaded this SVGA is ready to display it.
       } else {
         // Inform all systems that we've just finished setting up the scene.
@@ -247,8 +248,7 @@
         parentScope.attachScope(scope);
       }
       // Add some info to help devs locate scope elements in the DOM
-      if (!(navigator.userAgent.indexOf("Edge") >= 0)) {
-        // Add some helpful dev names to the element
+      if (Mode.dev) {
         element.setAttribute("SCOPE", scope.id || "");
         if ((symbol != null ? symbol.symbolName : void 0) != null) {
           element.setAttribute("SYMBOL", symbol.symbolName);
@@ -2947,7 +2947,7 @@
       Make("HUD", function() {}); // Noop
       return;
     }
-    rate = 1 / 8; // Update every nth of a second
+    rate = 1 / 30; // Update every nth of a second
     elapsed = rate; // Run the first update immediately
     needsUpdate = true;
     colors = {};
@@ -4554,6 +4554,59 @@
     });
   });
 
+  // scope.milliTick
+  // An every-frame update function that can be turned on and off by the content creator.
+  // The frame rate is capped to 1000 Hz but otherwise approximates display refresh rate.
+  Take(["Registry", "Tick"], function(Registry, Tick) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var acc, accTime, milliTick, running;
+      if (scope.milliTick == null) {
+        return;
+      }
+      running = true;
+      acc = 0;
+      accTime = 0;
+      // Replace the actual scope milliTick function with a warning
+      milliTick = scope.milliTick;
+      scope.milliTick = function() {
+        throw new Error("@milliTick() is called by the system. Please don't call it yourself.");
+      };
+      // Store a secret copy of the real milliTick function, so that warmup can use it
+      scope._milliTick = milliTick;
+      Tick(function(time, dt) {
+        var results;
+        if (!running) {
+          return;
+        }
+        acc += dt;
+        results = [];
+        while (acc > 1 / 1000) {
+          acc -= 1 / 1000;
+          accTime += 1 / 1000;
+          results.push(milliTick.call(scope, accTime, 1 / 1000));
+        }
+        return results;
+      });
+      scope.milliTick.start = function() {
+        return running = true;
+      };
+      scope.milliTick.stop = function() {
+        return running = false;
+      };
+      scope.milliTick.toggle = function() {
+        if (running) {
+          return scope.milliTick.stop();
+        } else {
+          return scope.milliTick.start();
+        }
+      };
+      return scope.milliTick.restart = function() {
+        acc = 0;
+        return accTime = 0;
+      };
+    });
+  });
+
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var childPaths, props;
@@ -4632,32 +4685,6 @@
     });
   });
 
-  // scope.rawTick
-  // An every-frame update function.
-  // The frame rate is uncapped, and will run at the native refresh rate in supporting browsers.
-  Take(["Registry", "Tick"], function(Registry, Tick) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var rawTick, startTime;
-      if (scope.rawTick == null) {
-        return;
-      }
-      startTime = null;
-      // Replace the actual scope rawTick function with a warning
-      rawTick = scope.rawTick;
-      scope.rawTick = function() {
-        throw new Error("@rawTick() is called by the system. Please don't call it yourself.");
-      };
-      // Store a secret copy of the real rawTick function, so that warmup can use it
-      scope._rawTick = rawTick;
-      return Tick(function(time, dt) {
-        if (startTime == null) {
-          startTime = time;
-        }
-        return rawTick.call(scope, time - startTime, dt);
-      });
-    });
-  });
-
   // This processor depends on the Style processor
   Take(["Registry", "ScopeCheck", "Tween"], function(Registry, ScopeCheck, Tween) {
     return Registry.add("ScopeProcessor", function(scope) {
@@ -4721,7 +4748,7 @@
 
   // scope.tick
   // An every-frame update function that can be turned on and off by the content creator.
-  // The frame rate is capped to 60 Hz.
+  // The frame rate is capped to 60 Hz but otherwise approximates display refresh rate.
   Take(["Registry", "Tick"], function(Registry, Tick) {
     return Registry.add("ScopeProcessor", function(scope) {
       var acc, accTime, running, tick;
@@ -4766,8 +4793,8 @@
         }
       };
       return scope.tick.restart = function() {
-        var startTime;
-        return startTime = null;
+        acc = 0;
+        return accTime = 0;
       };
     });
   });
@@ -4919,7 +4946,7 @@
         var fn, len, m, msg, runtime, start, time;
         start = performance.now();
         if (!(fns != null ? fns.length : void 0)) {
-          fns = [scope._tick, scope._rawTick];
+          fns = [scope._tick, scope._milliTick];
         }
         time = -duration; // seconds
         while (time <= 0) {

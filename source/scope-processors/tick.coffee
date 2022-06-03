@@ -1,6 +1,6 @@
 # scope.tick
 # An every-frame update function that can be turned on and off by the content creator.
-# The frame rate is capped to 60 Hz.
+# The frame rate is capped to 60 Hz but otherwise approximates display refresh rate.
 
 Take ["Registry", "Tick"], (Registry, Tick)->
   Registry.add "ScopeProcessor", (scope)->
@@ -35,4 +35,5 @@ Take ["Registry", "Tick"], (Registry, Tick)->
       if running then scope.tick.stop() else scope.tick.start()
 
     scope.tick.restart = ()->
-      startTime = null
+      acc = 0
+      accTime = 0

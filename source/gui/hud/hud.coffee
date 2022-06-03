@@ -4,7 +4,7 @@ Take ["Mode", "Tick", "SVG", "SVGReady"], (Mode, Tick, SVG)->
     Make "HUD", ()-> # Noop
     return
 
-  rate = 1/8 # Update every nth of a second
+  rate = 1/30 # Update every nth of a second
   elapsed = rate # Run the first update immediately
   needsUpdate = true
 

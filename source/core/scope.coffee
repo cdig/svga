@@ -29,8 +29,7 @@ Take ["Mode", "Registry", "ScopeCheck", "Symbol"], (Mode, Registry, ScopeCheck, 
     parentScope?.attachScope scope
 
     # Add some info to help devs locate scope elements in the DOM
-    unless navigator.userAgent.indexOf("Edge") >= 0
-      # Add some helpful dev names to the element
+    if Mode.dev
       element.setAttribute "SCOPE", scope.id or ""
       element.setAttribute "SYMBOL", symbol.symbolName if symbol?.symbolName?
       attrs = Array.prototype.slice.call element.attributes

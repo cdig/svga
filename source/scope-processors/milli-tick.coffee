@@ -3,12 +3,16 @@
 # The frame rate is capped to 1000 Hz but otherwise approximates display refresh rate.
 
 Take ["Registry", "Tick"], (Registry, Tick)->
+
+  speed = 1
+
   Registry.add "ScopeProcessor", (scope)->
     return unless scope.milliTick?
 
     running = true
     acc = 0
     accTime = 0
+    step = 1/1000
 
     # Replace the actual scope milliTick function with a warning
     milliTick = scope.milliTick
@@ -19,11 +23,11 @@ Take ["Registry", "Tick"], (Registry, Tick)->
 
     Tick (time, dt)->
       return unless running
-      acc += dt
-      while acc > 1/1000
-        acc -= 1/1000
-        accTime += 1/1000
-        milliTick.call scope, accTime, 1/1000
+      acc += dt * speed
+      while acc > step
+        acc -= step
+        accTime += step
+        milliTick.call scope, accTime, step
 
     scope.milliTick.start = ()->
       running = true
@@ -37,3 +41,6 @@ Take ["Registry", "Tick"], (Registry, Tick)->
     scope.milliTick.restart = ()->
       acc = 0
       accTime = 0
+
+    scope.milliTick.speed = (s)->
+      speed = s

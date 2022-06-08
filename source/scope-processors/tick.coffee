@@ -3,12 +3,16 @@
 # The frame rate is capped to 60 Hz but otherwise approximates display refresh rate.
 
 Take ["Registry", "Tick"], (Registry, Tick)->
+
+  speed = 1
+
   Registry.add "ScopeProcessor", (scope)->
     return unless scope.tick?
 
     running = true
     acc = 0
     accTime = 0
+    step = 1/60
 
     # Replace the actual scope tick function with a warning
     tick = scope.tick
@@ -19,11 +23,11 @@ Take ["Registry", "Tick"], (Registry, Tick)->
 
     Tick (time, dt)->
       return unless running
-      acc += dt
-      while acc > 1/60
-        acc -= 1/60
-        accTime += 1/60
-        tick.call scope, accTime, 1/60
+      acc += dt * speed
+      while acc > step
+        acc -= step
+        accTime += step
+        tick.call scope, accTime, step
 
     scope.tick.start = ()->
       running = true
@@ -37,3 +41,6 @@ Take ["Registry", "Tick"], (Registry, Tick)->
     scope.tick.restart = ()->
       acc = 0
       accTime = 0
+
+    scope.tick.speed = (s)->
+      speed = s

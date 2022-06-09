@@ -11,23 +11,12 @@ Take ["Registry", "Tick"], (Registry, Tick)->
 
     running = true
     acc = 0
-    accTime = 0
+    count = 0
     step = 1/60
 
     # Replace the actual scope tick function with a warning
     tick = scope.tick
     scope.tick = ()-> throw new Error "@tick() is called by the system. Please don't call it yourself."
-
-    # Store a secret copy of the real tick function, so that warmup can use it
-    scope._tick = tick
-
-    Tick (time, dt)->
-      return unless running
-      acc += dt * speed
-      while acc > step
-        acc -= step
-        accTime += step
-        tick.call scope, accTime, step
 
     scope.tick.start = ()->
       running = true
@@ -40,7 +29,22 @@ Take ["Registry", "Tick"], (Registry, Tick)->
 
     scope.tick.restart = ()->
       acc = 0
-      accTime = 0
+      count = 0
 
     scope.tick.speed = (s)->
-      speed = s
+      speed = s if s?
+      speed
+
+    scope.tick.step = ()->
+      count++
+      tick.call scope, count * step, step
+
+    # Store a secret copy of the real tick function, so that warmup can use it
+    scope._tick = (time, dt)->
+      return unless running
+      acc += dt * speed
+      while acc > step
+        acc -= step
+        scope.tick.step()
+
+    Tick scope._tick

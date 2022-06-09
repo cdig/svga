@@ -41,7 +41,6 @@
       // The root bounds will be zero if the export from Flash was bad, or if this SVGA is loaded in Chrome with display: none.
       initialRootRect = SVG.root.getBoundingClientRect();
       if (initialRootRect.width < 1 || initialRootRect.height < 1) {
-        console.log(initialRootRect);
         return setTimeout(checkBounds, 500); // Keep re-checking until whatever loaded this SVGA is ready to display it.
       } else {
         // Inform all systems that we've just finished setting up the scene.
@@ -2935,8 +2934,8 @@
     return Tick(function() {
       var color, fps, fpsDisplay;
       fps = FPS();
-      fpsDisplay = fps < 30 ? fps.toFixed(1) : Math.ceil(fps);
-      color = fps <= 10 ? "#C00" : fps <= 20 ? "#E608" : "#0003";
+      fpsDisplay = fps < 30 ? fps.toFixed(1) : Math.round(fps);
+      color = fps <= 30 ? "#C00" : fps <= 50 ? "#E608" : "#0003";
       return HUD("FPS", fpsDisplay, color);
     });
   });
@@ -2998,17 +2997,6 @@
       }
       return v; // Pass-through whenever possible
     });
-  });
-
-  Take(["HUD", "Mode", "SVGReady"], function(HUD, Mode) {
-    var nodeCountElm;
-    if (!Mode.dev) {
-      return;
-    }
-    nodeCountElm = document.querySelector("[node-count]");
-    if (nodeCountElm != null) {
-      return HUD("Nodes", nodeCountElm.getAttribute("node-count"), "#0003");
-    }
   });
 
   Take(["DOOM", "Resize", "SVG", "Wait", "SVGReady"], function(DOOM, Resize, SVG, Wait) {
@@ -4554,56 +4542,68 @@
     });
   });
 
-  // scope.milliTick
+  // scope.ms
   // An every-frame update function that can be turned on and off by the content creator.
   // The frame rate is capped to 1000 Hz but otherwise approximates display refresh rate.
   Take(["Registry", "Tick"], function(Registry, Tick) {
+    var speed;
+    speed = 1;
     return Registry.add("ScopeProcessor", function(scope) {
-      var acc, accTime, milliTick, running;
-      if (scope.milliTick == null) {
+      var acc, count, ms, running, step;
+      if (scope.ms == null) {
         return;
       }
       running = true;
       acc = 0;
-      accTime = 0;
-      // Replace the actual scope milliTick function with a warning
-      milliTick = scope.milliTick;
-      scope.milliTick = function() {
-        throw new Error("@milliTick() is called by the system. Please don't call it yourself.");
+      count = 0;
+      step = 1 / 1000;
+      // Replace the actual scope ms function with a warning
+      ms = scope.ms;
+      scope.ms = function() {
+        throw new Error("@ms() is called by the system. Please don't call it yourself.");
       };
-      // Store a secret copy of the real milliTick function, so that warmup can use it
-      scope._milliTick = milliTick;
-      Tick(function(time, dt) {
+      scope.ms.start = function() {
+        return running = true;
+      };
+      scope.ms.stop = function() {
+        return running = false;
+      };
+      scope.ms.toggle = function() {
+        if (running) {
+          return scope.ms.stop();
+        } else {
+          return scope.ms.start();
+        }
+      };
+      scope.ms.restart = function() {
+        acc = 0;
+        return count = 0;
+      };
+      scope.ms.speed = function(s) {
+        if (s != null) {
+          speed = s;
+        }
+        return speed;
+      };
+      scope.ms.step = function() {
+        count++;
+        return ms.call(scope, count * step, step);
+      };
+      // Store a secret copy of the real ms function, so that warmup can use it
+      scope._ms = function(time, dt) {
         var results;
         if (!running) {
           return;
         }
-        acc += dt;
+        acc += dt * speed;
         results = [];
-        while (acc > 1 / 1000) {
-          acc -= 1 / 1000;
-          accTime += 1 / 1000;
-          results.push(milliTick.call(scope, accTime, 1 / 1000));
+        while (acc > step) {
+          acc -= step;
+          results.push(scope.ms.step());
         }
         return results;
-      });
-      scope.milliTick.start = function() {
-        return running = true;
       };
-      scope.milliTick.stop = function() {
-        return running = false;
-      };
-      scope.milliTick.toggle = function() {
-        if (running) {
-          return scope.milliTick.stop();
-        } else {
-          return scope.milliTick.start();
-        }
-      };
-      return scope.milliTick.restart = function() {
-        acc = 0;
-        return accTime = 0;
-      };
+      return Tick(scope._ms);
     });
   });
 
@@ -4685,6 +4685,63 @@
     });
   });
 
+  // scope.rawTick
+  // An every-frame update function that can be turned on and off by the content creator.
+  // The frame rate is uncapped, and will run at the native refresh rate in supporting browsers.
+  Take(["Registry", "Tick"], function(Registry, Tick) {
+    var speed;
+    speed = 1;
+    return Registry.add("ScopeProcessor", function(scope) {
+      var accTime, rawTick, running, step;
+      if (scope.rawTick == null) {
+        return;
+      }
+      running = true;
+      accTime = 0;
+      step = 0;
+      // Replace the actual scope rawTick function with a warning
+      rawTick = scope.rawTick;
+      scope.rawTick = function() {
+        throw new Error("@rawTick() is called by the system. Please don't call it yourself.");
+      };
+      scope.rawTick.start = function() {
+        return running = true;
+      };
+      scope.rawTick.stop = function() {
+        return running = false;
+      };
+      scope.rawTick.toggle = function() {
+        if (running) {
+          return scope.rawTick.stop();
+        } else {
+          return scope.rawTick.start();
+        }
+      };
+      scope.rawTick.restart = function() {
+        return accTime = 0;
+      };
+      scope.rawTick.speed = function(s) {
+        if (s != null) {
+          speed = s;
+        }
+        return speed;
+      };
+      scope.rawTick.step = function() {
+        accTime += step;
+        return rawTick.call(scope, accTime, step);
+      };
+      // Store a secret copy of the real rawTick function, so that warmup can use it
+      scope._rawTick = function(time, dt) {
+        if (!running) {
+          return;
+        }
+        step = dt * speed;
+        return scope.rawTick.step();
+      };
+      return Tick(scope._rawTick);
+    });
+  });
+
   // This processor depends on the Style processor
   Take(["Registry", "ScopeCheck", "Tween"], function(Registry, ScopeCheck, Tween) {
     return Registry.add("ScopeProcessor", function(scope) {
@@ -4750,35 +4807,22 @@
   // An every-frame update function that can be turned on and off by the content creator.
   // The frame rate is capped to 60 Hz but otherwise approximates display refresh rate.
   Take(["Registry", "Tick"], function(Registry, Tick) {
+    var speed;
+    speed = 1;
     return Registry.add("ScopeProcessor", function(scope) {
-      var acc, accTime, running, tick;
+      var acc, count, running, step, tick;
       if (scope.tick == null) {
         return;
       }
       running = true;
       acc = 0;
-      accTime = 0;
+      count = 0;
+      step = 1 / 60;
       // Replace the actual scope tick function with a warning
       tick = scope.tick;
       scope.tick = function() {
         throw new Error("@tick() is called by the system. Please don't call it yourself.");
       };
-      // Store a secret copy of the real tick function, so that warmup can use it
-      scope._tick = tick;
-      Tick(function(time, dt) {
-        var results;
-        if (!running) {
-          return;
-        }
-        acc += dt;
-        results = [];
-        while (acc > 1 / 60) {
-          acc -= 1 / 60;
-          accTime += 1 / 60;
-          results.push(tick.call(scope, accTime, 1 / 60));
-        }
-        return results;
-      });
       scope.tick.start = function() {
         return running = true;
       };
@@ -4792,10 +4836,35 @@
           return scope.tick.start();
         }
       };
-      return scope.tick.restart = function() {
+      scope.tick.restart = function() {
         acc = 0;
-        return accTime = 0;
+        return count = 0;
       };
+      scope.tick.speed = function(s) {
+        if (s != null) {
+          speed = s;
+        }
+        return speed;
+      };
+      scope.tick.step = function() {
+        count++;
+        return tick.call(scope, count * step, step);
+      };
+      // Store a secret copy of the real tick function, so that warmup can use it
+      scope._tick = function(time, dt) {
+        var results;
+        if (!running) {
+          return;
+        }
+        acc += dt * speed;
+        results = [];
+        while (acc > step) {
+          acc -= step;
+          results.push(scope.tick.step());
+        }
+        return results;
+      };
+      return Tick(scope._tick);
     });
   });
 
@@ -4938,25 +5007,18 @@
 
   Take(["Registry", "ScopeCheck"], function(Registry, ScopeCheck) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var dt, runtimeLimit;
+      var runtimeLimit, step;
       ScopeCheck(scope, "warmup");
       runtimeLimit = 100; // ms
-      dt = 1 / 60; // seconds
-      return scope.warmup = function(duration, ...fns) {
-        var fn, len, m, msg, runtime, start, time;
+      step = 1 / 1000;
+      return scope.warmup = function(duration) {
+        var msg, runtime, start, time;
         start = performance.now();
-        if (!(fns != null ? fns.length : void 0)) {
-          fns = [scope._tick, scope._milliTick];
-        }
         time = -duration; // seconds
         while (time <= 0) {
-          for (m = 0, len = fns.length; m < len; m++) {
-            fn = fns[m];
-            if (fn != null) {
-              fn.call(scope, time, dt);
-            }
-          }
-          time += dt;
+          scope._ms(time, step);
+          scope._tick(time, step);
+          time += step;
           runtime = performance.now() - start;
           if (runtime > runtimeLimit) {
             console.log(`Warning: Warmup took longer than ${runtimeLimit}ms — aborting.`);
@@ -6395,7 +6457,6 @@
         total -= avgList.shift();
       }
       fps = avgList.length / total; // will be artifically low for the first second — that's fine
-      fps = Math.min(60, fps); // our method is slightly inexact, so sometimes you get numbers over 60 — cap to 60
       if (isNaN(fps)) { // If we drop too low we get NaN — cap to 2
         return fps = 2;
       }

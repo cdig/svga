@@ -3,19 +3,18 @@ Take ["Registry", "ScopeCheck"], (Registry, ScopeCheck)->
     ScopeCheck scope, "warmup"
 
     runtimeLimit = 100 # ms
-    dt = 1/60 # seconds
+    step = 1/1000
 
-    scope.warmup = (duration, ...fns)->
+    scope.warmup = (duration)->
       start = performance.now()
-
-      unless fns?.length
-        fns = [scope._tick, scope._milliTick]
 
       time = -duration # seconds
 
       while time <= 0
-        fn?.call scope, time, dt for fn in fns
-        time += dt
+
+        scope._ms time, step
+        scope._tick time, step
+        time += step
 
         runtime = performance.now() - start
         if runtime > runtimeLimit

@@ -470,7 +470,7 @@
   });
 
   Take(["FlowArrows:Config", "FlowArrows:Process", "FlowArrows:Set", "Reaction", "Tick"], function(Config, Process, Set, Reaction, Tick) {
-    var enableAll, sets, visible;
+    var FlowArrows, enableAll, sets, visible;
     sets = [];
     visible = true; // Default to true, in case we don't have an arrows button
     enableAll = function() {
@@ -487,7 +487,7 @@
         for (m = 0, len = sets.length; m < len; m++) {
           set = sets[m];
           if (set.parentScope.alpha > 0) {
-            f = dt * Config.SPEED;
+            f = dt * Config.SPEED * FlowArrows.speed;
             s = Config.SCALE;
             set.update(f, s);
           }
@@ -501,7 +501,7 @@
     Reaction("FlowArrows:Hide", function() {
       return enableAll(visible = false);
     });
-    return Make("FlowArrows", Config.wrap(function(parentScope, ...lineData) {
+    FlowArrows = Config.wrap(function(parentScope, ...lineData) {
       var elm, set, setData;
       if (parentScope == null) {
         console.log(lineData);
@@ -519,7 +519,10 @@
       set.parentScope = parentScope;
       sets.push(set);
       return set;
-    }));
+    });
+    // This is used by @debug.controls()
+    FlowArrows.speed = 1;
+    return Make("FlowArrows", FlowArrows);
   });
 
   Take(["FlowArrows:Config", "Vec"], function(Config, Vec) {
@@ -4348,6 +4351,43 @@
       return Object.defineProperty(scope, 'debug', {
         get: function() {
           return {
+            controls: function() {
+              var Control;
+              Control = Take("Control");
+              Control.slider({
+                name: "Speed",
+                group: "#f70",
+                value: 1,
+                change: (v) => {
+                  var ref, ref1, ref2, ref3;
+                  v = v === 0 ? 0 : Math.pow(500, v) / 500;
+                  if ((ref = scope.rawTick) != null) {
+                    ref.speed(v);
+                  }
+                  if ((ref1 = scope.tick) != null) {
+                    ref1.speed(v);
+                  }
+                  if ((ref2 = scope.ms) != null) {
+                    ref2.speed(v);
+                  }
+                  return (ref3 = Take("FlowArrows")) != null ? ref3.speed = 0.005 + v * 0.995 : void 0;
+                }
+              });
+              return Control.button({
+                name: "Step",
+                group: "#f70",
+                click: () => {
+                  var ref, ref1, ref2;
+                  if ((ref = scope.rawTick) != null) {
+                    ref.step();
+                  }
+                  if ((ref1 = scope.tick) != null) {
+                    ref1.step();
+                  }
+                  return (ref2 = scope.ms) != null ? ref2.step() : void 0;
+                }
+              });
+            },
             point: function(color) {
               var point;
               if (Mode.dev) {

@@ -12,7 +12,7 @@ Take ["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick
     if visible
       for set in sets
         if set.parentScope.alpha > 0
-          f = dt * Config.SPEED
+          f = dt * Config.SPEED * FlowArrows.speed
           s = Config.SCALE
           set.update f, s
     undefined
@@ -20,7 +20,7 @@ Take ["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick
   Reaction "FlowArrows:Show", ()-> enableAll visible = true
   Reaction "FlowArrows:Hide", ()-> enableAll visible = false
 
-  Make "FlowArrows", Config.wrap (parentScope, lineData...)->
+  FlowArrows = Config.wrap (parentScope, lineData...)->
     if not parentScope? then console.log lineData; throw new Error "FlowArrows was called with a null target. ^^^ was the baked line data."
 
     elm = parentScope.element
@@ -35,3 +35,8 @@ Take ["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick
     set.parentScope = parentScope
     sets.push set
     set
+
+  # This is used by @debug.controls()
+  FlowArrows.speed = 1
+
+  Make "FlowArrows", FlowArrows

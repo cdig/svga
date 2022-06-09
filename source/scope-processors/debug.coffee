@@ -1,10 +1,31 @@
 Take ["Mode", "Registry", "ScopeCheck", "Scope", "SVG"], (Mode, Registry, ScopeCheck, Scope, SVG)->
   Registry.add "ScopeProcessor", (scope)->
-    
+
     ScopeCheck scope, "debug"
-    
+
     Object.defineProperty scope, 'debug', get: ()->
-      
+
+      controls: ()->
+        Control = Take "Control"
+        Control.slider
+          name: "Speed"
+          group: "#f70"
+          value: 1
+          change: (v)=>
+            v = if v is 0 then 0 else Math.pow(500, v)/500
+            scope.rawTick?.speed v
+            scope.tick?.speed v
+            scope.ms?.speed v
+            Take("FlowArrows")?.speed = 0.005 + v * 0.995
+
+        Control.button
+          name: "Step"
+          group: "#f70"
+          click: ()=>
+            scope.rawTick?.step()
+            scope.tick?.step()
+            scope.ms?.step()
+
       point: (color)->
         if Mode.dev
           point = Scope SVG.create "g", scope.element

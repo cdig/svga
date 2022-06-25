@@ -4637,7 +4637,7 @@
         }
         acc += dt * speed;
         results = [];
-        while (acc > step) {
+        while (acc > step && running) {
           acc -= step;
           results.push(scope.ms.step());
         }
@@ -4898,7 +4898,7 @@
         }
         acc += dt * speed;
         results = [];
-        while (acc > step) {
+        while (acc > step && running) {
           acc -= step;
           results.push(scope.tick.step());
         }

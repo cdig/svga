@@ -43,7 +43,7 @@ Take ["Registry", "Tick"], (Registry, Tick)->
     scope._tick = (time, dt)->
       return unless running
       acc += dt * speed
-      while acc > step
+      while acc > step and running
         acc -= step
         scope.tick.step()
 

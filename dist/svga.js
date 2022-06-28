@@ -5047,17 +5047,17 @@
 
   Take(["Registry", "ScopeCheck"], function(Registry, ScopeCheck) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var runtimeLimit, step;
+      var runtimeLimit, warmup;
       ScopeCheck(scope, "warmup");
-      runtimeLimit = 100; // ms
-      step = 1 / 1000;
-      return scope.warmup = function(duration) {
-        var msg, runtime, start, time;
+      runtimeLimit = 300; // ms
+      warmup = function(fn, time, step) {
+        var msg, runtime, start;
+        if (fn == null) {
+          return;
+        }
         start = performance.now();
-        time = -duration; // seconds
         while (time <= 0) {
-          scope._ms(time, step);
-          scope._tick(time, step);
+          fn(time, step);
           time += step;
           runtime = performance.now() - start;
           if (runtime > runtimeLimit) {
@@ -5070,6 +5070,11 @@
           msg += " — please simplify your function or reduce the warmup duration";
         }
         return console.log(msg);
+      };
+      return scope.warmup = function(duration) { // duration: seconds
+        warmup(scope._ms, -duration, 1 / 1000);
+        warmup(scope._tick, -duration, 1 / 60);
+        return warmup(scope._rawTick, -duration, 1 / 60);
       };
     });
   });

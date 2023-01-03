@@ -34,7 +34,7 @@ Take ["Mode", "Tick", "SVG", "SVGReady"], (Mode, Tick, SVG)->
         HUD _k, _v, v
 
     # Pretty-print nested objects (and avoid infinite loops if there's a reference cycle)
-    else if typeof v is "object" and not v._hud_visited
+    else if v? and typeof v is "object" and not v._hud_visited
       v._hud_visited = true
       for _k, _v of v when _k isnt "_hud_visited"
         HUD "#{k}.#{_k}", _v, v

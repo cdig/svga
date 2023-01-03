@@ -2982,7 +2982,7 @@
           HUD(_k, _v, v);
         }
       // Pretty-print nested objects (and avoid infinite loops if there's a reference cycle)
-      } else if (typeof v === "object" && !v._hud_visited) {
+      } else if ((v != null) && typeof v === "object" && !v._hud_visited) {
         v._hud_visited = true;
         for (_k in v) {
           _v = v[_k];

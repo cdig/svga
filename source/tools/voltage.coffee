@@ -32,7 +32,7 @@ Take "Ease", (Ease)->
 
       # Normal — green to blue
       else
-        h = Ease.linear voltage, Voltage.min, Voltage.max, 100, 180
+        h = Ease.linear voltage, Voltage.min, Voltage.max, 51, 189
         return renderHSLString h, 100, 50, alpha
 
 

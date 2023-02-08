@@ -8186,7 +8186,7 @@
           return renderString(0, 0, 0, alpha);
         default:
           // Normal — green to blue
-          h = Ease.linear(voltage, Voltage.min, Voltage.max, 100, 180);
+          h = Ease.linear(voltage, Voltage.min, Voltage.max, 51, 189);
           return renderHSLString(h, 100, 50, alpha);
       }
     };

@@ -131,9 +131,10 @@ Take ["GUI", "Input", "PopoverButton", "RAF", "Registry", "Resize", "Scope", "SV
       SVG.attrs panelInner, transform: "translate(#{desiredPanelX * panelScale}, #{newPanelY}) scale(#{panelScale})"
 
 
-    setActive = (name, unclick)->
+    setActive = (buttonProps, unclick)->
       SVG.attrs activeLabel,
-        textContent: name
+        textContent: buttonProps.name
+        fontSize: buttonProps.fontSize or 16
         x: GUI.colInnerWidth/2 + (if name.length > 14 then 8 else 0)
       activeButtonCancelCb?()
       activeButtonCancelCb = unclick

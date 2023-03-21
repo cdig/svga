@@ -1476,9 +1476,10 @@
           transform: `translate(${desiredPanelX * panelScale}, ${newPanelY}) scale(${panelScale})`
         });
       };
-      setActive = function(name, unclick) {
+      setActive = function(buttonProps, unclick) {
         SVG.attrs(activeLabel, {
-          textContent: name,
+          textContent: buttonProps.name,
+          fontSize: buttonProps.fontSize || 16,
           x: GUI.colInnerWidth / 2 + (name.length > 14 ? 8 : 0)
         });
         if (typeof activeButtonCancelCb === "function") {
@@ -1750,7 +1751,7 @@
       };
       click = function(e, state) {
         var handler, len, m;
-        props.setActive(props.name, unclick);
+        props.setActive(props, unclick);
         isActive = true;
         toActive();
         if (e !== false) {

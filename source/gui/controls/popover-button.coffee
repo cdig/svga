@@ -51,7 +51,7 @@ Take ["GUI", "Input", "SVG", "Tween"], ({ControlPanel:GUI}, Input, SVG, Tween)->
       toNormal()
       isActive = false
     click = (e, state)->
-      props.setActive props.name, unclick
+      props.setActive props, unclick
       isActive = true
       toActive()
       handler() for handler in handlers unless e is false

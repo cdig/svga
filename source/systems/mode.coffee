@@ -21,7 +21,7 @@ Take ["Config", "ParentData"], (Config, ParentData)->
     # Allow turning on dev mode when running in prod
     return true if loc.search.indexOf("dev=true") > 0
     # By default, dev mode is active when we have a URL with a port number
-    return loc.port?.length >= 4
+    return loc.port?.length >= 3
 
   Mode =
     get: fetchAttribute

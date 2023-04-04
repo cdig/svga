@@ -5466,7 +5466,7 @@
         return true;
       }
       // By default, dev mode is active when we have a URL with a port number
-      return ((ref = loc.port) != null ? ref.length : void 0) >= 4;
+      return ((ref = loc.port) != null ? ref.length : void 0) >= 3;
     };
     Mode = {
       get: fetchAttribute,

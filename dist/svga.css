@@ -8,7 +8,6 @@
   pointer-events: none;
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
   cursor: default;
 }
@@ -33,10 +32,9 @@ button,
   text-align: center;
   text-decoration: none;
   color: white;
-  background-color: #507ed3;
+  background-color: hsl(219, 60%, 57%);
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
@@ -53,7 +51,7 @@ button.border,
 }
 button.active,
 .button.active {
-  background-color: #00a3a3;
+  background-color: hsl(180, 100%, 32%);
 }
 button.active:hover,
 .button.active:hover {
@@ -62,14 +60,14 @@ button.active:hover,
 button[disabled], button.disabled,
 .button[disabled],
 .button.disabled {
-  background-color: #507ed3;
-  color: #7da6e8;
+  background-color: hsl(219, 60%, 57%);
+  color: hsl(217, 70%, 70%);
   pointer-events: none;
 }
 button.soft-disabled,
 .button.soft-disabled {
-  background-color: #507ed3;
-  color: #7da6e8;
+  background-color: hsl(219, 60%, 57%);
+  color: hsl(217, 70%, 70%);
 }
 button.small,
 .button.small {
@@ -77,7 +75,7 @@ button.small,
 }
 button:focus,
 .button:focus {
-  border-color: #363a49;
+  border-color: hsl(227, 15%, 25%);
 }
 button:hover,
 .button:hover {
@@ -161,7 +159,7 @@ button.yellow:hover,
 }
 button.white,
 .button.white {
-  color: #3f5ca6;
+  color: hsl(223, 45%, 45%);
 }
 
 .buttons {
@@ -189,27 +187,27 @@ button.white,
 }
 
 .bg-xxl {
-  background-color: #7da6e8;
+  background-color: hsl(217, 70%, 70%);
 }
 
 .bg-xl {
-  background-color: #507ed3;
+  background-color: hsl(219, 60%, 57%);
 }
 
 .bg-l {
-  background-color: #406abf;
+  background-color: hsl(220, 50%, 50%);
 }
 
 .bg-m {
-  background-color: #3d5aa9;
+  background-color: hsl(224, 47%, 45%);
 }
 
 .bg-d {
-  background-color: #384c94;
+  background-color: hsl(227, 45%, 40%);
 }
 
 .bg-xd {
-  background-color: #263373;
+  background-color: hsl(230, 50%, 30%);
 }
 
 .white {
@@ -217,27 +215,27 @@ button.white,
 }
 
 .mist {
-  background-color: #e9eaed;
+  background-color: hsl(220, 10%, 92%);
 }
 
 .silver {
-  background-color: #c4c9d4;
+  background-color: hsl(220, 15%, 80%);
 }
 
 .grey {
-  background-color: #7a8190;
+  background-color: hsl(220, 9%, 52%);
 }
 
 .smoke {
-  background-color: #363a49;
+  background-color: hsl(227, 15%, 25%);
 }
 
 .onyx {
-  background-color: #060613;
+  background-color: hsl(240, 50%, 5%);
 }
 
 .tar {
-  background-color: #1e2138;
+  background-color: hsl(233, 30%, 17%);
 }
 
 .black {
@@ -245,67 +243,67 @@ button.white,
 }
 
 .red {
-  background-color: #e83037;
+  background-color: hsl(358, 80%, 55%);
 }
 
 .orange {
-  background-color: #ff8533;
+  background-color: hsl(24, 100%, 60%);
 }
 
 .yellow {
-  background-color: #ffb700;
+  background-color: hsl(43, 100%, 50%);
 }
 
 .green {
-  background-color: #0da527;
+  background-color: hsl(130, 85%, 35%);
 }
 
 .blue {
-  background-color: #3f5ca6;
+  background-color: hsl(223, 45%, 45%);
 }
 
 .indigo {
-  background-color: #945ec9;
+  background-color: hsl(270, 50%, 58%);
 }
 
 .violet {
-  background-color: #c63980;
+  background-color: hsl(330, 55%, 50%);
 }
 
 .blueberry {
-  background-color: #906ce0;
+  background-color: hsl(259, 65%, 65%);
 }
 
 .bronze {
-  background-color: #d9c38c;
+  background-color: hsl(43, 50%, 70%);
 }
 
 .mint {
-  background-color: #15bc71;
+  background-color: hsl(153, 80%, 41%);
 }
 
 .navy {
-  background-color: #1b2055;
+  background-color: hsl(235, 52%, 22%);
 }
 
 .navy-dark {
-  background-color: #0c173b;
+  background-color: hsl(227, 65%, 14%);
 }
 
 .olive {
-  background-color: #05614b;
+  background-color: hsl(166, 90%, 20%);
 }
 
 .purple {
-  background-color: #47308d;
+  background-color: hsl(255, 49%, 37%);
 }
 
 .teal {
-  background-color: #00a3a3;
+  background-color: hsl(180, 100%, 32%);
 }
 
 .fuscha {
-  background-color: #cc3366;
+  background-color: hsl(340, 60%, 50%);
 }
 
 .ghost {
@@ -317,27 +315,27 @@ button.white,
 }
 
 .bg-xxl-text {
-  color: #7da6e8;
+  color: hsl(217, 70%, 70%);
 }
 
 .bg-xl-text {
-  color: #507ed3;
+  color: hsl(219, 60%, 57%);
 }
 
 .bg-l-text {
-  color: #406abf;
+  color: hsl(220, 50%, 50%);
 }
 
 .bg-m-text {
-  color: #3d5aa9;
+  color: hsl(224, 47%, 45%);
 }
 
 .bg-d-text {
-  color: #384c94;
+  color: hsl(227, 45%, 40%);
 }
 
 .bg-xd-text {
-  color: #263373;
+  color: hsl(230, 50%, 30%);
 }
 
 .white-text {
@@ -345,27 +343,27 @@ button.white,
 }
 
 .mist-text {
-  color: #e9eaed;
+  color: hsl(220, 10%, 92%);
 }
 
 .silver-text {
-  color: #c4c9d4;
+  color: hsl(220, 15%, 80%);
 }
 
 .grey-text {
-  color: #7a8190;
+  color: hsl(220, 9%, 52%);
 }
 
 .smoke-text {
-  color: #363a49;
+  color: hsl(227, 15%, 25%);
 }
 
 .tar-text {
-  color: #1e2138;
+  color: hsl(233, 30%, 17%);
 }
 
 .onyx-text {
-  color: #060613;
+  color: hsl(240, 50%, 5%);
 }
 
 .black-text {
@@ -373,91 +371,91 @@ button.white,
 }
 
 .red-text {
-  color: #e83037;
+  color: hsl(358, 80%, 55%);
 }
 
 .orange-text {
-  color: #ff8533;
+  color: hsl(24, 100%, 60%);
 }
 
 .yellow-text {
-  color: #ffb700;
+  color: hsl(43, 100%, 50%);
 }
 
 .green-text {
-  color: #0da527;
+  color: hsl(130, 85%, 35%);
 }
 
 .blue-text {
-  color: #3f5ca6;
+  color: hsl(223, 45%, 45%);
 }
 
 .indigo-text {
-  color: #945ec9;
+  color: hsl(270, 50%, 58%);
 }
 
 .violet-text {
-  color: #c63980;
+  color: hsl(330, 55%, 50%);
 }
 
 .blueberry-text {
-  color: #906ce0;
+  color: hsl(259, 65%, 65%);
 }
 
 .bronze-text {
-  color: #d9c38c;
+  color: hsl(43, 50%, 70%);
 }
 
 .mint-text {
-  color: #15bc71;
+  color: hsl(153, 80%, 41%);
 }
 
 .navy-text {
-  color: #1b2055;
+  color: hsl(235, 52%, 22%);
 }
 
 .navy-dark-text {
-  color: #0c173b;
+  color: hsl(227, 65%, 14%);
 }
 
 .olive-text {
-  color: #05614b;
+  color: hsl(166, 90%, 20%);
 }
 
 .purple-text {
-  color: #47308d;
+  color: hsl(255, 49%, 37%);
 }
 
 .teal-text {
-  color: #00a3a3;
+  color: hsl(180, 100%, 32%);
 }
 
 .fuscha-text {
-  color: #cc3366;
+  color: hsl(340, 60%, 50%);
 }
 
 .bg-xxl-em em {
-  color: #7da6e8;
+  color: hsl(217, 70%, 70%);
 }
 
 .bg-xl-em em {
-  color: #507ed3;
+  color: hsl(219, 60%, 57%);
 }
 
 .bg-l-em em {
-  color: #406abf;
+  color: hsl(220, 50%, 50%);
 }
 
 .bg-m-em em {
-  color: #3d5aa9;
+  color: hsl(224, 47%, 45%);
 }
 
 .bg-d-em em {
-  color: #384c94;
+  color: hsl(227, 45%, 40%);
 }
 
 .bg-xd-em em {
-  color: #263373;
+  color: hsl(230, 50%, 30%);
 }
 
 .white-em em {
@@ -465,27 +463,27 @@ button.white,
 }
 
 .mist-em em {
-  color: #e9eaed;
+  color: hsl(220, 10%, 92%);
 }
 
 .silver-em em {
-  color: #c4c9d4;
+  color: hsl(220, 15%, 80%);
 }
 
 .grey-em em {
-  color: #7a8190;
+  color: hsl(220, 9%, 52%);
 }
 
 .smoke-em em {
-  color: #363a49;
+  color: hsl(227, 15%, 25%);
 }
 
 .tar-em em {
-  color: #1e2138;
+  color: hsl(233, 30%, 17%);
 }
 
 .onyx-em em {
-  color: #060613;
+  color: hsl(240, 50%, 5%);
 }
 
 .black-em em {
@@ -493,67 +491,67 @@ button.white,
 }
 
 .red-em em {
-  color: #e83037;
+  color: hsl(358, 80%, 55%);
 }
 
 .orange-em em {
-  color: #ff8533;
+  color: hsl(24, 100%, 60%);
 }
 
 .yellow-em em {
-  color: #ffb700;
+  color: hsl(43, 100%, 50%);
 }
 
 .green-em em {
-  color: #0da527;
+  color: hsl(130, 85%, 35%);
 }
 
 .blue-em em {
-  color: #3f5ca6;
+  color: hsl(223, 45%, 45%);
 }
 
 .indigo-em em {
-  color: #945ec9;
+  color: hsl(270, 50%, 58%);
 }
 
 .violet-em em {
-  color: #c63980;
+  color: hsl(330, 55%, 50%);
 }
 
 .blueberry-em em {
-  color: #906ce0;
+  color: hsl(259, 65%, 65%);
 }
 
 .bronze-em em {
-  color: #d9c38c;
+  color: hsl(43, 50%, 70%);
 }
 
 .mint-em em {
-  color: #15bc71;
+  color: hsl(153, 80%, 41%);
 }
 
 .navy-em em {
-  color: #1b2055;
+  color: hsl(235, 52%, 22%);
 }
 
 .navy-dark-em em {
-  color: #0c173b;
+  color: hsl(227, 65%, 14%);
 }
 
 .olive-em em {
-  color: #05614b;
+  color: hsl(166, 90%, 20%);
 }
 
 .purple-em em {
-  color: #47308d;
+  color: hsl(255, 49%, 37%);
 }
 
 .teal-em em {
-  color: #00a3a3;
+  color: hsl(180, 100%, 32%);
 }
 
 .fuscha-em em {
-  color: #cc3366;
+  color: hsl(340, 60%, 50%);
 }
 
 a {
@@ -591,19 +589,15 @@ h5 {
   h1 {
     font-size: 1.728em;
   }
-
   h2 {
     font-size: 1.44em;
   }
-
   h3 {
     font-size: 1.2em;
   }
-
   h4 {
     font-size: 1em;
   }
-
   h5 {
     font-size: 0.833em;
   }
@@ -612,19 +606,15 @@ h5 {
   h1 {
     font-size: 1.424em;
   }
-
   h2 {
     font-size: 1.266em;
   }
-
   h3 {
     font-size: 1.125em;
   }
-
   h4 {
     font-size: 1em;
   }
-
   h5 {
     font-size: 0.888em;
   }
@@ -653,7 +643,7 @@ html {
   font-size: 11pt;
   line-height: 1;
   color: white;
-  background: linear-gradient(to right, #263373, #3d5aa9, #263373);
+  background: linear-gradient(to right, hsl(230, 50%, 30%), hsl(224, 47%, 45%), hsl(230, 50%, 30%));
   opacity: 0;
   transition: 0.3s opacity;
 }
@@ -691,7 +681,7 @@ html {
   font-size: 2em;
   font-weight: bold;
   color: white;
-  background: #406abf;
+  background: hsl(220, 50%, 50%);
 }
 @media (max-width: 700px) {
   #message-inner {
@@ -755,7 +745,7 @@ html {
   border-radius: 8px;
   text-align: center;
   color: white;
-  background: #406abf;
+  background: hsl(220, 50%, 50%);
 }
 #Alert div:last-child {
   margin-top: 1em;
@@ -769,12 +759,12 @@ html {
   border-radius: 8px;
   text-align: center;
   color: white;
-  background-color: #384c94;
+  background-color: hsl(227, 45%, 40%);
 }
 #settings [settings-controls] {
   padding: 8px;
   border-radius: 8px;
-  background: #406abf;
+  background: hsl(220, 50%, 50%);
 }
 #settings [settings-controls] svg {
   display: block;
@@ -799,14 +789,9 @@ html {
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
 }
 #svga:-webkit-full-screen {
-  position: absolute;
-  top: 0;
-}
-#svga:-ms-fullscreen {
   position: absolute;
   top: 0;
 }
@@ -1049,12 +1034,9 @@ input,
 optgroup,
 select,
 textarea {
-  color: inherit;
-  /* 1 */
-  font: inherit;
-  /* 2 */
-  margin: 0;
-  /* 3 */
+  color: inherit; /* 1 */
+  font: inherit; /* 2 */
+  margin: 0; /* 3 */
 }
 
 /* Address inconsistent `text-transform` inheritance for `button` and `select`.
@@ -1075,10 +1057,8 @@ button,
 html input[type=button],
 input[type=reset],
 input[type=submit] {
-  -webkit-appearance: button;
-  /* 2 */
-  cursor: pointer;
-  /* 3 */
+  -webkit-appearance: button; /* 2 */
+  cursor: pointer; /* 3 */
 }
 
 /* Re-set default cursor for disabled elements. */

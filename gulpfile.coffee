@@ -1,4 +1,4 @@
-{ sassSync } = require "@mr-hope/gulp-sass"
+{ sass } = require "@mr-hope/gulp-sass"
 fs = require "fs"
 gulp = require "gulp"
 gulp_autoprefixer = require "gulp-autoprefixer"
@@ -49,7 +49,7 @@ gulp.task "scss", ()->
   gulp.src paths.scss
     .pipe gulp_natural_sort()
     .pipe gulp_concat "svga.scss"
-    .pipe sassSync(precision: 2).on("error", sassSync.logError)
+    .pipe sass(precision: 2).on "error", logAndKillError
     .pipe gulp_autoprefixer
       cascade: false
       remove: false

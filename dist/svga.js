@@ -5456,7 +5456,7 @@
     };
     isDev = function() {
       var loc, ref;
-      loc = window.top.location;
+      loc = window.location;
       if (loc.search.indexOf("dev=false") > 0) {
         // Allow turning off dev mode when running locally
         return false;
@@ -7540,9 +7540,9 @@
   // You are expected to do your own type conversions when getting values back.
   Make("Storage", Storage = function(k, v) {
     if (v != null) {
-      return window.top.localStorage["SVGA-" + k] = v.toString();
+      return window.localStorage["SVGA-" + k] = v.toString();
     } else {
-      return window.top.localStorage["SVGA-" + k];
+      return window.localStorage["SVGA-" + k];
     }
   });
 

@@ -3,6 +3,6 @@
 
 Make "Storage", Storage = (k, v)->
   if v?
-    window.top.localStorage["SVGA-" + k] = v.toString()
+    window.localStorage["SVGA-" + k] = v.toString()
   else
-    window.top.localStorage["SVGA-" + k]
+    window.localStorage["SVGA-" + k]

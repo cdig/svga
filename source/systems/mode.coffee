@@ -15,7 +15,8 @@ Take ["Config", "ParentData"], (Config, ParentData)->
       Config[name]
 
   isDev = ()->
-    loc = window.top.location
+    
+    loc = window.location
     # Allow turning off dev mode when running locally
     return false if loc.search.indexOf("dev=false") > 0
     # Allow turning on dev mode when running in prod

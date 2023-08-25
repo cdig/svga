@@ -3894,7 +3894,7 @@
       // This is the largest our SVGA can ever be
       totalAvailableSpace = {
         w: SVG.svg.getBoundingClientRect().width,
-        h: window.top.innerHeight
+        h: window.innerHeight
       };
       // When deployed, account for the floating header
       if (!Mode.dev && !Fullscreen.active()) {
@@ -3956,7 +3956,7 @@
       return RAF(resize, true);
     };
     window.addEventListener("resize", runResize);
-    window.top.addEventListener("resize", runResize);
+    // window.top.addEventListener "resize", runResize
     Take("AllReady", runResize);
     if (Mode.embed) {
       // This is noisy, but we don't currently have a way to limit listeners to just resize-relevant events

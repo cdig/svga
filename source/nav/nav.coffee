@@ -82,7 +82,7 @@ Take ["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resi
     # This is the largest our SVGA can ever be
     totalAvailableSpace =
       w: SVG.svg.getBoundingClientRect().width
-      h: window.innerHeight
+      h: window.top.innerHeight
 
     # When deployed, account for the floating header
     if not Mode.dev and not Fullscreen.active()

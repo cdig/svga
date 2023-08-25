@@ -3894,7 +3894,7 @@
       // This is the largest our SVGA can ever be
       totalAvailableSpace = {
         w: SVG.svg.getBoundingClientRect().width,
-        h: window.innerHeight
+        h: window.top.innerHeight
       };
       // When deployed, account for the floating header
       if (!Mode.dev && !Fullscreen.active()) {

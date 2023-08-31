@@ -3890,11 +3890,16 @@
       };
     };
     resize = function() {
-      var forcedHeight, forcedWidth, horizontalPanelInfo, horizontalResizeInfo, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
+      var forcedHeight, forcedWidth, horizontalPanelInfo, horizontalResizeInfo, innerHeight, resizeInfo, totalAvailableSpace, verticalPanelInfo, verticalResizeInfo;
       // This is the largest our SVGA can ever be
+      if (Mode.embed) {
+        innerHeight = ParentData.get("windowTopInnerHeight");
+      } else {
+        innerHeight = window.top.innerHeight;
+      }
       totalAvailableSpace = {
         w: SVG.svg.getBoundingClientRect().width,
-        h: window.top.innerHeight
+        h: innerHeight
       };
       // When deployed, account for the floating header
       if (!Mode.dev && !Fullscreen.active()) {
@@ -3956,7 +3961,9 @@
       return RAF(resize, true);
     };
     window.addEventListener("resize", runResize);
-    // window.top.addEventListener "resize", runResize
+    if (!Mode.embed) {
+      window.top.addEventListener("resize", runResize);
+    }
     Take("AllReady", runResize);
     if (Mode.embed) {
       // This is noisy, but we don't currently have a way to limit listeners to just resize-relevant events

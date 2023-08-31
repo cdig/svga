@@ -80,9 +80,14 @@ Take ["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resi
   resize = ()->
 
     # This is the largest our SVGA can ever be
+    if Mode.embed
+      innerHeight = ParentData.get("windowTopInnerHeight")
+    else
+      innerHeight = window.top.innerHeight
+      
     totalAvailableSpace =
       w: SVG.svg.getBoundingClientRect().width
-      h: window.top.innerHeight
+      h: innerHeight
 
     # When deployed, account for the floating header
     if not Mode.dev and not Fullscreen.active()
@@ -145,7 +150,8 @@ Take ["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resi
   # Init
   runResize = ()-> RAF resize, true
   window.addEventListener "resize", runResize
-  # window.top.addEventListener "resize", runResize
+  if not Mode.embed
+    window.top.addEventListener "resize", runResize
   Take "AllReady", runResize
 
 

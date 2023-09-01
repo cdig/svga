@@ -5463,6 +5463,9 @@
     };
     isDev = function() {
       var loc, ref;
+      if (embedded) {
+        return;
+      }
       loc = window.location;
       if (loc.search.indexOf("dev=false") > 0) {
         // Allow turning off dev mode when running locally

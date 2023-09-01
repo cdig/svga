@@ -15,7 +15,6 @@ Take ["Config", "ParentData"], (Config, ParentData)->
       Config[name]
 
   isDev = ()->
-    return if embedded
     loc = window.location
     # Allow turning off dev mode when running locally
     return false if loc.search.indexOf("dev=false") > 0

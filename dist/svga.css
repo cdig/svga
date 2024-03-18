@@ -791,10 +791,6 @@ html {
   -moz-user-select: none;
   user-select: none;
 }
-#svga:-webkit-full-screen {
-  position: absolute;
-  top: 0;
-}
 #svga:fullscreen {
   position: absolute;
   top: 0;

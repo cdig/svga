@@ -10,7 +10,7 @@
     "@mr-hope/gulp-sass": "latest",
     "coffeescript": "latest",
     "gulp": "gulpjs/gulp#v4.0.2",
-    "gulp-autoprefixer": "latest",
+    "gulp-autoprefixer": "8.0.0",
     "gulp-coffee": "latest",
     "gulp-concat": "latest",
     "gulp-natural-sort": "latest"

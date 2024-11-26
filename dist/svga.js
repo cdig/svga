@@ -6275,7 +6275,7 @@
   Take("Ease", function(Ease) {
     var Bivoltage, renderHSLString, renderString;
     Bivoltage = function(bivoltage, alpha = 1) {
-      var h, l;
+      var l;
       switch (false) {
         // Pass-through for string values
         case typeof bivoltage !== "string":
@@ -6289,15 +6289,15 @@
         // Zero bivoltage
         case bivoltage !== Bivoltage.zero:
           return renderString(0, 0, 0, alpha);
-        // Normal — green to blue
-        case !(bivoltage >= Bivoltage.posMin):
+        default:
+          // Normal — green to blue
           l = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0);
           return renderHSLString(0, 100, l, alpha);
-        default:
-          h = Ease.linear(bivoltage, Bivoltage.negMin, Bivoltage.negMax, 51, 180);
-          return renderHSLString(h, 100, 50, alpha);
       }
     };
+    // else
+    //   h = Ease.linear bivoltage, Bivoltage.negMin, Bivoltage.negMax, 51, 180
+    //   return renderHSLString h, 100, 50, alpha
     Bivoltage.black = 0;
     Bivoltage.inert = -101;
     Bivoltage.ground = 0;

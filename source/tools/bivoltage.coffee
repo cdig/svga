@@ -26,28 +26,28 @@ Take "Ease", (Ease)->
         return renderHSLString h, 100, 50, alpha
 
 
-Bivoltage.black = 0
-Bivoltage.inert = -101
-Bivoltage.ground = 0
-Bivoltage.zero = 0
-Bivoltage.posMin = 1
-Bivoltage.negMin = -1
-Bivoltage.posMax = 100
-Bivoltage.negMax = -100
-# Bivoltage.electric = 1000
-Bivoltage.magnetic = 1001
+  Bivoltage.black = 0
+  Bivoltage.inert = -101
+  Bivoltage.ground = 0
+  Bivoltage.zero = 0
+  Bivoltage.posMin = 1
+  Bivoltage.negMin = -1
+  Bivoltage.posMax = 100
+  Bivoltage.negMax = -100
+  # Bivoltage.electric = 1000
+  Bivoltage.magnetic = 1001
 
 
-renderString = (r, g, b, a)->
-  if a >= .99
-    return "rgb(#{r},#{g},#{b})"
-  else
-    return "rgba(#{r},#{g},#{b},#{a})"
+  renderString = (r, g, b, a)->
+    if a >= .99
+      return "rgb(#{r},#{g},#{b})"
+    else
+      return "rgba(#{r},#{g},#{b},#{a})"
 
-renderHSLString = (h, s, l, a)->
-  if a >= .99
-    return "hsl(#{h},#{s}%,#{l}%)"
-  else
-    return "hsla(#{h},#{s}%,#{l}%,#{a})"
+  renderHSLString = (h, s, l, a)->
+    if a >= .99
+      return "hsl(#{h},#{s}%,#{l}%)"
+    else
+      return "hsla(#{h},#{s}%,#{l}%,#{a})"
 
-Make "Bivoltage", Bivoltage
+  Make "Bivoltage", Bivoltage

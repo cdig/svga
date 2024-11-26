@@ -1,5 +1,5 @@
 (function() {
-  var Storage, renderHSLString, renderString,
+  var Storage,
     indexOf = [].indexOf;
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
@@ -6273,8 +6273,8 @@
   })();
 
   Take("Ease", function(Ease) {
-    var Bivoltage;
-    return Bivoltage = function(bivoltage, alpha = 1) {
+    var Bivoltage, renderHSLString, renderString;
+    Bivoltage = function(bivoltage, alpha = 1) {
       var h;
       switch (false) {
         // Pass-through for string values
@@ -6298,44 +6298,32 @@
           return renderHSLString(h, 100, 50, alpha);
       }
     };
+    Bivoltage.black = 0;
+    Bivoltage.inert = -101;
+    Bivoltage.ground = 0;
+    Bivoltage.zero = 0;
+    Bivoltage.posMin = 1;
+    Bivoltage.negMin = -1;
+    Bivoltage.posMax = 100;
+    Bivoltage.negMax = -100;
+    // Bivoltage.electric = 1000
+    Bivoltage.magnetic = 1001;
+    renderString = function(r, g, b, a) {
+      if (a >= .99) {
+        return `rgb(${r},${g},${b})`;
+      } else {
+        return `rgba(${r},${g},${b},${a})`;
+      }
+    };
+    renderHSLString = function(h, s, l, a) {
+      if (a >= .99) {
+        return `hsl(${h},${s}%,${l}%)`;
+      } else {
+        return `hsla(${h},${s}%,${l}%,${a})`;
+      }
+    };
+    return Make("Bivoltage", Bivoltage);
   });
-
-  Bivoltage.black = 0;
-
-  Bivoltage.inert = -101;
-
-  Bivoltage.ground = 0;
-
-  Bivoltage.zero = 0;
-
-  Bivoltage.posMin = 1;
-
-  Bivoltage.negMin = -1;
-
-  Bivoltage.posMax = 100;
-
-  Bivoltage.negMax = -100;
-
-  // Bivoltage.electric = 1000
-  Bivoltage.magnetic = 1001;
-
-  renderString = function(r, g, b, a) {
-    if (a >= .99) {
-      return `rgb(${r},${g},${b})`;
-    } else {
-      return `rgba(${r},${g},${b},${a})`;
-    }
-  };
-
-  renderHSLString = function(h, s, l, a) {
-    if (a >= .99) {
-      return `hsl(${h},${s}%,${l}%)`;
-    } else {
-      return `hsla(${h},${s}%,${l}%,${a})`;
-    }
-  };
-
-  Make("Bivoltage", Bivoltage);
 
   Take(["ControlPanel", "ControlPanelLayout", "GUI", "Registry", "Scope", "SVG", "ControlReady"], function(ControlPanel, ControlPanelLayout, {
       ControlPanel: GUI
@@ -7412,7 +7400,7 @@
   })();
 
   (function() {
-    var Pressure;
+    var Pressure, renderString;
     Pressure = function(pressure, alpha = 1) {
       var green;
       switch (false) {
@@ -8246,7 +8234,7 @@
   });
 
   Take("Ease", function(Ease) {
-    var Voltage;
+    var Voltage, renderHSLString, renderString;
     Voltage = function(voltage, alpha = 1) {
       var h;
       switch (false) {

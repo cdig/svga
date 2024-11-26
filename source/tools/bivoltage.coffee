@@ -5,10 +5,6 @@ Take "Ease", (Ease)->
       when typeof bivoltage is "string"
         return bivoltage
 
-    # Schematic — black
-      when bivoltage is Bivoltage.black
-        return renderString 0, 0, 0, alpha
-
     # Inert
       when bivoltage is Bivoltage.inert
         return renderHSLString 184, 9, 50, alpha
@@ -19,6 +15,7 @@ Take "Ease", (Ease)->
 
     # Normal — green to blue
       else
+        console.log "here"
         l = Ease.linear bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0
         return renderHSLString 0, 100, l, alpha
       # else
@@ -26,9 +23,7 @@ Take "Ease", (Ease)->
       #   return renderHSLString h, 100, 50, alpha
 
 
-  Bivoltage.black = 0
   Bivoltage.inert = -101
-  Bivoltage.ground = 0
   Bivoltage.zero = 0
   Bivoltage.posMin = 1
   Bivoltage.negMin = -1

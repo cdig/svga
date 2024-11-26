@@ -6280,9 +6280,6 @@
         // Pass-through for string values
         case typeof bivoltage !== "string":
           return bivoltage;
-        // Schematic — black
-        case bivoltage !== Bivoltage.black:
-          return renderString(0, 0, 0, alpha);
         // Inert
         case bivoltage !== Bivoltage.inert:
           return renderHSLString(184, 9, 50, alpha);
@@ -6291,6 +6288,7 @@
           return renderString(0, 0, 0, alpha);
         default:
           // Normal — green to blue
+          console.log("here");
           l = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0);
           return renderHSLString(0, 100, l, alpha);
       }
@@ -6298,9 +6296,7 @@
     // else
     //   h = Ease.linear bivoltage, Bivoltage.negMin, Bivoltage.negMax, 51, 180
     //   return renderHSLString h, 100, 50, alpha
-    Bivoltage.black = 0;
     Bivoltage.inert = -101;
-    Bivoltage.ground = 0;
     Bivoltage.zero = 0;
     Bivoltage.posMin = 1;
     Bivoltage.negMin = -1;

@@ -2,6 +2,7 @@ Take "Ease", (Ease)->
   Bivoltage = (bivoltage, alpha = 1)->
     switch
     # Pass-through for string values
+      console.log "hereUpper"
       when typeof bivoltage is "string"
         return bivoltage
 

@@ -4,13 +4,10 @@ Take "Ease", (Ease)->
     # Pass-through for string values
       when typeof bivoltage is "string"
         return bivoltage
+
     # Schematic — black
       when bivoltage is Bivoltage.black
         return renderString 0, 0, 0, alpha
-
-    # Magnetic
-      when bivoltage is Bivoltage.magnetic
-        return renderString 141, 2, 155, alpha
 
     # Inert
       when bivoltage is Bivoltage.inert
@@ -22,8 +19,8 @@ Take "Ease", (Ease)->
 
     # Normal — green to blue
       when bivoltage >= Bivoltage.posMin
-        h = Ease.linear bivoltage, Bivoltage.posMin, Bivoltage.max, 51, 180
-        return renderHSLString h, 100, 50, alpha
+        l = Ease.linear bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0
+        return renderHSLString 0, 100, l, alpha
       else
         h = Ease.linear bivoltage, Bivoltage.negMin, Bivoltage.negMax, 51, 180
         return renderHSLString h, 100, 50, alpha
@@ -37,8 +34,6 @@ Take "Ease", (Ease)->
   Bivoltage.negMin = -1
   Bivoltage.posMax = 100
   Bivoltage.negMax = -100
-  # Bivoltage.electric = 1000
-  Bivoltage.magnetic = 1001
 
 
   renderString = (r, g, b, a)->

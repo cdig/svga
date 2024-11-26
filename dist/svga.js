@@ -6275,7 +6275,7 @@
   Take("Ease", function(Ease) {
     var Bivoltage, renderHSLString, renderString;
     Bivoltage = function(bivoltage, alpha = 1) {
-      var h;
+      var h, l;
       switch (false) {
         // Pass-through for string values
         case typeof bivoltage !== "string":
@@ -6283,9 +6283,6 @@
         // Schematic — black
         case bivoltage !== Bivoltage.black:
           return renderString(0, 0, 0, alpha);
-        // Magnetic
-        case bivoltage !== Bivoltage.magnetic:
-          return renderString(141, 2, 155, alpha);
         // Inert
         case bivoltage !== Bivoltage.inert:
           return renderHSLString(184, 9, 50, alpha);
@@ -6294,8 +6291,8 @@
           return renderString(0, 0, 0, alpha);
         // Normal — green to blue
         case !(bivoltage >= Bivoltage.posMin):
-          h = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.max, 51, 180);
-          return renderHSLString(h, 100, 50, alpha);
+          l = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0);
+          return renderHSLString(0, 100, l, alpha);
         default:
           h = Ease.linear(bivoltage, Bivoltage.negMin, Bivoltage.negMax, 51, 180);
           return renderHSLString(h, 100, 50, alpha);
@@ -6309,8 +6306,6 @@
     Bivoltage.negMin = -1;
     Bivoltage.posMax = 100;
     Bivoltage.negMax = -100;
-    // Bivoltage.electric = 1000
-    Bivoltage.magnetic = 1001;
     renderString = function(r, g, b, a) {
       if (a >= .99) {
         return `rgb(${r},${g},${b})`;

@@ -6320,7 +6320,7 @@
           l = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.posMax, 80, 50);
           return renderHSLString(0, 100, l, alpha);
         case !(bivoltage < 0 && bivoltage > -100):
-          l = Ease.linear(bivoltage, Bivoltage.negMin, Bivoltage.negMax, 80, 50);
+          l = Ease.linear(bivoltage, Bivoltage.negMax, Bivoltage.negMin, 50, 80);
           return renderHSLString(240, 100, l, alpha);
       }
     };

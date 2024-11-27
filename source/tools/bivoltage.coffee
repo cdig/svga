@@ -2,7 +2,6 @@ Take "Ease", (Ease)->
   Bivoltage = (bivoltage, alpha = 1)->
     switch
     # Pass-through for string values
-      console.log "hereUpper"
       when typeof bivoltage is "string"
         return bivoltage
 
@@ -16,7 +15,6 @@ Take "Ease", (Ease)->
 
     # Normal — green to blue
       else
-        console.log "here"
         l = Ease.linear bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0
         return renderHSLString 0, 100, l, alpha
       # else

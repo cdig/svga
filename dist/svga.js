@@ -5307,7 +5307,7 @@
     });
   });
 
-  Take(["Pressure", "SVG", "Symbol", "Voltage"], function(Pressure, SVG, Symbol, Voltage) {
+  Take(["Pressure", "SVG", "Symbol", "Voltage", "Bivoltage"], function(Pressure, SVG, Symbol, Voltage, Bivoltage) {
     return Symbol("HydraulicLine", [], function(element) {
       var applyColor, fillElms, highlightActive, scope, strip, strokeElms;
       strokeElms = [];
@@ -5356,6 +5356,8 @@
             return applyColor("url(#MidHighlightGradient)", "url(#LightHighlightGradient)");
           } else if (scope.voltage != null) {
             return applyColor(Voltage(scope.voltage));
+          } else if (scope.bivoltage != null) {
+            return applyColor(Bivoltage(scope.bivoltage));
           } else {
             return applyColor(Pressure(scope.pressure));
           }
@@ -5366,6 +5368,8 @@
           // Do nothing
           } else if (scope.voltage != null) {
             return applyColor(Voltage(p));
+          } else if (scope.bivoltage != null) {
+            return applyColor(Bivoltage(p));
           } else {
             return applyColor(Pressure(p));
           }
@@ -6288,7 +6292,6 @@
           return renderString(0, 0, 0, alpha);
         default:
           // Normal — green to blue
-          console.log("here");
           l = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0);
           return renderHSLString(0, 100, l, alpha);
       }

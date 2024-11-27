@@ -1,4 +1,4 @@
-Take ["Pressure", "SVG", "Symbol", "Voltage"], (Pressure, SVG, Symbol, Voltage)->
+Take ["Pressure", "SVG", "Symbol", "Voltage", "Bivoltage"], (Pressure, SVG, Symbol, Voltage, Bivoltage)->
   Symbol "HydraulicLine", [], (element)->
     strokeElms = []
     fillElms = []
@@ -33,6 +33,8 @@ Take ["Pressure", "SVG", "Symbol", "Voltage"], (Pressure, SVG, Symbol, Voltage)-
           applyColor "url(#MidHighlightGradient)", "url(#LightHighlightGradient)"
         else if scope.voltage?
           applyColor Voltage scope.voltage
+        else if scope.bivoltage?
+          applyColor Bivoltage scope.bivoltage
         else
           applyColor Pressure scope.pressure
 
@@ -41,6 +43,8 @@ Take ["Pressure", "SVG", "Symbol", "Voltage"], (Pressure, SVG, Symbol, Voltage)-
           # Do nothing
         else if scope.voltage?
           applyColor Voltage p
+        else if scope.bivoltage?
+          applyColor Bivoltage p
         else
           applyColor Pressure p
 

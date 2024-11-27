@@ -18,8 +18,8 @@ Take "Ease", (Ease)->
         l = Ease.linear bivoltage, Bivoltage.posMin, Bivoltage.posMax, 80, 50
         return renderHSLString 0, 100, l, alpha
       when bivoltage < 0 and bivoltage > -100
-		l = Ease.linear bivoltage, Bivoltage.negMin, Bivoltage.negMax, 50, 80
-		return renderHSLString 240, 100, l, alpha
+        l = Ease.linear bivoltage, Bivoltage.negMin, Bivoltage.negMax, 50, 80
+        return renderHSLString 240, 100, l, alpha
       # else
       #   h = Ease.linear bivoltage, Bivoltage.negMin, Bivoltage.negMax, 51, 180
       #   return renderHSLString h, 100, 50, alpha

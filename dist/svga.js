@@ -4254,6 +4254,31 @@
     });
   });
 
+  // Depends on style
+  Take(["Bivoltage", "Registry", "ScopeCheck", "SVG"], function(Bivoltage, Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var accessors, bivoltage;
+      ScopeCheck(scope, "bivoltage");
+      bivoltage = null;
+      accessors = {
+        get: function() {
+          return bivoltage;
+        },
+        set: function(val) {
+          if (bivoltage !== val) {
+            bivoltage = val;
+            if (scope._setColor != null) {
+              return scope._setColor(bivoltage);
+            } else {
+              return scope.fill = Bivoltage(scope.bivoltage);
+            }
+          }
+        }
+      };
+      return Object.defineProperty(scope, "bivoltage", accessors);
+    });
+  });
+
   Take(["Registry", "ScopeCheck", "SVG"], function(Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       // These functions don't change the DOM — they just control the scope hierarchy.

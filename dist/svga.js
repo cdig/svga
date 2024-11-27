@@ -6315,9 +6315,9 @@
         // Zero bivoltage
         case bivoltage !== Bivoltage.zero:
           return renderString(0, 0, 0, alpha);
-        default:
-          // Normal — green to blue
-          l = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0);
+        // Normal — green to blue
+        case !(bivoltage > 0):
+          l = Ease.linear(bivoltage, Bivoltage.posMin, Bivoltage.posMax, 80, 0);
           return renderHSLString(0, 100, l, alpha);
       }
     };

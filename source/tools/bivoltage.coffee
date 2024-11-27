@@ -14,8 +14,8 @@ Take "Ease", (Ease)->
         return renderString 0, 0, 0, alpha
 
     # Normal — green to blue
-      else
-        l = Ease.linear bivoltage, Bivoltage.posMin, Bivoltage.max, 80, 0
+      when bivoltage > 0
+        l = Ease.linear bivoltage, Bivoltage.posMin, Bivoltage.posMax, 80, 0
         return renderHSLString 0, 100, l, alpha
       # else
       #   h = Ease.linear bivoltage, Bivoltage.negMin, Bivoltage.negMax, 51, 180

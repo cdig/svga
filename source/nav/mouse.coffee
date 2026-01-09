@@ -5,6 +5,10 @@ Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
 
 
   down = (e)->
+
+    if e.target?.class?.toString().includes 'otp'
+      return
+
     e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?
     if Nav.eventInside e
       dragging = true

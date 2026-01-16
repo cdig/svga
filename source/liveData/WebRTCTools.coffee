@@ -3,14 +3,14 @@ class WebRTCTools
     @sc = null
     @connectionState = 'closed'
     @connectionStateChange = null # Callback function when connection state changes
-    @connectionTimeoutTaredownSeconds = 5
+    @connectionTimeoutTaredownSeconds = 8
 
     @pc = null
     @dataChannel = null
     @remoteIceGatheringComplete = false
     @localIceGatheringComplete = false
 
-    @signalingHost = "https://lunchboxsessions.com"
+    @signalingHost = "https://livedata.cdig.cloud"
     @socket = null
 
   openForConnection: ->

@@ -3632,8 +3632,7 @@
         }
         // Point the newName to the oldName
         this.channelTable.set(newName, oldName);
-        console.log("linked channel", newName, "->", oldName);
-        return console.log("wowowow", this.channelTable);
+        return console.log("linked channel", newName, "->", oldName);
       };
       this.ui.attemptConnect = (sc) => {
         return this.webRTCTools.connect(sc);
@@ -3648,7 +3647,9 @@
           if (!(Array.isArray(packet) && packet.length === 2)) {
             return;
           }
-          return this.cachedData.set(packet[0], packet[1]);
+          this.cachedData.set(this._translateChannelName(packet[0]), packet[1]);
+          console.log(packet, this.channelTable, this._translateChannelName(packet[0], this.cachedData));
+          return console.log(this.cachedData, "<- cached data");
         } catch (error) {
           e = error;
           console.warn("Malformed WebRTC input data, must be of form [A,B]", e);
@@ -3687,7 +3688,7 @@
     }
 
     getChannel(channel, defaultValue = null) {
-      return this.cachedData.get(this._translateChannelName(channel.toString())) || defaultValue;
+      return this.cachedData.get(channel.toString()) || defaultValue;
     }
 
     sendChannel(channel, value) {

@@ -18,8 +18,6 @@ class LiveData
 			@channelTable.set newName, oldName
 			console.log "linked channel", newName, "->", oldName
 
-			console.log "wowowow", @channelTable
-
 		@ui.attemptConnect = (sc) =>
 			@webRTCTools.connect(sc)
 
@@ -30,7 +28,9 @@ class LiveData
 			try
 				packet = JSON.parse data
 				return unless Array.isArray(packet) and packet.length is 2
-				@cachedData.set packet[0], packet[1]
+				@cachedData.set (@_translateChannelName packet[0]), packet[1]
+				console.log(packet, @channelTable, @_translateChannelName packet[0], @cachedData)
+				console.log @cachedData, "<- cached data"
 			catch e
 				console.warn "Malformed WebRTC input data, must be of form [A,B]", e
 				return
@@ -58,7 +58,7 @@ class LiveData
 		@webRTCTools.useSignalingHost(host);
 
 	getChannel: (channel, defaultValue=null) ->
-		return @cachedData.get(@_translateChannelName(channel.toString())) || defaultValue
+		return @cachedData.get(channel.toString()) || defaultValue
 
 	sendChannel: (channel, value) ->
 		return unless typeof channel is 'number' or (typeof channel is 'string' and channel.length > 0)

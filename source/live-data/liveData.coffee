@@ -29,8 +29,6 @@ class LiveData
 				packet = JSON.parse data
 				return unless Array.isArray(packet) and packet.length is 2
 				@cachedData.set (@_translateChannelName packet[0]), packet[1]
-				console.log(packet, @channelTable, @_translateChannelName packet[0], @cachedData)
-				console.log @cachedData, "<- cached data"
 			catch e
 				console.warn "Malformed WebRTC input data, must be of form [A,B]", e
 				return

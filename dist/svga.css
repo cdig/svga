@@ -32,7 +32,7 @@ button,
   text-align: center;
   text-decoration: none;
   color: white;
-  background-color: hsl(219, 60%, 57%);
+  background-color: #507ed3;
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
@@ -51,7 +51,7 @@ button.border,
 }
 button.active,
 .button.active {
-  background-color: hsl(180, 100%, 32%);
+  background-color: #00a3a3;
 }
 button.active:hover,
 .button.active:hover {
@@ -60,14 +60,14 @@ button.active:hover,
 button[disabled], button.disabled,
 .button[disabled],
 .button.disabled {
-  background-color: hsl(219, 60%, 57%);
-  color: hsl(217, 70%, 70%);
+  background-color: #507ed3;
+  color: #7da6e8;
   pointer-events: none;
 }
 button.soft-disabled,
 .button.soft-disabled {
-  background-color: hsl(219, 60%, 57%);
-  color: hsl(217, 70%, 70%);
+  background-color: #507ed3;
+  color: #7da6e8;
 }
 button.small,
 .button.small {
@@ -75,7 +75,7 @@ button.small,
 }
 button:focus,
 .button:focus {
-  border-color: hsl(227, 15%, 25%);
+  border-color: #363a49;
 }
 button:hover,
 .button:hover {
@@ -159,7 +159,7 @@ button.yellow:hover,
 }
 button.white,
 .button.white {
-  color: hsl(223, 45%, 45%);
+  color: #3f5ca6;
 }
 
 .buttons {
@@ -187,27 +187,27 @@ button.white,
 }
 
 .bg-xxl {
-  background-color: hsl(217, 70%, 70%);
+  background-color: #7da6e8;
 }
 
 .bg-xl {
-  background-color: hsl(219, 60%, 57%);
+  background-color: #507ed3;
 }
 
 .bg-l {
-  background-color: hsl(220, 50%, 50%);
+  background-color: #406abf;
 }
 
 .bg-m {
-  background-color: hsl(224, 47%, 45%);
+  background-color: #3d5aa9;
 }
 
 .bg-d {
-  background-color: hsl(227, 45%, 40%);
+  background-color: #384c94;
 }
 
 .bg-xd {
-  background-color: hsl(230, 50%, 30%);
+  background-color: #263373;
 }
 
 .white {
@@ -215,27 +215,27 @@ button.white,
 }
 
 .mist {
-  background-color: hsl(220, 10%, 92%);
+  background-color: #e9eaed;
 }
 
 .silver {
-  background-color: hsl(220, 15%, 80%);
+  background-color: #c4c9d4;
 }
 
 .grey {
-  background-color: hsl(220, 9%, 52%);
+  background-color: #7a8190;
 }
 
 .smoke {
-  background-color: hsl(227, 15%, 25%);
+  background-color: #363a49;
 }
 
 .onyx {
-  background-color: hsl(240, 50%, 5%);
+  background-color: #060613;
 }
 
 .tar {
-  background-color: hsl(233, 30%, 17%);
+  background-color: #1e2138;
 }
 
 .black {
@@ -243,67 +243,67 @@ button.white,
 }
 
 .red {
-  background-color: hsl(358, 80%, 55%);
+  background-color: #e83037;
 }
 
 .orange {
-  background-color: hsl(24, 100%, 60%);
+  background-color: #ff8533;
 }
 
 .yellow {
-  background-color: hsl(43, 100%, 50%);
+  background-color: #ffb700;
 }
 
 .green {
-  background-color: hsl(130, 85%, 35%);
+  background-color: #0da527;
 }
 
 .blue {
-  background-color: hsl(223, 45%, 45%);
+  background-color: #3f5ca6;
 }
 
 .indigo {
-  background-color: hsl(270, 50%, 58%);
+  background-color: #945ec9;
 }
 
 .violet {
-  background-color: hsl(330, 55%, 50%);
+  background-color: #c63980;
 }
 
 .blueberry {
-  background-color: hsl(259, 65%, 65%);
+  background-color: #906ce0;
 }
 
 .bronze {
-  background-color: hsl(43, 50%, 70%);
+  background-color: #d9c38c;
 }
 
 .mint {
-  background-color: hsl(153, 80%, 41%);
+  background-color: #15bc71;
 }
 
 .navy {
-  background-color: hsl(235, 52%, 22%);
+  background-color: #1b2055;
 }
 
 .navy-dark {
-  background-color: hsl(227, 65%, 14%);
+  background-color: #0c173b;
 }
 
 .olive {
-  background-color: hsl(166, 90%, 20%);
+  background-color: #05614b;
 }
 
 .purple {
-  background-color: hsl(255, 49%, 37%);
+  background-color: #47308d;
 }
 
 .teal {
-  background-color: hsl(180, 100%, 32%);
+  background-color: #00a3a3;
 }
 
 .fuscha {
-  background-color: hsl(340, 60%, 50%);
+  background-color: #cc3366;
 }
 
 .ghost {
@@ -315,27 +315,27 @@ button.white,
 }
 
 .bg-xxl-text {
-  color: hsl(217, 70%, 70%);
+  color: #7da6e8;
 }
 
 .bg-xl-text {
-  color: hsl(219, 60%, 57%);
+  color: #507ed3;
 }
 
 .bg-l-text {
-  color: hsl(220, 50%, 50%);
+  color: #406abf;
 }
 
 .bg-m-text {
-  color: hsl(224, 47%, 45%);
+  color: #3d5aa9;
 }
 
 .bg-d-text {
-  color: hsl(227, 45%, 40%);
+  color: #384c94;
 }
 
 .bg-xd-text {
-  color: hsl(230, 50%, 30%);
+  color: #263373;
 }
 
 .white-text {
@@ -343,27 +343,27 @@ button.white,
 }
 
 .mist-text {
-  color: hsl(220, 10%, 92%);
+  color: #e9eaed;
 }
 
 .silver-text {
-  color: hsl(220, 15%, 80%);
+  color: #c4c9d4;
 }
 
 .grey-text {
-  color: hsl(220, 9%, 52%);
+  color: #7a8190;
 }
 
 .smoke-text {
-  color: hsl(227, 15%, 25%);
+  color: #363a49;
 }
 
 .tar-text {
-  color: hsl(233, 30%, 17%);
+  color: #1e2138;
 }
 
 .onyx-text {
-  color: hsl(240, 50%, 5%);
+  color: #060613;
 }
 
 .black-text {
@@ -371,91 +371,91 @@ button.white,
 }
 
 .red-text {
-  color: hsl(358, 80%, 55%);
+  color: #e83037;
 }
 
 .orange-text {
-  color: hsl(24, 100%, 60%);
+  color: #ff8533;
 }
 
 .yellow-text {
-  color: hsl(43, 100%, 50%);
+  color: #ffb700;
 }
 
 .green-text {
-  color: hsl(130, 85%, 35%);
+  color: #0da527;
 }
 
 .blue-text {
-  color: hsl(223, 45%, 45%);
+  color: #3f5ca6;
 }
 
 .indigo-text {
-  color: hsl(270, 50%, 58%);
+  color: #945ec9;
 }
 
 .violet-text {
-  color: hsl(330, 55%, 50%);
+  color: #c63980;
 }
 
 .blueberry-text {
-  color: hsl(259, 65%, 65%);
+  color: #906ce0;
 }
 
 .bronze-text {
-  color: hsl(43, 50%, 70%);
+  color: #d9c38c;
 }
 
 .mint-text {
-  color: hsl(153, 80%, 41%);
+  color: #15bc71;
 }
 
 .navy-text {
-  color: hsl(235, 52%, 22%);
+  color: #1b2055;
 }
 
 .navy-dark-text {
-  color: hsl(227, 65%, 14%);
+  color: #0c173b;
 }
 
 .olive-text {
-  color: hsl(166, 90%, 20%);
+  color: #05614b;
 }
 
 .purple-text {
-  color: hsl(255, 49%, 37%);
+  color: #47308d;
 }
 
 .teal-text {
-  color: hsl(180, 100%, 32%);
+  color: #00a3a3;
 }
 
 .fuscha-text {
-  color: hsl(340, 60%, 50%);
+  color: #cc3366;
 }
 
 .bg-xxl-em em {
-  color: hsl(217, 70%, 70%);
+  color: #7da6e8;
 }
 
 .bg-xl-em em {
-  color: hsl(219, 60%, 57%);
+  color: #507ed3;
 }
 
 .bg-l-em em {
-  color: hsl(220, 50%, 50%);
+  color: #406abf;
 }
 
 .bg-m-em em {
-  color: hsl(224, 47%, 45%);
+  color: #3d5aa9;
 }
 
 .bg-d-em em {
-  color: hsl(227, 45%, 40%);
+  color: #384c94;
 }
 
 .bg-xd-em em {
-  color: hsl(230, 50%, 30%);
+  color: #263373;
 }
 
 .white-em em {
@@ -463,27 +463,27 @@ button.white,
 }
 
 .mist-em em {
-  color: hsl(220, 10%, 92%);
+  color: #e9eaed;
 }
 
 .silver-em em {
-  color: hsl(220, 15%, 80%);
+  color: #c4c9d4;
 }
 
 .grey-em em {
-  color: hsl(220, 9%, 52%);
+  color: #7a8190;
 }
 
 .smoke-em em {
-  color: hsl(227, 15%, 25%);
+  color: #363a49;
 }
 
 .tar-em em {
-  color: hsl(233, 30%, 17%);
+  color: #1e2138;
 }
 
 .onyx-em em {
-  color: hsl(240, 50%, 5%);
+  color: #060613;
 }
 
 .black-em em {
@@ -491,67 +491,67 @@ button.white,
 }
 
 .red-em em {
-  color: hsl(358, 80%, 55%);
+  color: #e83037;
 }
 
 .orange-em em {
-  color: hsl(24, 100%, 60%);
+  color: #ff8533;
 }
 
 .yellow-em em {
-  color: hsl(43, 100%, 50%);
+  color: #ffb700;
 }
 
 .green-em em {
-  color: hsl(130, 85%, 35%);
+  color: #0da527;
 }
 
 .blue-em em {
-  color: hsl(223, 45%, 45%);
+  color: #3f5ca6;
 }
 
 .indigo-em em {
-  color: hsl(270, 50%, 58%);
+  color: #945ec9;
 }
 
 .violet-em em {
-  color: hsl(330, 55%, 50%);
+  color: #c63980;
 }
 
 .blueberry-em em {
-  color: hsl(259, 65%, 65%);
+  color: #906ce0;
 }
 
 .bronze-em em {
-  color: hsl(43, 50%, 70%);
+  color: #d9c38c;
 }
 
 .mint-em em {
-  color: hsl(153, 80%, 41%);
+  color: #15bc71;
 }
 
 .navy-em em {
-  color: hsl(235, 52%, 22%);
+  color: #1b2055;
 }
 
 .navy-dark-em em {
-  color: hsl(227, 65%, 14%);
+  color: #0c173b;
 }
 
 .olive-em em {
-  color: hsl(166, 90%, 20%);
+  color: #05614b;
 }
 
 .purple-em em {
-  color: hsl(255, 49%, 37%);
+  color: #47308d;
 }
 
 .teal-em em {
-  color: hsl(180, 100%, 32%);
+  color: #00a3a3;
 }
 
 .fuscha-em em {
-  color: hsl(340, 60%, 50%);
+  color: #cc3366;
 }
 
 a {
@@ -589,15 +589,19 @@ h5 {
   h1 {
     font-size: 1.728em;
   }
+
   h2 {
     font-size: 1.44em;
   }
+
   h3 {
     font-size: 1.2em;
   }
+
   h4 {
     font-size: 1em;
   }
+
   h5 {
     font-size: 0.833em;
   }
@@ -606,15 +610,19 @@ h5 {
   h1 {
     font-size: 1.424em;
   }
+
   h2 {
     font-size: 1.266em;
   }
+
   h3 {
     font-size: 1.125em;
   }
+
   h4 {
     font-size: 1em;
   }
+
   h5 {
     font-size: 0.888em;
   }
@@ -643,7 +651,7 @@ html {
   font-size: 11pt;
   line-height: 1;
   color: white;
-  background: linear-gradient(to right, hsl(230, 50%, 30%), hsl(224, 47%, 45%), hsl(230, 50%, 30%));
+  background: linear-gradient(to right, #263373, #3d5aa9, #263373);
   opacity: 0;
   transition: 0.3s opacity;
 }
@@ -681,7 +689,7 @@ html {
   font-size: 2em;
   font-weight: bold;
   color: white;
-  background: hsl(220, 50%, 50%);
+  background: #406abf;
 }
 @media (max-width: 700px) {
   #message-inner {
@@ -745,7 +753,7 @@ html {
   border-radius: 8px;
   text-align: center;
   color: white;
-  background: hsl(220, 50%, 50%);
+  background: #406abf;
 }
 #Alert div:last-child {
   margin-top: 1em;
@@ -759,12 +767,12 @@ html {
   border-radius: 8px;
   text-align: center;
   color: white;
-  background-color: hsl(227, 45%, 40%);
+  background-color: #384c94;
 }
 #settings [settings-controls] {
   padding: 8px;
   border-radius: 8px;
-  background: hsl(220, 50%, 50%);
+  background: #406abf;
 }
 #settings [settings-controls] svg {
   display: block;
@@ -1030,9 +1038,12 @@ input,
 optgroup,
 select,
 textarea {
-  color: inherit; /* 1 */
-  font: inherit; /* 2 */
-  margin: 0; /* 3 */
+  color: inherit;
+  /* 1 */
+  font: inherit;
+  /* 2 */
+  margin: 0;
+  /* 3 */
 }
 
 /* Address inconsistent `text-transform` inheritance for `button` and `select`.
@@ -1053,8 +1064,10 @@ button,
 html input[type=button],
 input[type=reset],
 input[type=submit] {
-  -webkit-appearance: button; /* 2 */
-  cursor: pointer; /* 3 */
+  -webkit-appearance: button;
+  /* 2 */
+  cursor: pointer;
+  /* 3 */
 }
 
 /* Re-set default cursor for disabled elements. */

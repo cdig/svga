@@ -1,5 +1,5 @@
 (function() {
-  var Storage,
+  var LiveData, LiveDataGUI, Storage, WebRTCTools, s,
     indexOf = [].indexOf;
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
@@ -3608,6 +3608,1113 @@
     }
   });
 
+  LiveData = class LiveData {
+    constructor(ui, webRTCTools1) {
+      this.passStateToUI = this.passStateToUI.bind(this);
+      this.registerChannel = this.registerChannel.bind(this);
+      this._translateChannelName = this._translateChannelName.bind(this);
+      this.ui = ui;
+      this.webRTCTools = webRTCTools1;
+      // Link the webRTC connection state change to the GUI
+      this.webRTCTools.onConnectionStateChange(this.passStateToUI);
+      this.cachedData = new Map(); // key: default channel name, value: data on that channel
+      this.channelTable = new Map(); // key: new channel name, value: old channel name
+      this.descriptions = new Map(); // key: default channel name, value: registration description
+      this.ui.updateChannelName = (oldName, newName) => {
+        var k, ref, v, x1;
+        ref = this.channelTable;
+        // Remove the any existing mappings to the oldName
+        for (x1 of ref) {
+          [k, v] = x1;
+          if (v === oldName) {
+            this.channelTable.delete(k);
+          }
+        }
+        // Point the newName to the oldName
+        this.channelTable.set(newName, oldName);
+        console.log("linked channel", newName, "->", oldName);
+        return console.log("wowowow", this.channelTable);
+      };
+      this.ui.attemptConnect = (sc) => {
+        return this.webRTCTools.connect(sc);
+      };
+      this.ui.attemptDisconnect = () => {
+        return this.webRTCTools.disconnect();
+      };
+      this.webRTCTools.onData = (data) => {
+        var e, packet;
+        try {
+          packet = JSON.parse(data);
+          if (!(Array.isArray(packet) && packet.length === 2)) {
+            return;
+          }
+          return this.cachedData.set(packet[0], packet[1]);
+        } catch (error) {
+          e = error;
+          console.warn("Malformed WebRTC input data, must be of form [A,B]", e);
+        }
+      };
+    }
+
+    passStateToUI(state) {
+      console.log("PASS STATE TO UI", state);
+      this.ui.setState(state);
+      if (state === "closed" || state === "disconnected" || state === "failed") {
+        return this.cachedData.clear();
+      }
+    }
+
+    showConnectionTools() {
+      this.ui.showConnectionTools();
+      return this.ui.setDescriptions(this.descriptions, this.channelTable);
+    }
+
+    registerChannel(channel, description) {
+      this.channelTable.set(channel, channel);
+      this.descriptions.set(channel, description);
+      if (this.ui.connectionToolsCreated) {
+        return this.ui.setDescriptions(this.descriptions, this.channelTable);
+      }
+    }
+
+    _translateChannelName(newName) {
+      var ref;
+      return (ref = this.channelTable.get(newName)) != null ? ref : newName;
+    }
+
+    useSignalingHost(host) {
+      return this.webRTCTools.useSignalingHost(host);
+    }
+
+    getChannel(channel, defaultValue = null) {
+      return this.cachedData.get(this._translateChannelName(channel.toString())) || defaultValue;
+    }
+
+    sendChannel(channel, value) {
+      if (!(typeof channel === 'number' || (typeof channel === 'string' && channel.length > 0))) {
+        return;
+      }
+      if (!(typeof value === 'number' && isFinite(value))) {
+        return;
+      }
+      return this.webRTCTools.sendData(JSON.stringify([channel.toString(), value]));
+    }
+
+  };
+
+  Take(["LiveDataGUI", "WebRTCTools"], function(liveDataGUI, webRTCTools) {
+    return Make("LiveData", new LiveData(liveDataGUI, webRTCTools));
+  });
+
+  // # USAGE
+  // # Only use the following functions:
+
+    //         # @ui.showConnectionTools();
+  //         # @ui.hideConnectionTools();
+  //         # @ui.setState(state) # state can be: connecting connected disconnected closed failed
+
+    //         # WISHLIST (NOT IMPLEMENTED)
+  //         # @ui.setDescriptions(descriptionMap, channelTable); # descriptionMap: a key (original channel name) and value (description string). channelTable is a map with key(new channel name) and value (old channel name)
+
+    //         # ==========================
+
+    //         # OVERWRITE THESE IN YOUR IMPLEMENTATION
+  //         # @ui.attemptConnect = (sc) =>
+  //         # @attemptDisconnect = () =>
+
+    //         # WISHLIST (NOT IMPLEMENTED)
+  //         # @updateChannelName = (oldName, newName) => # TODO 
+
+    // # Only one instance should ever be made, and it is made with Take at the bottom of this file
+  // class LiveDataGUI
+
+    //     # constructor
+  //     constructor: ->
+  //         @connectionToolsCreated = false
+  //         @_add_hide_event_listner()
+
+    //     _add_hide_event_listner: ->
+  //         window.addEventListener "click", (e) =>
+  //             if !e.target?.class?.toString().includes 'otp'
+  //                 if @connectionToolsCreated
+  //                     @_hide_otp();
+
+    //     showConnectionTools: ->
+  //         if !@connectionToolsCreated
+  //             @_create_open_otp_btn()
+  //             @_create_otp()
+  //             @connectionToolsCreated = true
+  //             @_show_otp() # TODO just for debuging, open it up right away
+
+    //     hideConnectionTools: ->
+  //         if @connectionToolsCreated
+  //             @_open_otp_btn_remove()
+  //             @_otp_remove()
+  //             @_remove_css_tags_in_head()
+  //             @connectionToolsCreated = false
+
+    //     _create_otp: () ->
+  //         # --- Create CSS ---
+  //         css = """
+  //         .otp-container {
+  //             position: absolute;
+  //             top:10px;
+  //             right:10px;
+  //             display:none;
+  //             gap:10px;
+  //             background: hsl(220, 50%, 50%);
+  //             padding: 10px 14px;
+  //             border-radius: 10px;
+  //             text-align: center;
+  //             height: 300px;
+  //         }
+
+    //         .otp-inputs {
+  //             display: flex;
+  //             gap: 5px;
+  //             margin-bottom: 16px;
+  //         }
+
+    //         .otp-inputs input {
+  //             width: 30px;
+  //             height: 36px;
+  //             font-size: 22px;
+  //             text-align: center;
+  //             border-radius: 8px;
+  //             border: none;
+  //             background: #3a4a92;
+  //             color: white;
+  //             outline: none;
+  //         }
+
+    //         .otp-inputs input:focus {
+  //             border-color: #38bdf8;
+  //             box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+  //         }
+
+    //         #otp-conn-button, #otp-disconn-button {
+  //             border: none;
+  //             border-radius: 8px;
+  //             font-size: 20px;
+  //             cursor: pointer;
+  //             height:36px;
+  //             padding:0px 10px;
+  //         }
+
+    //         #otp-disconn-button {
+  //             display:none;
+  //         }
+
+    //         .otp-channel-input {
+
+    //         }
+  //         """
+
+    //         styleTag = document.createElement 'style'
+  //         styleTag.textContent = css
+  //         styleTag.className = 'live-data-style'
+  //         document.head.appendChild styleTag
+
+    //         # --- Create OTP container ---
+  //         otpContainer = document.createElement 'div'
+  //         otpContainer.className = 'otp-container' # Used for the css
+  //         otpContainer.class = 'otp-container' # Used for the mousedown logic
+
+    //         # --- Create input wrapper ---
+  //         otpInputs = document.createElement 'div'
+  //         otpInputs.className = 'otp-inputs'
+
+    //         # --- Create 4 inputs ---
+  //         for i in [1..4]
+  //             input = document.createElement 'input'
+  //             input.maxLength = 1
+  //             input.inputMode = 'numeric'
+  //             input.class='otp-input'
+  //             otpInputs.appendChild input
+
+    //         # --- Append inputs to container ---
+  //         otpContainer.appendChild otpInputs
+
+    //         # --- Create the buttons ---
+  //         conButton = document.createElement 'button'
+  //         conButton.id = 'otp-conn-button'
+  //         conButton.class = 'otp-conn-button'
+  //         conButton.textContent = 'Connect'
+
+    //         disconButton = document.createElement 'button'
+  //         disconButton.id = 'otp-disconn-button'
+  //         disconButton.class = 'otp-conn-button'
+  //         disconButton.textContent = 'Disconnect'
+
+    //         # --- Append buttons to container ---
+  //         otpContainer.appendChild conButton
+  //         otpContainer.appendChild disconButton
+
+    //         # --- Add container to the body ---
+  //         document.body.appendChild otpContainer
+
+    //         # --- Implement functionality ---
+  //         inputs = document.querySelectorAll ".otp-inputs input"
+
+    //         # Auto-focus next input & backspace behavior
+  //         inputs.forEach (input, i) ->
+  //             input.addEventListener "input", ->
+  //                 input.value = input.value.toUpperCase();
+  //                 if input.value and i < inputs.length - 1
+  //                     inputs[i + 1].focus()
+
+    //             input.addEventListener "keydown", (e) ->
+  //                 if e.key is "Backspace" and not input.value and i > 0
+  //                     inputs[i - 1].focus()
+
+    //         # Connect button click
+  //         document.getElementById("otp-conn-button").addEventListener "click", =>
+  //             otp = Array.from(inputs).map((i) -> i.value).join ""
+  //             @conButtonClick otp
+
+    //         # Connect button click
+  //         document.getElementById("otp-disconn-button").addEventListener "click", =>
+  //             otp = Array.from(inputs).map((i) -> i.value).join ""
+  //             @attemptDisconnect()
+
+    //     _otp_set_input_disable_state: (state) ->
+  //         inputs = document.querySelectorAll ".otp-inputs input"
+  //         inputs.forEach (input, i) ->
+  //             input.disabled = state
+
+    //     _hide_otp: () ->
+  //         ele = document.querySelector ".otp-container"
+  //         if ele
+  //             ele.style.display = "none"
+
+    //     _show_otp: () ->
+  //         ele = document.querySelector ".otp-container"
+  //         if ele
+  //             ele.style.display = "flex"
+
+    //     _otp_connecting: () ->
+  //         @_otp_set_input_disable_state true
+  //         btn = document.getElementById("otp-conn-button")
+  //         btn.style.display = "unset"
+  //         btn.textContent = "Connecting ..."
+  //         btn.disabled = true;
+  //         document.getElementById("otp-disconn-button").style.display = "none";
+
+    //     _otp_disconnect: () ->
+  //         @_otp_set_input_disable_state true
+  //         btn = document.getElementById("otp-disconn-button")
+  //         btn.style.display = "unset"
+  //         btn.textContent = "Disconnect"
+  //         btn.disabled = false;
+  //         document.getElementById("otp-conn-button").style.display = "none";
+
+    //     _otp_reset: () ->
+  //         inputs = document.querySelectorAll ".otp-inputs input"
+  //         inputs.forEach (input, i) ->
+  //             input.value = ''
+  //         @_otp_set_input_disable_state false
+  //         btn = document.getElementById("otp-conn-button")
+  //         btn.style.display = "unset"
+  //         btn.textContent = "Connect"
+  //         btn.disabled = false;
+  //         document.getElementById("otp-disconn-button").style.display = "none";
+
+    //     _otp_remove: () ->
+  //         container = document.querySelector('.otp-container')
+  //         if container
+  //             container.remove()
+
+    //     _create_open_otp_btn: () ->
+
+    //         # TODO ensure create can't run if it's already made
+
+    //         # --- Create CSS ---
+  //         css = """
+  //         #otp-show-button {
+  //             border: none;
+  //             border-radius: 8px;
+  //             font-size: 25px;
+  //             cursor: pointer;
+  //             height:36px;
+  //             padding:0px 10px;
+  //             position: absolute;
+  //             background: #ff000a75; 
+  //             top: 10px;
+  //             right: 10px;
+  //         }
+  //         """
+
+    //         styleTag = document.createElement 'style'
+  //         styleTag.textContent = css
+  //         styleTag.className = 'live-data-style'
+  //         document.head.appendChild styleTag
+
+    //         # --- Create OTP container ---
+  //         button = document.createElement 'button'
+  //         button.id = 'otp-show-button'
+  //         button.class = 'otp-show-button'
+  //         button.textContent = '🔌'
+  //         button.onclick = @openOtpButtonClick.bind @
+
+    //         document.body.appendChild button
+
+    //     _hide_open_otp_btn: () ->
+  //         ele = document.querySelector "#otp-show-button"
+  //         if ele
+  //             ele.style.display = "none"
+
+    //     _show_open_otp_btn: () ->
+  //         ele = document.querySelector "#otp-show-button"
+  //         if ele
+  //             ele.style.display = "unset"
+
+    //     _open_otp_btn_connected: () ->
+  //         ele = document.querySelector "#otp-show-button"
+  //         if ele
+  //             ele.style.background = "#00ff0a75" # GREEN
+
+    //     _open_otp_btn_disconnected: () ->
+  //         ele = document.querySelector "#otp-show-button"
+  //         if ele
+  //             ele.style.background = "#ff000a75" # RED
+
+    //     _open_otp_btn_remove: () ->
+  //         button = document.querySelector '#otp-show-button'
+  //         if button
+  //             button.remove()
+
+    //     _remove_css_tags_in_head: () -> 
+  //         styles = document.querySelectorAll ".live-data-style"
+  //         for style in styles
+  //             style.remove()
+
+    //     # Buttons
+
+    //     conButtonClick: (otp) -> 
+  //         sc = otp;
+  //         if sc.length == 4
+  //             @attemptConnect sc
+  //         else
+  //             @_show_open_otp_btn()
+  //             @_hide_otp()
+
+    //     openOtpButtonClick: () ->
+  //         @_show_otp()
+
+    //     # Methods for interacting with otp =============
+  //     attemptConnect: (sc) ->
+  //         console.log("Please override attemptDisconnect(sc) in your implementation")
+
+    //     attemptDisconnect: () ->
+  //         console.log("Please override attemptDisconnect in your implementation")
+
+    //     setState: (status) ->
+  //         switch status
+  //             when 'connecting', 'loading', 'signaling', 'gathering'
+  //                 @_otp_connecting();
+  //             when 'connected'
+  //                 @_hide_otp();
+  //                 @_otp_disconnect();
+  //                 @_open_otp_btn_connected();
+  //                 @_show_open_otp_btn();
+  //             when 'disconnected'
+  //                 @_otp_reset();
+  //                 @_open_otp_btn_disconnected();
+  //                 @_show_open_otp_btn();
+  //             when 'closed'
+  //                 @_otp_reset();
+  //                 @_hide_otp();
+  //                 @_open_otp_btn_disconnected();
+  //                 @_show_open_otp_btn();
+  //             when 'failed'
+  //                 @_otp_reset();
+  //                 @_open_otp_btn_disconnected();
+  //                 @_show_open_otp_btn();
+  //             else
+  //                 console.log "Unknown status:", status
+
+    //     # get or create a channel
+  //     getChannel: (channel, defaultValue = null) ->
+
+    // Make "LiveDataGUI", new LiveDataGUI()
+  // Clean, single-instance CoffeeScript rewrite using embedded HTML + CSS
+  // External API preserved:
+  //  - showConnectionTools()
+  //  - hideConnectionTools()
+  //  - setState(state)
+  //  - @ui.setDescriptions(descriptionMap, channelTable); # descriptionMap: a key (original channel name) and value (description string). channelTable is a map with key(new channel name) and value (old channel name)
+  //  - override: attemptConnect = (sc) =>, attemptDisconnect = () =>
+  //  - overide: updateChannelName = (oldName, newName) =>
+  LiveDataGUI = class LiveDataGUI {
+    constructor() {
+      this._translateChannelNameInverse = this._translateChannelNameInverse.bind(this);
+      this.connectionToolsCreated = false;
+      this._bindGlobalHide();
+    }
+
+    // =======================
+    // Public API
+    // =======================
+    showConnectionTools() {
+      if (this.connectionToolsCreated) {
+        return;
+      }
+      this._injectUI();
+      return this.connectionToolsCreated = true;
+    }
+
+    hideConnectionTools() {
+      if (!this.connectionToolsCreated) {
+        return;
+      }
+      this._removeUI();
+      return this.connectionToolsCreated = false;
+    }
+
+    _translateChannelNameInverse(channelTable, originalName) {
+      var newName, oldName, x1;
+      for (x1 of channelTable) {
+        [newName, oldName] = x1;
+        if (oldName === originalName) {
+          return newName;
+        }
+      }
+      return originalName;
+    }
+
+    setDescriptions(descriptionMap, channelTable) {
+      var description, input, inputs, len, m, name, newName, results, x1;
+      // Delete all old channels
+      this.otpBody.innerHTML = "";
+      for (x1 of descriptionMap) {
+        [name, description] = x1;
+        newName = this._translateChannelNameInverse(channelTable, name);
+        this._insertChannel(name, description, newName);
+      }
+      // Ensure event listners
+      inputs = document.querySelectorAll('.otp-channel-input');
+      results = [];
+      for (m = 0, len = inputs.length; m < len; m++) {
+        input = inputs[m];
+        results.push(input.addEventListener('change', (e) => {
+          var el, og, value;
+          el = e.target;
+          og = el.dataset.ogChannel;
+          value = el.value;
+          return this.updateChannelName(og, value); // oldName, newName
+        }));
+      }
+      return results;
+    }
+
+    setState(status) {
+      switch (status) {
+        case 'connecting':
+        case 'loading':
+        case 'signaling':
+        case 'gathering':
+          return this._stateConnecting();
+        case 'connected':
+          this._hideOTP();
+          this._stateDisconnectReady();
+          this._setPlugConnected(true);
+          return this._showPlug();
+        case 'disconnected':
+          this._stateReset();
+          this._setPlugConnected(false);
+          return this._showPlug();
+        case 'closed':
+          this._stateReset();
+          this._hideOTP();
+          this._setPlugConnected(false);
+          return this._showPlug();
+        case 'failed':
+          this._stateReset();
+          this._setPlugConnected(false);
+          return this._showPlug();
+        default:
+          return console.log('Unknown status:', status);
+      }
+    }
+
+    // To be overridden
+    attemptConnect(sc) {
+      return console.log('Please override attemptConnect(sc) in your implementation', sc);
+    }
+
+    attemptDisconnect() {
+      return console.log('Please override attemptDisconnect() in your implementation');
+    }
+
+    updateChannelName(oldName, newName) {
+      return console.log('Please override updateChannelName(oldName, newName)');
+    }
+
+    // =======================
+    // UI creation / teardown
+    // =======================
+    _injectUI() {
+      var root, style;
+      if (document.getElementById('live-data-root')) {
+        return;
+      }
+      style = document.createElement('style');
+      style.id = 'live-data-style';
+      style.textContent = `  /* ===============================
+   OTP Connection Panel
+   =============================== */
+
+.otp-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  width: 320px;
+  max-height: 300px;
+
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+
+  background: #580061;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-align: center;
+
+  font-family: Lato, sans-serif;
+}
+
+/* ===============================
+   Header (OTP + Buttons)
+   =============================== */
+
+.otp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.otp-inputs {
+  display: flex;
+  gap: 5px;
+}
+
+.otp-inputs input {
+  width: 30px;
+  height: 36px;
+  font-size: 22px;
+  text-align: center;
+
+  border-radius: 8px;
+  border: none;
+  outline: none;
+
+  background: #760084;
+  color: white;
+}
+
+.otp-inputs input:focus {
+  border-color: #760084;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+}
+
+.otp-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ===============================
+   Buttons
+   =============================== */
+
+#otp-conn-button,
+#otp-disconn-button {
+  border: none;
+  border-radius: 8px;
+  font-size: 20px;
+  cursor: pointer;
+  height: 36px;
+  padding: 0 10px;
+  color: white;
+  background: #367f30;
+
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+#otp-conn-button:hover,
+#otp-disconn-button:hover {
+  transform: scale(1.02);
+}
+
+#otp-disconn-button {
+  display: none;
+}
+
+/* ===============================
+   Scrollable Channel List
+   =============================== */
+
+.otp-body {
+  flex: 1;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding-right: 4px;
+}
+
+/* Individual rows */
+
+.otp-row {
+  display: flex;
+  align-items: normal;
+  gap: 8px;
+}
+
+.otp-row input {
+    width: 120px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+    background: #760084;
+    color: white;
+}
+
+.otp-row p {
+  margin: 0;
+  flex: 1;
+
+  font-size: 14px;
+  color: white;
+  text-align: left;
+}
+
+/* ===============================
+   Plug Button
+   =============================== */
+
+#otp-show-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  height: 36px;
+  padding: 0 10px;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 25px;
+  cursor: pointer;
+
+  background: #ff000a75;
+}
+`;
+      root = document.createElement('div');
+      root.id = 'live-data-root';
+      root.innerHTML = `<button id="otp-show-button" title="Connection">🔌</button>
+<div class="otp-container">
+
+  <!-- Top row -->
+  <div class="otp-header">
+    <div class="otp-inputs">
+      <input maxlength="1" />
+      <input maxlength="1" />
+      <input maxlength="1" />
+      <input maxlength="1" />
+    </div>
+
+    <div class="otp-actions">
+      <button id="otp-conn-button">Connect</button>
+      <button id="otp-disconn-button">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="otp-body">
+    <!-- more rows... -->
+  </div>
+
+</div>`;
+      document.head.appendChild(style);
+      document.body.appendChild(root);
+      this._cacheElements();
+      return this._wireEvents();
+    }
+
+    _removeUI() {
+      var ref, ref1;
+      if ((ref = document.getElementById('live-data-root')) != null) {
+        ref.remove();
+      }
+      return (ref1 = document.getElementById('live-data-style')) != null ? ref1.remove() : void 0;
+    }
+
+    _insertChannel(originalName, description, newName) {
+      var channel;
+      channel = `<div class="otp-row">
+	<input class="otp-channel-input" value=${newName} data-og-channel=${originalName}></input>
+	<p>${description}</p>
+</div>`;
+      return this.otpBody.innerHTML += channel;
+    }
+
+    _cacheElements() {
+      this.root = document.getElementById('live-data-root');
+      this.container = this.root.querySelector('.otp-container');
+      this.inputs = Array.from(this.root.querySelectorAll('.otp-inputs input'));
+      this.btnConnect = this.root.querySelector('#otp-conn-button');
+      this.btnDisconnect = this.root.querySelector('#otp-disconn-button');
+      this.btnPlug = this.root.querySelector('#otp-show-button');
+      return this.otpBody = this.root.querySelector('.otp-body');
+    }
+
+    _wireEvents() {
+      // OTP input behavior
+      this.inputs.forEach((input, i) => {
+        input.addEventListener('input', () => {
+          input.value = input.value.toUpperCase();
+          if (input.value && i < this.inputs.length - 1) {
+            return this.inputs[i + 1].focus();
+          }
+        });
+        return input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !input.value && i > 0) {
+            return this.inputs[i - 1].focus();
+          }
+        });
+      });
+      // Buttons
+      this.btnConnect.addEventListener('click', () => {
+        var otp;
+        otp = this._getOTP();
+        if (otp.length === 4) {
+          return this.attemptConnect(otp);
+        } else {
+          this._showPlug();
+          return this._hideOTP();
+        }
+      });
+      this.btnDisconnect.addEventListener('click', () => {
+        return this.attemptDisconnect();
+      });
+      return this.btnPlug.addEventListener('click', () => {
+        return this._showOTP();
+      });
+    }
+
+    _bindGlobalHide() {
+      return window.addEventListener('click', (e) => {
+        if (!this.connectionToolsCreated) {
+          return;
+        }
+        if (this.root == null) {
+          return;
+        }
+        if (!this.root.contains(e.target)) {
+          return this._hideOTP();
+        }
+      });
+    }
+
+    // =======================
+    // UI helpers
+    // =======================
+    _getOTP() {
+      return this.inputs.map(function(i) {
+        return i.value;
+      }).join('');
+    }
+
+    _setInputsDisabled(state) {
+      return this.inputs.forEach(function(i) {
+        return i.disabled = state;
+      });
+    }
+
+    _showOTP() {
+      if (this.container) {
+        return this.container.style.display = 'flex';
+      }
+    }
+
+    _hideOTP() {
+      if (this.container) {
+        return this.container.style.display = 'none';
+      }
+    }
+
+    _showPlug() {
+      if (this.btnPlug) {
+        return this.btnPlug.style.display = 'unset';
+      }
+    }
+
+    _setPlugConnected(connected) {
+      if (!this.btnPlug) {
+        return;
+      }
+      return this.btnPlug.style.background = connected ? '#00ff0a75' : '#ff000a75';
+    }
+
+    // =======================
+    // State transitions
+    // =======================
+    _stateConnecting() {
+      this._setInputsDisabled(true);
+      this.btnConnect.style.display = 'unset';
+      this.btnConnect.textContent = 'Connecting ...';
+      this.btnConnect.disabled = true;
+      return this.btnDisconnect.style.display = 'none';
+    }
+
+    _stateDisconnectReady() {
+      this._setInputsDisabled(true);
+      this.btnDisconnect.style.display = 'unset';
+      this.btnDisconnect.disabled = false;
+      return this.btnConnect.style.display = 'none';
+    }
+
+    _stateReset() {
+      this.inputs.forEach(function(i) {
+        return i.value = '';
+      });
+      this._setInputsDisabled(false);
+      this.btnConnect.style.display = 'unset';
+      this.btnConnect.textContent = 'Connect';
+      this.btnConnect.disabled = false;
+      return this.btnDisconnect.style.display = 'none';
+    }
+
+  };
+
+  Make("LiveDataGUI", new LiveDataGUI());
+
+  // One-time Makes "socket.io" when it imports successfuly. the global io object is then safe to use
+  s = document.createElement('script');
+
+  s.src = 'https://cdn.socket.io/4.8.1/socket.io.min.js';
+
+  s.integrity = 'sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+';
+
+  s.crossOrigin = 'anonymous';
+
+  s.onerror = function() {
+    return console.error('Failed to load Socket.IO');
+  };
+
+  s.onload = function() {
+    return Make("socket.io");
+  };
+
+  document.head.appendChild(s);
+
+  WebRTCTools = class WebRTCTools {
+    constructor() {
+      this.sc = null;
+      this.connectionState = 'closed';
+      this.connectionStateChange = null; // Callback function when connection state changes
+      this.connectionTimeoutTaredownSeconds = 8;
+      this.pc = null;
+      this.dataChannel = null;
+      this.remoteIceGatheringComplete = false;
+      this.localIceGatheringComplete = false;
+      this.signalingHost = "https://livedata.cdig.cloud";
+      this.socket = null;
+    }
+
+    openForConnection() {
+      return this.connectionState === 'closed' || this.connectionState === 'disconnected';
+    }
+
+    useSignalingHost(host) {
+      return this.signalingHost = host;
+    }
+
+    connect(specialCode) {
+      if (!this.openForConnection()) {
+        return;
+      }
+      this.sc = specialCode;
+      this.updateConnectionState("loading");
+      // Tare down timeout
+      this.tareDownTimeout = setTimeout(() => {
+        return this.tareDownConnection();
+      }, this.connectionTimeoutTaredownSeconds * 1000);
+      this.socket = io(this.signalingHost + "?type=WebClient");
+      this.socket.on("connect_error", (e) => {
+        return console.log("LBSConnectClient can't reach signaling server", e);
+      });
+      return this.socket.on('connect', () => {
+        this.remoteIceGatheringComplete = false;
+        this.localIceGatheringComplete = false;
+        this.updateConnectionState("signaling");
+        // Create peer connection
+        this.pc = new RTCPeerConnection({
+          iceServers: [
+            {
+              urls: "stun:stun.l.google.com:19302"
+            }
+          ]
+        });
+        // Data channel creation
+        this.dataChannel = this.pc.createDataChannel("data");
+        this.dataChannel.onmessage = (event) => {
+          return this.onData(event.data);
+        };
+        // ICE connection state changes
+        this.pc.oniceconnectionstatechange = () => {
+          console.log("ICE state:", this.pc.iceConnectionState);
+          switch (this.pc.iceConnectionState) {
+            case "new":
+              return this.updateConnectionState("new");
+            case "connecting":
+              return this.updateConnectionState("connecting");
+            case "connected":
+              this.updateConnectionState("connected");
+              this.cancelTaredown();
+              return console.log("P2P connection established!");
+            case "disconnected":
+              this.updateConnectionState("disconnected");
+              return this.tareDownConnection();
+            case "failed":
+              this.updateConnectionState("failed");
+              console.log("P2P connection failed due to network issues");
+              return this.tareDownConnection();
+            case "closed":
+              this.updateConnectionState("closed");
+              return this.tareDownConnection();
+          }
+        };
+        // Send ICE candidates
+        this.pc.onicecandidate = (event) => {
+          if (event.candidate == null) {
+            return;
+          }
+          console.log("Got ICE candidate", event.candidate);
+          return this.socket.emit("ICEcandidate", {
+            candidatePackage: event.candidate,
+            sc: this.sc
+          });
+        };
+        // Receive ICE candidates
+        this.socket.on("ICEcandidate", ({candidatePackage}) => {
+          console.log("Added remote ICE candidate", candidatePackage);
+          return this.pc.addIceCandidate(candidatePackage);
+        });
+        // Local ICE gathering
+        this.pc.onicegatheringstatechange = () => {
+          console.log("ICE gathering state:", this.pc.iceGatheringState);
+          if (this.pc.iceGatheringState === "complete") {
+            console.log("Local ICE gathering finished");
+            this.localIceGatheringComplete = false;
+            if (this.remoteIceGatheringComplete) {
+              return this.socket.disconnect();
+            }
+          }
+        };
+        // Remote ICE gathering complete
+        this.socket.on("gatheringDone", () => {
+          console.log("Remote ICE gathering finished");
+          this.remoteIceGatheringComplete = true;
+          if (this.localIceGatheringComplete) {
+            return this.socket.disconnect();
+          }
+        });
+        // Create offer and send it
+        this.pc.createOffer({
+          offerToReceiveAudio: false,
+          offerToReceiveVideo: false
+        }).then((offer) => {
+          console.log("Created offer", offer);
+          this.pc.setLocalDescription(offer);
+          return this.socket.emit('SDPoffer', {
+            offerPackage: offer,
+            sc: this.sc
+          });
+        });
+        // Listen for answer
+        this.socket.on("SDPanswer", ({answerPackage}) => {
+          console.log("Got remote SDP answer", answerPackage);
+          return this.pc.setRemoteDescription(answerPackage);
+        });
+        return this.socket.on("disconnected", () => {
+          return console.log("Disconnected from signaling server");
+        });
+      });
+    }
+
+    disconnect() {
+      return this.tareDownConnection();
+    }
+
+    onData(data) {
+      return console.log("Please override WebRTCTools::onData(data)");
+    }
+
+    sendData(data) {
+      if (this.dataChannel == null) {
+        return;
+      }
+      if (this.dataChannel.readyState !== 'open') {
+        return;
+      }
+      return this.dataChannel.send(data);
+    }
+
+    cancelTaredown() {
+      return clearTimeout(this.tareDownTimeout);
+    }
+
+    tareDownConnection() {
+      var dc, len, m, ref;
+      this.cancelTaredown();
+      console.log("P2P took too long to connect, beginning taredown");
+      if (this.socket != null) {
+        this.socket.disconnect();
+      }
+      this.socket = null;
+      if (this.pc != null) {
+        ref = this.pc.dataChannels != null;
+        // Close all data channels
+        for (m = 0, len = ref.length; m < len; m++) {
+          dc = ref[m];
+          if (dc.readyState !== "closed") {
+            dc.close();
+          }
+        }
+        this.pc.close();
+        this.pc = null;
+        this.dataChannel = null;
+      }
+      this.remoteIceGatheringComplete = false;
+      this.localIceGatheringComplete = false;
+      this.updateConnectionState("closed");
+      return console.log("Done taredown. Safe to try reconnection.");
+    }
+
+    onConnectionStateChange(fn) {
+      return this.connectionStateChange = fn;
+    }
+
+    updateConnectionState(connectionState) {
+      this.connectionState = connectionState;
+      if (this.connectionStateChange) {
+        return this.connectionStateChange(this.connectionState);
+      }
+    }
+
+  };
+
+  Take(["socket.io"], function() {
+    return Make("WebRTCTools", new WebRTCTools());
+  });
+
   Take(["Mode", "Nav"], function(Mode, Nav) {
     if (!Mode.nav) {
       return;
@@ -3703,6 +4810,10 @@
     }
     dragging = false;
     down = function(e) {
+      var ref, ref1;
+      if ((ref = e.target) != null ? (ref1 = ref.class) != null ? ref1.toString().includes('otp') : void 0 : void 0) {
+        return;
+      }
       e.preventDefault(); // Without this, shift-drag pans the ENTIRE SVG! What the hell?
       if (Nav.eventInside(e)) {
         return dragging = true;

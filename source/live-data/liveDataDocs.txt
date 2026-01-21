@@ -6,6 +6,10 @@ Take "LiveData", (liveData) ->
     now you can use liveData methods such as the following:
 
     === BASIC SETUP ===
+    liveData.registerChannel channelName, description                 : Call once at the beginnning of your program to show users the channel name and description, and allow users to change the channel name to whatever they want.
+                                                                           : In your code, use what ever your original channel name was, if a user dynamically changes a channel name through the UI, it will still be known to your code as the original channel name
+                                                                           : Description must be less than 200 characters. Will be truncated.
+                                                                           : Channel name must be shorter than 16 characters. Will be truncated
     liveData.showConnectionTools()
     liveData.hideConnectionTools()
 
@@ -14,7 +18,7 @@ Take "LiveData", (liveData) ->
     liveData.sendChannel channelName, valueToSend                          : Sends data back to the LBSConnect software, can be used to control physical systems. Use with caution.
 
     === ADVANCED (don't use unless you really know what your doing) ===
-    liveData.useSignalingHost("http://localhost:4000")                     : Sets the socket.io address of the signaling server to something other than lunchboxsessions.com. If you are going to use it, make sure this is called BEFORE liveData.showConnectionTools()
+    liveData.useSignalingHost "http://localhost:4000"                      : Sets the socket.io address of the signaling server to something other than lunchboxsessions.com. If you are going to use it, make sure this is called BEFORE liveData.showConnectionTools()
 
 
 

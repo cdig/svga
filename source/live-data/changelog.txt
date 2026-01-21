@@ -1,0 +1,5 @@
+changed nav/mouse
+    if class contains otp, skip the custom mouse functionality of nav
+    this allows the input fields to be clicked
+
+Other than that, nothing else in the project was changed by the addition of liveData

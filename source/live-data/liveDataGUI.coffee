@@ -14,6 +14,9 @@ class LiveDataGUI
 		@_pointerDownInside = false
 		@_bindGlobalHide()
 
+		# In localhost development, body is used to house the svga. In production environments, "page" is used
+		@page = document.getElementById("page") ? document.body
+
 	# =======================
 	# Public API
 	# =======================
@@ -279,7 +282,7 @@ class LiveDataGUI
 		                 		                 """
 
 		document.head.appendChild style
-		document.body.appendChild root
+		@page.appendChild root
 
 		@_cacheElements()
 		@_wireEvents()

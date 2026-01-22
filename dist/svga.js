@@ -3780,10 +3780,13 @@
   //  - overide: updateChannelName = (oldName, newName) =>
   LiveDataGUI = class LiveDataGUI {
     constructor(debug1) {
+      var ref;
       this.debug = debug1;
       this.connectionToolsCreated = false;
       this._pointerDownInside = false;
       this._bindGlobalHide();
+      // In localhost development, body is used to house the svga. In production environments, "page" is used
+      this.page = (ref = document.getElementById("page")) != null ? ref : document.body;
     }
 
     // =======================
@@ -4067,7 +4070,7 @@
 
 </div>`;
       document.head.appendChild(style);
-      document.body.appendChild(root);
+      this.page.appendChild(root);
       this._cacheElements();
       return this._wireEvents();
     }

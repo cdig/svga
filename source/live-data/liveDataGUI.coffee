@@ -3,14 +3,15 @@
 #  - showConnectionTools()
 #  - hideConnectionTools()
 #  - setState(state)
-#  - @ui.setDescriptions(descriptionMap, channelTable); # descriptionMap: a key (original channel name) and value (description string). channelTable is a map with key(new channel name) and value (old channel name)
+#  - @ui.setDescriptions(descriptionMap, aliasIndex); # parameters are defined in liveData.coffee
 #  - override: attemptConnect = (sc) =>, attemptDisconnect = () =>
 #  - overide: updateChannelName = (oldName, newName) =>
 
 class LiveDataGUI
 
-	constructor: ->
+	constructor: (@debug) ->
 		@connectionToolsCreated = false
+		@_pointerDownInside = false
 		@_bindGlobalHide()
 
 	# =======================
@@ -27,18 +28,13 @@ class LiveDataGUI
 		@_removeUI()
 		@connectionToolsCreated = false
 
-	_translateChannelNameInverse: (channelTable, originalName) =>
-		for [newName, oldName] from channelTable
-			return newName if oldName is originalName
-		originalName
-
-	setDescriptions: (descriptionMap, channelTable) ->
+	setDescriptions: (descriptionMap, aliasIndex) ->
 		# Delete all old channels
 		@otpBody.innerHTML = "";
-		# descriptionMap: key = originalChannelName, value = description
-		for [name, description] from descriptionMap
-			newName = @_translateChannelNameInverse channelTable, name
-			@_insertChannel name, description, newName
+		
+		for [alias, targets] from aliasIndex
+			for target in targets
+				@_insertChannel target, descriptionMap.get(target), alias
 
 		# Ensure event listners
 		inputs = document.querySelectorAll '.otp-channel-input'
@@ -74,17 +70,17 @@ class LiveDataGUI
 				@_setPlugConnected false
 				@_showPlug()
 			else
-				console.log 'Unknown status:', status
+				@debug.log 'Unknown status:', status
 
 	# To be overridden
 	attemptConnect: (sc) ->
-		console.log 'Please override attemptConnect(sc) in your implementation', sc
+		@debug.log 'Please override attemptConnect(sc) in your implementation', sc
 
 	attemptDisconnect: ->
-		console.log 'Please override attemptDisconnect() in your implementation'
+		@debug.log 'Please override attemptDisconnect() in your implementation'
 
 	updateChannelName: (oldName, newName) ->
-		console.log 'Please override updateChannelName(oldName, newName)'
+		@debug.log 'Please override updateChannelName(oldName, newName)'
 
 	# =======================
 	# UI creation / teardown
@@ -337,12 +333,15 @@ class LiveDataGUI
 			@_showOTP()
 
 	_bindGlobalHide: ->
-		window.addEventListener 'click', (e) =>
-			return unless @connectionToolsCreated
+		window.addEventListener 'pointerdown', (e) =>
+			return unless @root?
+			@_pointerDownInside = @root.contains e.target
+
+		window.addEventListener 'pointerup', (e) =>
 			return unless @root?
 
-			if not @root.contains e.target
-				@_hideOTP()
+			return if @_pointerDownInside
+			@_hideOTP()
 
 	# =======================
 	# UI helpers
@@ -392,4 +391,5 @@ class LiveDataGUI
 		@btnConnect.disabled = false
 		@btnDisconnect.style.display = 'none'
 
-Make "LiveDataGUI", new LiveDataGUI()
+Take ["LiveDataDebug"], (debug) ->
+	Make "LiveDataGUI", new LiveDataGUI debug

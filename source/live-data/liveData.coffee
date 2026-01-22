@@ -1,22 +1,33 @@
 class LiveData
-	constructor: (@ui, @webRTCTools)->
+	constructor: (@ui, @webRTCTools, @debug)->
+		if @debug.debugMode
+			console.log "[Live Data] %cVersion 1.0.0", "color: darkgreen"
 
 		# Link the webRTC connection state change to the GUI
 		@webRTCTools.onConnectionStateChange @passStateToUI
 		
 		@cachedData = new Map() # key: default channel name, value: data on that channel
-		@channelTable = new Map()  # key: new channel name, value: old channel name
-		@descriptions = new Map() # key: default channel name, value: registration description
+		@aliasIndex = new Map()  # key: alias name, value: array of targets
+		@descriptions = new Map() # key: target, value: registration description
 
 		@ui.updateChannelName = (oldName, newName) =>
-			# Remove the any existing mappings to the oldName
-			for [k, v] from @channelTable
-				if v == oldName
-					@channelTable.delete k
+			# Find the alias that currently holds this target
+			alias = @findAliasForTarget oldName
 
-			# Point the newName to the oldName
-			@channelTable.set newName, oldName
-			console.log "linked channel", newName, "->", oldName
+			# Remove the target from the alias
+			if alias
+				@removeTargetFromAlias alias, oldName
+
+			# Find the alias that matches newName (or create it if it doesn't exist [])
+			# Add oldName as a target to that newly found/created alias
+			targets = @aliasIndex.get newName
+			if targets?
+				targets.push oldName unless oldName in targets
+				@aliasIndex.set newName, targets
+			else
+				@aliasIndex.set newName, [oldName]
+
+			@debug.log "linked channel", newName, "->", oldName
 
 		@ui.attemptConnect = (sc) =>
 			@webRTCTools.connect(sc)
@@ -28,30 +39,57 @@ class LiveData
 			try
 				packet = JSON.parse data
 				return unless Array.isArray(packet) and packet.length is 2
-				@cachedData.set (@_translateChannelName packet[0]), packet[1]
+
+				for target in @aliasIndex.get(packet[0])
+					@cachedData.set target, packet[1]
 			catch e
 				console.warn "Malformed WebRTC input data, must be of form [A,B]", e
 				return
-	
+
+	findAliasForTarget: (target) =>
+		@debug.log @aliasIndex
+		for [alias, targets] from @aliasIndex
+			return alias if target in targets
+		null
+
+	removeTargetFromAlias: (alias, target) =>
+		targets = @aliasIndex.get alias
+		return false unless Array.isArray targets
+
+		idx = targets.indexOf target
+		return false if idx is -1
+
+		targets.splice idx, 1
+
+		# clean up empty aliases
+		@aliasIndex.delete alias if targets.length is 0
+
+		true
+
+			
 	passStateToUI: (state) =>
-		console.log("PASS STATE TO UI", state);
+		@debug.log("PASS STATE TO UI", state);
 		@ui.setState(state)
 		if state == "closed" or state == "disconnected" or state == "failed"
 			@cachedData.clear()
 	
 	showConnectionTools: ->
 		@ui.showConnectionTools();
-		@ui.setDescriptions @descriptions, @channelTable
+		@ui.setDescriptions @descriptions, @aliasIndex
 
-	registerChannel: (channel, description) => 
-		@channelTable.set channel, channel
+	registerChannel: (channel, description) =>
+
+		if @descriptions.has channel
+			console.warn "[Live Data] Tried to register channel #{channel} more than once. Using previous registration."
+			return
+
+		@aliasIndex.set channel, [channel]
 		@descriptions.set channel, description
-		if @ui.connectionToolsCreated
-			@ui.setDescriptions @descriptions, @channelTable
 
-	_translateChannelName: (newName) =>
-		return @channelTable.get(newName) ? newName
-	
+		if @ui.connectionToolsCreated
+			@ui.setDescriptions @descriptions, @aliasIndex
+
+
 	useSignalingHost: (host) ->
 		@webRTCTools.useSignalingHost(host);
 
@@ -65,5 +103,5 @@ class LiveData
 		@webRTCTools.sendData JSON.stringify [channel.toString(), value]
 
 
-Take ["LiveDataGUI", "WebRTCTools"], (liveDataGUI, webRTCTools)->
-	Make "LiveData", new LiveData liveDataGUI, webRTCTools
+Take ["LiveDataGUI", "WebRTCTools", "LiveDataDebug"], (liveDataGUI, webRTCTools, debug)->
+	Make "LiveData", new LiveData liveDataGUI, webRTCTools, debug

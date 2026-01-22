@@ -3,10 +3,14 @@ Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
 
   dragging = false
 
+  liveDataGUI = null
+  Take ["LiveDataGUI"], (_liveDataGUI) ->
+    liveDataGUI = _liveDataGUI
 
   down = (e)->
 
-    if e.target?.class?.toString().includes 'otp'
+    # Safely pass control of mousedown events to the live data root if the target was within live data root
+    if liveDataGUI?.root?.contains?(e.target)
       return
 
     e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?

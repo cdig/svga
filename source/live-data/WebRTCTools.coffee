@@ -1,5 +1,5 @@
 class WebRTCTools
-  constructor: ->
+  constructor: (@debug) ->
     @sc = null
     @connectionState = 'closed'
     @connectionStateChange = null # Callback function when connection state changes
@@ -11,6 +11,11 @@ class WebRTCTools
     @localIceGatheringComplete = false
 
     @signalingHost = "https://livedata.cdig.cloud"
+
+    if @debug.params.has('live-data-signaling-server')
+      @signalingHost = @debug.params.get('live-data-signaling-server')
+
+    @debug.log "USING SIGNALING SERVER:", @signalingHost
     @socket = null
 
   openForConnection: ->
@@ -33,7 +38,7 @@ class WebRTCTools
     @socket = io @signalingHost+"?type=WebClient"
 
     @socket.on "connect_error", (e) =>
-      console.log "LBSConnectClient can't reach signaling server", e
+      @debug.log "LBSConnectClient can't reach signaling server", e
 
     @socket.on 'connect', =>
       @remoteIceGatheringComplete = false
@@ -53,7 +58,7 @@ class WebRTCTools
 
       # ICE connection state changes
       @pc.oniceconnectionstatechange = =>
-        console.log "ICE state:", @pc.iceConnectionState
+        @debug.log "ICE state:", @pc.iceConnectionState
         switch @pc.iceConnectionState
           when "new"
             @updateConnectionState "new"
@@ -62,13 +67,13 @@ class WebRTCTools
           when "connected"
             @updateConnectionState "connected"
             @cancelTaredown()
-            console.log "P2P connection established!"
+            @debug.log "P2P connection established!"
           when "disconnected"
             @updateConnectionState "disconnected"
             @tareDownConnection()
           when "failed"
             @updateConnectionState "failed"
-            console.log "P2P connection failed due to network issues"
+            @debug.log "P2P connection failed due to network issues"
             @tareDownConnection()
           when "closed"
             @updateConnectionState "closed"
@@ -77,28 +82,28 @@ class WebRTCTools
       # Send ICE candidates
       @pc.onicecandidate = (event) =>
         return unless event.candidate?
-        console.log "Got ICE candidate", event.candidate
+        @debug.log "Got ICE candidate", event.candidate
         @socket.emit "ICEcandidate",
           candidatePackage: event.candidate
           sc: @sc
 
       # Receive ICE candidates
       @socket.on "ICEcandidate", ({ candidatePackage }) =>
-        console.log "Added remote ICE candidate", candidatePackage
+        @debug.log "Added remote ICE candidate", candidatePackage
         @pc.addIceCandidate candidatePackage
 
       # Local ICE gathering
       @pc.onicegatheringstatechange = =>
-        console.log "ICE gathering state:", @pc.iceGatheringState
+        @debug.log "ICE gathering state:", @pc.iceGatheringState
         if @pc.iceGatheringState is "complete"
-          console.log "Local ICE gathering finished"
+          @debug.log "Local ICE gathering finished"
           @localIceGatheringComplete = false
           if @remoteIceGatheringComplete
             @socket.disconnect()
 
       # Remote ICE gathering complete
       @socket.on "gatheringDone", =>
-        console.log "Remote ICE gathering finished"
+        @debug.log "Remote ICE gathering finished"
         @remoteIceGatheringComplete = true
         if @localIceGatheringComplete
           @socket.disconnect()
@@ -108,7 +113,7 @@ class WebRTCTools
         offerToReceiveAudio: false
         offerToReceiveVideo: false
       .then (offer) =>
-        console.log "Created offer", offer
+        @debug.log "Created offer", offer
         @pc.setLocalDescription offer
         @socket.emit 'SDPoffer',
           offerPackage: offer
@@ -116,17 +121,17 @@ class WebRTCTools
 
       # Listen for answer
       @socket.on "SDPanswer", ({ answerPackage }) =>
-        console.log "Got remote SDP answer", answerPackage
+        @debug.log "Got remote SDP answer", answerPackage
         @pc.setRemoteDescription answerPackage
 
       @socket.on "disconnected", =>
-        console.log "Disconnected from signaling server"
+        @debug.log "Disconnected from signaling server"
 
   disconnect: ->
     @tareDownConnection()
 
   onData: (data)->
-    console.log("Please override WebRTCTools::onData(data)");
+    @debug.log("Please override WebRTCTools::onData(data)");
 
   sendData: (data) ->
     return unless @dataChannel?
@@ -139,7 +144,7 @@ class WebRTCTools
 
   tareDownConnection: ->
     @cancelTaredown()
-    console.log "P2P took too long to connect, beginning taredown"
+    @debug.log "P2P took too long to connect, beginning taredown"
 
     if @socket?
       @socket.disconnect()
@@ -158,7 +163,7 @@ class WebRTCTools
     @localIceGatheringComplete = false
 
     @updateConnectionState "closed"
-    console.log "Done taredown. Safe to try reconnection."
+    @debug.log "Done taredown. Safe to try reconnection."
 
   onConnectionStateChange: (fn) ->
     @connectionStateChange = fn
@@ -168,5 +173,5 @@ class WebRTCTools
     if @connectionStateChange
       @connectionStateChange @connectionState
 
-Take ["socket.io"], ()->
-  Make "WebRTCTools", new WebRTCTools()
+Take ["LiveDataDebug"], (debug) ->
+  Make "WebRTCTools", new WebRTCTools debug

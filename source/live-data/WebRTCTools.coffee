@@ -3,10 +3,11 @@ class WebRTCTools
     @sc = null
     @connectionState = 'closed'
     @connectionStateChange = null # Callback function when connection state changes
-    @connectionTimeoutTaredownSeconds = 8
+    @connectionTimeoutTaredownSeconds = 5
 
     @pc = null
     @dataChannel = null
+    @pendingRemoteCandidates = []
     @remoteIceGatheringComplete = false
     @localIceGatheringComplete = false
 
@@ -24,16 +25,21 @@ class WebRTCTools
   useSignalingHost: (host) ->
     @signalingHost = host;
 
+  startTaredownTimer: ->
+    @cancelTaredown()
+    @tareDownTimeout = setTimeout =>
+      return if @pc?.iceConnectionState in ['checking', 'connected']
+      @tareDownConnection()
+    , @connectionTimeoutTaredownSeconds * 1000
+
   connect: (specialCode) ->
     return unless @openForConnection()
 
     @sc = specialCode
     @updateConnectionState "loading"
+    @onConnectionUserInfoChange "Connecting..."
 
-          # Tare down timeout
-    @tareDownTimeout = setTimeout =>
-      @tareDownConnection()
-    , @connectionTimeoutTaredownSeconds * 1000
+    @startTaredownTimer()
 
     @socket = io @signalingHost+"?type=WebClient"
 
@@ -45,6 +51,8 @@ class WebRTCTools
       @localIceGatheringComplete = false
 
       @updateConnectionState "signaling"
+      @onConnectionUserInfoChange "Signaling..."
+      @startTaredownTimer()
 
       # Create peer connection
       @pc = new RTCPeerConnection
@@ -68,6 +76,9 @@ class WebRTCTools
             @updateConnectionState "connected"
             @cancelTaredown()
             @debug.log "P2P connection established!"
+          when "checking"
+            @debug.log "Checking ICE candidates"
+            @startTaredownTimer()
           when "disconnected"
             @updateConnectionState "disconnected"
             @tareDownConnection()
@@ -90,14 +101,17 @@ class WebRTCTools
       # Receive ICE candidates
       @socket.on "ICEcandidate", ({ candidatePackage }) =>
         @debug.log "Added remote ICE candidate", candidatePackage
-        @pc.addIceCandidate candidatePackage
+        if @pc.remoteDescription?
+          @pc.addIceCandidate candidatePackage
+        else
+          @pendingRemoteCandidates.push candidatePackage
 
       # Local ICE gathering
       @pc.onicegatheringstatechange = =>
         @debug.log "ICE gathering state:", @pc.iceGatheringState
         if @pc.iceGatheringState is "complete"
           @debug.log "Local ICE gathering finished"
-          @localIceGatheringComplete = false
+          @localIceGatheringComplete = true
           if @remoteIceGatheringComplete
             @socket.disconnect()
 
@@ -123,6 +137,9 @@ class WebRTCTools
       @socket.on "SDPanswer", ({ answerPackage }) =>
         @debug.log "Got remote SDP answer", answerPackage
         @pc.setRemoteDescription answerPackage
+        for c in @pendingRemoteCandidates
+          @pc.addIceCandidate c
+        @pendingRemoteCandidates = []
 
       @socket.on "disconnected", =>
         @debug.log "Disconnected from signaling server"
@@ -132,6 +149,9 @@ class WebRTCTools
 
   onData: (data)->
     @debug.log("Please override WebRTCTools::onData(data)");
+
+  onConnectionUserInfoChange: (text) ->
+    @debug.log("Please override onConnectionUserInfoChange(text)")
 
   sendData: (data) ->
     return unless @dataChannel?
@@ -161,6 +181,7 @@ class WebRTCTools
 
     @remoteIceGatheringComplete = false
     @localIceGatheringComplete = false
+    @pendingRemoteCandidates = []
 
     @updateConnectionState "closed"
     @debug.log "Done taredown. Safe to try reconnection."

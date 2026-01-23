@@ -31,6 +31,9 @@ class LiveDataGUI
 		@_removeUI()
 		@connectionToolsCreated = false
 
+	setConnectButtonText: (text) ->
+		@btnConnect.textContent = text;
+
 	setDescriptions: (descriptionMap, aliasIndex) ->
 		# Delete all old channels
 		@otpBody.innerHTML = "";
@@ -376,7 +379,6 @@ class LiveDataGUI
 	_stateConnecting: ->
 		@_setInputsDisabled true
 		@btnConnect.style.display = 'unset'
-		@btnConnect.textContent = 'Connecting ...'
 		@btnConnect.disabled = true
 		@btnDisconnect.style.display = 'none'
 

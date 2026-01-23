@@ -3622,6 +3622,9 @@
       }
       // Link the webRTC connection state change to the GUI
       this.webRTCTools.onConnectionStateChange(this.passStateToUI);
+      this.webRTCTools.onConnectionUserInfoChange = (text) => {
+        return this.ui.setConnectButtonText(text);
+      };
       this.cachedData = new Map(); // key: default channel name, value: data on that channel
       this.aliasIndex = new Map(); // key: alias name, value: array of targets
       this.descriptions = new Map(); // key: target, value: registration description
@@ -3806,6 +3809,10 @@
       }
       this._removeUI();
       return this.connectionToolsCreated = false;
+    }
+
+    setConnectButtonText(text) {
+      return this.btnConnect.textContent = text;
     }
 
     setDescriptions(descriptionMap, aliasIndex) {
@@ -4200,7 +4207,6 @@
     _stateConnecting() {
       this._setInputsDisabled(true);
       this.btnConnect.style.display = 'unset';
-      this.btnConnect.textContent = 'Connecting ...';
       this.btnConnect.disabled = true;
       return this.btnDisconnect.style.display = 'none';
     }
@@ -4254,9 +4260,10 @@
       this.sc = null;
       this.connectionState = 'closed';
       this.connectionStateChange = null; // Callback function when connection state changes
-      this.connectionTimeoutTaredownSeconds = 8;
+      this.connectionTimeoutTaredownSeconds = 5;
       this.pc = null;
       this.dataChannel = null;
+      this.pendingRemoteCandidates = [];
       this.remoteIceGatheringComplete = false;
       this.localIceGatheringComplete = false;
       this.signalingHost = "https://livedata.cdig.cloud";
@@ -4275,16 +4282,25 @@
       return this.signalingHost = host;
     }
 
+    startTaredownTimer() {
+      this.cancelTaredown();
+      return this.tareDownTimeout = setTimeout(() => {
+        var ref, ref1;
+        if ((ref = (ref1 = this.pc) != null ? ref1.iceConnectionState : void 0) === 'checking' || ref === 'connected') {
+          return;
+        }
+        return this.tareDownConnection();
+      }, this.connectionTimeoutTaredownSeconds * 1000);
+    }
+
     connect(specialCode) {
       if (!this.openForConnection()) {
         return;
       }
       this.sc = specialCode;
       this.updateConnectionState("loading");
-      // Tare down timeout
-      this.tareDownTimeout = setTimeout(() => {
-        return this.tareDownConnection();
-      }, this.connectionTimeoutTaredownSeconds * 1000);
+      this.onConnectionUserInfoChange("Connecting...");
+      this.startTaredownTimer();
       this.socket = io(this.signalingHost + "?type=WebClient");
       this.socket.on("connect_error", (e) => {
         return this.debug.log("LBSConnectClient can't reach signaling server", e);
@@ -4293,6 +4309,8 @@
         this.remoteIceGatheringComplete = false;
         this.localIceGatheringComplete = false;
         this.updateConnectionState("signaling");
+        this.onConnectionUserInfoChange("Signaling...");
+        this.startTaredownTimer();
         // Create peer connection
         this.pc = new RTCPeerConnection({
           iceServers: [
@@ -4318,6 +4336,9 @@
               this.updateConnectionState("connected");
               this.cancelTaredown();
               return this.debug.log("P2P connection established!");
+            case "checking":
+              this.debug.log("Checking ICE candidates");
+              return this.startTaredownTimer();
             case "disconnected":
               this.updateConnectionState("disconnected");
               return this.tareDownConnection();
@@ -4344,14 +4365,18 @@
         // Receive ICE candidates
         this.socket.on("ICEcandidate", ({candidatePackage}) => {
           this.debug.log("Added remote ICE candidate", candidatePackage);
-          return this.pc.addIceCandidate(candidatePackage);
+          if (this.pc.remoteDescription != null) {
+            return this.pc.addIceCandidate(candidatePackage);
+          } else {
+            return this.pendingRemoteCandidates.push(candidatePackage);
+          }
         });
         // Local ICE gathering
         this.pc.onicegatheringstatechange = () => {
           this.debug.log("ICE gathering state:", this.pc.iceGatheringState);
           if (this.pc.iceGatheringState === "complete") {
             this.debug.log("Local ICE gathering finished");
-            this.localIceGatheringComplete = false;
+            this.localIceGatheringComplete = true;
             if (this.remoteIceGatheringComplete) {
               return this.socket.disconnect();
             }
@@ -4379,8 +4404,15 @@
         });
         // Listen for answer
         this.socket.on("SDPanswer", ({answerPackage}) => {
+          var c, len, m, ref;
           this.debug.log("Got remote SDP answer", answerPackage);
-          return this.pc.setRemoteDescription(answerPackage);
+          this.pc.setRemoteDescription(answerPackage);
+          ref = this.pendingRemoteCandidates;
+          for (m = 0, len = ref.length; m < len; m++) {
+            c = ref[m];
+            this.pc.addIceCandidate(c);
+          }
+          return this.pendingRemoteCandidates = [];
         });
         return this.socket.on("disconnected", () => {
           return this.debug.log("Disconnected from signaling server");
@@ -4394,6 +4426,10 @@
 
     onData(data) {
       return this.debug.log("Please override WebRTCTools::onData(data)");
+    }
+
+    onConnectionUserInfoChange(text) {
+      return this.debug.log("Please override onConnectionUserInfoChange(text)");
     }
 
     sendData(data) {
@@ -4433,6 +4469,7 @@
       }
       this.remoteIceGatheringComplete = false;
       this.localIceGatheringComplete = false;
+      this.pendingRemoteCandidates = [];
       this.updateConnectionState("closed");
       return this.debug.log("Done taredown. Safe to try reconnection.");
     }

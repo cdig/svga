@@ -5,6 +5,9 @@ class LiveData
 
 		# Link the webRTC connection state change to the GUI
 		@webRTCTools.onConnectionStateChange @passStateToUI
+
+		@webRTCTools.onConnectionUserInfoChange = (text) =>
+			@ui.setConnectButtonText(text);
 		
 		@cachedData = new Map() # key: default channel name, value: data on that channel
 		@aliasIndex = new Map()  # key: alias name, value: array of targets

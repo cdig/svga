@@ -2,10 +2,13 @@
 # External API preserved:
 #  - showConnectionTools()
 #  - hideConnectionTools()
+#  - showRequestHardwareControlBtn()
+#  - hideRequestHardwareControlBtn()
 #  - setState(state)
 #  - @ui.setDescriptions(descriptionMap, aliasIndex); # parameters are defined in liveData.coffee
 #  - override: attemptConnect = (sc) =>, attemptDisconnect = () =>
 #  - overide: updateChannelName = (oldName, newName) =>
+#  - overide: requestHardwareControl = () =>
 
 class LiveDataGUI
 
@@ -30,6 +33,22 @@ class LiveDataGUI
 		return unless @connectionToolsCreated
 		@_removeUI()
 		@connectionToolsCreated = false
+
+	showRequestHardwareControlBtn: ->
+		@requestHardwareControlDiv.style.display = 'unset'
+
+	hideRequestHardwareControlBtn: ->
+		@requestHardwareControlDiv.style.display = 'none'
+
+	grantHardwareControl: ->
+		@btnRequestHardwareControl.innerText = "Release Hardware Control"
+		@btnRequestHardwareControl.style.background = "#cf8c0c";
+		@btnPlug.style.background = '#00eeffe8'; # Blue for connected and controling hardware
+	
+	revolkHardwareControl: ->
+		@btnRequestHardwareControl.innerText = "Request Hardware Control"
+		@btnRequestHardwareControl.style.background = "";
+		@btnPlug.style.background = '#00ff0a75'; # Green for connected
 
 	setConnectButtonText: (text) ->
 		@btnConnect.textContent = text;
@@ -88,6 +107,9 @@ class LiveDataGUI
 	updateChannelName: (oldName, newName) ->
 		@debug.log 'Please override updateChannelName(oldName, newName)'
 
+	requestHardwareControl: () ->
+		@debug.log 'Please override requestHardwareControl()'
+
 	# =======================
 	# UI creation / teardown
 	# =======================
@@ -106,6 +128,7 @@ class LiveDataGUI
 		                      position: absolute;
 		                      top: 10px;
 		                      right: 10px;
+							  box-shadow: 0px 2px 6px 0px #00000063;
 		                    
 		                      width: 320px;
 		                      max-height: 300px;
@@ -114,7 +137,7 @@ class LiveDataGUI
 		                      flex-direction: column;
 		                      gap: 10px;
 		                    
-		                      background: #580061;
+		                      background: #406abf;
 		                      padding: 10px 14px;
 		                      border-radius: 10px;
 		                      text-align: center;
@@ -148,7 +171,7 @@ class LiveDataGUI
 		                      border: none;
 		                      outline: none;
 		                    
-		                      background: #760084;
+		                      background: #212d59;
 		                      color: white;
 		                    }
 		                    
@@ -170,24 +193,30 @@ class LiveDataGUI
 		                    #otp-disconn-button {
 		                      border: none;
 		                      border-radius: 8px;
-		                      font-size: 20px;
 		                      cursor: pointer;
-		                      height: 36px;
+							  height:35px;
 		                      padding: 0 10px;
 		                      color: white;
-		                      background: #367f30;
 		                    
 		                      transition: transform 0.15s ease, filter 0.15s ease;
 		                    }
 		                    
 		                    #otp-conn-button:hover,
-		                    #otp-disconn-button:hover {
+		                    #otp-disconn-button:hover,
+							.rhc-button:hover {
 		                      transform: scale(1.02);
 		                    }
 		                    
 		                    #otp-disconn-button {
 		                      display: none;
 		                    }
+
+							.rhc-button {
+								width: 100%;
+								height: 30px;
+								padding: 0px;
+								color: white;
+							}
 		                    
 		                    /* ===============================
 		                       Scrollable Channel List
@@ -219,7 +248,7 @@ class LiveDataGUI
 		                        border-radius: 6px;
 		                        border: none;
 		                        outline: none;
-		                        background: #760084;
+		                        background: #212d59;
 		                        color: white;
 		                    }
 		                    
@@ -275,6 +304,10 @@ class LiveDataGUI
 		                       <button id="otp-disconn-button">Disconnect</button>
 		                     </div>
 		                   </div>
+
+						   <div id="rhc-div">
+						   		<button class='rhc-button'>Request Hardware Control</button>
+						   </div>
 		                 
 		                   <!-- Scrollable body -->
 		                   <div class="otp-body">
@@ -297,7 +330,7 @@ class LiveDataGUI
 	_insertChannel: (originalName, description, newName) ->
 		channel = """
 			<div class="otp-row">
-				<input class="otp-channel-input" value=#{newName} data-og-channel=#{originalName}></input>
+				<input data-1p-ignore class="otp-channel-input" value=#{newName} data-og-channel=#{originalName}></input>
 				<p>#{description}</p>
 			</div>
 		"""
@@ -309,6 +342,8 @@ class LiveDataGUI
 		@inputs = Array.from @root.querySelectorAll '.otp-inputs input'
 		@btnConnect = @root.querySelector '#otp-conn-button'
 		@btnDisconnect = @root.querySelector '#otp-disconn-button'
+		@btnRequestHardwareControl = @root.querySelector '.rhc-button'
+		@requestHardwareControlDiv = @root.querySelector '#rhc-div'
 		@btnPlug = @root.querySelector '#otp-show-button'
 		@otpBody = @root.querySelector '.otp-body'
 
@@ -334,6 +369,9 @@ class LiveDataGUI
 
 		@btnDisconnect.addEventListener 'click', =>
 			@attemptDisconnect()
+
+		@btnRequestHardwareControl.addEventListener 'click', =>
+			@requestHardwareControl()
 
 		@btnPlug.addEventListener 'click', =>
 			@_showOTP()

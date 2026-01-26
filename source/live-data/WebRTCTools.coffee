@@ -1,5 +1,7 @@
 class WebRTCTools
   constructor: (@debug) ->
+    @connectionId = 0 # Incremented on every connection
+
     @sc = null
     @connectionState = 'closed'
     @connectionStateChange = null # Callback function when connection state changes
@@ -20,10 +22,13 @@ class WebRTCTools
     @socket = null
 
   openForConnection: ->
-    @connectionState == 'closed' or @connectionState == 'disconnected'
+    @pc is null
 
   useSignalingHost: (host) ->
     @signalingHost = host;
+
+  onCommand: (command) ->
+    @debug.log "got command: #{command}. Overwrite this function"
 
   startTaredownTimer: ->
     @cancelTaredown()
@@ -34,6 +39,13 @@ class WebRTCTools
 
   connect: (specialCode) ->
     return unless @openForConnection()
+
+    @pendingRemoteCandidates = []
+    @remoteIceGatheringComplete = false
+    @localIceGatheringComplete = false
+
+    @connectionId++
+    cid = @connectionId
 
     @sc = specialCode
     @updateConnectionState "loading"
@@ -59,13 +71,14 @@ class WebRTCTools
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
 
       # Data channel creation
-      @dataChannel = @pc.createDataChannel "data"
+      @dataChannel = @pc.createDataChannel "data" # UDP-like For the transfer of sensor/actuator data
 
       @dataChannel.onmessage = (event) =>
         @onData event.data
 
       # ICE connection state changes
       @pc.oniceconnectionstatechange = =>
+        return unless cid is @connectionId
         @debug.log "ICE state:", @pc.iceConnectionState
         switch @pc.iceConnectionState
           when "new"
@@ -92,6 +105,7 @@ class WebRTCTools
 
       # Send ICE candidates
       @pc.onicecandidate = (event) =>
+        return unless cid is @connectionId
         return unless event.candidate?
         @debug.log "Got ICE candidate", event.candidate
         @socket.emit "ICEcandidate",
@@ -108,6 +122,7 @@ class WebRTCTools
 
       # Local ICE gathering
       @pc.onicegatheringstatechange = =>
+        return unless cid is @connectionId
         @debug.log "ICE gathering state:", @pc.iceGatheringState
         if @pc.iceGatheringState is "complete"
           @debug.log "Local ICE gathering finished"
@@ -127,6 +142,7 @@ class WebRTCTools
         offerToReceiveAudio: false
         offerToReceiveVideo: false
       .then (offer) =>
+        return unless cid is @connectionId
         @debug.log "Created offer", offer
         @pc.setLocalDescription offer
         @socket.emit 'SDPoffer',
@@ -135,6 +151,7 @@ class WebRTCTools
 
       # Listen for answer
       @socket.on "SDPanswer", ({ answerPackage }) =>
+        return unless cid is @connectionId
         @debug.log "Got remote SDP answer", answerPackage
         @pc.setRemoteDescription answerPackage
         for c in @pendingRemoteCandidates
@@ -157,7 +174,14 @@ class WebRTCTools
     return unless @dataChannel?
     return unless @dataChannel.readyState is 'open'
 
-    @dataChannel.send data
+    @dataChannel.send JSON.stringify({data:data})
+
+  sendCommand: (topic, data) ->
+    return unless @dataChannel?
+    return unless @dataChannel.readyState is 'open'
+
+    @dataChannel.send JSON.stringify({command:topic, data:data})
+    console.log {command:topic, data:data}
 
   cancelTaredown: ->
     clearTimeout @tareDownTimeout
@@ -174,6 +198,10 @@ class WebRTCTools
       # Close all data channels
       for dc in @pc.dataChannels? when dc.readyState isnt "closed"
         dc.close()
+      
+      @pc.onicecandidate = null
+      @pc.oniceconnectionstatechange = null
+      @pc.onicegatheringstatechange = null
 
       @pc.close()
       @pc = null

@@ -12,6 +12,7 @@ class LiveData
 		@cachedData = new Map() # key: default channel name, value: data on that channel
 		@aliasIndex = new Map()  # key: alias name, value: array of targets
 		@descriptions = new Map() # key: target, value: registration description
+		@hasPermissionToControl = false; 
 
 		@ui.updateChannelName = (oldName, newName) =>
 			# Find the alias that currently holds this target
@@ -41,13 +42,40 @@ class LiveData
 		@webRTCTools.onData = (data) =>
 			try
 				packet = JSON.parse data
-				return unless Array.isArray(packet) and packet.length is 2
+				console.log(packet);
+				if packet.data
+					# If the packet is data
+					if Array.isArray(packet.data) and packet.data.length is 2
+						for target in @aliasIndex.get(packet.data[0])
+							@cachedData.set target, packet.data[1]
+						return
+				
+				if packet.command
+					if packet.command == 'disableRequestHardwareControl'
+						@ui.hideRequestHardwareControlBtn()
 
-				for target in @aliasIndex.get(packet[0])
-					@cachedData.set target, packet[1]
+					else if packet.command == 'enableRequestHardwareControl'
+						@ui.showRequestHardwareControlBtn()
+
+					else if packet.command == 'grantHardwareControl'
+						@hasPermissionToControl = true;
+						@ui.grantHardwareControl()
+
+					else if packet.command == 'revolkHardwareControl'
+						@hasPermissionToControl = false;
+						@ui.revolkHardwareControl()
+						
+					return
+
 			catch e
 				console.warn "Malformed WebRTC input data, must be of form [A,B]", e
 				return
+
+		@ui.requestHardwareControl = () =>
+			if @hasPermissionToControl
+				@webRTCTools.sendCommand("releaseHardwareAccess")
+			else
+				@webRTCTools.sendCommand("requestHardwareAccess")
 
 	findAliasForTarget: (target) =>
 		@debug.log @aliasIndex
@@ -103,7 +131,7 @@ class LiveData
 		return unless typeof channel is 'number' or (typeof channel is 'string' and channel.length > 0)
 		return unless typeof value is 'number' and isFinite value
 
-		@webRTCTools.sendData JSON.stringify [channel.toString(), value]
+		@webRTCTools.sendData [channel.toString(), value]
 
 
 Take ["LiveDataGUI", "WebRTCTools", "LiveDataDebug"], (liveDataGUI, webRTCTools, debug)->

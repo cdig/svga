@@ -3613,7 +3613,8 @@
       this.findAliasForTarget = this.findAliasForTarget.bind(this);
       this.removeTargetFromAlias = this.removeTargetFromAlias.bind(this);
       this.passStateToUI = this.passStateToUI.bind(this);
-      this.registerChannel = this.registerChannel.bind(this);
+      this.registerSubscriberChannel = this.registerSubscriberChannel.bind(this);
+      this.registerPublisherChannel = this.registerPublisherChannel.bind(this);
       this.ui = ui;
       this.webRTCTools = webRTCTools1;
       this.debug = debug1;
@@ -3628,6 +3629,7 @@
       this.cachedData = new Map(); // key: default channel name, value: data on that channel
       this.aliasIndex = new Map(); // key: alias name, value: array of targets
       this.descriptions = new Map(); // key: target, value: registration description
+      this.publisherDescriptions = new Map();
       this.hasPermissionToControl = false;
       this.ui.updateChannelName = (oldName, newName) => {
         var alias, targets;
@@ -3743,15 +3745,26 @@
       return this.ui.setDescriptions(this.descriptions, this.aliasIndex);
     }
 
-    registerChannel(channel, description) {
+    registerSubscriberChannel(channel, description) {
       if (this.descriptions.has(channel)) {
-        console.warn(`[Live Data] Tried to register channel ${channel} more than once. Using previous registration.`);
+        console.warn(`[Live Data] Tried to register subscriber channel ${channel} more than once. Using previous registration.`);
         return;
       }
       this.aliasIndex.set(channel, [channel]);
       this.descriptions.set(channel, description);
       if (this.ui.connectionToolsCreated) {
         return this.ui.setDescriptions(this.descriptions, this.aliasIndex);
+      }
+    }
+
+    registerPublisherChannel(channel, description) {
+      if (this.publisherDescriptions.has(channel)) {
+        console.warn(`[Live Data] Tried to register publisher channel ${channel} more than once. Using previous registration.`);
+        return;
+      }
+      this.publisherDescriptions.set(channel, description);
+      if (this.ui.connectionToolsCreated) {
+        return this.ui.setPublisherDescriptions(this.publisherDescriptions);
       }
     }
 
@@ -3764,6 +3777,9 @@
     }
 
     sendChannel(channel, value) {
+      if (!this.hasPermissionToControl) {
+        return;
+      }
       if (!(typeof channel === 'number' || (typeof channel === 'string' && channel.length > 0))) {
         return;
       }
@@ -3864,7 +3880,7 @@
     setDescriptions(descriptionMap, aliasIndex) {
       var alias, input, inputs, len, len1, m, n, results, target, targets, x1;
       // Delete all old channels
-      this.otpBody.innerHTML = "";
+      this.subContainer.innerHTML = "";
       for (x1 of aliasIndex) {
         [alias, targets] = x1;
         for (m = 0, len = targets.length; m < len; m++) {
@@ -3888,6 +3904,18 @@
       return results;
     }
 
+    setPublisherDescriptions(publisherDescriptionMap) {
+      var channel, description, results, x1;
+      // Delete all old channels
+      this.pubContainer.innerHTML = "";
+      results = [];
+      for (x1 of publisherDescriptionMap) {
+        [channel, description] = x1;
+        results.push(this._insertPubChannel(channel, description));
+      }
+      return results;
+    }
+
     setState(status) {
       switch (status) {
         case 'connecting':
@@ -3899,6 +3927,7 @@
           this._hideOTP();
           this._stateDisconnectReady();
           this._setPlugConnected(true);
+          this.showRequestHardwareControlBtn();
           return this._showPlug();
         case 'disconnected':
           this._stateReset();
@@ -3943,6 +3972,67 @@
       if (document.getElementById('live-data-root')) {
         return;
       }
+      this.disconnectedSVG = `<svg
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+stroke-linecap="round"
+stroke-linejoin="round"
+version="1.1"
+id="svg2"
+xmlns="http://www.w3.org/2000/svg"
+xmlns:svg="http://www.w3.org/2000/svg">
+<defs
+	id="defs2" />
+<path
+	style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.461;stroke-linecap:round;stroke-dasharray:none"
+	id="path4-0"
+	d="m 9.3765059,17.811095 a 5.8269229,5.8269229 0 0 1 -5.0462633,-2.913462 5.8269229,5.8269229 0 0 1 0,-5.8269226 5.8269229,5.8269229 0 0 1 5.0462633,-2.9134614 v 5.826923 z" />
+<path
+	style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.461;stroke-linecap:round;stroke-dasharray:none"
+	id="path4-0-3"
+	d="m -14.600672,17.851888 a 5.8269229,5.8269229 0 0 1 -5.046263,-2.913461 5.8269229,5.8269229 0 0 1 0,-5.8269232 5.8269229,5.8269229 0 0 1 5.046263,-2.9134614 v 5.8269226 z"
+	transform="scale(-1,1)" />
+<path
+	style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+	d="M -0.08158924,11.993619 H 5.824059"
+	id="path5" />
+<path
+	style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+	d="m 17.918,11.994 h 5.905648"
+	id="path5-8" />
+</svg>`;
+      this.connectedSVG = `<svg
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+stroke-linecap="round"
+stroke-linejoin="round"
+version="1.1"
+id="svg2"
+xmlns="http://www.w3.org/2000/svg"
+xmlns:svg="http://www.w3.org/2000/svg">
+<defs
+	id="defs2" />
+<line
+	x1="0"
+	y1="12"
+	x2="24"
+	y2="12"
+	id="line1" />
+<circle
+	style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.461;stroke-linecap:round;stroke-dasharray:none"
+	id="path4"
+	cx="11.913462"
+	cy="11.942308"
+	r="5.8269229" />
+</svg>`;
       style = document.createElement('style');
       style.id = 'live-data-style';
       style.textContent = `		                      /* ===============================
@@ -4042,12 +4132,16 @@
 	padding: 0px;
 	color: white;
 }
+
+#rhc-div {
+	display: none;
+}
 		                    
 		                    /* ===============================
 		                       Scrollable Channel List
 		                       =============================== */
 		                    
-		                    .otp-body {
+		                    .ld-container {
 		                      flex: 1;
 		                      overflow-y: auto;
 		                    
@@ -4056,6 +4150,9 @@
 		                      gap: 6px;
 		                    
 		                      padding-right: 4px;
+		                    }
+
+.ld-sub-container, .ld-pub-container {
 		                    }
 		                    
 		                    /* Individual rows */
@@ -4073,8 +4170,8 @@
 		                        border-radius: 6px;
 		                        border: none;
 		                        outline: none;
-		                        background: #212d59;
 		                        color: white;
+	background: #212d59;
 		                    }
 		                    
 		                    .otp-row p {
@@ -4085,31 +4182,34 @@
 		                      color: white;
 		                      text-align: left;
 		                    }
+
+.ld-title {
+	color: white;
+	background: #0000003b;
+	border-radius: 5px;
+	padding: 5px;
+}
 		                    
 		                    /* ===============================
 		                       Plug Button
 		                       =============================== */
 		                    
 		                    #otp-show-button {
-		                      position: absolute;
-		                      top: 10px;
-		                      right: 10px;
-		                    
-		                      height: 36px;
-		                      padding: 0 10px;
-		                    
-		                      border: none;
-		                      border-radius: 8px;
-		                    
-		                      font-size: 25px;
-		                      cursor: pointer;
-		                    
-		                      background: #ff000a75;
+		                      	position: absolute;
+	top: 10px;
+	right: 10px;
+	height: 35px;
+	/* padding: 0 10px; */
+	padding: 5px;
+	border: none;
+	border-radius: 10px;
+	cursor: pointer;
+	background: #ff000a75;
 		                    }
 		                    `;
       root = document.createElement('div');
       root.id = 'live-data-root';
-      root.innerHTML = `		                 <button id="otp-show-button" title="Connection">🔌</button>
+      root.innerHTML = `		                 <button id="otp-show-button" title="Connection">${this.disconnectedSVG}</button>
 		                 <div class="otp-container">
 		                 
 		                   <!-- Top row -->
@@ -4127,14 +4227,21 @@
 		                     </div>
 		                   </div>
 
-<div id="rhc-div">
-		<button class='rhc-button'>Request Hardware Control</button>
-</div>
+						   <div id="rhc-div">
+						   		<button class='rhc-button'>Request Hardware Control</button>
+						   </div>
 		                 
 		                   <!-- Scrollable body -->
-		                   <div class="otp-body">
-		                     <!-- more rows... -->
-		                   </div>
+						   <div class='ld-container'>
+<p class='ld-title'>Subscribers</p>
+<div class="ld-sub-container">
+	<!-- more rows... -->
+</div>
+<p class='ld-title'>Publishers</p>
+<div class="ld-pub-container">
+	<!-- more rows... -->
+</div>
+						   </div>
 		                 
 		                 </div>`;
       document.head.appendChild(style);
@@ -4157,7 +4264,16 @@
 	<input data-1p-ignore class="otp-channel-input" value=${newName} data-og-channel=${originalName}></input>
 	<p>${description}</p>
 </div>`;
-      return this.otpBody.innerHTML += channel;
+      return this.subContainer.innerHTML += channel;
+    }
+
+    _insertPubChannel(originalName, description) {
+      var channel;
+      channel = `<div class="otp-row">
+	<input disabled data-1p-ignore class="otp-channel-output" value=${originalName}></input>
+	<p>${description}</p>
+</div>`;
+      return this.pubContainer.innerHTML += channel;
     }
 
     _cacheElements() {
@@ -4169,7 +4285,8 @@
       this.btnRequestHardwareControl = this.root.querySelector('.rhc-button');
       this.requestHardwareControlDiv = this.root.querySelector('#rhc-div');
       this.btnPlug = this.root.querySelector('#otp-show-button');
-      return this.otpBody = this.root.querySelector('.otp-body');
+      this.subContainer = this.root.querySelector('.ld-sub-container');
+      return this.pubContainer = this.root.querySelector('.ld-pub-container');
     }
 
     _wireEvents() {
@@ -4264,7 +4381,8 @@
       if (!this.btnPlug) {
         return;
       }
-      return this.btnPlug.style.background = connected ? '#00ff0a75' : '#ff000a75';
+      this.btnPlug.style.background = connected ? '#00ff0a75' : '#ff000a75';
+      return this.btnPlug.innerHTML = connected ? this.connectedSVG : this.disconnectedSVG;
     }
 
     // =======================
@@ -4292,7 +4410,8 @@
       this.btnConnect.style.display = 'unset';
       this.btnConnect.textContent = 'Connect';
       this.btnConnect.disabled = false;
-      return this.btnDisconnect.style.display = 'none';
+      this.btnDisconnect.style.display = 'none';
+      return this.hideRequestHardwareControlBtn();
     }
 
   };

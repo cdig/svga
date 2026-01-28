@@ -55,7 +55,7 @@ class LiveDataGUI
 
 	setDescriptions: (descriptionMap, aliasIndex) ->
 		# Delete all old channels
-		@otpBody.innerHTML = "";
+		@subContainer.innerHTML = "";
 		
 		for [alias, targets] from aliasIndex
 			for target in targets
@@ -69,8 +69,12 @@ class LiveDataGUI
 				og = el.dataset.ogChannel
 				value = el.value
 				@updateChannelName og, value # oldName, newName
-
-		
+	
+	setPublisherDescriptions: (publisherDescriptionMap) ->
+		# Delete all old channels
+		@pubContainer.innerHTML = "";
+		for [channel, description] from publisherDescriptionMap
+			@_insertPubChannel channel, description
 
 	setState: (status) ->
 		switch status
@@ -80,6 +84,7 @@ class LiveDataGUI
 				@_hideOTP()
 				@_stateDisconnectReady()
 				@_setPlugConnected true
+				@showRequestHardwareControlBtn()
 				@_showPlug()
 			when 'disconnected'
 				@_stateReset()
@@ -116,6 +121,75 @@ class LiveDataGUI
 
 	_injectUI: ->
 		return if document.getElementById 'live-data-root'
+
+		@disconnectedSVG = 
+		"""
+		<svg
+		width="24"
+		height="24"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		version="1.1"
+		id="svg2"
+		xmlns="http://www.w3.org/2000/svg"
+		xmlns:svg="http://www.w3.org/2000/svg">
+		<defs
+			id="defs2" />
+		<path
+			style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.461;stroke-linecap:round;stroke-dasharray:none"
+			id="path4-0"
+			d="m 9.3765059,17.811095 a 5.8269229,5.8269229 0 0 1 -5.0462633,-2.913462 5.8269229,5.8269229 0 0 1 0,-5.8269226 5.8269229,5.8269229 0 0 1 5.0462633,-2.9134614 v 5.826923 z" />
+		<path
+			style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.461;stroke-linecap:round;stroke-dasharray:none"
+			id="path4-0-3"
+			d="m -14.600672,17.851888 a 5.8269229,5.8269229 0 0 1 -5.046263,-2.913461 5.8269229,5.8269229 0 0 1 0,-5.8269232 5.8269229,5.8269229 0 0 1 5.046263,-2.9134614 v 5.8269226 z"
+			transform="scale(-1,1)" />
+		<path
+			style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+			d="M -0.08158924,11.993619 H 5.824059"
+			id="path5" />
+		<path
+			style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-dasharray:none"
+			d="m 17.918,11.994 h 5.905648"
+			id="path5-8" />
+		</svg>
+		"""
+
+		@connectedSVG = 
+		"""
+		<svg
+		width="24"
+		height="24"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		version="1.1"
+		id="svg2"
+		xmlns="http://www.w3.org/2000/svg"
+		xmlns:svg="http://www.w3.org/2000/svg">
+		<defs
+			id="defs2" />
+		<line
+			x1="0"
+			y1="12"
+			x2="24"
+			y2="12"
+			id="line1" />
+		<circle
+			style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.461;stroke-linecap:round;stroke-dasharray:none"
+			id="path4"
+			cx="11.913462"
+			cy="11.942308"
+			r="5.8269229" />
+		</svg>
+		"""
 
 		style = document.createElement 'style'
 		style.id = 'live-data-style'
@@ -217,12 +291,16 @@ class LiveDataGUI
 								padding: 0px;
 								color: white;
 							}
+
+							#rhc-div {
+								display: none;
+							}
 		                    
 		                    /* ===============================
 		                       Scrollable Channel List
 		                       =============================== */
 		                    
-		                    .otp-body {
+		                    .ld-container {
 		                      flex: 1;
 		                      overflow-y: auto;
 		                    
@@ -231,6 +309,9 @@ class LiveDataGUI
 		                      gap: 6px;
 		                    
 		                      padding-right: 4px;
+		                    }
+
+							.ld-sub-container, .ld-pub-container {
 		                    }
 		                    
 		                    /* Individual rows */
@@ -248,8 +329,8 @@ class LiveDataGUI
 		                        border-radius: 6px;
 		                        border: none;
 		                        outline: none;
-		                        background: #212d59;
 		                        color: white;
+								background: #212d59;
 		                    }
 		                    
 		                    .otp-row p {
@@ -260,26 +341,29 @@ class LiveDataGUI
 		                      color: white;
 		                      text-align: left;
 		                    }
+
+							.ld-title {
+								color: white;
+								background: #0000003b;
+								border-radius: 5px;
+								padding: 5px;
+							}
 		                    
 		                    /* ===============================
 		                       Plug Button
 		                       =============================== */
 		                    
 		                    #otp-show-button {
-		                      position: absolute;
-		                      top: 10px;
-		                      right: 10px;
-		                    
-		                      height: 36px;
-		                      padding: 0 10px;
-		                    
-		                      border: none;
-		                      border-radius: 8px;
-		                    
-		                      font-size: 25px;
-		                      cursor: pointer;
-		                    
-		                      background: #ff000a75;
+		                      	position: absolute;
+								top: 10px;
+								right: 10px;
+								height: 35px;
+								/* padding: 0 10px; */
+								padding: 5px;
+								border: none;
+								border-radius: 10px;
+								cursor: pointer;
+								background: #ff000a75;
 		                    }
 		                    
 		                    		                    """
@@ -287,7 +371,7 @@ class LiveDataGUI
 		root = document.createElement 'div'
 		root.id = 'live-data-root'
 		root.innerHTML = """
-		                 <button id="otp-show-button" title="Connection">🔌</button>
+		                 <button id="otp-show-button" title="Connection">#{@disconnectedSVG}</button>
 		                 <div class="otp-container">
 		                 
 		                   <!-- Top row -->
@@ -310,9 +394,16 @@ class LiveDataGUI
 						   </div>
 		                 
 		                   <!-- Scrollable body -->
-		                   <div class="otp-body">
-		                     <!-- more rows... -->
-		                   </div>
+						   <div class='ld-container'>
+								<p class='ld-title'>Subscribers</p>
+								<div class="ld-sub-container">
+									<!-- more rows... -->
+								</div>
+								<p class='ld-title'>Publishers</p>
+								<div class="ld-pub-container">
+									<!-- more rows... -->
+								</div>
+						   </div>
 		                 
 		                 </div>
 		                 		                 """
@@ -334,7 +425,16 @@ class LiveDataGUI
 				<p>#{description}</p>
 			</div>
 		"""
-		@otpBody.innerHTML += channel
+		@subContainer.innerHTML += channel
+	
+	_insertPubChannel: (originalName, description) ->
+		channel = """
+			<div class="otp-row">
+				<input disabled data-1p-ignore class="otp-channel-output" value=#{originalName}></input>
+				<p>#{description}</p>
+			</div>
+		"""
+		@pubContainer.innerHTML += channel
 
 	_cacheElements: ->
 		@root = document.getElementById 'live-data-root'
@@ -345,7 +445,8 @@ class LiveDataGUI
 		@btnRequestHardwareControl = @root.querySelector '.rhc-button'
 		@requestHardwareControlDiv = @root.querySelector '#rhc-div'
 		@btnPlug = @root.querySelector '#otp-show-button'
-		@otpBody = @root.querySelector '.otp-body'
+		@subContainer = @root.querySelector '.ld-sub-container'
+		@pubContainer = @root.querySelector '.ld-pub-container'
 
 	_wireEvents: ->
 		# OTP input behavior
@@ -408,7 +509,8 @@ class LiveDataGUI
 
 	_setPlugConnected: (connected) ->
 		return unless @btnPlug
-		@btnPlug.style.background = if connected then '#00ff0a75' else '#ff000a75'
+		@btnPlug.style.background = if connected then '#00ff0a75' else '#ff000a75';
+		@btnPlug.innerHTML = if connected then @connectedSVG else @disconnectedSVG;
 
 	# =======================
 	# State transitions
@@ -433,6 +535,7 @@ class LiveDataGUI
 		@btnConnect.textContent = 'Connect'
 		@btnConnect.disabled = false
 		@btnDisconnect.style.display = 'none'
+		@hideRequestHardwareControlBtn()
 
 Take ["LiveDataDebug"], (debug) ->
 	Make "LiveDataGUI", new LiveDataGUI debug

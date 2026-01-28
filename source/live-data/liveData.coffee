@@ -12,6 +12,8 @@ class LiveData
 		@cachedData = new Map() # key: default channel name, value: data on that channel
 		@aliasIndex = new Map()  # key: alias name, value: array of targets
 		@descriptions = new Map() # key: target, value: registration description
+		@publisherDescriptions = new Map()
+
 		@hasPermissionToControl = false; 
 
 		@ui.updateChannelName = (oldName, newName) =>
@@ -108,10 +110,10 @@ class LiveData
 		@ui.showConnectionTools();
 		@ui.setDescriptions @descriptions, @aliasIndex
 
-	registerChannel: (channel, description) =>
+	registerSubscriberChannel: (channel, description) =>
 
 		if @descriptions.has channel
-			console.warn "[Live Data] Tried to register channel #{channel} more than once. Using previous registration."
+			console.warn "[Live Data] Tried to register subscriber channel #{channel} more than once. Using previous registration."
 			return
 
 		@aliasIndex.set channel, [channel]
@@ -119,6 +121,17 @@ class LiveData
 
 		if @ui.connectionToolsCreated
 			@ui.setDescriptions @descriptions, @aliasIndex
+
+	registerPublisherChannel: (channel, description) =>
+
+		if @publisherDescriptions.has channel
+			console.warn "[Live Data] Tried to register publisher channel #{channel} more than once. Using previous registration."
+			return
+
+		@publisherDescriptions.set channel, description
+
+		if @ui.connectionToolsCreated
+			@ui.setPublisherDescriptions @publisherDescriptions
 
 
 	useSignalingHost: (host) ->
@@ -128,6 +141,7 @@ class LiveData
 		return @cachedData.get(channel.toString()) || defaultValue
 
 	sendChannel: (channel, value) ->
+		return unless @hasPermissionToControl
 		return unless typeof channel is 'number' or (typeof channel is 'string' and channel.length > 0)
 		return unless typeof value is 'number' and isFinite value
 

@@ -146,6 +146,9 @@ class LiveData
 		return unless typeof value is 'number' and isFinite value
 
 		@webRTCTools.sendData [channel.toString(), value]
+	
+	hasHardwareControl: ()->
+		return @hasPermissionToControl
 
 
 Take ["LiveDataGUI", "WebRTCTools", "LiveDataDebug"], (liveDataGUI, webRTCTools, debug)->

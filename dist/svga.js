@@ -3789,6 +3789,10 @@
       return this.webRTCTools.sendData([channel.toString(), value]);
     }
 
+    hasHardwareControl() {
+      return this.hasPermissionToControl;
+    }
+
   };
 
   Take(["LiveDataGUI", "WebRTCTools", "LiveDataDebug"], function(liveDataGUI, webRTCTools, debug) {

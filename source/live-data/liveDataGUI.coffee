@@ -312,6 +312,9 @@ class LiveDataGUI
 		                    }
 
 							.ld-sub-container, .ld-pub-container {
+								display: flex;
+								gap: 2px;
+								flex-direction: column;
 		                    }
 		                    
 		                    /* Individual rows */

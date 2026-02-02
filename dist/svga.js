@@ -4157,6 +4157,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
 		                    }
 
 .ld-sub-container, .ld-pub-container {
+	display: flex;
+	gap: 2px;
+	flex-direction: column;
 		                    }
 		                    
 		                    /* Individual rows */

@@ -3663,7 +3663,6 @@
         var e, len, m, packet, ref, target;
         try {
           packet = JSON.parse(data);
-          console.log(packet);
           if (packet.data) {
             // If the packet is data
             if (Array.isArray(packet.data) && packet.data.length === 2) {

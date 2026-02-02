@@ -46,7 +46,6 @@ class LiveData
 		@webRTCTools.onData = (data) =>
 			try
 				packet = JSON.parse data
-				console.log(packet);
 				if packet.data
 					# If the packet is data
 					if Array.isArray(packet.data) and packet.data.length is 2

@@ -6,6 +6,8 @@ class LiveData
 		# Link the webRTC connection state change to the GUI
 		@webRTCTools.onConnectionStateChange @passStateToUI
 
+		@connected = false
+
 		@webRTCTools.onConnectionUserInfoChange = (text) =>
 			@ui.setConnectButtonText(text);
 		
@@ -103,6 +105,7 @@ class LiveData
 	passStateToUI: (state) =>
 		@debug.log("PASS STATE TO UI", state);
 		@ui.setState(state)
+		@connected = (state == "connected")
 		if state == "closed" or state == "disconnected" or state == "failed"
 			@cachedData.clear()
 	

@@ -3623,6 +3623,7 @@
       }
       // Link the webRTC connection state change to the GUI
       this.webRTCTools.onConnectionStateChange(this.passStateToUI);
+      this.connected = false;
       this.webRTCTools.onConnectionUserInfoChange = (text) => {
         return this.ui.setConnectButtonText(text);
       };
@@ -3735,6 +3736,7 @@
     passStateToUI(state) {
       this.debug.log("PASS STATE TO UI", state);
       this.ui.setState(state);
+      this.connected = state === "connected";
       if (state === "closed" || state === "disconnected" || state === "failed") {
         return this.cachedData.clear();
       }

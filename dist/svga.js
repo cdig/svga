@@ -3742,8 +3742,23 @@
     }
 
     showConnectionTools() {
+      var autoConnect, code, urlParams;
+      urlParams = new URLSearchParams(window.location.search);
+      autoConnect = urlParams.has('live-data-auto-connect');
+      code = urlParams.get('live-data-code');
       this.ui.showConnectionTools();
-      return this.ui.setDescriptions(this.descriptions, this.aliasIndex);
+      this.ui.setDescriptions(this.descriptions, this.aliasIndex);
+      if (code) {
+        this.ui.setOTP(code);
+      }
+      if (autoConnect) {
+        this.ui.clickPlug();
+      }
+      return Take(['socket.io'], () => {
+        if (autoConnect) {
+          return this.ui.clickConnect();
+        }
+      });
     }
 
     registerSubscriberChannel(channel, description) {
@@ -3967,6 +3982,21 @@
 
     requestHardwareControl() {
       return this.debug.log('Please override requestHardwareControl()');
+    }
+
+    clickConnect() {
+      var otp;
+      otp = this._getOTP();
+      if (otp.length === 4) {
+        return this.attemptConnect(otp);
+      } else {
+        this._showPlug();
+        return this._hideOTP();
+      }
+    }
+
+    clickPlug() {
+      return this._showOTP();
     }
 
     // =======================
@@ -4314,14 +4344,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       });
       // Buttons
       this.btnConnect.addEventListener('click', () => {
-        var otp;
-        otp = this._getOTP();
-        if (otp.length === 4) {
-          return this.attemptConnect(otp);
-        } else {
-          this._showPlug();
-          return this._hideOTP();
-        }
+        return this.clickConnect();
       });
       this.btnDisconnect.addEventListener('click', () => {
         return this.attemptDisconnect();
@@ -4330,7 +4353,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         return this.requestHardwareControl();
       });
       return this.btnPlug.addEventListener('click', () => {
-        return this._showOTP();
+        return this.clickPlug();
       });
     }
 
@@ -4359,6 +4382,12 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return this.inputs.map(function(i) {
         return i.value;
       }).join('');
+    }
+
+    setOTP(otp) {
+      return this.inputs.forEach(function(input, index) {
+        return input.value = otp[index] || '';
+      });
     }
 
     _setInputsDisabled(state) {

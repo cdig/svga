@@ -109,8 +109,17 @@ class LiveData
 			@cachedData.clear()
 	
 	showConnectionTools: ->
+		urlParams = new URLSearchParams(window.location.search)
+		autoConnect = urlParams.has('live-data-auto-connect')
+		code = urlParams.get('live-data-code')
+
 		@ui.showConnectionTools();
 		@ui.setDescriptions @descriptions, @aliasIndex
+		@ui.setOTP(code) if code
+		@ui.clickPlug() if autoConnect
+
+		Take ['socket.io'], =>
+			@ui.clickConnect() if autoConnect
 
 	registerSubscriberChannel: (channel, description) =>
 

@@ -115,6 +115,16 @@ class LiveDataGUI
 	requestHardwareControl: () ->
 		@debug.log 'Please override requestHardwareControl()'
 
+	clickConnect: ->
+		otp = @_getOTP()
+		if otp.length is 4 then @attemptConnect otp
+		else
+			@_showPlug()
+			@_hideOTP()
+
+	clickPlug: ->
+		@_showOTP()
+
 	# =======================
 	# UI creation / teardown
 	# =======================
@@ -465,11 +475,7 @@ class LiveDataGUI
 
 		# Buttons
 		@btnConnect.addEventListener 'click', =>
-			otp = @_getOTP()
-			if otp.length is 4 then @attemptConnect otp
-			else
-				@_showPlug()
-				@_hideOTP()
+			@clickConnect()
 
 		@btnDisconnect.addEventListener 'click', =>
 			@attemptDisconnect()
@@ -478,7 +484,7 @@ class LiveDataGUI
 			@requestHardwareControl()
 
 		@btnPlug.addEventListener 'click', =>
-			@_showOTP()
+			@clickPlug()
 
 	_bindGlobalHide: ->
 		window.addEventListener 'pointerdown', (e) =>
@@ -497,6 +503,10 @@ class LiveDataGUI
 
 	_getOTP: ->
 		@inputs.map((i) -> i.value).join ''
+
+	setOTP: (otp) ->
+		@inputs.forEach (input, index) ->
+			input.value = otp[index] or ''
 
 	_setInputsDisabled: (state) ->
 		@inputs.forEach (i) -> i.disabled = state

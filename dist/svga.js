@@ -3610,6 +3610,7 @@
 
   LiveData = class LiveData {
     constructor(ui, webRTCTools1, debug1) {
+      this.requestHardwareControl = this.requestHardwareControl.bind(this);
       this.findAliasForTarget = this.findAliasForTarget.bind(this);
       this.removeTargetFromAlias = this.removeTargetFromAlias.bind(this);
       this.passStateToUI = this.passStateToUI.bind(this);
@@ -3618,11 +3619,12 @@
       this.ui = ui;
       this.webRTCTools = webRTCTools1;
       this.debug = debug1;
-      if (this.debug.debugMode) {
-        console.log("[Live Data] %cVersion 1.0.0", "color: darkgreen");
-      }
+      this.urlParams = new URLSearchParams(window.location.search);
+      console.log("[Live Data] %cVersion 1.0.0", "color: darkgreen");
       // Link the webRTC connection state change to the GUI
-      this.webRTCTools.onConnectionStateChange(this.passStateToUI);
+      this.webRTCTools.onConnectionStateChange((state) => {
+        return this.passStateToUI(state);
+      });
       this.connected = false;
       this.webRTCTools.onConnectionUserInfoChange = (text) => {
         return this.ui.setConnectButtonText(text);
@@ -3689,16 +3691,20 @@
           }
         } catch (error) {
           e = error;
-          console.warn("Malformed WebRTC input data, must be of form [A,B]", e);
+          this.debug.log("Malformed WebRTC input data, must be of form [A,B]", e);
         }
       };
       this.ui.requestHardwareControl = () => {
-        if (this.hasPermissionToControl) {
-          return this.webRTCTools.sendCommand("releaseHardwareAccess");
-        } else {
-          return this.webRTCTools.sendCommand("requestHardwareAccess");
-        }
+        return this.requestHardwareControl();
       };
+    }
+
+    requestHardwareControl() {
+      if (this.hasPermissionToControl) {
+        return this.webRTCTools.sendCommand("releaseHardwareAccess");
+      } else {
+        return this.webRTCTools.sendCommand("requestHardwareAccess");
+      }
     }
 
     findAliasForTarget(target) {
@@ -3742,10 +3748,9 @@
     }
 
     showConnectionTools() {
-      var autoConnect, code, urlParams;
-      urlParams = new URLSearchParams(window.location.search);
-      autoConnect = urlParams.has('live-data-auto-connect');
-      code = urlParams.get('live-data-code');
+      var autoConnect, code;
+      autoConnect = this.urlParams.has('live-data-auto-connect');
+      code = this.urlParams.get('live-data-code');
       this.ui.showConnectionTools();
       this.ui.setDescriptions(this.descriptions, this.aliasIndex);
       if (code) {
@@ -3847,6 +3852,7 @@
     constructor(debug1) {
       var ref;
       this.debug = debug1;
+      this.urlParams = new URLSearchParams(window.location.search);
       this.connectionToolsCreated = false;
       this._pointerDownInside = false;
       this._bindGlobalHide();
@@ -3858,11 +3864,18 @@
     // Public API
     // =======================
     showConnectionTools() {
+      var root;
       if (this.connectionToolsCreated) {
         return;
       }
       this._injectUI();
-      return this.connectionToolsCreated = true;
+      this.connectionToolsCreated = true;
+      if (this.urlParams.has('live-data-hidden')) {
+        root = document.getElementById('live-data-root');
+        if (root) {
+          return root.style.display = 'none';
+        }
+      }
     }
 
     hideConnectionTools() {
@@ -4479,6 +4492,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
   WebRTCTools = class WebRTCTools {
     constructor(debug1) {
       this.debug = debug1;
+      this.urlParams = new URLSearchParams(window.location.search);
       this.connectionId = 0; // Incremented on every connection
       this.sc = null;
       this.connectionState = 'closed';
@@ -4554,6 +4568,12 @@ xmlns:svg="http://www.w3.org/2000/svg">
         });
         // Data channel creation
         this.dataChannel = this.pc.createDataChannel("data"); // UDP-like For the transfer of sensor/actuator data
+        this.dataChannel.onopen = (event) => {
+          if (this.urlParams.has('live-data-auto-control')) {
+            this.debug.log("Automatically requesting hardware control");
+            return this.sendCommand("requestHardwareAccess");
+          }
+        };
         this.dataChannel.onmessage = (event) => {
           return this.onData(event.data);
         };
@@ -4703,7 +4723,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         command: topic,
         data: data
       }));
-      return console.log({
+      return this.debug.log({
         command: topic,
         data: data
       });

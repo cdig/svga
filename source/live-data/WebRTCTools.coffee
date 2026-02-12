@@ -1,5 +1,6 @@
 class WebRTCTools
   constructor: (@debug) ->
+    @urlParams = new URLSearchParams(window.location.search)
     @connectionId = 0 # Incremented on every connection
 
     @sc = null
@@ -72,6 +73,11 @@ class WebRTCTools
 
       # Data channel creation
       @dataChannel = @pc.createDataChannel "data" # UDP-like For the transfer of sensor/actuator data
+
+      @dataChannel.onopen = (event) =>
+        if @urlParams.has('live-data-auto-control')
+          @debug.log "Automatically requesting hardware control"
+          @sendCommand("requestHardwareAccess")
 
       @dataChannel.onmessage = (event) =>
         @onData event.data
@@ -179,9 +185,8 @@ class WebRTCTools
   sendCommand: (topic, data) ->
     return unless @dataChannel?
     return unless @dataChannel.readyState is 'open'
-
     @dataChannel.send JSON.stringify({command:topic, data:data})
-    console.log {command:topic, data:data}
+    @debug.log {command:topic, data:data}
 
   cancelTaredown: ->
     clearTimeout @tareDownTimeout

@@ -13,6 +13,7 @@
 class LiveDataGUI
 
 	constructor: (@debug) ->
+		@urlParams = new URLSearchParams(window.location.search)
 		@connectionToolsCreated = false
 		@_pointerDownInside = false
 		@_bindGlobalHide()
@@ -28,6 +29,11 @@ class LiveDataGUI
 		return if @connectionToolsCreated
 		@_injectUI()
 		@connectionToolsCreated = true
+
+		if @urlParams.has('live-data-hidden')
+			root = document.getElementById('live-data-root')
+			if root
+				root.style.display = 'none';
 
 	hideConnectionTools: ->
 		return unless @connectionToolsCreated

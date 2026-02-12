@@ -1,10 +1,12 @@
 class LiveData
 	constructor: (@ui, @webRTCTools, @debug)->
-		if @debug.debugMode
-			console.log "[Live Data] %cVersion 1.0.0", "color: darkgreen"
+		@urlParams = new URLSearchParams(window.location.search)
+
+		console.log "[Live Data] %cVersion 1.0.0", "color: darkgreen"
 
 		# Link the webRTC connection state change to the GUI
-		@webRTCTools.onConnectionStateChange @passStateToUI
+		@webRTCTools.onConnectionStateChange (state) => 
+			@passStateToUI state
 
 		@connected = false
 
@@ -71,11 +73,14 @@ class LiveData
 					return
 
 			catch e
-				console.warn "Malformed WebRTC input data, must be of form [A,B]", e
+				@debug.log "Malformed WebRTC input data, must be of form [A,B]", e
 				return
 
 		@ui.requestHardwareControl = () =>
-			if @hasPermissionToControl
+			@requestHardwareControl()
+	
+	requestHardwareControl: () => 
+		if @hasPermissionToControl
 				@webRTCTools.sendCommand("releaseHardwareAccess")
 			else
 				@webRTCTools.sendCommand("requestHardwareAccess")
@@ -109,9 +114,8 @@ class LiveData
 			@cachedData.clear()
 	
 	showConnectionTools: ->
-		urlParams = new URLSearchParams(window.location.search)
-		autoConnect = urlParams.has('live-data-auto-connect')
-		code = urlParams.get('live-data-code')
+		autoConnect = @urlParams.has('live-data-auto-connect')
+		code = @urlParams.get('live-data-code')
 
 		@ui.showConnectionTools();
 		@ui.setDescriptions @descriptions, @aliasIndex

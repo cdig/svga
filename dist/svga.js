@@ -6633,6 +6633,17 @@ xmlns:svg="http://www.w3.org/2000/svg">
     });
   });
 
+  Take(["Reaction", "Symbol", "Mode"], function(Reaction, Symbol, Mode) {
+    return Symbol("Legend", ["Legend"], function(svgElement) {
+      var scope;
+      return scope = {
+        setup: function() {
+          return svgElement.style.display = Mode.get("legend") ? 'unset' : 'none';
+        }
+      };
+    });
+  });
+
   Take(["Ease", "Reaction", "Symbol"], function(Ease, Reaction, Symbol) {
     return Symbol("ManifoldBackground", ["ManifoldBackground"], function(svgElement) {
       var scope;

@@ -43,3 +43,13 @@ Take ["Mode", "Registry", "ScopeCheck", "Scope", "SVG"], (Mode, Registry, ScopeC
         else
           "Warning: @debug.point() is disabled unless you're in dev"
           return {}
+
+      circle: (color, radius)->
+        if Mode.dev
+          point = Scope SVG.create "g", scope.element
+          SVG.create "circle", point.element, stroke: "#F00", fill:"none", cx: 0, cy: 0, r:1
+          SVG.create "circle", point.element, stroke: "#F00", fill:"none", cx: 0, cy: 0, r:radius
+          return point
+        else
+          "Warning: @debug.circle() is disabled unless you're in dev"
+          return {}

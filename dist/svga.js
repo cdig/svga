@@ -5672,6 +5672,30 @@ xmlns:svg="http://www.w3.org/2000/svg">
                 "Warning: @debug.point() is disabled unless you're in dev";
                 return {};
               }
+            },
+            circle: function(color, radius) {
+              var point;
+              if (Mode.dev) {
+                point = Scope(SVG.create("g", scope.element));
+                SVG.create("circle", point.element, {
+                  stroke: "#F00",
+                  fill: "none",
+                  cx: 0,
+                  cy: 0,
+                  r: 1
+                });
+                SVG.create("circle", point.element, {
+                  stroke: "#F00",
+                  fill: "none",
+                  cx: 0,
+                  cy: 0,
+                  r: radius
+                });
+                return point;
+              } else {
+                "Warning: @debug.circle() is disabled unless you're in dev";
+                return {};
+              }
             }
           };
         }

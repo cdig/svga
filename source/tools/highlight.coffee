@@ -130,6 +130,13 @@ Take ["FPS", "Gradient", "Input", "RAF", "Reaction", "SVG", "Tick", "SVGReady"],
 
       undefined
 
+    return
+      flashOnce: (delayTimeMs, durationMs) =>
+        ac = activate targets[0]
+        setTimeout ac, delayTimeMs
+        setTimeout deactivate, delayTimeMs + durationMs
+        # Use a function wrapper (->) so it doesn't execute immediately
+        
 
   Reaction "Highlights:Set", (v)->
     enabled = v

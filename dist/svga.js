@@ -8047,7 +8047,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       // Delay running the Highlight setup code by one frame so that if fills / strokes are changed
       // by the @tick() function (eg: an @linearGradient is created), we can capture those changes.
       // See: https://github.com/cdig/svga/issues/133
-      return RAF(function() {
+      RAF(function() {
         var len, len1, m, mouseProps, n, t, target, touchProps;
         for (m = 0, len = targets.length; m < len; m++) {
           target = targets[m];
@@ -8090,7 +8090,16 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
         return void 0;
       });
+      return {
+        flashOnce: (delayTimeMs, durationMs) => {
+          var ac;
+          ac = activate(targets[0]);
+          setTimeout(ac, delayTimeMs);
+          return setTimeout(deactivate, delayTimeMs + durationMs);
+        }
+      };
     });
+    // Use a function wrapper (->) so it doesn't execute immediately
     return Reaction("Highlights:Set", function(v) {
       return enabled = v;
     });

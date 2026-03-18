@@ -4885,6 +4885,12 @@ xmlns:svg="http://www.w3.org/2000/svg">
       if (liveDataGUI != null ? (ref = liveDataGUI.root) != null ? typeof ref.contains === "function" ? ref.contains(e.target) : void 0 : void 0 : void 0) {
         return;
       }
+      if (Nav.disabled) {
+        return;
+      }
+      if (e.target.hasAttribute('block-nav')) {
+        return;
+      }
       e.preventDefault(); // Without this, shift-drag pans the ENTIRE SVG! What the hell?
       if (Nav.eventInside(e)) {
         return dragging = true;
@@ -4924,6 +4930,12 @@ xmlns:svg="http://www.w3.org/2000/svg">
         if (e.button !== 0) {
           return;
         }
+        if (Nav.disabled) {
+          return;
+        }
+        if (e.target.hasAttribute('block-nav')) {
+          return;
+        }
         if (blockDbl(e.target)) {
           return;
         }
@@ -4938,6 +4950,12 @@ xmlns:svg="http://www.w3.org/2000/svg">
       });
     }
     wheel = function(e) {
+      if (Nav.disabled) {
+        return;
+      }
+      if (e.target.hasAttribute('block-nav')) {
+        return;
+      }
       if (e.button !== 0) {
         return;
       }
@@ -5163,6 +5181,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return Math.min(l.max + a, Math.max(l.min - a, v));
     };
     Make("Nav", Nav = {
+      disabled: false,
       center: function() {
         return center;
       },

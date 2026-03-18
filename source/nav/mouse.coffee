@@ -13,6 +13,9 @@ Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
     if liveDataGUI?.root?.contains?(e.target)
       return
 
+    return if Nav.disabled
+    return if e.target.hasAttribute 'block-nav'
+
     e.preventDefault() # Without this, shift-drag pans the ENTIRE SVG! What the hell?
     if Nav.eventInside e
       dragging = true
@@ -46,12 +49,16 @@ Take ["Input", "Mode", "Nav"], (Input, Mode, Nav)->
 
     document.addEventListener "dblclick", (e)->
       return unless e.button is 0
+      return if Nav.disabled
+      return if e.target.hasAttribute 'block-nav'
       return if blockDbl e.target
       if Nav.eventInside e
         e.preventDefault()
         Nav.to x:0, y:0, z:0
 
   wheel = (e)->
+    return if Nav.disabled
+    return if e.target.hasAttribute 'block-nav'
     return unless e.button is 0
     if Nav.eventInside e
       e.preventDefault()

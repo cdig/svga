@@ -173,6 +173,8 @@ Take ["Action", "ControlPanel", "Fullscreen", "Mode", "ParentData", "RAF", "Resi
     Math.min l.max + a, Math.max l.min - a, v
 
   Make "Nav", Nav =
+    disabled: false
+    
     center: ()-> center
     pos: ()-> pos
     rootScale: rootScale

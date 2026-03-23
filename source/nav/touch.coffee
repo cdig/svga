@@ -6,6 +6,7 @@ Take ["Mode", "Nav", "TouchAcceleration"], (Mode, Nav, TouchAcceleration)->
 
 
   touchStart = (e)->
+    return if e.target.hasAttribute 'block-nav'
     dragging = false
     TouchAcceleration.move x: 0, y: 0 # Stop any momentum scrolling
     if Nav.eventInside e
@@ -13,6 +14,7 @@ Take ["Mode", "Nav", "TouchAcceleration"], (Mode, Nav, TouchAcceleration)->
       cloneTouches e
 
   touchMove = (e)->
+    return if e.target.hasAttribute 'block-nav'
     if Nav.eventInside e
       e.preventDefault()
       if e.touches.length isnt lastTouches.length

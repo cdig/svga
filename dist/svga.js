@@ -85,11 +85,12 @@ void main() {
           this.container.setAttribute('x', this.options.panelSettings.x); // Adjust these to position it within the SVG space
           this.container.setAttribute('y', this.options.panelSettings.y);
           this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
+            antialias: false,
             alpha: true
           });
           this.renderer.setSize(this.options.panelSettings.width, this.options.panelSettings.height);
-          this.renderer.setPixelRatio(window.devicePixelRatio);
+          this.renderer.setPixelRatio(1);
+          this.renderer.shadowMap.enabled = false;
         } catch (error1) {
           e = error1;
           console.warn("Could not create 3d components in this browser. Try turning on graphics acceleration in chrome settings: chrome://settings/?search=graphics+acceleration");
@@ -233,7 +234,8 @@ void main() {
             }
             this.controls.update();
             this.renderer.render(this.scene, this.camera);
-            return this.rainbowMaterial.uniforms.uTime.value = (Date.now() % 20000) / 800;
+            this.rainbowMaterial.uniforms.uTime.value = (Date.now() % 20000) / 800;
+            return console.log(this.renderer.info.render.calls);
           };
           animate();
           return resolve(this);
@@ -5796,6 +5798,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
     lastTouches = null;
     dragging = false;
     touchStart = function(e) {
+      if (e.target.hasAttribute('block-nav')) {
+        return;
+      }
       dragging = false;
       TouchAcceleration.move({
         x: 0,
@@ -5808,6 +5813,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
     touchMove = function(e) {
       var a, b;
+      if (e.target.hasAttribute('block-nav')) {
+        return;
+      }
       if (Nav.eventInside(e)) {
         e.preventDefault();
         if (e.touches.length !== lastTouches.length) {

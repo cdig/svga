@@ -69,9 +69,10 @@ class Panel3d
                 @container.setAttribute 'x', @options.panelSettings.x # Adjust these to position it within the SVG space
                 @container.setAttribute 'y', @options.panelSettings.y
                 
-                @renderer = new THREE.WebGLRenderer(antialias: true, alpha: true)
+                @renderer = new THREE.WebGLRenderer(antialias: false, alpha: true)
                 @renderer.setSize @options.panelSettings.width, @options.panelSettings.height
-                @renderer.setPixelRatio window.devicePixelRatio
+                @renderer.setPixelRatio 1
+                @renderer.shadowMap.enabled = false;
             
             catch e
                 console.warn("Could not create 3d components in this browser. Try turning on graphics acceleration in chrome settings: chrome://settings/?search=graphics+acceleration");
@@ -214,6 +215,8 @@ class Panel3d
                         @renderer.render @scene, @camera
 
                         @rainbowMaterial.uniforms.uTime.value = (Date.now()%20000)/800
+
+                        console.log(@renderer.info.render.calls)
                     
                     animate()
 

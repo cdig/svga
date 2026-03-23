@@ -2,7 +2,7 @@ class LiveData
 	constructor: (@ui, @webRTCTools, @debug)->
 		@urlParams = new URLSearchParams(window.location.search)
 
-		console.log "[Live Data] %cVersion 1.0.0", "color: darkgreen"
+		# console.log "[Live Data] %cVersion 1.0.0", "color: darkgreen"
 
 		# Link the webRTC connection state change to the GUI
 		@webRTCTools.onConnectionStateChange (state) => 

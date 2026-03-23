@@ -85,7 +85,7 @@ void main() {
           this.container.setAttribute('x', this.options.panelSettings.x); // Adjust these to position it within the SVG space
           this.container.setAttribute('y', this.options.panelSettings.y);
           this.renderer = new THREE.WebGLRenderer({
-            antialias: false,
+            antialias: true,
             alpha: true
           });
           this.renderer.setSize(this.options.panelSettings.width, this.options.panelSettings.height);

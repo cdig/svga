@@ -69,7 +69,7 @@ class Panel3d
                 @container.setAttribute 'x', @options.panelSettings.x # Adjust these to position it within the SVG space
                 @container.setAttribute 'y', @options.panelSettings.y
                 
-                @renderer = new THREE.WebGLRenderer(antialias: false, alpha: true)
+                @renderer = new THREE.WebGLRenderer(antialias: true, alpha: true)
                 @renderer.setSize @options.panelSettings.width, @options.panelSettings.height
                 @renderer.setPixelRatio 1
                 @renderer.shadowMap.enabled = false;

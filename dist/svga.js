@@ -1,6 +1,489 @@
 (function() {
-  var LiveData, LiveDataDebug, LiveDataGUI, Storage, WebRTCTools, s,
+  var LiveData, LiveDataDebug, LiveDataGUI, Model, Panel3d, Storage, WebRTCTools, s,
     indexOf = [].indexOf;
+
+  Panel3d = class Panel3d {
+    constructor(options1, scopes) {
+      this.options = options1;
+      this.scopes = scopes;
+      this.objectMethods = new Map();
+      this.animations = new Map();
+      this.highlightedObjects = new Set();
+      this.currentlyPressedTargets = new Set();
+      this.currentlyOverTargets = new Set();
+      this.morphingMeshes = [];
+      // For highlights
+      this.rainbowMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          uTime: {
+            value: 0
+          },
+          uColor1: {
+            value: new THREE.Color("#2F6")
+          },
+          uColor2: {
+            value: new THREE.Color("#FF2")
+          },
+          uColor3: {
+            value: new THREE.Color("#F72")
+          }
+        },
+        vertexShader: `varying vec2 vUv;
+void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`,
+        fragmentShader: `varying vec2 vUv;
+uniform float uTime;
+uniform vec3 uColor1;
+uniform vec3 uColor2;
+uniform vec3 uColor3;
+void main() {
+    // This mimics your cos/sin rotation logic
+    float angle = uTime * 3.14159;
+    vec2 dir = vec2(cos(angle), sin(angle));
+    
+    // Project UV onto the rotating direction
+    float grad = dot(vUv - 0.5, dir) + 0.5;
+    
+    // Create a 3-stop gradient mix
+    vec3 color = mix(uColor1, uColor2, smoothstep(0.0, 0.5, grad));
+    color = mix(color, uColor3, smoothstep(0.5, 1.0, grad));
+    
+    gl_FragColor = vec4(color, 1.0);
+}`
+      });
+    }
+
+    log(...args) {
+      if (this.options.debug) {
+        return console.log(`[${this.options.model}]`, ...args);
+      }
+    }
+
+    expandResourceName(name) {
+      var host;
+      host = window.location.host;
+      if (host.indexOf(".com") > -1 || host.indexOf(".ca") > -1) {
+        return `https://cdn.lunchboxsessions.com/v4-1/models/${name}`;
+      } else {
+        return `svga-models/${name}`;
+      }
+    }
+
+    setupCanvas() {
+      return new Promise((resolve, reject) => {
+        var e, pmremGenerator, sun, sun2;
+        try {
+          // Target the SVG and the Root Group
+          this.rootGroup = document.getElementById('root');
+          // Create the ForeignObject wrapper
+          // This is the "container" that lets HTML live inside SVG
+          this.container = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+          this.container.setAttribute('width', this.options.panelSettings.width);
+          this.container.setAttribute('height', this.options.panelSettings.height);
+          this.container.setAttribute('x', this.options.panelSettings.x); // Adjust these to position it within the SVG space
+          this.container.setAttribute('y', this.options.panelSettings.y);
+          this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+          });
+          this.renderer.setSize(this.options.panelSettings.width, this.options.panelSettings.height);
+          this.renderer.setPixelRatio(window.devicePixelRatio);
+        } catch (error1) {
+          e = error1;
+          console.warn("Could not create 3d components in this browser. Try turning on graphics acceleration in chrome settings: chrome://settings/?search=graphics+acceleration");
+          reject(e);
+        }
+        this.canvas = this.renderer.domElement;
+        this.canvas.style.backgroundColor = this.options.panelSettings.backgroundColor;
+        this.canvas.style.borderRadius = this.options.panelSettings.borderRadius;
+        this.loaderDiv = document.createElement('div');
+        this.loaderDiv.style.position = 'absolute';
+        this.loaderDiv.style.top = '0';
+        this.loaderDiv.style.left = '0';
+        this.loaderDiv.style.width = '100%';
+        this.loaderDiv.style.height = '100%';
+        this.loaderDiv.style.display = 'flex';
+        this.loaderDiv.style.justifyContent = 'center';
+        this.loaderDiv.style.alignItems = 'center';
+        this.loaderDiv.style.color = 'black';
+        this.loaderDiv.style.fontFamily = 'lato';
+        this.loaderDiv.style.fontSize = '20px';
+        this.loaderDiv.style.pointerEvents = 'none'; // Clicks go through to OrbitControls
+        this.loaderDiv.innerHTML = "Initializing Engine...";
+        // Assemble the tree: Root -> ForeignObject -> Wrapper -> (Canvas + Loader)
+        this.wrapper = document.createElement('div');
+        this.wrapper.style.position = 'relative';
+        this.wrapper.appendChild(this.canvas);
+        this.wrapper.appendChild(this.loaderDiv);
+        this.container.appendChild(this.wrapper); // Append wrapper instead of just canvas
+        this.rootGroup.appendChild(this.container);
+        if (this.options.blockNav) {
+          this.canvas.setAttribute('block-nav', true);
+        }
+        // Remove absolute positioning since it's now inside the SVG flow
+        this.canvas.style.display = 'block';
+        // Scene Setup
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(45, this.options.panelSettings.width / this.options.panelSettings.height, 0.1, 1000);
+        this.camera.position.set(this.options.initialCameraPosition.x, this.options.initialCameraPosition.y, this.options.initialCameraPosition.z);
+        this.controls = new OrbitControls(this.camera, this.canvas);
+        this.controls.enableDamping = true;
+        this.controls.enabled = this.options.orbitAndZoom;
+        this.mixer = null;
+        this.actions = {};
+        this.clock = new THREE.Clock();
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2(-1, -1);
+        pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+        this.scene.environment = pmremGenerator.fromScene(new THREE.Scene()).texture;
+        // Robust mouse mapping for SVG coordinates
+        this.updateMouse = (event) => {
+          var rect;
+          rect = this.canvas.getBoundingClientRect();
+          this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+          return this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        };
+        this.onMouseDown = (event) => {
+          var intersects, methods, rect, target;
+          rect = this.canvas.getBoundingClientRect();
+          this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+          this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+          this.raycaster.setFromCamera(this.mouse, this.camera);
+          intersects = this.raycaster.intersectObjects(this.scene.children, true);
+          if (intersects.length > 0) {
+            target = intersects[0].object;
+            this.log("clicked on:", target.name);
+            // console.log target.name
+            // Bubble up to find a registered name
+            while (target) {
+              methods = this.objectMethods.get(target.name);
+              if (methods) {
+                this.currentlyPressedTargets.add(target);
+                if (typeof methods.mouseDown === "function") {
+                  methods.mouseDown(target); // Stop looking once found
+                }
+                return;
+              }
+              target = target.parent;
+            }
+          }
+        };
+        this.onMouseUp = (event) => {
+          var methods, ref, target;
+          ref = this.currentlyPressedTargets;
+          for (target of ref) {
+            methods = this.objectMethods.get(target.name);
+            if (methods) {
+              if (typeof methods.mouseUp === "function") {
+                methods.mouseUp(target);
+              }
+            }
+          }
+          return this.currentlyPressedTargets.clear();
+        };
+        this.canvas.addEventListener('mousemove', this.updateMouse);
+        this.canvas.addEventListener('mousedown', this.onMouseDown);
+        this.canvas.addEventListener('mouseup', this.onMouseUp);
+        // Load Model
+        this.loader = new GLTFLoader();
+        this.loader.setCrossOrigin('use-credentials');
+        this.loader.setWithCredentials(true);
+        this.loader.load(this.expandResourceName(this.options.model), (gltf) => {
+          var animate, box, center, model, ref;
+          this.loaderDiv.style.display = 'none';
+          model = gltf.scene;
+          model.traverse((node) => {
+            if (node.isMesh) {
+              node.material.depthWrite = true;
+              node.material.needsUpdate = true;
+              if (node.geometry && node.geometry.morphAttributes) {
+                node.material.morphTargets = true; // Required for older Three.js
+                node.material.needsUpdate = true; // Forces shader recompilation
+                if (node.morphTargetInfluences) {
+                  this.log("Found morphable object:", node.name);
+                  return this.morphingMeshes.push(node);
+                }
+              }
+            }
+          });
+          this.scene.add(model);
+          
+          // Setup Mixer
+          if (((ref = gltf.animations) != null ? ref.length : void 0) > 0) {
+            this.mixer = new THREE.AnimationMixer(model);
+            gltf.animations.forEach((clip) => {
+              var action;
+              action = this.mixer.clipAction(clip);
+              this.animations.set(clip.name, action);
+              return this.log("Found animation:", clip.name);
+            });
+          }
+          // Center logic
+          box = new THREE.Box3().setFromObject(model);
+          center = box.getCenter(new THREE.Vector3());
+          model.position.sub(center);
+          animate = () => {
+            var delta, ref1;
+            requestAnimationFrame(animate);
+            delta = this.clock.getDelta();
+            if ((ref1 = this.mixer) != null) {
+              ref1.update(delta);
+            }
+            this.controls.update();
+            this.renderer.render(this.scene, this.camera);
+            return this.rainbowMaterial.uniforms.uTime.value = (Date.now() % 20000) / 800;
+          };
+          animate();
+          return resolve(this);
+        // 2. Progress Callback (onProgress)
+        }, (xhr) => {
+          var loadedMB, percent;
+          loadedMB = (xhr.loaded / 1024 / 1024).toFixed(2);
+          // If total is 0, just show MB. If total exists, show %
+          if (xhr.total > 0) {
+            percent = Math.round(xhr.loaded / xhr.total * 100);
+            return this.loaderDiv.innerHTML = `Loading Model: ${percent}%`;
+          } else {
+            return this.loaderDiv.innerHTML = `Loading 3D: ${loadedMB} MB`;
+          }
+        // 3. Error Callback (onError)
+        }, (error) => {
+          console.warn(`Failed to set up 3d panel. Model ${this.options.resource} not found`);
+          return reject(error); // This triggers the .catch() on your createPanel call
+        });
+        
+        // Lighting
+        this.scene.add(new THREE.AmbientLight(0xffffff, 3));
+        sun = new THREE.DirectionalLight(0xffffff, 1.5);
+        sun.position.set(5, 5, 5);
+        sun2 = new THREE.DirectionalLight(0xffffff, 1.5);
+        sun2.position.set(100, 100, 100); // Move it out
+        this.scene.add(sun);
+        return this.scene.add(sun2);
+      });
+    }
+
+    getObject(meshName, methods) {
+      var target;
+      this.objectMethods.set(meshName, methods);
+      target = this.scene.getObjectByName(meshName);
+      if (target) {
+        return this._wrapInProxy(target);
+      }
+    }
+
+    getObjects(meshNames, methods) {
+      var objects;
+      objects = meshNames.map((name) => {
+        return this.getObject(name, methods);
+      }).filter(function(obj) {
+        return obj != null;
+      });
+      return new Proxy(objects, {
+        // Handles function calls: @group.morph(1)
+        get: (target, prop) => {
+          if (indexOf.call(target, prop) >= 0) {
+            return target[prop];
+          }
+          
+            // We return a function that, when called, loops through the meshes
+          return (...args) => {
+            var len, m, obj;
+            for (m = 0, len = target.length; m < len; m++) {
+              obj = target[m];
+              if (typeof obj[prop] === 'function') {
+                obj[prop](...args);
+              }
+            }
+          };
+        },
+        // Handles assignments: @group.pressure = 1
+        // CRITICAL for Tweens and Sliders!
+        set: (target, prop, value) => {
+          var len, m, obj;
+          for (m = 0, len = target.length; m < len; m++) {
+            obj = target[m];
+            obj[prop] = value;
+          }
+          return true; // Standard Proxy requirement
+        }
+      });
+    }
+
+    
+      // Export objects in a wrapper so we can use the Highlight class on it like any other GUI element or SVG symbol
+    _wrapInProxy(object) {
+      var handler, proxyStorage;
+      // 1. Define the custom logic for your specific "virtual" properties
+      proxyStorage = {
+        element: null, // Will be set below
+        _scope: {
+          _highlight: (state) => {
+            return this.setHighlight(object, state);
+          },
+          _dontHighlightOnHover: false
+        },
+        
+        // Keep your custom methods
+        morph: function(val, target = 0) {
+          if (!object.morphTargetInfluences) {
+            console.warn(`Object ${object.name} has no morph targets`);
+            return;
+          }
+          if (target >= object.morphTargetInfluences.length) {
+            console.warn("Target index out of bounds");
+            return;
+          }
+          return object.morphTargetInfluences[target] = val;
+        },
+        // Required DOM mocks for Highlight class compatibility
+        getAttribute: function(name) {
+          return null;
+        },
+        addEventListener: function(name, cb) {
+          return null;
+        },
+        tagName: "custom",
+        childNodes: []
+      };
+      proxyStorage.element = proxyStorage;
+      // 2. Create the Handler to bridge the Proxy and the Real Object
+      handler = {
+        get: function(target, prop) {
+          // Priority 1: Check our custom proxyStorage (morph, element, etc)
+          if (prop in target) {
+            return target[prop];
+          }
+          // Priority 2: Check the special 'pressure' logic
+          if (prop === 'pressure') {
+            return target.__pressure;
+          }
+          // Priority 3: Fallback to the real THREE.js object
+          return object[prop];
+        },
+        set: (target, prop, value) => {
+          if (prop === 'pressure') {
+            target.__pressure = value;
+            this.setColor(object, this.scopes.Pressure(value));
+            return true;
+          }
+          
+          // CRITICAL: This line forwards material, position, etc. to the REAL mesh
+          object[prop] = value;
+          return true;
+        }
+      };
+      // 3. Return the dynamic Proxy
+      return new Proxy(proxyStorage, handler);
+    }
+
+    getAnimation(name) {
+      return this.animations.get(name);
+    }
+
+    setHighlight(target, state) {
+      var base;
+      if (target && target.isMesh) {
+        if (state) {
+          if ((base = target.userData).originalMaterial == null) {
+            base.originalMaterial = target.material;
+          }
+          return target.material = this.rainbowMaterial;
+        } else {
+          if (target.userData.originalMaterial) {
+            return target.material = target.userData.originalMaterial;
+          }
+        }
+      }
+    }
+
+    setColor(target, color) {
+      // 1. Ensure we have a valid mesh and color
+      if (!(target && target.isMesh && color)) {
+        return;
+      }
+      // 2. Check if the material is already 'unique' to this mesh.
+      // If not, clone it so we don't colorize every other object in the scene.
+      if (!target.userData.isCloned) {
+        target.material = target.material.clone();
+        target.userData.isCloned = true;
+        // Store the 'original' color so you can revert it later if needed
+        target.userData.originalColor = target.material.color.clone();
+      }
+      // 3. Apply the new color
+      // .set() handles hex strings, names, or other Color objects
+      return target.material.color.set(color);
+    }
+
+    logCameraPosition() {
+      return console.log(`[${this.options.model}] Camera pos:`, this.camera.position);
+    }
+
+  };
+
+  Model = class Model {
+    // The constructor runs when you call 'new Model()'
+    constructor(scopes) {
+      this.scopes = scopes;
+      this.importMap = {
+        imports: {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      };
+      this.librariesReadyState = 0;
+    }
+
+    async ensureLibrariesImported() {
+      var GLTFLoader, OrbitControls, imTag, module;
+      // Return immediately if already loaded or loading
+      if (this.librariesReadyState === 2) {
+        return true;
+      }
+      if (this.librariesReadyState === 1) {
+        return;
+      }
+      
+      // Optional: logic to wait for existing loading process
+      this.librariesReadyState = 1;
+      
+      // Inject Import Map
+      imTag = document.createElement('script');
+      imTag.type = 'importmap';
+      imTag.textContent = JSON.stringify(this.importMap);
+      document.head.appendChild(imTag);
+      // We must assign to the outer THREE variable
+      // Note: Use window.THREE if you want it globally accessible
+      module = (await import('three'));
+      window.THREE = module;
+      
+        // Destructure addons
+      ({GLTFLoader} = (await import('three/addons/loaders/GLTFLoader.js')));
+      ({OrbitControls} = (await import('three/addons/controls/OrbitControls.js')));
+      
+      // Attach these to window so Panel can see them
+      window.GLTFLoader = GLTFLoader;
+      window.OrbitControls = OrbitControls;
+      return this.librariesReadyState = 2;
+    }
+
+    // Change this to an async method
+    async createPanel(options) {
+      var panel;
+      await this.ensureLibrariesImported();
+      // Now THREE and OrbitControls are guaranteed to exist
+      panel = new Panel3d(options, this.scopes);
+      await panel.setupCanvas();
+      return panel;
+    }
+
+  };
+
+  Take(["Pressure"], function(Pressure) {
+    return Make("Model", new Model({Pressure}));
+  });
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
     var checkBounds, svgData;
@@ -3620,7 +4103,8 @@
       this.webRTCTools = webRTCTools1;
       this.debug = debug1;
       this.urlParams = new URLSearchParams(window.location.search);
-      console.log("[Live Data] %cVersion 1.0.0", "color: darkgreen");
+      // console.log "[Live Data] %cVersion 1.0.0", "color: darkgreen"
+
       // Link the webRTC connection state change to the GUI
       this.webRTCTools.onConnectionStateChange((state) => {
         return this.passStateToUI(state);
@@ -3689,8 +4173,8 @@
               this.ui.revolkHardwareControl();
             }
           }
-        } catch (error) {
-          e = error;
+        } catch (error1) {
+          e = error1;
           this.debug.log("Malformed WebRTC input data, must be of form [A,B]", e);
         }
       };

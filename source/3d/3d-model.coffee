@@ -1,11 +1,14 @@
 class Panel3d
     constructor: (@options, @scopes) ->
-        @objectMethods = new Map()
+        @definedObjects = new Map()
         @animations = new Map()
         @highlightedObjects = new Set()
         @currentlyPressedTargets = new Set()
         @currentlyOverTargets = new Set()
         @morphingMeshes = []
+        @rawHoverTarget = null
+        @oldLogicalTarget = null
+        @popovers = new Map()
 
         # For highlights
         @rainbowMaterial = new THREE.ShaderMaterial
@@ -54,24 +57,71 @@ class Panel3d
         else
             "svga-models/#{name}"
 
+    animatePopovers: () ->
+        for [key, value] from @popovers
+            if value.opts.show
+                coords = @getScreenCoordinates value.opts.targetObject
+                value.div.style.left = coords.x+'px'
+                value.div.style.top = coords.y+'px'
+
+    showPopover: (name) ->
+        p = @popovers.get(name)
+        if not p
+            console.warn("popver",name,"does not exist")
+            return
+        p.opts.show = true
+        p.div.style.display = 'unset'
+
+    hidePopover: (name) ->
+        p = @popovers.get(name)
+        if not p
+            console.warn("popver",name,"does not exist")
+            return
+        p.opts.show = false
+        p.div.style.display = 'none'
+
+    togglePopover: (name) ->
+        p = @popovers.get(name)
+        if not p
+            console.warn("popver",name,"does not exist")
+            return
+        if p.opts.show
+            @hidePopover name
+        else
+            @showPopover name
+
+    getScreenCoordinates: (object) ->
+        # 1. Get the geometric center of the object
+        box = new THREE.Box3().setFromObject object
+        center = new THREE.Vector3()
+        box.getCenter center
+
+        # 2. Project the world-space center to NDC (-1 to +1)
+        center.project @camera
+        
+        x = (center.x + 1) * @canvas.clientWidth / 2
+        y = (-center.y + 1) * @canvas.clientHeight / 2
+
+        return { x: x, y: y }
+
     setupCanvas: () ->
         return new Promise (resolve, reject) =>
 
             try
-                # Target the SVG and the Root Group
-                @rootGroup = document.getElementById 'root'
-
                 # Create the ForeignObject wrapper
                 # This is the "container" that lets HTML live inside SVG
+
                 @container = document.createElementNS 'http://www.w3.org/2000/svg', 'foreignObject'
-                @container.setAttribute 'width', @options.panelSettings.width
-                @container.setAttribute 'height', @options.panelSettings.height
-                @container.setAttribute 'x', @options.panelSettings.x # Adjust these to position it within the SVG space
-                @container.setAttribute 'y', @options.panelSettings.y
+                @container.id = '3d'
+                if not @options.panelSettings.fullscreen
+                    @container.setAttribute 'width', @options.panelSettings.width
+                    @container.setAttribute 'height', @options.panelSettings.height
+                    @container.setAttribute 'x', @options.panelSettings.x # Adjust these to position it within the SVG space
+                    @container.setAttribute 'y', @options.panelSettings.y
                 
                 @renderer = new THREE.WebGLRenderer(antialias: true, alpha: true)
                 @renderer.setSize @options.panelSettings.width, @options.panelSettings.height
-                @renderer.setPixelRatio 1
+                @renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                 @renderer.shadowMap.enabled = false;
             
             catch e
@@ -97,14 +147,39 @@ class Panel3d
             @loaderDiv.style.pointerEvents = 'none' # Clicks go through to OrbitControls
             @loaderDiv.innerHTML = "Initializing Engine..."
 
+            @popoverLayer = document.createElement 'div'
+            @popoverLayer.style.position = 'absolute'
+            @popoverLayer.style.top = '0'
+            @popoverLayer.style.left = '0'
+            @popoverLayer.style.width = '100%'
+            @popoverLayer.style.height = '100%'
+            @popoverLayer.style.pointerEvents = 'none'
+
             # Assemble the tree: Root -> ForeignObject -> Wrapper -> (Canvas + Loader)
             @wrapper = document.createElement 'div'
-            @wrapper.style.position = 'relative'
+
+            if @options.panelSettings.fullscreen
+                @wrapper.style.position = 'absolute'
+            else
+                @wrapper.style.position = 'relative'
+
+            @wrapper.style.left = '0px'
+            @wrapper.style.top = '0px'
+
             @wrapper.appendChild @canvas
             @wrapper.appendChild @loaderDiv
+            @wrapper.appendChild @popoverLayer
 
             @container.appendChild @wrapper # Append wrapper instead of just canvas
-            @rootGroup.appendChild @container
+
+            if @options.panelSettings.fullscreen
+                @scopes.GUI.elm.prepend @container
+                @scopes.Resize ()=>
+                    @updateContainerSize()
+            else
+                @scopes.SVG.root.appendChild @container
+
+            # document.body.appendChild @container
             
             if @options.blockNav then @canvas.setAttribute 'block-nav', true
             # Remove absolute positioning since it's now inside the SVG flow
@@ -112,7 +187,7 @@ class Panel3d
 
             # Scene Setup
             @scene = new THREE.Scene()
-            @camera = new THREE.PerspectiveCamera(45, @options.panelSettings.width / @options.panelSettings.height, 0.1, 1000)
+            @camera = new THREE.PerspectiveCamera(45, @options.panelSettings.width / @options.panelSettings.height, 0.1, 10000)
             @camera.position.set(@options.initialCameraPosition.x, @options.initialCameraPosition.y, @options.initialCameraPosition.z)
 
             @controls = new OrbitControls(@camera, @canvas)
@@ -128,11 +203,46 @@ class Panel3d
             pmremGenerator = new THREE.PMREMGenerator(@renderer)
             @scene.environment = pmremGenerator.fromScene(new THREE.Scene()).texture
 
-            # Robust mouse mapping for SVG coordinates
+            if @options.panelSettings.fullscreen
+                @updateContainerSize()
+
             @updateMouse = (event) =>
                 rect = @canvas.getBoundingClientRect()
                 @mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
                 @mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+                @raycaster.setFromCamera @mouse, @camera
+                intersects = @raycaster.intersectObjects @scene.children, true
+                
+                # 1. Find the "Logical" owner of the hit mesh
+                newLogicalTarget = null
+                if intersects.length > 0
+                    search = intersects[0].object
+                    while search
+                        # Check if this specific name has registered mouse methods
+                        if @definedObjects.has(search.name)
+                            newLogicalTarget = search
+                            break
+                        search = search.parent
+                else
+                    newLogicalTarget = null
+
+
+                if newLogicalTarget isnt @rawHoverTarget
+                    if newLogicalTarget
+                        p = @definedObjects.get(newLogicalTarget.name)
+                        if p?.methods?.mouseEnter
+                            p.methods.mouseEnter p
+
+                    if @oldLogicalTarget
+                        p = @definedObjects.get(@oldLogicalTarget.name)
+                        if p?.methods?.mouseExit
+                            p.methods.mouseExit p
+
+                # 3. Update the persistent state
+                @oldLogicalTarget = newLogicalTarget
+                @rawHoverTarget = newLogicalTarget
+
 
             @onMouseDown = (event) =>
                 rect = @canvas.getBoundingClientRect()
@@ -145,28 +255,27 @@ class Panel3d
                 if intersects.length > 0
                     target = intersects[0].object
                     @log "clicked on:",target.name
-                    # console.log target.name
                     # Bubble up to find a registered name
                     while target
-                        methods = @objectMethods.get target.name
-                        if methods
+                        p = @definedObjects.get(target.name)
+                        if p?.methods
                             @currentlyPressedTargets.add(target);
-                            methods.mouseDown?(target)
+                            p.methods.mouseDown?(target)
                             return # Stop looking once found
                         target = target.parent
 
             @onMouseUp = (event) =>
 
                 for target from @currentlyPressedTargets
-                    methods = @objectMethods.get target.name
-                    if methods
-                        methods.mouseUp?(target)
+                    p = @definedObjects.get(target.name)
+                    if p?.methods
+                        p.methods.mouseUp?(target)
                 
                 @currentlyPressedTargets.clear()
             
             @canvas.addEventListener 'mousemove', @updateMouse
-            @canvas.addEventListener 'mousedown', @onMouseDown
-            @canvas.addEventListener 'mouseup', @onMouseUp
+            @canvas.addEventListener 'pointerdown', @onMouseDown
+            @canvas.addEventListener 'pointerup', @onMouseUp
 
             # Load Model
             @loader = new GLTFLoader()
@@ -212,11 +321,10 @@ class Panel3d
                         delta = @clock.getDelta();
                         @mixer?.update(delta)
                         @controls.update()
+                        @animatePopovers()
                         @renderer.render @scene, @camera
 
                         @rainbowMaterial.uniforms.uTime.value = (Date.now()%20000)/800
-
-                        console.log(@renderer.info.render.calls)
                     
                     animate()
 
@@ -239,19 +347,53 @@ class Panel3d
 
 
             # Lighting
-            @scene.add new THREE.AmbientLight(0xffffff, 3)
-            sun = new THREE.DirectionalLight(0xffffff, 1.5)
-            sun.position.set(5, 5, 5)
-            sun2 = new THREE.DirectionalLight(0xffffff, 1.5)
-            sun2.position.set(100, 100, 100) # Move it out
-            @scene.add sun
-            @scene.add sun2
-    
-    getObject: (meshName, methods) ->
-        @objectMethods.set meshName, methods
+            if not @options.useCustomLighting
+                @scene.add new THREE.AmbientLight(0xffffff, 3)
+                sun = new THREE.DirectionalLight(0xffffff, 1)
+                sun.position.set(5, 5, 5)
+                sun2 = new THREE.DirectionalLight(0xffffff, 1)
+                sun2.position.set(100, 100, 100) # Move it out
+                sun3 = new THREE.DirectionalLight(0xffffff, 1)
+                sun3.position.set(-100, -100, -100) # Move it out
+                @scene.add sun
+                @scene.add sun2
+                @scene.add sun3
 
+    updateContainerSize: ()->
+        @container.setAttribute "width", window.innerWidth
+        @container.setAttribute "height", window.innerHeight
+        @canvas.setAttribute "width", window.innerWidth
+        @canvas.setAttribute "height", window.innerHeight
+        @renderer.setSize @canvas.width, @canvas.height
+        if @camera
+            @camera.aspect = @canvas.width / @canvas.height
+            @camera.updateProjectionMatrix()
+
+    resetCamera: () ->
+        # 1. Reset the focal point of the orbit (the center of rotation)
+        @controls.enableDamping = false
+        @controls.target.set(0, 0, 0)
+
+        # 2. Reset the physical position of the camera
+        @camera.position.set(
+            @options.initialCameraPosition.x, 
+            @options.initialCameraPosition.y, 
+            @options.initialCameraPosition.z
+        )
+
+        # 3. Tell the controls to sync up
+        @controls.update()
+        @controls.enableDamping = true
+
+    setCursor: (cursorType) ->
+        @canvas.style.cursor = cursorType
+        
+    getObject: (meshName, methods) ->
         target = @scene.getObjectByName meshName
-        return @_wrapInProxy target if target
+        p = @_wrapInProxy(target, methods) if target
+
+        @definedObjects.set meshName, p
+        return p
 
     getObjects: (meshNames, methods) ->
         objects = meshNames.map((name) => @getObject(name, methods)).filter (obj) -> obj?
@@ -277,7 +419,7 @@ class Panel3d
         
 
     # Export objects in a wrapper so we can use the Highlight class on it like any other GUI element or SVG symbol
-    _wrapInProxy: (object) ->
+    _wrapInProxy: (object, methods) ->
         # 1. Define the custom logic for your specific "virtual" properties
         proxyStorage =
             element: null # Will be set below
@@ -294,6 +436,8 @@ class Panel3d
                     console.warn "Target index out of bounds"
                     return
                 object.morphTargetInfluences[target] = val
+            
+            methods: methods
 
             # Required DOM mocks for Highlight class compatibility
             getAttribute: (name) -> null
@@ -354,6 +498,46 @@ class Panel3d
         # .set() handles hex strings, names, or other Color objects
         target.material.color.set(color)
 
+    createPopover: (name, opts) ->
+        # Create the container
+        div = document.createElement 'div'
+        id = "P-"+Math.floor(10000+Math.random()*10000)
+        
+        # Apply Styles
+        Object.assign div.style,
+            position: 'absolute'
+            left: '200px'
+            top: '200px'
+            backgroundColor: 'white'
+            color: 'black'
+            borderRadius: '8px'
+            padding: '15px'
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)' # Added a subtle shadow since there's no border
+            width: '200px'
+            zIndex: '1000'
+            display: 'none'
+
+        title = document.createElement 'h3'
+        title.innerText = opts.title
+        title.style.margin = '0 0 8px 0'
+        title.style.fontSize = '16px'
+
+        body = document.createElement 'p'
+        body.innerText = opts.body
+        body.style.margin = '0'
+        body.style.fontSize = '14px'
+
+        div.appendChild title
+        div.appendChild body
+        div.setAttribute "id", id
+
+        @popoverLayer.appendChild div
+
+        popover =
+            div: div,
+            opts: opts
+        @popovers.set name, popover
+
     logCameraPosition: () ->
         console.log "[#{@options.model}] Camera pos:", @camera.position
 
@@ -407,5 +591,5 @@ class Model
 
         return panel
 
-Take ["Pressure"],(Pressure)->
-    Make "Model", new Model({Pressure})
+Take ["Pressure", "GUI" ,"Resize", "SVG"],(Pressure, GUI, Resize, SVG)->
+    Make "Model", new Model({Pressure, GUI, Resize, SVG})

@@ -6,12 +6,15 @@
     constructor(options1, scopes) {
       this.options = options1;
       this.scopes = scopes;
-      this.objectMethods = new Map();
+      this.definedObjects = new Map();
       this.animations = new Map();
       this.highlightedObjects = new Set();
       this.currentlyPressedTargets = new Set();
       this.currentlyOverTargets = new Set();
       this.morphingMeshes = [];
+      this.rawHoverTarget = null;
+      this.oldLogicalTarget = null;
+      this.popovers = new Map();
       // For highlights
       this.rainbowMaterial = new THREE.ShaderMaterial({
         uniforms: {
@@ -71,25 +74,95 @@ void main() {
       }
     }
 
+    animatePopovers() {
+      var coords, key, ref, results, value, x1;
+      ref = this.popovers;
+      results = [];
+      for (x1 of ref) {
+        [key, value] = x1;
+        if (value.opts.show) {
+          coords = this.getScreenCoordinates(value.opts.targetObject);
+          value.div.style.left = coords.x + 'px';
+          results.push(value.div.style.top = coords.y + 'px');
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    }
+
+    showPopover(name) {
+      var p;
+      p = this.popovers.get(name);
+      if (!p) {
+        console.warn("popver", name, "does not exist");
+        return;
+      }
+      p.opts.show = true;
+      return p.div.style.display = 'unset';
+    }
+
+    hidePopover(name) {
+      var p;
+      p = this.popovers.get(name);
+      if (!p) {
+        console.warn("popver", name, "does not exist");
+        return;
+      }
+      p.opts.show = false;
+      return p.div.style.display = 'none';
+    }
+
+    togglePopover(name) {
+      var p;
+      p = this.popovers.get(name);
+      if (!p) {
+        console.warn("popver", name, "does not exist");
+        return;
+      }
+      if (p.opts.show) {
+        return this.hidePopover(name);
+      } else {
+        return this.showPopover(name);
+      }
+    }
+
+    getScreenCoordinates(object) {
+      var box, center, x, y;
+      // 1. Get the geometric center of the object
+      box = new THREE.Box3().setFromObject(object);
+      center = new THREE.Vector3();
+      box.getCenter(center);
+      // 2. Project the world-space center to NDC (-1 to +1)
+      center.project(this.camera);
+      x = (center.x + 1) * this.canvas.clientWidth / 2;
+      y = (-center.y + 1) * this.canvas.clientHeight / 2;
+      return {
+        x: x,
+        y: y
+      };
+    }
+
     setupCanvas() {
       return new Promise((resolve, reject) => {
-        var e, pmremGenerator, sun, sun2;
+        var e, pmremGenerator, sun, sun2, sun3;
         try {
-          // Target the SVG and the Root Group
-          this.rootGroup = document.getElementById('root');
           // Create the ForeignObject wrapper
           // This is the "container" that lets HTML live inside SVG
           this.container = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-          this.container.setAttribute('width', this.options.panelSettings.width);
-          this.container.setAttribute('height', this.options.panelSettings.height);
-          this.container.setAttribute('x', this.options.panelSettings.x); // Adjust these to position it within the SVG space
-          this.container.setAttribute('y', this.options.panelSettings.y);
+          this.container.id = '3d';
+          if (!this.options.panelSettings.fullscreen) {
+            this.container.setAttribute('width', this.options.panelSettings.width);
+            this.container.setAttribute('height', this.options.panelSettings.height);
+            this.container.setAttribute('x', this.options.panelSettings.x); // Adjust these to position it within the SVG space
+            this.container.setAttribute('y', this.options.panelSettings.y);
+          }
           this.renderer = new THREE.WebGLRenderer({
             antialias: true,
             alpha: true
           });
           this.renderer.setSize(this.options.panelSettings.width, this.options.panelSettings.height);
-          this.renderer.setPixelRatio(1);
+          this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
           this.renderer.shadowMap.enabled = false;
         } catch (error1) {
           e = error1;
@@ -113,13 +186,35 @@ void main() {
         this.loaderDiv.style.fontSize = '20px';
         this.loaderDiv.style.pointerEvents = 'none'; // Clicks go through to OrbitControls
         this.loaderDiv.innerHTML = "Initializing Engine...";
+        this.popoverLayer = document.createElement('div');
+        this.popoverLayer.style.position = 'absolute';
+        this.popoverLayer.style.top = '0';
+        this.popoverLayer.style.left = '0';
+        this.popoverLayer.style.width = '100%';
+        this.popoverLayer.style.height = '100%';
+        this.popoverLayer.style.pointerEvents = 'none';
         // Assemble the tree: Root -> ForeignObject -> Wrapper -> (Canvas + Loader)
         this.wrapper = document.createElement('div');
-        this.wrapper.style.position = 'relative';
+        if (this.options.panelSettings.fullscreen) {
+          this.wrapper.style.position = 'absolute';
+        } else {
+          this.wrapper.style.position = 'relative';
+        }
+        this.wrapper.style.left = '0px';
+        this.wrapper.style.top = '0px';
         this.wrapper.appendChild(this.canvas);
         this.wrapper.appendChild(this.loaderDiv);
+        this.wrapper.appendChild(this.popoverLayer);
         this.container.appendChild(this.wrapper); // Append wrapper instead of just canvas
-        this.rootGroup.appendChild(this.container);
+        if (this.options.panelSettings.fullscreen) {
+          this.scopes.GUI.elm.prepend(this.container);
+          this.scopes.Resize(() => {
+            return this.updateContainerSize();
+          });
+        } else {
+          this.scopes.SVG.root.appendChild(this.container);
+        }
+        // document.body.appendChild @container
         if (this.options.blockNav) {
           this.canvas.setAttribute('block-nav', true);
         }
@@ -127,7 +222,7 @@ void main() {
         this.canvas.style.display = 'block';
         // Scene Setup
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(45, this.options.panelSettings.width / this.options.panelSettings.height, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(45, this.options.panelSettings.width / this.options.panelSettings.height, 0.1, 10000);
         this.camera.position.set(this.options.initialCameraPosition.x, this.options.initialCameraPosition.y, this.options.initialCameraPosition.z);
         this.controls = new OrbitControls(this.camera, this.canvas);
         this.controls.enableDamping = true;
@@ -139,15 +234,52 @@ void main() {
         this.mouse = new THREE.Vector2(-1, -1);
         pmremGenerator = new THREE.PMREMGenerator(this.renderer);
         this.scene.environment = pmremGenerator.fromScene(new THREE.Scene()).texture;
-        // Robust mouse mapping for SVG coordinates
+        if (this.options.panelSettings.fullscreen) {
+          this.updateContainerSize();
+        }
         this.updateMouse = (event) => {
-          var rect;
+          var intersects, newLogicalTarget, p, rect, ref, ref1, search;
           rect = this.canvas.getBoundingClientRect();
           this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-          return this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+          this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+          this.raycaster.setFromCamera(this.mouse, this.camera);
+          intersects = this.raycaster.intersectObjects(this.scene.children, true);
+          
+          // 1. Find the "Logical" owner of the hit mesh
+          newLogicalTarget = null;
+          if (intersects.length > 0) {
+            search = intersects[0].object;
+            while (search) {
+              // Check if this specific name has registered mouse methods
+              if (this.definedObjects.has(search.name)) {
+                newLogicalTarget = search;
+                break;
+              }
+              search = search.parent;
+            }
+          } else {
+            newLogicalTarget = null;
+          }
+          if (newLogicalTarget !== this.rawHoverTarget) {
+            if (newLogicalTarget) {
+              p = this.definedObjects.get(newLogicalTarget.name);
+              if (p != null ? (ref = p.methods) != null ? ref.mouseEnter : void 0 : void 0) {
+                p.methods.mouseEnter(p);
+              }
+            }
+            if (this.oldLogicalTarget) {
+              p = this.definedObjects.get(this.oldLogicalTarget.name);
+              if (p != null ? (ref1 = p.methods) != null ? ref1.mouseExit : void 0 : void 0) {
+                p.methods.mouseExit(p);
+              }
+            }
+          }
+          // 3. Update the persistent state
+          this.oldLogicalTarget = newLogicalTarget;
+          return this.rawHoverTarget = newLogicalTarget;
         };
         this.onMouseDown = (event) => {
-          var intersects, methods, rect, target;
+          var base, intersects, p, rect, target;
           rect = this.canvas.getBoundingClientRect();
           this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
           this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -156,14 +288,13 @@ void main() {
           if (intersects.length > 0) {
             target = intersects[0].object;
             this.log("clicked on:", target.name);
-            // console.log target.name
             // Bubble up to find a registered name
             while (target) {
-              methods = this.objectMethods.get(target.name);
-              if (methods) {
+              p = this.definedObjects.get(target.name);
+              if (p != null ? p.methods : void 0) {
                 this.currentlyPressedTargets.add(target);
-                if (typeof methods.mouseDown === "function") {
-                  methods.mouseDown(target); // Stop looking once found
+                if (typeof (base = p.methods).mouseDown === "function") {
+                  base.mouseDown(target); // Stop looking once found
                 }
                 return;
               }
@@ -172,21 +303,21 @@ void main() {
           }
         };
         this.onMouseUp = (event) => {
-          var methods, ref, target;
+          var base, p, ref, target;
           ref = this.currentlyPressedTargets;
           for (target of ref) {
-            methods = this.objectMethods.get(target.name);
-            if (methods) {
-              if (typeof methods.mouseUp === "function") {
-                methods.mouseUp(target);
+            p = this.definedObjects.get(target.name);
+            if (p != null ? p.methods : void 0) {
+              if (typeof (base = p.methods).mouseUp === "function") {
+                base.mouseUp(target);
               }
             }
           }
           return this.currentlyPressedTargets.clear();
         };
         this.canvas.addEventListener('mousemove', this.updateMouse);
-        this.canvas.addEventListener('mousedown', this.onMouseDown);
-        this.canvas.addEventListener('mouseup', this.onMouseUp);
+        this.canvas.addEventListener('pointerdown', this.onMouseDown);
+        this.canvas.addEventListener('pointerup', this.onMouseUp);
         // Load Model
         this.loader = new GLTFLoader();
         this.loader.setCrossOrigin('use-credentials');
@@ -233,9 +364,9 @@ void main() {
               ref1.update(delta);
             }
             this.controls.update();
+            this.animatePopovers();
             this.renderer.render(this.scene, this.camera);
-            this.rainbowMaterial.uniforms.uTime.value = (Date.now() % 20000) / 800;
-            return console.log(this.renderer.info.render.calls);
+            return this.rainbowMaterial.uniforms.uTime.value = (Date.now() % 20000) / 800;
           };
           animate();
           return resolve(this);
@@ -257,23 +388,56 @@ void main() {
         });
         
         // Lighting
-        this.scene.add(new THREE.AmbientLight(0xffffff, 3));
-        sun = new THREE.DirectionalLight(0xffffff, 1.5);
-        sun.position.set(5, 5, 5);
-        sun2 = new THREE.DirectionalLight(0xffffff, 1.5);
-        sun2.position.set(100, 100, 100); // Move it out
-        this.scene.add(sun);
-        return this.scene.add(sun2);
+        if (!this.options.useCustomLighting) {
+          this.scene.add(new THREE.AmbientLight(0xffffff, 3));
+          sun = new THREE.DirectionalLight(0xffffff, 1);
+          sun.position.set(5, 5, 5);
+          sun2 = new THREE.DirectionalLight(0xffffff, 1);
+          sun2.position.set(100, 100, 100); // Move it out
+          sun3 = new THREE.DirectionalLight(0xffffff, 1);
+          sun3.position.set(-100, -100, -100); // Move it out
+          this.scene.add(sun);
+          this.scene.add(sun2);
+          return this.scene.add(sun3);
+        }
       });
     }
 
+    updateContainerSize() {
+      this.container.setAttribute("width", window.innerWidth);
+      this.container.setAttribute("height", window.innerHeight);
+      this.canvas.setAttribute("width", window.innerWidth);
+      this.canvas.setAttribute("height", window.innerHeight);
+      this.renderer.setSize(this.canvas.width, this.canvas.height);
+      if (this.camera) {
+        this.camera.aspect = this.canvas.width / this.canvas.height;
+        return this.camera.updateProjectionMatrix();
+      }
+    }
+
+    resetCamera() {
+      // 1. Reset the focal point of the orbit (the center of rotation)
+      this.controls.enableDamping = false;
+      this.controls.target.set(0, 0, 0);
+      // 2. Reset the physical position of the camera
+      this.camera.position.set(this.options.initialCameraPosition.x, this.options.initialCameraPosition.y, this.options.initialCameraPosition.z);
+      // 3. Tell the controls to sync up
+      this.controls.update();
+      return this.controls.enableDamping = true;
+    }
+
+    setCursor(cursorType) {
+      return this.canvas.style.cursor = cursorType;
+    }
+
     getObject(meshName, methods) {
-      var target;
-      this.objectMethods.set(meshName, methods);
+      var p, target;
       target = this.scene.getObjectByName(meshName);
       if (target) {
-        return this._wrapInProxy(target);
+        p = this._wrapInProxy(target, methods);
       }
+      this.definedObjects.set(meshName, p);
+      return p;
     }
 
     getObjects(meshNames, methods) {
@@ -316,7 +480,7 @@ void main() {
 
     
       // Export objects in a wrapper so we can use the Highlight class on it like any other GUI element or SVG symbol
-    _wrapInProxy(object) {
+    _wrapInProxy(object, methods) {
       var handler, proxyStorage;
       // 1. Define the custom logic for your specific "virtual" properties
       proxyStorage = {
@@ -340,6 +504,7 @@ void main() {
           }
           return object.morphTargetInfluences[target] = val;
         },
+        methods: methods,
         // Required DOM mocks for Highlight class compatibility
         getAttribute: function(name) {
           return null;
@@ -419,6 +584,45 @@ void main() {
       return target.material.color.set(color);
     }
 
+    createPopover(name, opts) {
+      var body, div, id, popover, title;
+      // Create the container
+      div = document.createElement('div');
+      id = "P-" + Math.floor(10000 + Math.random() * 10000);
+      
+      // Apply Styles
+      Object.assign(div.style, {
+        position: 'absolute',
+        left: '200px',
+        top: '200px',
+        backgroundColor: 'white',
+        color: 'black',
+        borderRadius: '8px',
+        padding: '15px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', // Added a subtle shadow since there's no border
+        width: '200px',
+        zIndex: '1000',
+        display: 'none'
+      });
+      title = document.createElement('h3');
+      title.innerText = opts.title;
+      title.style.margin = '0 0 8px 0';
+      title.style.fontSize = '16px';
+      body = document.createElement('p');
+      body.innerText = opts.body;
+      body.style.margin = '0';
+      body.style.fontSize = '14px';
+      div.appendChild(title);
+      div.appendChild(body);
+      div.setAttribute("id", id);
+      this.popoverLayer.appendChild(div);
+      popover = {
+        div: div,
+        opts: opts
+      };
+      return this.popovers.set(name, popover);
+    }
+
     logCameraPosition() {
       return console.log(`[${this.options.model}] Camera pos:`, this.camera.position);
     }
@@ -483,8 +687,8 @@ void main() {
 
   };
 
-  Take(["Pressure"], function(Pressure) {
-    return Make("Model", new Model({Pressure}));
+  Take(["Pressure", "GUI", "Resize", "SVG"], function(Pressure, GUI, Resize, SVG) {
+    return Make("Model", new Model({Pressure, GUI, Resize, SVG}));
   });
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {

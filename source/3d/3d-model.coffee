@@ -204,10 +204,8 @@ class Panel3d
                 @updateContainerSize()
 
             @updateMouse = (event) =>
-                rect = @canvas.getBoundingClientRect()
-                @mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-                @mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-
+                @mouse.x = (event.offsetX / @canvas.clientWidth) * 2 - 1;
+                @mouse.y = -(event.offsetY / @canvas.clientHeight) * 2 + 1;
                 @raycaster.setFromCamera @mouse, @camera
                 intersects = @raycaster.intersectObjects @scene.children, true
                 
@@ -242,9 +240,8 @@ class Panel3d
 
 
             @onMouseDown = (event) =>
-                rect = @canvas.getBoundingClientRect()
-                @mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-                @mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+                @mouse.x = (event.offsetX / @canvas.clientWidth) * 2 - 1;
+                @mouse.y = -(event.offsetY / @canvas.clientHeight) * 2 + 1;
 
                 @raycaster.setFromCamera @mouse, @camera
                 intersects = @raycaster.intersectObjects @scene.children, true
@@ -315,7 +312,7 @@ class Panel3d
 
                     animate = =>
                         requestAnimationFrame animate
-                        if @runningOnWebkit then @syncInternalTransform()
+                        if @runningOnWebkit and not @options.panelSettings.fullscreen then @syncInternalTransform()
                         delta = @clock.getDelta();
                         @mixer?.update(delta)
                         @controls.update()
@@ -358,35 +355,31 @@ class Panel3d
                 @scene.add sun3
 
     syncInternalTransform: () ->
-        # 1. Get the current screen transformation matrix
         matrix = @container.getScreenCTM()
         return unless matrix
 
-        # 2. Get the SVG's position to keep coordinates local to the container
-        # (If matrix.e/f already work as-is, you might not need the svgRect offset, 
-        # but it's safer to include if your SVG isn't at 0,0 on the page)
-        svgRect = @scopes.SVG.svg.getBoundingClientRect()
-
-        # 3. Calculate the true pixel position
-        # Subtracting svgRect ensures the canvas stays pinned to the SVG 
-        # even if the whole page scrolls.
-        # console.log svgRect
-        tx = matrix.e - svgRect.left
-        ty = matrix.f - svgRect.top
-
-        # 4. Extract the Scale
-        # matrix.a is the 'zoom' level of the SVG
+        # 1. Extract scale (a) and translation (e, f)
+        # e and f are the absolute screen X and Y of the element's origin
         currentScale = matrix.a
+        screenX = matrix.e
+        screenY = matrix.f
 
-        # 5. Apply Position via Left/Top (which you confirmed works)
-        @wrapper.style.left = tx + @options.panelSettings.x + "px"
-        @wrapper.style.top  = ty + @options.panelSettings.y + "px"
+        # 2. Apply Position
+        # We add the local panel offsets, but they must be scaled!
+        # If panelSettings.x is 10, and zoom is 2x, it should move 20px.
+        offsetX = @options.panelSettings.x * currentScale
+        offsetY = @options.panelSettings.y * currentScale
 
-        # 6. Apply Scale via CSS Transform
-        # We use transform for scaling because it's much smoother than 
-        # changing width/height (which causes a 'Relayout' every frame)
-        @wrapper.style.transformOrigin = "0 0"
+        @wrapper.style.left = (screenX + offsetX) + "px"
+        @wrapper.style.top  = (screenY + offsetY) + "px"
+
+        # 3. Apply Scale and Dimensions
+        @wrapper.style.width  = @options.panelSettings.width + "px"
+        @wrapper.style.height = @options.panelSettings.height + "px"
+        
+        # Use transform for the scale so the browser doesn't struggle
         @wrapper.style.transform = "scale(#{currentScale})"
+        @wrapper.style.transformOrigin = "top left"
         
 
     updateContainerSize: ()->

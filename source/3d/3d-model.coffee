@@ -1,5 +1,5 @@
 class Panel3d
-    constructor: (@options, @scopes) ->
+    constructor: (@options, @scopes, @fullscreenModelContainer, @runningOnWebkit) ->
         @definedObjects = new Map()
         @animations = new Map()
         @highlightedObjects = new Set()
@@ -116,8 +116,9 @@ class Panel3d
                 if not @options.panelSettings.fullscreen
                     @container.setAttribute 'width', @options.panelSettings.width
                     @container.setAttribute 'height', @options.panelSettings.height
-                    @container.setAttribute 'x', @options.panelSettings.x # Adjust these to position it within the SVG space
-                    @container.setAttribute 'y', @options.panelSettings.y
+                    unless @runningOnWebkit
+                        @container.setAttribute 'x', @options.panelSettings.x # Adjust these to position it within the SVG space
+                        @container.setAttribute 'y', @options.panelSettings.y
                 
                 @renderer = new THREE.WebGLRenderer(antialias: true, alpha: true)
                 @renderer.setSize @options.panelSettings.width, @options.panelSettings.height
@@ -158,10 +159,7 @@ class Panel3d
             # Assemble the tree: Root -> ForeignObject -> Wrapper -> (Canvas + Loader)
             @wrapper = document.createElement 'div'
 
-            if @options.panelSettings.fullscreen
-                @wrapper.style.position = 'absolute'
-            else
-                @wrapper.style.position = 'relative'
+            @wrapper.style.position = 'absolute'
 
             @wrapper.style.left = '0px'
             @wrapper.style.top = '0px'
@@ -173,13 +171,11 @@ class Panel3d
             @container.appendChild @wrapper # Append wrapper instead of just canvas
 
             if @options.panelSettings.fullscreen
-                @scopes.GUI.elm.prepend @container
+                @fullscreenModelContainer.prepend @container
                 @scopes.Resize ()=>
                     @updateContainerSize()
             else
                 @scopes.SVG.root.appendChild @container
-
-            # document.body.appendChild @container
             
             if @options.blockNav then @canvas.setAttribute 'block-nav', true
             # Remove absolute positioning since it's now inside the SVG flow
@@ -187,6 +183,7 @@ class Panel3d
 
             # Scene Setup
             @scene = new THREE.Scene()
+            @textureLoader = new THREE.TextureLoader()
             @camera = new THREE.PerspectiveCamera(45, @options.panelSettings.width / @options.panelSettings.height, 0.1, 10000)
             @camera.position.set(@options.initialCameraPosition.x, @options.initialCameraPosition.y, @options.initialCameraPosition.z)
 
@@ -318,6 +315,7 @@ class Panel3d
 
                     animate = =>
                         requestAnimationFrame animate
+                        if @runningOnWebkit then @syncInternalTransform()
                         delta = @clock.getDelta();
                         @mixer?.update(delta)
                         @controls.update()
@@ -359,6 +357,38 @@ class Panel3d
                 @scene.add sun2
                 @scene.add sun3
 
+    syncInternalTransform: () ->
+        # 1. Get the current screen transformation matrix
+        matrix = @container.getScreenCTM()
+        return unless matrix
+
+        # 2. Get the SVG's position to keep coordinates local to the container
+        # (If matrix.e/f already work as-is, you might not need the svgRect offset, 
+        # but it's safer to include if your SVG isn't at 0,0 on the page)
+        svgRect = @scopes.SVG.svg.getBoundingClientRect()
+
+        # 3. Calculate the true pixel position
+        # Subtracting svgRect ensures the canvas stays pinned to the SVG 
+        # even if the whole page scrolls.
+        # console.log svgRect
+        tx = matrix.e - svgRect.left
+        ty = matrix.f - svgRect.top
+
+        # 4. Extract the Scale
+        # matrix.a is the 'zoom' level of the SVG
+        currentScale = matrix.a
+
+        # 5. Apply Position via Left/Top (which you confirmed works)
+        @wrapper.style.left = tx + @options.panelSettings.x + "px"
+        @wrapper.style.top  = ty + @options.panelSettings.y + "px"
+
+        # 6. Apply Scale via CSS Transform
+        # We use transform for scaling because it's much smoother than 
+        # changing width/height (which causes a 'Relayout' every frame)
+        @wrapper.style.transformOrigin = "0 0"
+        @wrapper.style.transform = "scale(#{currentScale})"
+        
+
     updateContainerSize: ()->
         @container.setAttribute "width", window.innerWidth
         @container.setAttribute "height", window.innerHeight
@@ -368,6 +398,59 @@ class Panel3d
         if @camera
             @camera.aspect = @canvas.width / @canvas.height
             @camera.updateProjectionMatrix()
+
+    createMaterial: (opts) ->
+        baseColorTex = @textureLoader.load @expandResourceName opts.baseColorTexture
+        normalTex    = @textureLoader.load @expandResourceName opts.normalTexture
+        ormTex       = @textureLoader.load @expandResourceName opts.oclusionRoughnessMetalicTexture
+
+        baseColorTex.colorSpace = THREE.SRGBColorSpace
+        baseColorTex.flipY = false 
+        normalTex.flipY = false
+        ormTex.flipY = false
+
+        # IMPORTANT: ORM textures must NOT be sRGB. They are raw data.
+        ormTex.colorSpace = THREE.NoColorSpace 
+
+        mat = new THREE.MeshStandardMaterial
+            map: baseColorTex
+            normalMap: normalTex
+            roughnessMap: ormTex
+            metalnessMap: ormTex
+            # # These scalars multiply against the map. 
+            # # If the map is dark, 1.0 ensures you actually see the effect.
+            roughness: 1.0 
+            metalness: 1.0
+            envMapIntensity: 0.5 # Crank this up to see if HDR is working!
+            normalScale: new THREE.Vector2(1, 1)
+        
+        return mat
+
+    useMaterialForAll: (mat) ->
+        @scene.traverse (child) =>
+            if child.isMesh
+                child.material = mat
+
+    useHDR: (hdrName) ->
+        loader = new RGBELoader() 
+        loader.setDataType(THREE.HalfFloatType)
+
+        url = @expandResourceName hdrName
+
+        loader.load url, (texture) =>
+            texture.mapping = THREE.EquirectangularReflectionMapping
+
+            @renderer.toneMapping = THREE.ACESFilmicToneMapping
+            @renderer.toneMappingExposure = 2.0 # Try 2.0 if it's too dark
+            @renderer.outputColorSpace = THREE.SRGBColorSpace
+
+            @scene.environment = texture
+            # @scene.background = texture # If you want to see the skybox
+
+            @log "HDR Loaded: #{hdrName}"
+            @scene.traverse (node) =>
+                if node.isMesh
+                    node.material.needsUpdate = true
 
     resetCamera: () ->
         # 1. Reset the focal point of the orbit (the center of rotation)
@@ -551,6 +634,7 @@ class Model
             }
         }
         @librariesReadyState = 0
+        @svgaRestructured = false
 
     ensureLibrariesImported: ->
         # Return immediately if already loaded or loading
@@ -575,21 +659,70 @@ class Model
         # Destructure addons
         { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js')
         { OrbitControls } = await import('three/addons/controls/OrbitControls.js')
-        
+        { RGBELoader } = await import('three/addons/loaders/RGBELoader.js')
+
         # Attach these to window so Panel can see them
         window.GLTFLoader = GLTFLoader
         window.OrbitControls = OrbitControls
+        window.RGBELoader = RGBELoader
         
         @librariesReadyState = 2
+
+    restructureSVGALayers: ->
+        return if @svgaRestructured
+        
+        # Clone the SVG root element without children
+        # clone = @options.SVG.cloneNode(false);
+        svgaClone = @scopes.SVG.svg.cloneNode false
+        svgaClone.id = 'svga-gui-layer'
+        svgaClone.style.position = 'absolute'
+        svgaClone.style.left = '0px'
+        svgaClone.style.top = '0px'
+        svgaClone.setAttribute 'width', window.innerWidth
+        svgaClone.setAttribute 'height', window.innerHeight
+        svgaClone.style.background = 'none';
+        @scopes.SVG.svg.after svgaClone
+
+        # Move the x-gui group into the other one
+        svgaClone.appendChild @scopes.GUI.elm
+
+        # Shallow copy the GUI back into the original svga, this will house the 3d model if full screen
+        @fullscreenModelContainer = @scopes.GUI.elm.cloneNode false
+        @scopes.SVG.root.after @fullscreenModelContainer
+
+        # Add the resize method to the svgaClone
+        @scopes.Resize ()=>
+            svgaClone.setAttribute 'width', window.innerWidth
+            svgaClone.setAttribute 'height', window.innerHeight
+
+        # Enable pointer events if neccesary
+        svgaClone.style.pointerEvents = 'none'
+        # @scopes.GUI.elm.style.pointerEvents = 'none'
+        for ele in @scopes.GUI.elm.querySelectorAll ':scope > g'
+            ele.style.pointerEvents = 'all'
+
+        @svgaRestructured = true
 
     # Change this to an async method
     createPanel: (options) ->
         await @ensureLibrariesImported()
+        runningOnWebkit = @isWebKit()
+        await @restructureSVGALayers()
         # Now THREE and OrbitControls are guaranteed to exist
-        panel = new Panel3d options, @scopes
+        panel = new Panel3d options, @scopes, @fullscreenModelContainer, runningOnWebkit
         await panel.setupCanvas()
 
         return panel
+
+    isWebKit: ->
+        # Check for the vendor or the engine string
+        # 'Apple Computer, Inc.' is the vendor for all iOS browsers and Safari
+        isAppleVendor = navigator.vendor? and navigator.vendor.indexOf('Apple') > -1
+        # Also check the User Agent for the engine name
+        isWebKitEngine = /AppleWebKit/i.test(navigator.userAgent) and not /Chrome/i.test(navigator.userAgent)
+        
+        # On iOS, even Chrome reports as 'Apple Computer, Inc.'
+        return isAppleVendor or isWebKitEngine
 
 Take ["Pressure", "GUI" ,"Resize", "SVG"],(Pressure, GUI, Resize, SVG)->
     Make "Model", new Model({Pressure, GUI, Resize, SVG})

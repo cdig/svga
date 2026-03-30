@@ -238,7 +238,7 @@ void main() {
           this.updateContainerSize();
         }
         this.updateMouse = (event) => {
-          var intersects, newLogicalTarget, p, ref, ref1, search;
+          var intersects, newLogicalTarget, p, ref, ref1, ref2, ref3, results, search, target;
           this.mouse.x = (event.offsetX / this.canvas.clientWidth) * 2 - 1;
           this.mouse.y = -(event.offsetY / this.canvas.clientHeight) * 2 + 1;
           this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -275,7 +275,18 @@ void main() {
           }
           // 3. Update the persistent state
           this.oldLogicalTarget = newLogicalTarget;
-          return this.rawHoverTarget = newLogicalTarget;
+          this.rawHoverTarget = newLogicalTarget;
+          ref2 = this.currentlyPressedTargets;
+          results = [];
+          for (target of ref2) {
+            p = this.definedObjects.get(target.name);
+            if (p != null ? (ref3 = p.methods) != null ? ref3.drag : void 0 : void 0) {
+              results.push(p.methods.drag(2));
+            } else {
+              results.push(void 0);
+            }
+          }
+          return results;
         };
         this.onMouseDown = (event) => {
           var base, intersects, p, target;
@@ -496,6 +507,18 @@ void main() {
           }
         });
       });
+    }
+
+    pauseOrbit() {
+      this.controls.enablePan = false;
+      this.controls.enableRotate = false;
+      return this.controls.enableZoom = false;
+    }
+
+    resumeOrbit() {
+      this.controls.enablePan = true;
+      this.controls.enableRotate = true;
+      return this.controls.enableZoom = true;
     }
 
     resetCamera() {

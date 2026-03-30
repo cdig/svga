@@ -238,6 +238,11 @@ class Panel3d
                 @oldLogicalTarget = newLogicalTarget
                 @rawHoverTarget = newLogicalTarget
 
+                for target from @currentlyPressedTargets
+                    p = @definedObjects.get(target.name)
+                    if p?.methods?.drag
+                        p.methods.drag 2
+
 
             @onMouseDown = (event) =>
                 @mouse.x = (event.offsetX / @canvas.clientWidth) * 2 - 1;
@@ -444,6 +449,16 @@ class Panel3d
             @scene.traverse (node) =>
                 if node.isMesh
                     node.material.needsUpdate = true
+
+    pauseOrbit: () ->
+        @controls.enablePan = false
+        @controls.enableRotate = false
+        @controls.enableZoom = false
+
+    resumeOrbit: () ->
+        @controls.enablePan = true
+        @controls.enableRotate = true
+        @controls.enableZoom = true
 
     resetCamera: () ->
         # 1. Reset the focal point of the orbit (the center of rotation)

@@ -50,12 +50,7 @@ class Panel3d
         if @options.debug then console.log "[#{@options.model}]", ...args
 
     expandResourceName: (name) ->
-        host = window.location.host
-
-        if host.indexOf(".com") > -1 or host.indexOf(".ca") > -1
-            "https://cdn.lunchboxsessions.com/v4-1/models/#{name}"
-        else
-            "svga-models/#{name}"
+        return name
 
     animatePopovers: () ->
         for [key, value] from @popovers

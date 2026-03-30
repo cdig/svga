@@ -67,13 +67,7 @@ void main() {
     }
 
     expandResourceName(name) {
-      var host;
-      host = window.location.host;
-      if (host.indexOf(".com") > -1 || host.indexOf(".ca") > -1) {
-        return `https://cdn.lunchboxsessions.com/v4-1/models/${name}`;
-      } else {
-        return `svga-models/${name}`;
-      }
+      return name;
     }
 
     animatePopovers() {

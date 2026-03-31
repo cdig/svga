@@ -323,6 +323,9 @@ void main() {
         this.canvas.addEventListener('pointerup', this.onMouseUp);
         // Load Model
         this.loader = new GLTFLoader();
+        this.dracoLoader = new DRACOLoader();
+        this.dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        this.loader.setDRACOLoader(this.dracoLoader);
         this.loader.setCrossOrigin('use-credentials');
         this.loader.setWithCredentials(true);
         this.loader.load(this.expandResourceName(this.options.model), (gltf) => {
@@ -744,7 +747,7 @@ void main() {
     }
 
     async ensureLibrariesImported() {
-      var GLTFLoader, OrbitControls, RGBELoader, imTag, module;
+      var DRACOLoader, GLTFLoader, OrbitControls, RGBELoader, imTag, module;
       // Return immediately if already loaded or loading
       if (this.librariesReadyState === 2) {
         return true;
@@ -768,12 +771,14 @@ void main() {
       
         // Destructure addons
       ({GLTFLoader} = (await import('three/addons/loaders/GLTFLoader.js')));
+      ({DRACOLoader} = (await import('three/addons/loaders/DRACOLoader.js')));
       ({OrbitControls} = (await import('three/addons/controls/OrbitControls.js')));
       ({RGBELoader} = (await import('three/addons/loaders/RGBELoader.js')));
       // Attach these to window so Panel can see them
       window.GLTFLoader = GLTFLoader;
       window.OrbitControls = OrbitControls;
       window.RGBELoader = RGBELoader;
+      window.DRACOLoader = DRACOLoader;
       return this.librariesReadyState = 2;
     }
 

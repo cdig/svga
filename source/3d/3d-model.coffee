@@ -273,6 +273,9 @@ class Panel3d
 
             # Load Model
             @loader = new GLTFLoader()
+            @dracoLoader = new DRACOLoader();
+            @dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+            @loader.setDRACOLoader(@dracoLoader);
 
             @loader.setCrossOrigin('use-credentials')
             @loader.setWithCredentials true
@@ -661,6 +664,7 @@ class Model
         
         # Destructure addons
         { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js')
+        { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js')
         { OrbitControls } = await import('three/addons/controls/OrbitControls.js')
         { RGBELoader } = await import('three/addons/loaders/RGBELoader.js')
 
@@ -668,6 +672,7 @@ class Model
         window.GLTFLoader = GLTFLoader
         window.OrbitControls = OrbitControls
         window.RGBELoader = RGBELoader
+        window.DRACOLoader = DRACOLoader
         
         @librariesReadyState = 2
 

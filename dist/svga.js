@@ -98,6 +98,17 @@ void main() {
       return p.div.style.display = 'unset';
     }
 
+    hideAllPopovers() {
+      var p, pname, ref, results, x1;
+      ref = this.popovers;
+      results = [];
+      for (x1 of ref) {
+        [pname, p] = x1;
+        results.push(this.hidePopover(pname));
+      }
+      return results;
+    }
+
     hidePopover(name) {
       var p;
       p = this.popovers.get(name);
@@ -254,16 +265,16 @@ void main() {
             newLogicalTarget = null;
           }
           if (newLogicalTarget !== this.rawHoverTarget) {
-            if (newLogicalTarget) {
-              p = this.definedObjects.get(newLogicalTarget.name);
-              if (p != null ? (ref = p.methods) != null ? ref.mouseEnter : void 0 : void 0) {
-                p.methods.mouseEnter(p);
-              }
-            }
             if (this.oldLogicalTarget) {
               p = this.definedObjects.get(this.oldLogicalTarget.name);
-              if (p != null ? (ref1 = p.methods) != null ? ref1.mouseExit : void 0 : void 0) {
+              if (p != null ? (ref = p.methods) != null ? ref.mouseExit : void 0 : void 0) {
                 p.methods.mouseExit(p);
+              }
+            }
+            if (newLogicalTarget) {
+              p = this.definedObjects.get(newLogicalTarget.name);
+              if (p != null ? (ref1 = p.methods) != null ? ref1.mouseEnter : void 0 : void 0) {
+                p.methods.mouseEnter(p);
               }
             }
           }
@@ -286,6 +297,7 @@ void main() {
           var base, intersects, p, target;
           this.mouse.x = (event.offsetX / this.canvas.clientWidth) * 2 - 1;
           this.mouse.y = -(event.offsetY / this.canvas.clientHeight) * 2 + 1;
+          this.cameraPosOnMouseDown = this.camera.position.clone();
           this.raycaster.setFromCamera(this.mouse, this.camera);
           intersects = this.raycaster.intersectObjects(this.scene.children, true);
           if (intersects.length > 0) {
@@ -307,12 +319,14 @@ void main() {
         };
         this.onMouseUp = (event) => {
           var base, p, ref, target;
-          ref = this.currentlyPressedTargets;
-          for (target of ref) {
-            p = this.definedObjects.get(target.name);
-            if (p != null ? p.methods : void 0) {
-              if (typeof (base = p.methods).mouseUp === "function") {
-                base.mouseUp(target);
+          if (this.camera.position.distanceTo(this.cameraPosOnMouseDown) <= 4) {
+            ref = this.currentlyPressedTargets;
+            for (target of ref) {
+              p = this.definedObjects.get(target.name);
+              if (p != null ? p.methods : void 0) {
+                if (typeof (base = p.methods).mouseUp === "function") {
+                  base.mouseUp(target);
+                }
               }
             }
           }
@@ -324,7 +338,7 @@ void main() {
         // Load Model
         this.loader = new GLTFLoader();
         this.dracoLoader = new DRACOLoader();
-        this.dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        this.dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/');
         this.loader.setDRACOLoader(this.dracoLoader);
         this.loader.setCrossOrigin('use-credentials');
         this.loader.setWithCredentials(true);
@@ -795,6 +809,7 @@ void main() {
       svgaClone.style.position = 'absolute';
       svgaClone.style.left = '0px';
       svgaClone.style.top = '0px';
+      svgaClone.style.opacity = 1;
       svgaClone.setAttribute('width', window.innerWidth);
       svgaClone.setAttribute('height', window.innerHeight);
       svgaClone.style.background = 'none';

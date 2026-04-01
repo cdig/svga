@@ -67,6 +67,10 @@ class Panel3d
         p.opts.show = true
         p.div.style.display = 'unset'
 
+    hideAllPopovers: ->
+        for [pname, p] from @popovers
+            @hidePopover pname
+
     hidePopover: (name) ->
         p = @popovers.get(name)
         if not p
@@ -219,15 +223,15 @@ class Panel3d
 
 
                 if newLogicalTarget isnt @rawHoverTarget
-                    if newLogicalTarget
-                        p = @definedObjects.get(newLogicalTarget.name)
-                        if p?.methods?.mouseEnter
-                            p.methods.mouseEnter p
-
                     if @oldLogicalTarget
                         p = @definedObjects.get(@oldLogicalTarget.name)
                         if p?.methods?.mouseExit
                             p.methods.mouseExit p
+                                
+                    if newLogicalTarget
+                        p = @definedObjects.get(newLogicalTarget.name)
+                        if p?.methods?.mouseEnter
+                            p.methods.mouseEnter p
 
                 # 3. Update the persistent state
                 @oldLogicalTarget = newLogicalTarget
@@ -242,6 +246,8 @@ class Panel3d
             @onMouseDown = (event) =>
                 @mouse.x = (event.offsetX / @canvas.clientWidth) * 2 - 1;
                 @mouse.y = -(event.offsetY / @canvas.clientHeight) * 2 + 1;
+
+                @cameraPosOnMouseDown = @camera.position.clone()
 
                 @raycaster.setFromCamera @mouse, @camera
                 intersects = @raycaster.intersectObjects @scene.children, true
@@ -259,11 +265,11 @@ class Panel3d
                         target = target.parent
 
             @onMouseUp = (event) =>
-
-                for target from @currentlyPressedTargets
-                    p = @definedObjects.get(target.name)
-                    if p?.methods
-                        p.methods.mouseUp?(target)
+                if @camera.position.distanceTo(@cameraPosOnMouseDown) <= 4
+                    for target from @currentlyPressedTargets
+                        p = @definedObjects.get(target.name)
+                        if p?.methods
+                            p.methods.mouseUp?(target)
                 
                 @currentlyPressedTargets.clear()
             
@@ -273,9 +279,9 @@ class Panel3d
 
             # Load Model
             @loader = new GLTFLoader()
-            @dracoLoader = new DRACOLoader();
-            @dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-            @loader.setDRACOLoader(@dracoLoader);
+            @dracoLoader = new DRACOLoader()
+            @dracoLoader.setDecoderPath 'https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/'
+            @loader.setDRACOLoader @dracoLoader
 
             @loader.setCrossOrigin('use-credentials')
             @loader.setWithCredentials true
@@ -686,6 +692,7 @@ class Model
         svgaClone.style.position = 'absolute'
         svgaClone.style.left = '0px'
         svgaClone.style.top = '0px'
+        svgaClone.style.opacity = 1;
         svgaClone.setAttribute 'width', window.innerWidth
         svgaClone.setAttribute 'height', window.innerHeight
         svgaClone.style.background = 'none';

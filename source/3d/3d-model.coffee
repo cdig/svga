@@ -183,6 +183,8 @@ class Panel3d
             # Scene Setup
             @scene = new THREE.Scene()
             @textureLoader = new THREE.TextureLoader()
+            @textureLoader.setCrossOrigin('use-credentials');
+            @textureLoader.setWithCredentials(true);
             @camera = new THREE.PerspectiveCamera(45, @options.panelSettings.width / @options.panelSettings.height, 0.1, 10000)
             @camera.position.set(@options.initialCameraPosition.x, @options.initialCameraPosition.y, @options.initialCameraPosition.z)
 
@@ -435,6 +437,8 @@ class Panel3d
 
     useHDR: (hdrName) ->
         loader = new RGBELoader() 
+        loader.setCrossOrigin('use-credentials');
+        loader.setWithCredentials(true);
         loader.setDataType(THREE.HalfFloatType)
 
         url = @expandResourceName hdrName

@@ -227,6 +227,8 @@ void main() {
         // Scene Setup
         this.scene = new THREE.Scene();
         this.textureLoader = new THREE.TextureLoader();
+        this.textureLoader.setCrossOrigin('use-credentials');
+        this.textureLoader.setWithCredentials(true);
         this.camera = new THREE.PerspectiveCamera(45, this.options.panelSettings.width / this.options.panelSettings.height, 0.1, 10000);
         this.camera.position.set(this.options.initialCameraPosition.x, this.options.initialCameraPosition.y, this.options.initialCameraPosition.z);
         this.controls = new OrbitControls(this.camera, this.canvas);
@@ -502,6 +504,8 @@ void main() {
     useHDR(hdrName) {
       var loader, url;
       loader = new RGBELoader();
+      loader.setCrossOrigin('use-credentials');
+      loader.setWithCredentials(true);
       loader.setDataType(THREE.HalfFloatType);
       url = this.expandResourceName(hdrName);
       return loader.load(url, (texture) => {

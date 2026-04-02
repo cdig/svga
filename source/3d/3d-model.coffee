@@ -125,7 +125,7 @@ class Panel3d
                 @renderer.shadowMap.enabled = false;
             
             catch e
-                console.warn("Could not create 3d components in this browser. Try turning on graphics acceleration in chrome settings: chrome://settings/?search=graphics+acceleration");
+                console.warn("Could not create 3d components in this browser. If in chrome, try turning on graphics acceleration in chrome settings: chrome://settings/?search=graphics+acceleration");
                 reject(e)
             
             @canvas = @renderer.domElement
@@ -719,6 +719,21 @@ class Model
         # @scopes.GUI.elm.style.pointerEvents = 'none'
         for ele in @scopes.GUI.elm.querySelectorAll ':scope > g'
             ele.style.pointerEvents = 'all'
+            ele.style.touchAction = 'none'
+
+        # Capture events on the new layer and shoot them at the old one
+        ['touchstart', 'touchmove', 'touchend', 'click'].forEach (eventType) =>
+            svgaClone.addEventListener eventType, (e) =>
+                # Don't create an infinite loop if we're already proxying
+                return if e.proxied 
+                
+                # Create a new event that looks like the old one
+                newEvt = new e.constructor(e.type, e)
+                newEvt.proxied = true
+                
+                # Dispatch it to the original SVG root
+                @scopes.SVG.svg.dispatchEvent(newEvt)
+            , { passive: false }
 
         @svgaRestructured = true
 

@@ -12,4 +12,4 @@ Take ["Mode"], (Mode)->
     window.addEventListener "scroll", (e)-> e.preventDefault()
 
     # Block scrolling on iOS
-    window.addEventListener "touchmove", (e)-> e.preventDefault()
+    window.addEventListener "touchmove", ((e)-> e.preventDefault()), { passive: false }

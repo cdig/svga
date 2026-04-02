@@ -175,7 +175,7 @@ void main() {
           this.renderer.shadowMap.enabled = false;
         } catch (error1) {
           e = error1;
-          console.warn("Could not create 3d components in this browser. Try turning on graphics acceleration in chrome settings: chrome://settings/?search=graphics+acceleration");
+          console.warn("Could not create 3d components in this browser. If in chrome, try turning on graphics acceleration in chrome settings: chrome://settings/?search=graphics+acceleration");
           reject(e);
         }
         this.canvas = this.renderer.domElement;
@@ -835,7 +835,27 @@ void main() {
       for (m = 0, len = ref.length; m < len; m++) {
         ele = ref[m];
         ele.style.pointerEvents = 'all';
+        ele.style.touchAction = 'none';
       }
+      // Capture events on the new layer and shoot them at the old one
+      ['touchstart', 'touchmove', 'touchend', 'click'].forEach((eventType) => {
+        return svgaClone.addEventListener(eventType, (e) => {
+          var newEvt;
+          // Don't create an infinite loop if we're already proxying
+          if (e.proxied) {
+            return;
+          }
+          
+          // Create a new event that looks like the old one
+          newEvt = new e.constructor(e.type, e);
+          newEvt.proxied = true;
+          
+          // Dispatch it to the original SVG root
+          return this.scopes.SVG.svg.dispatchEvent(newEvt);
+        }, {
+          passive: false
+        });
+      });
       return this.svgaRestructured = true;
     }
 
@@ -3721,8 +3741,10 @@ void main() {
         return e.preventDefault();
       });
       // Block scrolling on iOS
-      return window.addEventListener("touchmove", function(e) {
+      return window.addEventListener("touchmove", (function(e) {
         return e.preventDefault();
+      }), {
+        passive: false
       });
     }
   });

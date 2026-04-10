@@ -33,6 +33,19 @@ Take ["FlowArrows:Config","FlowArrows:Process","FlowArrows:Set","Reaction","Tick
     setData = Process lineData
     set = Set elm, setData
     set.parentScope = parentScope
+
+    # Provide method to delete flow arrows
+    set.delete = ()->
+      index = sets.indexOf this
+      if index > -1
+        sets.splice index, 1  # REMOVE FROM TRACKING ARRAY FIRST
+      
+      # Remove DOM elements
+      elm = @parentScope.element
+      while elm.hasChildNodes()
+        elm.removeChild elm.firstChild
+    set
+
     sets.push set
     set
 

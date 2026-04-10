@@ -1404,6 +1404,23 @@ void main() {
       setData = Process(lineData);
       set = Set(elm, setData);
       set.parentScope = parentScope;
+      // Provide method to delete flow arrows
+      set.delete = function() {
+        var index, results;
+        index = sets.indexOf(this);
+        if (index > -1) {
+          sets.splice(index, 1); // REMOVE FROM TRACKING ARRAY FIRST
+        }
+        
+        // Remove DOM elements
+        elm = this.parentScope.element;
+        results = [];
+        while (elm.hasChildNodes()) {
+          results.push(elm.removeChild(elm.firstChild));
+        }
+        return results;
+      };
+      set;
       sets.push(set);
       return set;
     });

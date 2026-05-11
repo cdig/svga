@@ -71,17 +71,58 @@ void main() {
     }
 
     animatePopovers() {
-      var coords, key, ref, results, value, x1;
+      var angle, coords, distance, dx, dy, isAboveCenter, key, ref, results, targetX, targetY, value, viewportCenter, x1, yOffset;
+      // Get viewport height for center calculation
+      viewportCenter = window.innerHeight / 2;
       ref = this.popovers;
       results = [];
       for (x1 of ref) {
         [key, value] = x1;
         if (value.opts.show) {
-          coords = this.getScreenCoordinates(value.opts.targetObject);
-          value.div.style.left = coords.x + 'px';
-          results.push(value.div.style.top = coords.y + 'px');
+          // 1. Get the 3D object's current screen position
+          coords = this.getScreenCoordinates(value.opts.origin);
+          
+          // 2. Determine Direction & Target
+          // If coords.y < center, point is in TOP half -> Popover should go DOWN
+          // If coords.y > center, point is in BOTTOM half -> Popover should go UP
+          isAboveCenter = coords.y < viewportCenter;
+          targetX = coords.x;
+          yOffset = isAboveCenter ? -100 : 100;
+          targetY = coords.y + yOffset;
+          // 3. Corner Connection Logic
+          // The line starts at 'coords'. We want it to end at the corner of the box.
+          // If popover is BELOW (targetY > coords.y), connect to Top-Right corner of box.
+          // If popover is ABOVE (targetY < coords.y), connect to Bottom-Right corner of box.
+          // Since targetX is coords.x - 100, the right edge of the box is at targetX + width.
+          dx = targetX - coords.x;
+          dy = targetY - coords.y;
+          
+          // 4. Calculate Line Geometry
+          distance = Math.sqrt(dx * dx + dy * dy) + 5;
+          angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          // 5. Update the Line Div
+          Object.assign(value.line.style, {
+            display: 'block',
+            left: coords.x + 'px',
+            top: coords.y + 'px',
+            width: distance + 'px',
+            transform: `rotate(${angle}deg)`,
+            transformOrigin: "0 0" // Ensure it rotates from the start point
+          });
+          
+          // 6. Update the Popover Div position
+          // If moving UP, we need to offset the div's top by its own height 
+          // so the bottom corner touches the line. 
+          // Assuming div height is dynamic, 'transform: translateY(-100%)' is safest.
+          results.push(Object.assign(value.div.style, {
+            display: 'block',
+            left: (targetX - 100) + 'px',
+            top: (targetY - 2) + 'px',
+            transform: isAboveCenter ? "translateY(-100%)" : "none"
+          }));
         } else {
-          results.push(void 0);
+          value.div.style.display = 'none';
+          results.push(value.line.style.display = 'none');
         }
       }
       return results;
@@ -95,7 +136,8 @@ void main() {
         return;
       }
       p.opts.show = true;
-      return p.div.style.display = 'unset';
+      p.div.style.display = 'unset';
+      return p.line.style.display = 'unset';
     }
 
     hideAllPopovers() {
@@ -134,16 +176,25 @@ void main() {
       }
     }
 
-    getScreenCoordinates(object) {
-      var box, center, x, y;
-      // 1. Get the geometric center of the object
-      box = new THREE.Box3().setFromObject(object);
-      center = new THREE.Vector3();
-      box.getCenter(center);
-      // 2. Project the world-space center to NDC (-1 to +1)
-      center.project(this.camera);
-      x = (center.x + 1) * this.canvas.clientWidth / 2;
-      y = (-center.y + 1) * this.canvas.clientHeight / 2;
+    getScreenCoordinates(input) {
+      var box, vector, x, y;
+      this.camera.updateMatrixWorld();
+      vector = new THREE.Vector3();
+      // 1. Determine if input is a 3D Point or an Object
+      if ((input.x != null) && (input.y != null) && (input.z != null)) {
+        // It's a point (like hit.point)
+        vector.copy(input);
+      } else {
+        // It's a mesh/object
+        box = new THREE.Box3().setFromObject(input);
+        box.getCenter(vector);
+      }
+      // 2. Project the world-space position to NDC (-1 to +1)
+      vector.project(this.camera);
+      
+      // 3. Map NDC to screen pixels
+      x = (vector.x + 1) * this.canvas.clientWidth / 2;
+      y = (-vector.y + 1) * this.canvas.clientHeight / 2;
       return {
         x: x,
         y: y
@@ -296,15 +347,16 @@ void main() {
           return results;
         };
         this.onMouseDown = (event) => {
-          var base, intersects, p, target;
+          var base, hit, intersects, p, target;
           this.mouse.x = (event.offsetX / this.canvas.clientWidth) * 2 - 1;
           this.mouse.y = -(event.offsetY / this.canvas.clientHeight) * 2 + 1;
           this.cameraPosOnMouseDown = this.camera.position.clone();
           this.raycaster.setFromCamera(this.mouse, this.camera);
           intersects = this.raycaster.intersectObjects(this.scene.children, true);
           if (intersects.length > 0) {
-            target = intersects[0].object;
-            this.log("clicked on:", target.name);
+            hit = intersects[0];
+            target = hit.object;
+            this.log("clicked on:", target.name, "hit", hit.point);
             // Bubble up to find a registered name
             while (target) {
               p = this.definedObjects.get(target.name);
@@ -706,42 +758,63 @@ void main() {
     }
 
     createPopover(name, opts) {
-      var body, div, id, popover, title;
-      // Create the container
+      var body, div, id, line, popover, title;
+      // 1. Create the Main Popover Box
       div = document.createElement('div');
       id = "P-" + Math.floor(10000 + Math.random() * 10000);
-      
-      // Apply Styles
       Object.assign(div.style, {
         position: 'absolute',
         left: '200px',
         top: '200px',
-        backgroundColor: 'white',
+        backgroundColor: 'white', // Or 'transparent'
         color: 'black',
+        border: '2px solid black', // Defines thickness, style, and color
         borderRadius: '8px',
         padding: '15px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', // Added a subtle shadow since there's no border
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
         width: '200px',
         zIndex: '1000',
         display: 'none'
       });
+      // Create Title and Body
       title = document.createElement('h3');
-      title.innerText = opts.title;
+      title.innerText = opts.title || "";
       title.style.margin = '0 0 8px 0';
       title.style.fontSize = '16px';
       body = document.createElement('p');
-      body.innerText = opts.body;
+      body.innerText = opts.body || "";
       body.style.margin = '0';
       body.style.fontSize = '14px';
       div.appendChild(title);
       div.appendChild(body);
       div.setAttribute("id", id);
+      // 2. Create the "Line" as a DIV (instead of SVG)
+      // We use a thin div with a background color
+      line = document.createElement('div');
+      Object.assign(line.style, {
+        position: 'absolute',
+        height: '1.5px', // Line thickness
+        backgroundColor: 'black', // Line color
+        transformOrigin: '0 0', // Rotation starts from the top-left
+        zIndex: '999', // Sits just behind or on level with the box
+        display: 'none',
+        pointerEvents: 'none' // Ensures it doesn't block clicks
+      });
+      
+      // 3. Append both to the popover layer
+      // Note: We don't append the line INSIDE the div, because the line needs to
+      // start at the object and end at the div. If it's inside the div, 
+      // its coordinates become relative to the div's moving corner.
       this.popoverLayer.appendChild(div);
+      this.popoverLayer.appendChild(line);
+      // 4. Store the references for the animation loop
       popover = {
         div: div,
+        line: line,
         opts: opts
       };
-      return this.popovers.set(name, popover);
+      this.popovers.set(name, popover);
+      return popover;
     }
 
     logCameraPosition() {

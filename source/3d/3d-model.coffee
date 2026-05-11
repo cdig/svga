@@ -53,11 +53,60 @@ class Panel3d
         return name
 
     animatePopovers: () ->
+        # Get viewport height for center calculation
+        viewportCenter = window.innerHeight / 2
+
         for [key, value] from @popovers
             if value.opts.show
-                coords = @getScreenCoordinates value.opts.targetObject
-                value.div.style.left = coords.x+'px'
-                value.div.style.top = coords.y+'px'
+                # 1. Get the 3D object's current screen position
+                coords = @getScreenCoordinates value.opts.origin
+                
+                # 2. Determine Direction & Target
+                # If coords.y < center, point is in TOP half -> Popover should go DOWN
+                # If coords.y > center, point is in BOTTOM half -> Popover should go UP
+                isAboveCenter = coords.y < viewportCenter
+                
+                targetX = coords.x; # Keep horizontal offset consistent
+                
+                # If above center, push popover down (+100). If below, push up (-100).
+                yOffset = if isAboveCenter then -100 else 100
+                targetY = coords.y + yOffset
+
+                # 3. Corner Connection Logic
+                # The line starts at 'coords'. We want it to end at the corner of the box.
+                # If popover is BELOW (targetY > coords.y), connect to Top-Right corner of box.
+                # If popover is ABOVE (targetY < coords.y), connect to Bottom-Right corner of box.
+                # Since targetX is coords.x - 100, the right edge of the box is at targetX + width.
+                
+                dx = targetX - coords.x
+                dy = targetY - coords.y
+                
+                # 4. Calculate Line Geometry
+                distance = Math.sqrt(dx * dx + dy * dy) + 5
+                angle = Math.atan2(dy, dx) * 180 / Math.PI
+
+                # 5. Update the Line Div
+                Object.assign value.line.style,
+                    display: 'block'
+                    left: coords.x + 'px'
+                    top: coords.y + 'px'
+                    width: distance + 'px'
+                    transform: "rotate(#{angle}deg)"
+                    transformOrigin: "0 0" # Ensure it rotates from the start point
+
+                # 6. Update the Popover Div position
+                # If moving UP, we need to offset the div's top by its own height 
+                # so the bottom corner touches the line. 
+                # Assuming div height is dynamic, 'transform: translateY(-100%)' is safest.
+                
+                Object.assign value.div.style,
+                    display: 'block'
+                    left: (targetX - 100) + 'px'
+                    top: (targetY - 2) + 'px'
+                    transform: if isAboveCenter then "translateY(-100%)" else "none"
+            else
+                value.div.style.display = 'none'
+                value.line.style.display = 'none'
 
     showPopover: (name) ->
         p = @popovers.get(name)
@@ -66,6 +115,7 @@ class Panel3d
             return
         p.opts.show = true
         p.div.style.display = 'unset'
+        p.line.style.display = 'unset'
 
     hideAllPopovers: ->
         for [pname, p] from @popovers
@@ -89,17 +139,25 @@ class Panel3d
         else
             @showPopover name
 
-    getScreenCoordinates: (object) ->
-        # 1. Get the geometric center of the object
-        box = new THREE.Box3().setFromObject object
-        center = new THREE.Vector3()
-        box.getCenter center
+    getScreenCoordinates: (input) ->
+        @camera.updateMatrixWorld()
+        vector = new THREE.Vector3()
 
-        # 2. Project the world-space center to NDC (-1 to +1)
-        center.project @camera
+        # 1. Determine if input is a 3D Point or an Object
+        if input.x? and input.y? and input.z?
+            # It's a point (like hit.point)
+            vector.copy input
+        else
+            # It's a mesh/object
+            box = new THREE.Box3().setFromObject input
+            box.getCenter vector
+
+        # 2. Project the world-space position to NDC (-1 to +1)
+        vector.project @camera
         
-        x = (center.x + 1) * @canvas.clientWidth / 2
-        y = (-center.y + 1) * @canvas.clientHeight / 2
+        # 3. Map NDC to screen pixels
+        x = (vector.x + 1) * @canvas.clientWidth / 2
+        y = (-vector.y + 1) * @canvas.clientHeight / 2
 
         return { x: x, y: y }
 
@@ -255,8 +313,9 @@ class Panel3d
                 intersects = @raycaster.intersectObjects @scene.children, true
                 
                 if intersects.length > 0
-                    target = intersects[0].object
-                    @log "clicked on:",target.name
+                    hit = intersects[0]
+                    target = hit.object
+                    @log "clicked on:",target.name, "hit", hit.point
                     # Bubble up to find a registered name
                     while target
                         p = @definedObjects.get(target.name)
@@ -598,31 +657,32 @@ class Panel3d
         target.material.color.set(color)
 
     createPopover: (name, opts) ->
-        # Create the container
+        # 1. Create the Main Popover Box
         div = document.createElement 'div'
-        id = "P-"+Math.floor(10000+Math.random()*10000)
+        id = "P-" + Math.floor(10000 + Math.random() * 10000)
         
-        # Apply Styles
         Object.assign div.style,
             position: 'absolute'
             left: '200px'
             top: '200px'
-            backgroundColor: 'white'
+            backgroundColor: 'white'  # Or 'transparent'
             color: 'black'
+            border: '2px solid black' # Defines thickness, style, and color
             borderRadius: '8px'
             padding: '15px'
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)' # Added a subtle shadow since there's no border
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             width: '200px'
             zIndex: '1000'
             display: 'none'
 
+        # Create Title and Body
         title = document.createElement 'h3'
-        title.innerText = opts.title
+        title.innerText = opts.title or ""
         title.style.margin = '0 0 8px 0'
         title.style.fontSize = '16px'
 
         body = document.createElement 'p'
-        body.innerText = opts.body
+        body.innerText = opts.body or ""
         body.style.margin = '0'
         body.style.fontSize = '14px'
 
@@ -630,12 +690,34 @@ class Panel3d
         div.appendChild body
         div.setAttribute "id", id
 
-        @popoverLayer.appendChild div
+        # 2. Create the "Line" as a DIV (instead of SVG)
+        # We use a thin div with a background color
+        line = document.createElement 'div'
+        Object.assign line.style,
+            position: 'absolute'
+            height: '1.5px'           # Line thickness
+            backgroundColor: 'black' # Line color
+            transformOrigin: '0 0'  # Rotation starts from the top-left
+            zIndex: '999'           # Sits just behind or on level with the box
+            display: 'none'
+            pointerEvents: 'none'   # Ensures it doesn't block clicks
 
+        # 3. Append both to the popover layer
+        # Note: We don't append the line INSIDE the div, because the line needs to
+        # start at the object and end at the div. If it's inside the div, 
+        # its coordinates become relative to the div's moving corner.
+        @popoverLayer.appendChild div
+        @popoverLayer.appendChild line
+
+        # 4. Store the references for the animation loop
         popover =
-            div: div,
+            div: div
+            line: line
             opts: opts
+            
         @popovers.set name, popover
+        
+        return popover
 
     logCameraPosition: () ->
         console.log "[#{@options.model}] Camera pos:", @camera.position

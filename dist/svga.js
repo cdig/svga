@@ -71,7 +71,7 @@ void main() {
     }
 
     animatePopovers() {
-      var angle, coords, distance, dx, dy, isAboveCenter, key, ref, results, targetX, targetY, value, viewportCenter, x1, yOffset;
+      var angle, coords, distance, dx, dy, isAboveCenter, key, rect, ref, results, targetX, targetY, value, viewportCenter, x1, yOffset;
       // Get viewport height for center calculation
       viewportCenter = window.innerHeight / 2;
       ref = this.popovers;
@@ -80,7 +80,7 @@ void main() {
         [key, value] = x1;
         if (value.opts.show) {
           // 1. Get the 3D object's current screen position
-          coords = this.getScreenCoordinates(value.opts.origin);
+          coords = this.getScreenCoordinates(value.opts.targetObject, value.opts.offset);
           
           // 2. Determine Direction & Target
           // If coords.y < center, point is in TOP half -> Popover should go DOWN
@@ -114,9 +114,10 @@ void main() {
           // If moving UP, we need to offset the div's top by its own height 
           // so the bottom corner touches the line. 
           // Assuming div height is dynamic, 'transform: translateY(-100%)' is safest.
+          rect = value.div.getBoundingClientRect();
           results.push(Object.assign(value.div.style, {
             display: 'block',
-            left: (targetX - 100) + 'px',
+            left: (targetX - rect.width / 2) + 'px',
             top: (targetY - 2) + 'px',
             transform: isAboveCenter ? "translateY(-100%)" : "none"
           }));
@@ -176,20 +177,25 @@ void main() {
       }
     }
 
-    getScreenCoordinates(input) {
+    getScreenCoordinates(targetObject, offset) {
       var box, vector, x, y;
+      // 1. Ensure the camera and object matrices are absolutely current
+      targetObject.updateMatrixWorld();
       this.camera.updateMatrixWorld();
       vector = new THREE.Vector3();
-      // 1. Determine if input is a 3D Point or an Object
-      if ((input.x != null) && (input.y != null) && (input.z != null)) {
-        // It's a point (like hit.point)
-        vector.copy(input);
-      } else {
-        // It's a mesh/object
-        box = new THREE.Box3().setFromObject(input);
-        box.getCenter(vector);
+      // 2. Get the center point of the object in world space
+      // Using a reusable Box3 outside this loop is better for performance, 
+      // but for now, let's keep it clean:
+      box = new THREE.Box3().setFromObject(targetObject);
+      box.getCenter(vector);
+      // 3. Apply the offset in world space if it exists
+      if (offset) {
+        vector.x += offset.x || 0;
+        vector.y += offset.y || 0;
+        vector.z += offset.z || 0;
       }
-      // 2. Project the world-space position to NDC (-1 to +1)
+      // 4. Project the world position to the Normalized Device Coordinates (NDC)
+      // This uses the current camera's projection state
       vector.project(this.camera);
       
       // 3. Map NDC to screen pixels
@@ -203,7 +209,7 @@ void main() {
 
     setupCanvas() {
       return new Promise((resolve, reject) => {
-        var e, pmremGenerator, sun, sun2, sun3;
+        var e, pmremGenerator, ref, sun, sun2, sun3;
         try {
           // Create the ForeignObject wrapper
           // This is the "container" that lets HTML live inside SVG
@@ -282,7 +288,13 @@ void main() {
         this.textureLoader.setWithCredentials(true);
         this.camera = new THREE.PerspectiveCamera(45, this.options.panelSettings.width / this.options.panelSettings.height, 0.1, 10000);
         this.camera.position.set(this.options.initialCameraPosition.x, this.options.initialCameraPosition.y, this.options.initialCameraPosition.z);
+        this.cameraTarget = (ref = this.options.cameraTarget) != null ? ref : {
+          x: 0,
+          y: 0,
+          z: 0
+        };
         this.controls = new OrbitControls(this.camera, this.canvas);
+        this.controls.target.set(this.cameraTarget.x, this.cameraTarget.y, this.cameraTarget.z);
         this.controls.enableDamping = true;
         this.controls.enabled = this.options.orbitAndZoom;
         this.mixer = null;
@@ -296,7 +308,7 @@ void main() {
           this.updateContainerSize();
         }
         this.updateMouse = (event) => {
-          var intersects, newLogicalTarget, p, ref, ref1, ref2, ref3, results, search, target;
+          var intersects, newLogicalTarget, p, ref1, ref2, ref3, ref4, results, search, target;
           this.mouse.x = (event.offsetX / this.canvas.clientWidth) * 2 - 1;
           this.mouse.y = -(event.offsetY / this.canvas.clientHeight) * 2 + 1;
           this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -320,13 +332,13 @@ void main() {
           if (newLogicalTarget !== this.rawHoverTarget) {
             if (this.oldLogicalTarget) {
               p = this.definedObjects.get(this.oldLogicalTarget.name);
-              if (p != null ? (ref = p.methods) != null ? ref.mouseExit : void 0 : void 0) {
+              if (p != null ? (ref1 = p.methods) != null ? ref1.mouseExit : void 0 : void 0) {
                 p.methods.mouseExit(p);
               }
             }
             if (newLogicalTarget) {
               p = this.definedObjects.get(newLogicalTarget.name);
-              if (p != null ? (ref1 = p.methods) != null ? ref1.mouseEnter : void 0 : void 0) {
+              if (p != null ? (ref2 = p.methods) != null ? ref2.mouseEnter : void 0 : void 0) {
                 p.methods.mouseEnter(p);
               }
             }
@@ -334,11 +346,11 @@ void main() {
           // 3. Update the persistent state
           this.oldLogicalTarget = newLogicalTarget;
           this.rawHoverTarget = newLogicalTarget;
-          ref2 = this.currentlyPressedTargets;
+          ref3 = this.currentlyPressedTargets;
           results = [];
-          for (target of ref2) {
+          for (target of ref3) {
             p = this.definedObjects.get(target.name);
-            if (p != null ? (ref3 = p.methods) != null ? ref3.drag : void 0 : void 0) {
+            if (p != null ? (ref4 = p.methods) != null ? ref4.drag : void 0 : void 0) {
               results.push(p.methods.drag(2));
             } else {
               results.push(void 0);
@@ -347,7 +359,7 @@ void main() {
           return results;
         };
         this.onMouseDown = (event) => {
-          var base, hit, intersects, p, target;
+          var base, clickOffset, hit, intersects, p, target, worldPosition;
           this.mouse.x = (event.offsetX / this.canvas.clientWidth) * 2 - 1;
           this.mouse.y = -(event.offsetY / this.canvas.clientHeight) * 2 + 1;
           this.cameraPosOnMouseDown = this.camera.position.clone();
@@ -356,7 +368,13 @@ void main() {
           if (intersects.length > 0) {
             hit = intersects[0];
             target = hit.object;
-            this.log("clicked on:", target.name, "hit", hit.point);
+            // Get the object's world position
+            worldPosition = new THREE.Vector3();
+            target.getWorldPosition(worldPosition);
+            // Calculate the offset: Click Point - Object Origin
+            // This is the vector from the center of the object to where you clicked
+            clickOffset = new THREE.Vector3().subVectors(hit.point, worldPosition);
+            this.log("clicked on:", target.name, "local offset:", clickOffset);
             // Bubble up to find a registered name
             while (target) {
               p = this.definedObjects.get(target.name);
@@ -372,10 +390,10 @@ void main() {
           }
         };
         this.onMouseUp = (event) => {
-          var base, p, ref, target;
+          var base, p, ref1, target;
           if (this.camera.position.distanceTo(this.cameraPosOnMouseDown) <= 4) {
-            ref = this.currentlyPressedTargets;
-            for (target of ref) {
+            ref1 = this.currentlyPressedTargets;
+            for (target of ref1) {
               p = this.definedObjects.get(target.name);
               if (p != null ? p.methods : void 0) {
                 if (typeof (base = p.methods).mouseUp === "function") {
@@ -397,7 +415,7 @@ void main() {
         this.loader.setCrossOrigin('use-credentials');
         this.loader.setWithCredentials(true);
         this.loader.load(this.expandResourceName(this.options.model), (gltf) => {
-          var animate, box, center, model, ref;
+          var animate, box, center, model, ref1;
           this.loaderDiv.style.display = 'none';
           model = gltf.scene;
           model.traverse((node) => {
@@ -417,7 +435,7 @@ void main() {
           this.scene.add(model);
           
           // Setup Mixer
-          if (((ref = gltf.animations) != null ? ref.length : void 0) > 0) {
+          if (((ref1 = gltf.animations) != null ? ref1.length : void 0) > 0) {
             this.mixer = new THREE.AnimationMixer(model);
             gltf.animations.forEach((clip) => {
               var action;
@@ -431,14 +449,14 @@ void main() {
           center = box.getCenter(new THREE.Vector3());
           model.position.sub(center);
           animate = () => {
-            var delta, ref1;
+            var delta, ref2;
             requestAnimationFrame(animate);
             if (this.runningOnWebkit && !this.options.panelSettings.fullscreen) {
               this.syncInternalTransform();
             }
             delta = this.clock.getDelta();
-            if ((ref1 = this.mixer) != null) {
-              ref1.update(delta);
+            if ((ref2 = this.mixer) != null) {
+              ref2.update(delta);
             }
             this.controls.update();
             this.animatePopovers();
@@ -591,7 +609,7 @@ void main() {
     resetCamera() {
       // 1. Reset the focal point of the orbit (the center of rotation)
       this.controls.enableDamping = false;
-      this.controls.target.set(0, 0, 0);
+      this.controls.target.set(this.cameraTarget.x, this.cameraTarget.y, this.cameraTarget.z);
       // 2. Reset the physical position of the camera
       this.camera.position.set(this.options.initialCameraPosition.x, this.options.initialCameraPosition.y, this.options.initialCameraPosition.z);
       // 3. Tell the controls to sync up
@@ -689,6 +707,7 @@ void main() {
         childNodes: []
       };
       proxyStorage.element = proxyStorage;
+      proxyStorage.mesh = object;
       // 2. Create the Handler to bridge the Proxy and the Real Object
       handler = {
         get: function(target, prop) {
@@ -770,23 +789,26 @@ void main() {
         color: 'black',
         border: '2px solid black', // Defines thickness, style, and color
         borderRadius: '8px',
-        padding: '15px',
+        padding: '7px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        width: '200px',
         zIndex: '1000',
+        maxWidth: '200px',
         display: 'none'
       });
       // Create Title and Body
       title = document.createElement('h3');
       title.innerText = opts.title || "";
-      title.style.margin = '0 0 8px 0';
+      title.style.margin = '0 0 0 0';
       title.style.fontSize = '16px';
-      body = document.createElement('p');
-      body.innerText = opts.body || "";
-      body.style.margin = '0';
-      body.style.fontSize = '14px';
+      title.style.textAlign = opts.titleTextAlign || 'center';
       div.appendChild(title);
-      div.appendChild(body);
+      if (opts.body) {
+        body = document.createElement('p');
+        body.innerText = opts.body || "";
+        body.style.margin = '0';
+        body.style.fontSize = '14px';
+        div.appendChild(body);
+      }
       div.setAttribute("id", id);
       // 2. Create the "Line" as a DIV (instead of SVG)
       // We use a thin div with a background color

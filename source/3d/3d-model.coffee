@@ -59,7 +59,7 @@ class Panel3d
         for [key, value] from @popovers
             if value.opts.show
                 # 1. Get the 3D object's current screen position
-                coords = @getScreenCoordinates value.opts.origin
+                coords = @getScreenCoordinates value.opts.targetObject, value.opts.offset
                 
                 # 2. Determine Direction & Target
                 # If coords.y < center, point is in TOP half -> Popover should go DOWN
@@ -99,9 +99,10 @@ class Panel3d
                 # so the bottom corner touches the line. 
                 # Assuming div height is dynamic, 'transform: translateY(-100%)' is safest.
                 
+                rect = value.div.getBoundingClientRect()
                 Object.assign value.div.style,
                     display: 'block'
-                    left: (targetX - 100) + 'px'
+                    left: (targetX - rect.width/2) + 'px'
                     top: (targetY - 2) + 'px'
                     transform: if isAboveCenter then "translateY(-100%)" else "none"
             else
@@ -139,20 +140,27 @@ class Panel3d
         else
             @showPopover name
 
-    getScreenCoordinates: (input) ->
+    getScreenCoordinates: (targetObject, offset) ->
+        # 1. Ensure the camera and object matrices are absolutely current
+        targetObject.updateMatrixWorld()
         @camera.updateMatrixWorld()
+
         vector = new THREE.Vector3()
 
-        # 1. Determine if input is a 3D Point or an Object
-        if input.x? and input.y? and input.z?
-            # It's a point (like hit.point)
-            vector.copy input
-        else
-            # It's a mesh/object
-            box = new THREE.Box3().setFromObject input
-            box.getCenter vector
+        # 2. Get the center point of the object in world space
+        # Using a reusable Box3 outside this loop is better for performance, 
+        # but for now, let's keep it clean:
+        box = new THREE.Box3().setFromObject targetObject
+        box.getCenter vector
 
-        # 2. Project the world-space position to NDC (-1 to +1)
+        # 3. Apply the offset in world space if it exists
+        if offset
+            vector.x += offset.x or 0
+            vector.y += offset.y or 0
+            vector.z += offset.z or 0
+
+        # 4. Project the world position to the Normalized Device Coordinates (NDC)
+        # This uses the current camera's projection state
         vector.project @camera
         
         # 3. Map NDC to screen pixels
@@ -246,7 +254,9 @@ class Panel3d
             @camera = new THREE.PerspectiveCamera(45, @options.panelSettings.width / @options.panelSettings.height, 0.1, 10000)
             @camera.position.set(@options.initialCameraPosition.x, @options.initialCameraPosition.y, @options.initialCameraPosition.z)
 
+            @cameraTarget = @options.cameraTarget ? {x:0, y:0, z:0}
             @controls = new OrbitControls(@camera, @canvas)
+            @controls.target.set @cameraTarget.x, @cameraTarget.y, @cameraTarget.z 
             @controls.enableDamping = true
             @controls.enabled = @options.orbitAndZoom
 
@@ -315,7 +325,16 @@ class Panel3d
                 if intersects.length > 0
                     hit = intersects[0]
                     target = hit.object
-                    @log "clicked on:",target.name, "hit", hit.point
+
+                    # Get the object's world position
+                    worldPosition = new THREE.Vector3()
+                    target.getWorldPosition(worldPosition)
+
+                    # Calculate the offset: Click Point - Object Origin
+                    # This is the vector from the center of the object to where you clicked
+                    clickOffset = new THREE.Vector3().subVectors(hit.point, worldPosition)
+
+                    @log "clicked on:", target.name, "local offset:", clickOffset
                     # Bubble up to find a registered name
                     while target
                         p = @definedObjects.get(target.name)
@@ -530,7 +549,7 @@ class Panel3d
     resetCamera: () ->
         # 1. Reset the focal point of the orbit (the center of rotation)
         @controls.enableDamping = false
-        @controls.target.set(0, 0, 0)
+        @controls.target.set(@cameraTarget.x, @cameraTarget.y, @cameraTarget.z)
 
         # 2. Reset the physical position of the camera
         @camera.position.set(
@@ -605,6 +624,8 @@ class Panel3d
 
         proxyStorage.element = proxyStorage
 
+        proxyStorage.mesh = object
+
         # 2. Create the Handler to bridge the Proxy and the Real Object
         handler = 
             get: (target, prop) ->
@@ -669,25 +690,27 @@ class Panel3d
             color: 'black'
             border: '2px solid black' # Defines thickness, style, and color
             borderRadius: '8px'
-            padding: '15px'
+            padding: '7px'
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            width: '200px'
             zIndex: '1000'
+            maxWidth: '200px'
             display: 'none'
 
         # Create Title and Body
         title = document.createElement 'h3'
         title.innerText = opts.title or ""
-        title.style.margin = '0 0 8px 0'
+        title.style.margin = '0 0 0 0'
         title.style.fontSize = '16px'
-
-        body = document.createElement 'p'
-        body.innerText = opts.body or ""
-        body.style.margin = '0'
-        body.style.fontSize = '14px'
-
+        title.style.textAlign = opts.titleTextAlign or 'center'
         div.appendChild title
-        div.appendChild body
+
+        if(opts.body)
+            body = document.createElement 'p'
+            body.innerText = opts.body or ""
+            body.style.margin = '0'
+            body.style.fontSize = '14px'
+            div.appendChild body
+
         div.setAttribute "id", id
 
         # 2. Create the "Line" as a DIV (instead of SVG)

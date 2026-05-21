@@ -359,7 +359,7 @@ void main() {
           return results;
         };
         this.onMouseDown = (event) => {
-          var base, clickOffset, hit, intersects, p, target, worldPosition;
+          var base1, clickOffset, hit, intersects, p, target, worldPosition;
           this.mouse.x = (event.offsetX / this.canvas.clientWidth) * 2 - 1;
           this.mouse.y = -(event.offsetY / this.canvas.clientHeight) * 2 + 1;
           this.cameraPosOnMouseDown = this.camera.position.clone();
@@ -380,8 +380,8 @@ void main() {
               p = this.definedObjects.get(target.name);
               if (p != null ? p.methods : void 0) {
                 this.currentlyPressedTargets.add(target);
-                if (typeof (base = p.methods).mouseDown === "function") {
-                  base.mouseDown(target); // Stop looking once found
+                if (typeof (base1 = p.methods).mouseDown === "function") {
+                  base1.mouseDown(target); // Stop looking once found
                 }
                 return;
               }
@@ -390,14 +390,14 @@ void main() {
           }
         };
         this.onMouseUp = (event) => {
-          var base, p, ref1, target;
+          var base1, p, ref1, target;
           if (this.camera.position.distanceTo(this.cameraPosOnMouseDown) <= 4) {
             ref1 = this.currentlyPressedTargets;
             for (target of ref1) {
               p = this.definedObjects.get(target.name);
               if (p != null ? p.methods : void 0) {
-                if (typeof (base = p.methods).mouseUp === "function") {
-                  base.mouseUp(target);
+                if (typeof (base1 = p.methods).mouseUp === "function") {
+                  base1.mouseUp(target);
                 }
               }
             }
@@ -743,11 +743,11 @@ void main() {
     }
 
     setHighlight(target, state) {
-      var base;
+      var base1;
       if (target && target.isMesh) {
         if (state) {
-          if ((base = target.userData).originalMaterial == null) {
-            base.originalMaterial = target.material;
+          if ((base1 = target.userData).originalMaterial == null) {
+            base1.originalMaterial = target.material;
           }
           return target.material = this.rainbowMaterial;
         } else {
@@ -8632,7 +8632,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
     setup = function(type, defn) {
       return Control[type] = function(props = {}) {
-        var base, elm, group, scope;
+        var base1, elm, group, scope;
         if (typeof props !== "object") {
           console.log(props);
           throw new Error(`Control.${type}(props) takes a optional props object. Got ^^^, which is not an object.`);
@@ -8640,8 +8640,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         
         // Re-using an existing ID? Just attach to the existing control.
         if ((props.id != null) && (instances[props.id] != null)) {
-          if (typeof (base = instances[props.id]).attach === "function") {
-            base.attach(props);
+          if (typeof (base1 = instances[props.id]).attach === "function") {
+            base1.attach(props);
           }
           return instances[props.id];
         } else {
@@ -9675,6 +9675,254 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
   })();
 
+  Take(["SVG"], function(SVG) {
+    return Make(["ParticleSystem"], function(_opts) {
+      var ParticleSystem;
+      ParticleSystem = {
+        debugPath: null,
+        particles: [],
+        opts: _opts,
+        
+        // Loop control state
+        isRunning: false,
+        animationFrameId: null,
+        lastTime: 0,
+        updateDebugVisuals: function() {
+          var alx, aly, angle, arcR, arx, ary, blx, bly, brx, bry, coneWidth, d, deg2rad, half, largeArc, ltipX, ltipY, origin, originWidth, radius, rtipX, rtipY, sincos, sx, sy;
+          ({origin, originWidth, angle, coneWidth, radius} = this.opts.shape);
+          deg2rad = function(d) {
+            return d * Math.PI / 180;
+          };
+          sincos = function(deg) {
+            var r;
+            r = deg2rad(deg);
+            return [Math.sin(r), -Math.cos(r)];
+          };
+          [sx, sy] = sincos(angle + 90);
+          half = originWidth / 2;
+          blx = origin.x - sx * half;
+          bly = origin.y - sy * half;
+          brx = origin.x + sx * half;
+          bry = origin.y + sy * half;
+          [arx, ary] = sincos(angle + coneWidth / 2);
+          rtipX = brx + radius * arx;
+          rtipY = bry + radius * ary;
+          [alx, aly] = sincos(angle - coneWidth / 2);
+          ltipX = blx + radius * alx;
+          ltipY = bly + radius * aly;
+          arcR = Math.sqrt((rtipX - origin.x) ** 2 + (rtipY - origin.y) ** 2);
+          largeArc = coneWidth >= 180 ? 1 : 0;
+          d = [`M ${blx} ${bly}`, `L ${brx} ${bry}`, `L ${rtipX} ${rtipY}`, `A ${arcR} ${arcR} 0 ${largeArc} 0 ${ltipX} ${ltipY}`, "Z"].join(" ");
+          if (this.debugPath != null) {
+            return this.debugPath.setAttribute("d", d);
+          } else {
+            return this.debugPath = SVG.create("path", SVG.root, {
+              d: d,
+              stroke: "#F0F",
+              fill: "none"
+            });
+          }
+        },
+        randomVariance: function(base, variance) {
+          return base + (Math.random() * 2 - 1) * variance;
+        },
+        rollParticleStats: function() {
+          var life, particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance, speed;
+          ({particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance} = this.opts.particle);
+          life = Math.max(0.1, this.randomVariance(particleLifeSeconds, particleLifeVarianceSeconds));
+          speed = Math.max(0.01, this.randomVariance(particleSpeed, particleSpeedVariance));
+          return {
+            
+            // These are now calculated per millisecond elapsed
+            lifeStep: 1 / (life * 1000),
+            speedStep: speed / 1000
+          };
+        },
+        resetParticle: function(system) {
+          var angle, coneWidth, deg2rad, origin, originWidth, sincos, spread, stats, sx, sy, t;
+          ({origin, originWidth, angle, coneWidth} = this.opts.shape);
+          deg2rad = function(d) {
+            return d * Math.PI / 180;
+          };
+          sincos = function(deg) {
+            var r;
+            r = deg2rad(deg);
+            return [Math.sin(r), -Math.cos(r)];
+          };
+          stats = this.rollParticleStats();
+          system.lifeStep = stats.lifeStep;
+          system.speedStep = stats.speedStep;
+          t = Math.random() * 2 - 1;
+          [sx, sy] = sincos(angle + 90);
+          system.baseX = origin.x + sx * (originWidth / 2) * t;
+          system.baseY = origin.y + sy * (originWidth / 2) * t;
+          if (originWidth < 10) {
+            spread = (Math.random() * 2 - 1) * (coneWidth / 2);
+          } else {
+            spread = t * (coneWidth / 2);
+          }
+          system.travelAngle = angle + spread;
+          system.travelDistance = 0;
+          system.phase = 0;
+          system.resetFlag = false;
+          system.dormant = false;
+          return system.visible = true;
+        },
+        preWarmParticle: function(system) {
+          var randomStartPhase, timeInMs;
+          randomStartPhase = Math.random();
+          timeInMs = randomStartPhase / system.lifeStep;
+          system.phase = randomStartPhase;
+          return system.travelDistance = system.speedStep * timeInMs;
+        },
+        createParticles: function() {
+          var count, i, particle, ref, shouldStartActive, system, throttle, type, typeSpecificSettings;
+          ({type, count, typeSpecificSettings = {}} = this.opts.particle);
+          throttle = (ref = this.opts.throttle) != null ? ref : 1;
+          return this.particles = (function() {
+            var m, ref1, results;
+            results = [];
+            for (i = m = 0, ref1 = count; (0 <= ref1 ? m < ref1 : m > ref1); i = 0 <= ref1 ? ++m : --m) {
+              particle = type(typeSpecificSettings);
+              particle.createElement();
+              shouldStartActive = i < (count * throttle);
+              system = {
+                x: 0,
+                y: 0,
+                phase: 0,
+                travelDistance: 0,
+                lifeStep: 0,
+                speedStep: 0,
+                resetFlag: false,
+                dormant: false,
+                visible: shouldStartActive
+              };
+              this.resetParticle(system);
+              if (shouldStartActive) {
+                this.preWarmParticle(system);
+              } else {
+                system.phase = 1;
+                system.resetFlag = true;
+                system.dormant = true;
+                system.visible = false;
+              }
+              this.updateParticlePosition(system);
+              particle.system = system;
+              results.push(particle);
+            }
+            return results;
+          }).call(this);
+        },
+        updateParticlePosition: function(system) {
+          var deg2rad, dx, dy, externalForce, forceFactor, sincos;
+          externalForce = this.opts.particle.externalForce || {
+            x: 0,
+            y: 0
+          };
+          deg2rad = function(d) {
+            return d * Math.PI / 180;
+          };
+          sincos = function(deg) {
+            var r;
+            r = deg2rad(deg);
+            return [Math.sin(r), -Math.cos(r)];
+          };
+          [dx, dy] = sincos(system.travelAngle);
+          forceFactor = system.phase * system.phase;
+          system.x = system.baseX + dx * system.travelDistance + externalForce.x * forceFactor;
+          return system.y = system.baseY + dy * system.travelDistance + externalForce.y * forceFactor;
+        },
+        // Note: Added deltaTime here to step smoothly across variable frame rates
+        updateParticle: function(particle, index, deltaTime) {
+          var count, maxDelayMs, ref, system, throttle, wasDormant;
+          system = particle.system;
+          count = this.opts.particle.count;
+          throttle = (ref = this.opts.throttle) != null ? ref : 1;
+          if (system.resetFlag) {
+            if (index < (count * throttle)) {
+              wasDormant = system.dormant;
+              this.resetParticle(system);
+              if (wasDormant) {
+                maxDelayMs = 1 / system.lifeStep;
+                system.spawnDelay = Math.random() * maxDelayMs;
+                system.visible = false;
+              }
+            } else {
+              system.visible = false;
+              system.dormant = true;
+              return;
+            }
+          }
+          if ((system.spawnDelay != null) && system.spawnDelay > 0) {
+            system.spawnDelay -= deltaTime;
+            return;
+          }
+          if (system.visible) {
+            // Scale step increments by the actual time passed since last frame
+            system.phase += system.lifeStep * deltaTime;
+            system.travelDistance += system.speedStep * deltaTime;
+            if (system.phase >= 1) {
+              system.resetFlag = true;
+            }
+            return this.updateParticlePosition(system);
+          } else if ((system.spawnDelay != null) && system.spawnDelay <= 0) {
+            system.visible = true;
+            system.spawnDelay = null;
+            return this.updateParticlePosition(system);
+          }
+        },
+        // Accepts a raw timestamp provided natively by requestAnimationFrame
+        update: function(timestamp) {
+          var deltaTime, i, len, m, particle, ref, results;
+          if (!this.lastTime) {
+            this.lastTime = timestamp;
+          }
+          // Calculate how many milliseconds have elapsed since the last frame
+          deltaTime = timestamp - this.lastTime;
+          this.lastTime = timestamp;
+          // Cap deltaTime to prevent massive physics jumps if the browser stalls
+          if (deltaTime > 100) {
+            deltaTime = 16.66;
+          }
+          ref = this.particles;
+          results = [];
+          for (i = m = 0, len = ref.length; m < len; i = ++m) {
+            particle = ref[i];
+            this.updateParticle(particle, i, deltaTime);
+            results.push(particle.updateElement());
+          }
+          return results;
+        },
+        // --- NEW ANIMATION FRAME CONTROL METHODS ---
+        start: function() {
+          var loopFrame;
+          if (this.isRunning) {
+            return;
+          }
+          this.isRunning = true;
+          this.lastTime = 0; // Reset frame anchor
+          loopFrame = (timestamp) => {
+            if (!this.isRunning) {
+              return;
+            }
+            this.update(timestamp);
+            return this.animationFrameId = requestAnimationFrame(loopFrame);
+          };
+          return this.animationFrameId = requestAnimationFrame(loopFrame);
+        },
+        stop: function() {
+          this.isRunning = false;
+          if (this.animationFrameId != null) {
+            cancelAnimationFrame(this.animationFrameId);
+            return this.animationFrameId = null;
+          }
+        }
+      };
+      ParticleSystem.createParticles();
+      return ParticleSystem;
+    });
+  });
+
   (function() {
     var Pressure, renderString;
     Pressure = function(pressure, alpha = 1) {
@@ -10017,7 +10265,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         return elm; // Composable
       },
       attr: function(elm, k, v) {
-        var base, ns;
+        var base1, ns;
         if (!elm) {
           throw new Error("SVG.attr was called with a null element");
         }
@@ -10035,7 +10283,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         if (v === void 0) { // Read
           // Note that we only do DOM->cache on a read call (not on a write call),
           // to slightly avoid intermingling DOM reads and writes, which causes thrashing.
-          return (base = elm._SVG_attr)[k] != null ? base[k] : base[k] = elm.getAttribute(k);
+          return (base1 = elm._SVG_attr)[k] != null ? base1[k] : base1[k] = elm.getAttribute(k);
         }
         if (elm._SVG_attr[k] === v) { // cache hit — bail
           return v;
@@ -10070,7 +10318,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         return elm; // Composable
       },
       style: function(elm, k, v) {
-        var base;
+        var base1;
         if (!elm) {
           throw new Error("SVG.style was called with a null element");
         }
@@ -10086,7 +10334,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
           elm._SVG_style = {};
         }
         if (v === void 0) {
-          return (base = elm._SVG_style)[k] != null ? base[k] : base[k] = elm.style[k];
+          return (base1 = elm._SVG_style)[k] != null ? base1[k] : base1[k] = elm.style[k];
         }
         if (elm._SVG_style[k] !== v) {
           elm.style[k] = elm._SVG_style[k] = v;

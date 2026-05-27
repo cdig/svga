@@ -53,16 +53,17 @@ Take ["SVG"], (SVG) ->
             base + (Math.random() * 2 - 1) * variance
 
         rollParticleStats: () ->
-            { particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance } = @opts.particle
+            { particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance, reverse } = @opts.particle
             life  = Math.max 0.1,  @randomVariance particleLifeSeconds,  particleLifeVarianceSeconds
             speed = Math.max 0.01, @randomVariance particleSpeed, particleSpeedVariance
             
             # These are now calculated per millisecond elapsed
-            lifeStep:  1 / (life * 1000)
+            lifeStep:  if reverse then -(1 / (life * 1000)) else 1 / (life * 1000)
             speedStep: speed / 1000
 
         resetParticle: (system) ->
             { origin, originWidth, angle, coneWidth } = @opts.shape
+            { reverse } = @opts.particle
 
             deg2rad = (d) -> d * Math.PI / 180
             sincos  = (deg) ->
@@ -84,17 +85,22 @@ Take ["SVG"], (SVG) ->
                 spread = t * (coneWidth / 2)
 
             system.travelAngle    = angle + spread
-            system.travelDistance = 0
-            system.phase          = 0
+            system.travelDistance = if reverse then system.speedStep * (1 / Math.abs system.lifeStep) else 0
+            system.phase          = if reverse then 1 else 0
             system.resetFlag      = false
             system.dormant        = false
             system.visible        = true
 
         preWarmParticle: (system) ->
             randomStartPhase = Math.random()
-            timeInMs = randomStartPhase / system.lifeStep
-            system.phase          = randomStartPhase
-            system.travelDistance = system.speedStep * timeInMs
+            maxLifeMs = 1 / Math.abs system.lifeStep
+            timeInMs = randomStartPhase * maxLifeMs
+            if @opts.particle.reverse
+                system.phase          = 1 - randomStartPhase
+                system.travelDistance = system.speedStep * maxLifeMs - system.speedStep * timeInMs
+            else
+                system.phase          = randomStartPhase
+                system.travelDistance = system.speedStep * timeInMs
 
         createParticles: () ->
             { type, count, typeSpecificSettings = {} } = @opts.particle
@@ -122,7 +128,7 @@ Take ["SVG"], (SVG) ->
                 if shouldStartActive
                     @preWarmParticle system
                 else
-                    system.phase    = 1
+                    system.phase    = if @opts.particle.reverse then 0 else 1
                     system.resetFlag = true
                     system.dormant  = true
                     system.visible  = false
@@ -149,6 +155,7 @@ Take ["SVG"], (SVG) ->
             system = particle.system
             count  = @opts.particle.count
             throttle = @opts.throttle ? 1
+            reverse = @opts.particle.reverse
 
             if system.resetFlag
                 if index < (count * throttle)
@@ -156,7 +163,7 @@ Take ["SVG"], (SVG) ->
                     @resetParticle system
 
                     if wasDormant
-                        maxDelayMs = 1 / system.lifeStep
+                        maxDelayMs = 1 / Math.abs system.lifeStep
                         system.spawnDelay = Math.random() * maxDelayMs
                         system.visible    = false
                 else
@@ -169,11 +176,11 @@ Take ["SVG"], (SVG) ->
                 return
 
             if system.visible
-                # Scale step increments by the actual time passed since last frame
                 system.phase          += system.lifeStep * deltaTime
-                system.travelDistance += system.speedStep * deltaTime
+                system.travelDistance += (if reverse then -system.speedStep else system.speedStep) * deltaTime
 
-                if system.phase >= 1
+                resetCondition = if reverse then system.phase <= 0 else system.phase >= 1
+                if resetCondition
                     system.resetFlag = true
 
                 @updateParticlePosition system

@@ -1093,7 +1093,7 @@ void main() {
       return void 0;
     };
     removeUselessLayers = function(containerElm) {
-      var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len, len1, m, n, ref, ref1, results;
+      var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len, len1, m, ref, ref1, results, u;
       // In recent versions of Adobe Animate, groups are sometimes created to house layer contents,
       // where previous versions wouldn't do this. This creates a weird mismatch between new and old code.
       // To work around this, we detect these extra layer elements, and remove them before building
@@ -1106,8 +1106,8 @@ void main() {
         isUselessLayer = ((ref = layerSuspect.id) != null ? ref.search(/L_\d+/) : void 0) >= 0;
         if (isGroup && isUselessLayer) {
           ref1 = Array.prototype.slice.call(layerSuspect.childNodes);
-          for (n = 0, len1 = ref1.length; n < len1; n++) {
-            childElm = ref1[n];
+          for (u = 0, len1 = ref1.length; u < len1; u++) {
+            childElm = ref1[u];
             containerElm.insertBefore(childElm, layerSuspect);
           }
           results.push(containerElm.removeChild(layerSuspect));
@@ -1200,7 +1200,7 @@ void main() {
       return null;
     };
     return Make("Scope", Scope = function(element, symbol, props = {}) {
-      var attr, attrs, len, len1, m, n, parentScope, ref, scope, scopeProcessor;
+      var attr, attrs, len, len1, m, parentScope, ref, scope, scopeProcessor, u;
       if (!element instanceof SVGElement) {
         console.log(element);
         throw new Error("Scope() takes an element as the first argument. Got ^^^");
@@ -1246,8 +1246,8 @@ void main() {
         }
       }
       ref = Registry.all("ScopeProcessor");
-      for (n = 0, len1 = ref.length; n < len1; n++) {
-        scopeProcessor = ref[n];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        scopeProcessor = ref[u];
         // Forcing a reflow fixes an IE bug — disabled, not deleted, until we can verify this doesn't affect Edge
         // window.getComputedStyle element
 
@@ -1673,9 +1673,9 @@ void main() {
       for (m = 0, len = segments.length; m < len; m++) {
         segment = segments[m];
         results.push((function() {
-          var len1, n, results1;
+          var len1, results1, u;
           results1 = [];
-          for (i = n = 0, len1 = segment.length; n < len1; i = ++n) {
+          for (i = u = 0, len1 = segment.length; u < len1; i = ++u) {
             pointA = segment[i];
             if (pointB = segment[i + 1]) {
               results1.push(vector = {
@@ -1692,13 +1692,13 @@ void main() {
       return results;
     };
     reifySegments = function(set) {
-      var dist, len, len1, m, n, results, segment, segmentVectors, vector;
+      var dist, len, len1, m, results, segment, segmentVectors, u, vector;
       results = [];
       for (m = 0, len = set.length; m < len; m++) {
         segmentVectors = set[m];
         dist = 0;
-        for (n = 0, len1 = segmentVectors.length; n < len1; n++) {
-          vector = segmentVectors[n];
+        for (u = 0, len1 = segmentVectors.length; u < len1; u++) {
+          vector = segmentVectors[u];
           dist += vector.dist;
         }
         results.push(segment = {
@@ -2016,7 +2016,7 @@ void main() {
     }, Mode, SVG) {
     var checkPanelSize, constructLayout;
     constructLayout = function(groups, desiredColumnHeight, vertical) {
-      var column, columns, group, innerPanelSize, len, len1, len2, m, n, tallestColumnHeight, u;
+      var column, columns, group, innerPanelSize, len, len1, len2, m, tallestColumnHeight, u, w;
       columns = [];
       column = null;
 
@@ -2052,14 +2052,14 @@ void main() {
       
       // Figure out which column is tallest, so we know how tall to make the panel
       tallestColumnHeight = 0;
-      for (n = 0, len1 = columns.length; n < len1; n++) {
-        column = columns[n];
+      for (u = 0, len1 = columns.length; u < len1; u++) {
+        column = columns[u];
         tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
       }
 
       // Set the y position for each column
-      for (u = 0, len2 = columns.length; u < len2; u++) {
-        column = columns[u];
+      for (w = 0, len2 = columns.length; w < len2; w++) {
+        column = columns[w];
         // In vertical orientation, center-align
         // In horizontal orientation, bottom-align
         column.y = vertical ? tallestColumnHeight / 2 - column.height / 2 : tallestColumnHeight - column.height;
@@ -2127,11 +2127,11 @@ void main() {
             transform: `translate(${column.x},${column.y})`
           });
           results.push((function() {
-            var len1, n, ref, results1;
+            var len1, ref, results1, u;
             ref = column.groups;
             results1 = [];
-            for (n = 0, len1 = ref.length; n < len1; n++) {
-              groupInfo = ref[n];
+            for (u = 0, len1 = ref.length; u < len1; u++) {
+              groupInfo = ref[u];
               SVG.append(columnElm, groupInfo.scope.element);
               results1.push(groupInfo.scope.y = groupInfo.y);
             }
@@ -2521,10 +2521,10 @@ void main() {
         } else {
           panel.hide(0.2);
           requestAnimationFrame(function() {
-            var len1, n, results;
+            var len1, results, u;
             results = [];
-            for (n = 0, len1 = buttons.length; n < len1; n++) {
-              button = buttons[n];
+            for (u = 0, len1 = buttons.length; u < len1; u++) {
+              button = buttons[u];
               results.push(button.enable(false));
             }
             return results;
@@ -2971,7 +2971,7 @@ void main() {
         height: height,
         input: input,
         setValue: function(activate, runHandlers = true) {
-          var len, len1, m, n, offHandler, onHandler;
+          var len, len1, m, offHandler, onHandler, u;
           if (activate && !isActive) {
             isActive = true;
             toClicking();
@@ -2989,8 +2989,8 @@ void main() {
               toNormal();
             }
             if (runHandlers) {
-              for (n = 0, len1 = offHandlers.length; n < len1; n++) {
-                offHandler = offHandlers[n];
+              for (u = 0, len1 = offHandlers.length; u < len1; u++) {
+                offHandler = offHandlers[u];
                 offHandler();
               }
             }
@@ -3474,7 +3474,7 @@ void main() {
       };
       tickBG(blueBG);
       updateSnaps = function(input) {
-        var i, inMax, inMin, len, len1, m, n, outMax, outMin, ref, ref1;
+        var i, inMax, inMin, len, len1, m, outMax, outMin, ref, ref1, u;
         ref = props.snaps;
         // Reset all snaps
         for (i = m = 0, len = ref.length; m < len; i = ++m) {
@@ -3486,7 +3486,7 @@ void main() {
         }
         ref1 = props.snaps;
         // Map our input to the right position, move the slider, and highlight the proper dot if needed
-        for (i = n = 0, len1 = ref1.length; n < len1; i = ++n) {
+        for (i = u = 0, len1 = ref1.length; u < len1; i = ++u) {
           snap = ref1[i];
           // Input is inside this snap point
           if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
@@ -4262,7 +4262,7 @@ void main() {
       };
       tickBG(blueBG);
       updateSnaps = function(input) {
-        var i, inMax, inMin, len, len1, m, n, outMax, outMin, ref, ref1;
+        var i, inMax, inMin, len, len1, m, outMax, outMin, ref, ref1, u;
         ref = props.snaps;
         // Reset all snaps
         for (i = m = 0, len = ref.length; m < len; i = ++m) {
@@ -4274,7 +4274,7 @@ void main() {
         }
         ref1 = props.snaps;
         // Map our input to the right position, move the slider, and highlight the proper dot if needed
-        for (i = n = 0, len1 = ref1.length; n < len1; i = ++n) {
+        for (i = u = 0, len1 = ref1.length; u < len1; i = ++u) {
           snap = ref1[i];
           // Input is inside this snap point
           if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
@@ -4913,7 +4913,7 @@ void main() {
     }
 
     setDescriptions(descriptionMap, aliasIndex) {
-      var alias, input, inputs, len, len1, m, n, results, target, targets, x1;
+      var alias, input, inputs, len, len1, m, results, target, targets, u, x1;
       // Delete all old channels
       this.subContainer.innerHTML = "";
       for (x1 of aliasIndex) {
@@ -4926,8 +4926,8 @@ void main() {
       // Ensure event listners
       inputs = document.querySelectorAll('.otp-channel-input');
       results = [];
-      for (n = 0, len1 = inputs.length; n < len1; n++) {
-        input = inputs[n];
+      for (u = 0, len1 = inputs.length; u < len1; u++) {
+        input = inputs[u];
         results.push(input.addEventListener('change', (e) => {
           var el, og, value;
           el = e.target;
@@ -6771,6 +6771,95 @@ xmlns:svg="http://www.w3.org/2000/svg">
     });
   });
 
+  Take(["SVG"], function(SVG) {
+    return Make(["FireParticle"], function(settings) {
+      var Particle;
+      Particle = {
+        system: {
+          x: 0,
+          y: 0,
+          phase: 0,
+          visible: true
+        },
+        el: null,
+        
+        // Use a single static gradient ID for ALL fire particles.
+        // This completely removes DOM duplication and CSS variable overhead.
+        gradientId: "fire-particle-static-gradient",
+        ensureGradient: function() {
+          var defs, gradient;
+          if (!document.getElementById(this.gradientId)) {
+            defs = SVG.root.querySelector("defs") || SVG.create("defs", SVG.root);
+            gradient = SVG.create("radialGradient", defs, {
+              id: this.gradientId,
+              cx: "50%",
+              cy: "50%",
+              r: "50%"
+            });
+            // A beautiful, universal fire gradient that doesn't need to change
+            SVG.create("stop", gradient, {
+              offset: "0%",
+              "stop-color": "#ffffff",
+              "stop-opacity": "1.0" // White core
+            });
+            SVG.create("stop", gradient, {
+              offset: "30%",
+              "stop-color": "#ffcc00",
+              "stop-opacity": "0.9" // Yellow intense glow
+            });
+            SVG.create("stop", gradient, {
+              offset: "65%",
+              "stop-color": "#ff4500",
+              "stop-opacity": "0.6" // Orange/Red body
+            });
+            return SVG.create("stop", gradient, {
+              offset: "100%",
+              "stop-color": "#330000",
+              "stop-opacity": "0" // Dark dissipating edge
+            });
+          }
+        },
+        createElement: function() {
+          this.ensureGradient();
+          this.el = SVG.create("circle", SVG.root, {
+            fill: `url(#${this.gradientId})`
+          });
+          
+          // Blend modes can sometimes cause a hit on mobile, but "screen" 
+          // is generally well-supported and highly optimized on modern mobile GPUs.
+          return this.el.style.mixBlendMode = "screen";
+        },
+        updateElement: function() {
+          var currentRadius, maxRadius, minRadius, opacity, phase, ref, ref1, sizeFactor;
+          if (this.el == null) {
+            return;
+          }
+          if (!this.system.visible) {
+            this.el.setAttribute("opacity", "0");
+            return;
+          }
+          phase = this.system.phase;
+          // --- 1. THE FLAME FLICKER & SHAPE ---
+          // Fire naturally starts slightly larger and burns down/evaporates.
+          minRadius = (ref = settings != null ? settings.minRadius : void 0) != null ? ref : 10;
+          maxRadius = (ref1 = settings != null ? settings.maxRadius : void 0) != null ? ref1 : 45;
+          
+          // A natural fire curve: expands quickly, then shrinks to 0 as it dies
+          sizeFactor = Math.sin(phase * Math.PI);
+          currentRadius = minRadius + (maxRadius - minRadius) * sizeFactor;
+          // --- 2. NATURAL BURST OPACITY ---
+          opacity = Math.sin(phase * Math.PI);
+          // --- 3. LIGHTWEIGHT DOM UPDATES ---
+          this.el.setAttribute("cx", this.system.x);
+          this.el.setAttribute("cy", this.system.y);
+          this.el.setAttribute("r", currentRadius);
+          return this.el.setAttribute("opacity", opacity);
+        }
+      };
+      return Particle;
+    });
+  });
+
   // Depends on style
   Take(["Gradient", "Registry", "ScopeCheck"], function(Gradient, Registry, ScopeCheck) {
     var gradientCount;
@@ -6944,6 +7033,27 @@ xmlns:svg="http://www.w3.org/2000/svg">
           }
         });
       });
+    });
+  });
+
+  // Depends on style
+  Take(["Phase", "Registry", "ScopeCheck", "SVG"], function(Phase, Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var accessors, phase;
+      ScopeCheck(scope, "phase");
+      phase = null;
+      accessors = {
+        get: function() {
+          return phase;
+        },
+        set: function(val) {
+          if (phase !== val) {
+            scope.stroke = Phase(val);
+            return console.log(Phase(val));
+          }
+        }
+      };
+      return Object.defineProperty(scope, "phase", accessors);
     });
   });
 
@@ -7515,7 +7625,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return scope = {
         setup: function() {
           return Reaction("Background:Set", function(v) {
-            var c, current, l, len, len1, m, n, ref, ref1, ref2, results;
+            var c, current, l, len, len1, m, ref, ref1, ref2, results, u;
             l = (ref = v.split(", ")[2]) != null ? ref.split("%")[0] : void 0;
             l /= 100;
             l = (l / 2 + .8) % 1;
@@ -7529,8 +7639,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
             }
             ref2 = svgElement.querySelectorAll("[stroke]");
             results = [];
-            for (n = 0, len1 = ref2.length; n < len1; n++) {
-              c = ref2[n];
+            for (u = 0, len1 = ref2.length; u < len1; u++) {
+              c = ref2[u];
               current = SVG.attr(c, "stroke");
               if (current !== "none" && current !== "transparent") {
                 results.push(SVG.attr(c, "stroke", `hsl(227, 4%, ${l * 100}%)`));
@@ -7597,13 +7707,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
       strip(element);
       element.setAttribute("fill", "transparent");
       applyColor = function(stroke, fill = stroke) {
-        var elm, len, len1, m, n;
+        var elm, len, len1, m, u;
         for (m = 0, len = strokeElms.length; m < len; m++) {
           elm = strokeElms[m];
           SVG.attr(elm, "stroke", stroke);
         }
-        for (n = 0, len1 = fillElms.length; n < len1; n++) {
-          elm = fillElms[n];
+        for (u = 0, len1 = fillElms.length; u < len1; u++) {
+          elm = fillElms[u];
           SVG.attr(elm, "fill", fill);
         }
         return void 0;
@@ -7654,7 +7764,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
             return scope.alpha = true;
           });
           return Reaction("Background:Set", function(v) {
-            var c, current, l, len, len1, m, n, ref, ref1, ref2, results;
+            var c, current, l, len, len1, m, ref, ref1, ref2, results, u;
             l = (ref = v.split(", ")[2]) != null ? ref.split("%")[0] : void 0;
             l /= 100;
             l = (l / 2 + .8) % 1;
@@ -7668,8 +7778,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
             }
             ref2 = svgElement.querySelectorAll("[stroke]");
             results = [];
-            for (n = 0, len1 = ref2.length; n < len1; n++) {
-              c = ref2[n];
+            for (u = 0, len1 = ref2.length; u < len1; u++) {
+              c = ref2[u];
               current = SVG.attr(c, "stroke");
               if (current !== "none" && current !== "transparent") {
                 results.push(SVG.attr(c, "stroke", `hsl(227, 4%, ${l * 100}%)`));
@@ -7872,7 +7982,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
     // SETUP #########################################################################################
     setupPaths = function() {
-      var len, len1, len2, m, n, path, ref, ref1, ref2, set, setIndex, u;
+      var len, len1, len2, m, path, ref, ref1, ref2, set, setIndex, u, w;
       ref = activeConfig.paths;
       for (m = 0, len = ref.length; m < len; m++) {
         path = ref[m];
@@ -7886,13 +7996,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
         resetTracerProp(path);
       }
       ref1 = activeConfig.solution;
-      for (setIndex = n = 0, len1 = ref1.length; n < len1; setIndex = ++n) {
+      for (setIndex = u = 0, len1 = ref1.length; u < len1; setIndex = ++u) {
         set = ref1[setIndex];
         setupSolutionSet(set, setIndex);
       }
       ref2 = activeConfig.paths;
-      for (u = 0, len2 = ref2.length; u < len2; u++) {
-        path = ref2[u];
+      for (w = 0, len2 = ref2.length; w < len2; w++) {
+        path = ref2[w];
         stylePath(path);
       }
       return updateZoomScaling(true, true);
@@ -8035,7 +8145,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
     });
     updateZoomScaling = function(updateHits, updateBadges) {
-      var badgeScale, hit, hitScale, len, len1, m, n, path, ref, ref1, scale;
+      var badgeScale, hit, hitScale, len, len1, m, path, ref, ref1, scale, u;
       if (activeConfig == null) {
         return;
       }
@@ -8051,8 +8161,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
         if (updateHits || path === hoveredPath) {
           ref1 = path.tracer.hits;
-          for (n = 0, len1 = ref1.length; n < len1; n++) {
-            hit = ref1[n];
+          for (u = 0, len1 = ref1.length; u < len1; u++) {
+            hit = ref1[u];
             hit.strokeWidth = hitScale;
           }
         }
@@ -8066,7 +8176,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
     // STYLING #######################################################################################
     stylePath = function(path) {
-      var child, color, colorIndex, glow, hit, isColored, isHover, len, len1, len2, m, n, ref, ref1, ref2, u;
+      var child, color, colorIndex, glow, hit, isColored, isHover, len, len1, len2, m, ref, ref1, ref2, u, w;
       colorIndex = path.tracer.clickCount % activeConfig.colors.length;
       color = activeConfig.colors[colorIndex] || "#000";
       isHover = path.tracer.hovering;
@@ -8080,8 +8190,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
       }
       ref1 = path.tracer.glows;
-      for (n = 0, len1 = ref1.length; n < len1; n++) {
-        glow = ref1[n];
+      for (u = 0, len1 = ref1.length; u < len1; u++) {
+        glow = ref1[u];
         glow.stroke = color;
         glow.alpha = (function() {
           switch (false) {
@@ -8097,8 +8207,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         })();
       }
       ref2 = path.tracer.hits;
-      for (u = 0, len2 = ref2.length; u < len2; u++) {
-        hit = ref2[u];
+      for (w = 0, len2 = ref2.length; w < len2; w++) {
+        hit = ref2[w];
         // Even when the color is "transparent", there's a sizable perf benefit to having opaque alpha
         hit.stroke = isHover ? color : "transparent";
         hit.alpha = isHover ? .2 : 1;
@@ -8148,7 +8258,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
     };
     unstylePath = function(path) {
-      var child, glow, hit, len, len1, len2, m, n, ref, ref1, ref2, u;
+      var child, glow, hit, len, len1, len2, m, ref, ref1, ref2, u, w;
       path.stroke = "#000";
       ref = path.children;
       for (m = 0, len = ref.length; m < len; m++) {
@@ -8156,13 +8266,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
         child.alpha = 1;
       }
       ref1 = path.tracer.glows;
-      for (n = 0, len1 = ref1.length; n < len1; n++) {
-        glow = ref1[n];
+      for (u = 0, len1 = ref1.length; u < len1; u++) {
+        glow = ref1[u];
         glow.alpha = 0;
       }
       ref2 = path.tracer.hits;
-      for (u = 0, len2 = ref2.length; u < len2; u++) {
-        hit = ref2[u];
+      for (w = 0, len2 = ref2.length; w < len2; w++) {
+        hit = ref2[w];
         hit.alpha = 0;
       }
       Tween.cancel(path.tracer.tween);
@@ -8252,7 +8362,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       };
     };
     setPathClickPos = function(path) {
-      var child, closestDist, closestPoint, d, i, len, len1, m, n, p, p_path, p_screen, pathElm, ref, ref1, runtime, screenToPath, startTime, stepSize;
+      var child, closestDist, closestPoint, d, i, len, len1, m, p, p_path, p_screen, pathElm, ref, ref1, runtime, screenToPath, startTime, stepSize, u;
       // Create a point at the root of the SVG, and move it to the screen coords of the mouse position
       p_screen = SVG.svg.createSVGPoint();
       p_screen.x = path.tracer.clicking.x;
@@ -8273,8 +8383,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
           child._tracer_paths = child.querySelectorAll("path");
         }
         ref1 = child._tracer_paths;
-        for (n = 0, len1 = ref1.length; n < len1; n++) {
-          pathElm = ref1[n];
+        for (u = 0, len1 = ref1.length; u < len1; u++) {
+          pathElm = ref1[u];
           i = pathElm.getTotalLength();
           while (i > 0) {
             p = pathElm.getPointAtLength(i);
@@ -8861,7 +8971,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
       },
       updateStops: function(gradient, ...stops) {
-        var attrs, dirty, i, len, len1, m, n, ref, stop;
+        var attrs, dirty, i, len, len1, m, ref, stop, u;
         if (gradient._stops != null) {
           dirty = false;
           ref = gradient._stops;
@@ -8881,7 +8991,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
           gradient.removeChild(gradient.lastChild);
         }
         stops = stops[0] instanceof Array ? stops[0] : stops;
-        for (i = n = 0, len1 = stops.length; n < len1; i = ++n) {
+        for (i = u = 0, len1 = stops.length; u < len1; i = ++u) {
           stop = stops[i];
           if (typeof stop === "string") {
             SVG.create("stop", gradient, {
@@ -9110,7 +9220,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       // by the @tick() function (eg: an @linearGradient is created), we can capture those changes.
       // See: https://github.com/cdig/svga/issues/133
       RAF(function() {
-        var len, len1, m, mouseProps, n, t, target, touchProps;
+        var len, len1, m, mouseProps, t, target, touchProps, u;
         for (m = 0, len = targets.length; m < len; m++) {
           target = targets[m];
           if (target == null) {
@@ -9133,8 +9243,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
             console.log("Warning: it looks like you're setting up Highlighter every frame. Don't do that.");
           }
         }
-        for (n = 0, len1 = targets.length; n < len1; n++) {
-          target = targets[n];
+        for (u = 0, len1 = targets.length; u < len1; u++) {
+          target = targets[u];
           t = target.element || target; // Support both scopes and elements
           if (!t._Highlighter) {
             t._Highlighter = true;
@@ -9727,20 +9837,21 @@ xmlns:svg="http://www.w3.org/2000/svg">
           return base + (Math.random() * 2 - 1) * variance;
         },
         rollParticleStats: function() {
-          var life, particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance, speed;
-          ({particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance} = this.opts.particle);
+          var life, particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance, reverse, speed;
+          ({particleLifeSeconds, particleLifeVarianceSeconds, particleSpeed, particleSpeedVariance, reverse} = this.opts.particle);
           life = Math.max(0.1, this.randomVariance(particleLifeSeconds, particleLifeVarianceSeconds));
           speed = Math.max(0.01, this.randomVariance(particleSpeed, particleSpeedVariance));
           return {
             
             // These are now calculated per millisecond elapsed
-            lifeStep: 1 / (life * 1000),
+            lifeStep: reverse ? -(1 / (life * 1000)) : 1 / (life * 1000),
             speedStep: speed / 1000
           };
         },
         resetParticle: function(system) {
-          var angle, coneWidth, deg2rad, origin, originWidth, sincos, spread, stats, sx, sy, t;
+          var angle, coneWidth, deg2rad, origin, originWidth, reverse, sincos, spread, stats, sx, sy, t;
           ({origin, originWidth, angle, coneWidth} = this.opts.shape);
+          ({reverse} = this.opts.particle);
           deg2rad = function(d) {
             return d * Math.PI / 180;
           };
@@ -9762,18 +9873,24 @@ xmlns:svg="http://www.w3.org/2000/svg">
             spread = t * (coneWidth / 2);
           }
           system.travelAngle = angle + spread;
-          system.travelDistance = 0;
-          system.phase = 0;
+          system.travelDistance = reverse ? system.speedStep * (1 / Math.abs(system.lifeStep)) : 0;
+          system.phase = reverse ? 1 : 0;
           system.resetFlag = false;
           system.dormant = false;
           return system.visible = true;
         },
         preWarmParticle: function(system) {
-          var randomStartPhase, timeInMs;
+          var maxLifeMs, randomStartPhase, timeInMs;
           randomStartPhase = Math.random();
-          timeInMs = randomStartPhase / system.lifeStep;
-          system.phase = randomStartPhase;
-          return system.travelDistance = system.speedStep * timeInMs;
+          maxLifeMs = 1 / Math.abs(system.lifeStep);
+          timeInMs = randomStartPhase * maxLifeMs;
+          if (this.opts.particle.reverse) {
+            system.phase = 1 - randomStartPhase;
+            return system.travelDistance = system.speedStep * maxLifeMs - system.speedStep * timeInMs;
+          } else {
+            system.phase = randomStartPhase;
+            return system.travelDistance = system.speedStep * timeInMs;
+          }
         },
         createParticles: function() {
           var count, i, particle, ref, shouldStartActive, system, throttle, type, typeSpecificSettings;
@@ -9801,7 +9918,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
               if (shouldStartActive) {
                 this.preWarmParticle(system);
               } else {
-                system.phase = 1;
+                system.phase = this.opts.particle.reverse ? 0 : 1;
                 system.resetFlag = true;
                 system.dormant = true;
                 system.visible = false;
@@ -9834,16 +9951,17 @@ xmlns:svg="http://www.w3.org/2000/svg">
         },
         // Note: Added deltaTime here to step smoothly across variable frame rates
         updateParticle: function(particle, index, deltaTime) {
-          var count, maxDelayMs, ref, system, throttle, wasDormant;
+          var count, maxDelayMs, ref, resetCondition, reverse, system, throttle, wasDormant;
           system = particle.system;
           count = this.opts.particle.count;
           throttle = (ref = this.opts.throttle) != null ? ref : 1;
+          reverse = this.opts.particle.reverse;
           if (system.resetFlag) {
             if (index < (count * throttle)) {
               wasDormant = system.dormant;
               this.resetParticle(system);
               if (wasDormant) {
-                maxDelayMs = 1 / system.lifeStep;
+                maxDelayMs = 1 / Math.abs(system.lifeStep);
                 system.spawnDelay = Math.random() * maxDelayMs;
                 system.visible = false;
               }
@@ -9858,10 +9976,10 @@ xmlns:svg="http://www.w3.org/2000/svg">
             return;
           }
           if (system.visible) {
-            // Scale step increments by the actual time passed since last frame
             system.phase += system.lifeStep * deltaTime;
-            system.travelDistance += system.speedStep * deltaTime;
-            if (system.phase >= 1) {
+            system.travelDistance += (reverse ? -system.speedStep : system.speedStep) * deltaTime;
+            resetCondition = reverse ? system.phase <= 0 : system.phase >= 1;
+            if (resetCondition) {
               system.resetFlag = true;
             }
             return this.updateParticlePosition(system);
@@ -9921,6 +10039,80 @@ xmlns:svg="http://www.w3.org/2000/svg">
       ParticleSystem.createParticles();
       return ParticleSystem;
     });
+  });
+
+  Take("Ease", function(Ease) {
+    var ANCHORS, Phase, getColor, getVibrant, lerpColor, smoothstep;
+    ANCHORS = [
+      {
+        phase: 0,
+        r: 236,
+        g: 33,
+        b: 37
+      },
+      {
+        phase: 120,
+        r: 0,
+        g: 155,
+        b: 0
+      },
+      {
+        phase: 240,
+        r: 57,
+        g: 84,
+        b: 163
+      }
+    ];
+    smoothstep = function(t) {
+      return t * t * (3 - 2 * t);
+    };
+    lerpColor = function(a, b, t) {
+      return {
+        r: a.r + (b.r - a.r) * t,
+        g: a.g + (b.g - a.g) * t,
+        b: a.b + (b.b - a.b) * t
+      };
+    };
+    getVibrant = function(phase) {
+      var a, b, bPhase, i, m, n, ref, t;
+      phase = ((phase % 360) + 360) % 360;
+      n = ANCHORS.length;
+      for (i = m = 0, ref = n; (0 <= ref ? m < ref : m > ref); i = 0 <= ref ? ++m : --m) {
+        a = ANCHORS[i];
+        b = ANCHORS[(i + 1) % n];
+        bPhase = b.phase === 0 ? 360 : b.phase;
+        if (phase >= a.phase && phase < bPhase) {
+          t = smoothstep((phase - a.phase) / (bPhase - a.phase));
+          return lerpColor(a, b, t);
+        }
+      }
+      return ANCHORS[0];
+    };
+    getColor = function(phase, saturation = 1) {
+      var b, desat, g, lum, r, tint, toHex, vibrant;
+      vibrant = getVibrant(phase);
+      // Desaturated base: luminance-weighted gray with a hint of the hue
+      lum = 0.299 * vibrant.r + 0.587 * vibrant.g + 0.114 * vibrant.b;
+      tint = 0.18;
+      desat = {
+        r: lum * (1 - tint) + vibrant.r * tint,
+        g: lum * (1 - tint) + vibrant.g * tint,
+        b: lum * (1 - tint) + vibrant.b * tint
+      };
+      // Blend between desaturated base and full vibrant color
+      r = Math.round(desat.r + (vibrant.r - desat.r) * saturation);
+      g = Math.round(desat.g + (vibrant.g - desat.g) * saturation);
+      b = Math.round(desat.b + (vibrant.b - desat.b) * saturation);
+      toHex = function(v) {
+        return Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0');
+      };
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    };
+    Phase = function(phase, alpha = 1) {
+      return getColor(phase, 1);
+    };
+    // phase: 0 to 360  
+    return Make("Phase", Phase);
   });
 
   (function() {
@@ -10004,7 +10196,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
     aboutToRun = false;
     callbacksByPriority = [[], []]; // Assume 2 priorities will be used in most cases
     run = function(time) {
-      var callbacks, cb, len, len1, m, n, priority;
+      var callbacks, cb, len, len1, m, priority, u;
       aboutToRun = false;
       for (priority = m = 0, len = callbacksByPriority.length; m < len; priority = ++m) {
         callbacks = callbacksByPriority[priority];
@@ -10012,8 +10204,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
           continue;
         }
         callbacksByPriority[priority] = [];
-        for (n = 0, len1 = callbacks.length; n < len1; n++) {
-          cb = callbacks[n];
+        for (u = 0, len1 = callbacks.length; u < len1; u++) {
+          cb = callbacks[u];
           cb(time);
         }
       }
@@ -10184,7 +10376,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         return elm; // Composable
       },
       clone: function(source, parent, attrs) {
-        var attr, child, elm, len, len1, m, n, ref, ref1;
+        var attr, child, elm, len, len1, m, ref, ref1, u;
         if (source == null) {
           throw new Error("Clone source is undefined in SVG.clone(source, parent, attrs)");
         }
@@ -10204,8 +10396,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
           SVG.attrs(elm, attrs);
         }
         ref1 = source.childNodes;
-        for (n = 0, len1 = ref1.length; n < len1; n++) {
-          child = ref1[n];
+        for (u = 0, len1 = ref1.length; u < len1; u++) {
+          child = ref1[u];
           SVG.append(elm, child.cloneNode(true));
         }
         if (parent != null) {
@@ -10703,7 +10895,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return timeScale;
     };
     return Tick(function(t, dt) {
-      var e, k, len, len1, m, n, ref, remainingDt, tween, v;
+      var e, k, len, len1, m, ref, remainingDt, tween, u, v;
       skipGC = true; // It's probably not safe to GC in the middle of our tick loop
       for (m = 0, len = tweens.length; m < len; m++) {
         tween = tweens[m];
@@ -10721,8 +10913,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
           tween.pos = tween.time <= 0 ? 1 : Math.min(1, tween.pos + remainingDt / tween.time);
           e = tween.ease(tween.pos);
           ref = tween.keys;
-          for (n = 0, len1 = ref.length; n < len1; n++) {
-            k = ref[n];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            k = ref[u];
             tween.value[k] = tween.from[k] + tween.delta[k] * e;
           }
           v = tween.multi ? tween.value : tween.value.v;

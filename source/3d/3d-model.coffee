@@ -513,7 +513,7 @@ class Panel3d
             if child.isMesh
                 child.material = mat
 
-    useHDR: (hdrName, exposure = 2) ->
+    useHDR: (hdrName, exposure) ->
         loader = new RGBELoader() 
         loader.setCrossOrigin('use-credentials');
         loader.setWithCredentials(true);
@@ -525,7 +525,7 @@ class Panel3d
             texture.mapping = THREE.EquirectangularReflectionMapping
 
             @renderer.toneMapping = THREE.ACESFilmicToneMapping
-            @renderer.toneMappingExposure = exposure # Try 2.0 if it's too dark
+            @renderer.toneMappingExposure = exposure || 2 # Try 2.0 if it's too dark
             @renderer.outputColorSpace = THREE.SRGBColorSpace
 
             @scene.environment = texture

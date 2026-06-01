@@ -571,7 +571,7 @@ void main() {
       });
     }
 
-    useHDR(hdrName) {
+    useHDR(hdrName, exposure) {
       var loader, url;
       loader = new RGBELoader();
       loader.setCrossOrigin('use-credentials');
@@ -581,7 +581,7 @@ void main() {
       return loader.load(url, (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 2.0; // Try 2.0 if it's too dark
+        this.renderer.toneMappingExposure = exposure || 2; // Try 2.0 if it's too dark
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.scene.environment = texture;
         // @scene.background = texture # If you want to see the skybox
@@ -6768,95 +6768,6 @@ xmlns:svg="http://www.w3.org/2000/svg">
       if (props.enabled === false) {
         return scope.enabled = false;
       }
-    });
-  });
-
-  Take(["SVG"], function(SVG) {
-    return Make(["FireParticle"], function(settings) {
-      var Particle;
-      Particle = {
-        system: {
-          x: 0,
-          y: 0,
-          phase: 0,
-          visible: true
-        },
-        el: null,
-        
-        // Use a single static gradient ID for ALL fire particles.
-        // This completely removes DOM duplication and CSS variable overhead.
-        gradientId: "fire-particle-static-gradient",
-        ensureGradient: function() {
-          var defs, gradient;
-          if (!document.getElementById(this.gradientId)) {
-            defs = SVG.root.querySelector("defs") || SVG.create("defs", SVG.root);
-            gradient = SVG.create("radialGradient", defs, {
-              id: this.gradientId,
-              cx: "50%",
-              cy: "50%",
-              r: "50%"
-            });
-            // A beautiful, universal fire gradient that doesn't need to change
-            SVG.create("stop", gradient, {
-              offset: "0%",
-              "stop-color": "#ffffff",
-              "stop-opacity": "1.0" // White core
-            });
-            SVG.create("stop", gradient, {
-              offset: "30%",
-              "stop-color": "#ffcc00",
-              "stop-opacity": "0.9" // Yellow intense glow
-            });
-            SVG.create("stop", gradient, {
-              offset: "65%",
-              "stop-color": "#ff4500",
-              "stop-opacity": "0.6" // Orange/Red body
-            });
-            return SVG.create("stop", gradient, {
-              offset: "100%",
-              "stop-color": "#330000",
-              "stop-opacity": "0" // Dark dissipating edge
-            });
-          }
-        },
-        createElement: function() {
-          this.ensureGradient();
-          this.el = SVG.create("circle", SVG.root, {
-            fill: `url(#${this.gradientId})`
-          });
-          
-          // Blend modes can sometimes cause a hit on mobile, but "screen" 
-          // is generally well-supported and highly optimized on modern mobile GPUs.
-          return this.el.style.mixBlendMode = "screen";
-        },
-        updateElement: function() {
-          var currentRadius, maxRadius, minRadius, opacity, phase, ref, ref1, sizeFactor;
-          if (this.el == null) {
-            return;
-          }
-          if (!this.system.visible) {
-            this.el.setAttribute("opacity", "0");
-            return;
-          }
-          phase = this.system.phase;
-          // --- 1. THE FLAME FLICKER & SHAPE ---
-          // Fire naturally starts slightly larger and burns down/evaporates.
-          minRadius = (ref = settings != null ? settings.minRadius : void 0) != null ? ref : 10;
-          maxRadius = (ref1 = settings != null ? settings.maxRadius : void 0) != null ? ref1 : 45;
-          
-          // A natural fire curve: expands quickly, then shrinks to 0 as it dies
-          sizeFactor = Math.sin(phase * Math.PI);
-          currentRadius = minRadius + (maxRadius - minRadius) * sizeFactor;
-          // --- 2. NATURAL BURST OPACITY ---
-          opacity = Math.sin(phase * Math.PI);
-          // --- 3. LIGHTWEIGHT DOM UPDATES ---
-          this.el.setAttribute("cx", this.system.x);
-          this.el.setAttribute("cy", this.system.y);
-          this.el.setAttribute("r", currentRadius);
-          return this.el.setAttribute("opacity", opacity);
-        }
-      };
-      return Particle;
     });
   });
 

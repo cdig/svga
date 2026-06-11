@@ -6947,24 +6947,56 @@ xmlns:svg="http://www.w3.org/2000/svg">
     });
   });
 
-  // Depends on style
-  Take(["Phase", "Registry", "ScopeCheck", "SVG"], function(Phase, Registry, ScopeCheck, SVG) {
+  Take(["AC", "Registry", "ScopeCheck", "SVG"], function(AC, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
-      var accessors, phase;
-      ScopeCheck(scope, "phase");
-      phase = null;
-      accessors = {
-        get: function() {
-          return phase;
+      var ac;
+      ScopeCheck(scope, "ac");
+      ac = {};
+      Object.defineProperties(ac, {
+        phase: {
+          get: function() {
+            return ac._phase != null ? ac._phase : ac._phase = 0;
+          },
+          set: function(val) {
+            if (val !== ac._phase) {
+              ac._phase = val;
+              if (scope._setColor != null) {
+                return scope._setColor(AC(ac._phase, ac._voltage));
+              } else {
+                return scope.fill = Pressure(scope.pressure);
+              }
+            }
+          }
         },
-        set: function(val) {
-          if (phase !== val) {
-            scope.stroke = Phase(val);
-            return console.log(Phase(val));
+        voltage: {
+          get: function() {
+            return ac._voltage != null ? ac._voltage : ac._voltage = 0;
+          },
+          set: function(val) {
+            if (val !== ac._voltage) {
+              ac._voltage = val;
+              if (scope._setColor != null) {
+                return scope._setColor(AC(ac._phase, ac._voltage));
+              } else {
+                return scope.fill = Pressure(scope.pressure);
+              }
+            }
           }
         }
-      };
-      return Object.defineProperty(scope, "phase", accessors);
+      });
+      return Object.defineProperty(scope, "ac", {
+        get: function() {
+          return ac;
+        },
+        set: function(val) {
+          if ((val != null ? val.phase : void 0) != null) {
+            ac.phase = val.phase;
+          }
+          if ((val != null ? val.voltage : void 0) != null) {
+            return ac.voltage = val.voltage;
+          }
+        }
+      });
     });
   });
 
@@ -8543,6 +8575,84 @@ xmlns:svg="http://www.w3.org/2000/svg">
     });
   });
 
+  Take("Ease", function(Ease) {
+    var AC, ANCHORS, getColor, getVibrant, lerpColor, smoothstep, voltageToSaturation;
+    ANCHORS = [
+      {
+        phase: 0,
+        r: 236,
+        g: 33,
+        b: 37
+      },
+      {
+        phase: 120,
+        r: 0,
+        g: 155,
+        b: 0
+      },
+      {
+        phase: 240,
+        r: 57,
+        g: 84,
+        b: 163
+      }
+    ];
+    smoothstep = function(t) {
+      return t * t * (3 - 2 * t);
+    };
+    lerpColor = function(a, b, t) {
+      return {
+        r: a.r + (b.r - a.r) * t,
+        g: a.g + (b.g - a.g) * t,
+        b: a.b + (b.b - a.b) * t
+      };
+    };
+    getVibrant = function(phase) {
+      var a, b, bPhase, i, m, n, ref, t;
+      phase = ((phase % 360) + 360) % 360;
+      n = ANCHORS.length;
+      for (i = m = 0, ref = n; (0 <= ref ? m < ref : m > ref); i = 0 <= ref ? ++m : --m) {
+        a = ANCHORS[i];
+        b = ANCHORS[(i + 1) % n];
+        bPhase = b.phase === 0 ? 360 : b.phase;
+        if (phase >= a.phase && phase < bPhase) {
+          t = smoothstep((phase - a.phase) / (bPhase - a.phase));
+          return lerpColor(a, b, t);
+        }
+      }
+      return ANCHORS[0];
+    };
+    getColor = function(phase, saturation = 1) {
+      var b, desat, g, lum, r, tint, toHex, vibrant;
+      vibrant = getVibrant(phase);
+      lum = 0.299 * vibrant.r + 0.587 * vibrant.g + 0.114 * vibrant.b;
+      tint = 0.18;
+      desat = {
+        r: lum * (1 - tint) + vibrant.r * tint,
+        g: lum * (1 - tint) + vibrant.g * tint,
+        b: lum * (1 - tint) + vibrant.b * tint
+      };
+      r = Math.round(desat.r + (vibrant.r - desat.r) * saturation);
+      g = Math.round(desat.g + (vibrant.g - desat.g) * saturation);
+      b = Math.round(desat.b + (vibrant.b - desat.b) * saturation);
+      toHex = function(v) {
+        return Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0');
+      };
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    };
+    voltageToSaturation = function(voltage) {
+      var t;
+      t = Math.max(0, Math.min(1, voltage));
+      return 0.2 + t * 0.8;
+    };
+    AC = function(phase, voltage = 0) {
+      var saturation;
+      saturation = voltageToSaturation(voltage);
+      return getColor(phase, saturation);
+    };
+    return Make("AC", AC);
+  });
+
   (function() {
     var cbs;
     cbs = {};
@@ -9950,80 +10060,6 @@ xmlns:svg="http://www.w3.org/2000/svg">
       ParticleSystem.createParticles();
       return ParticleSystem;
     });
-  });
-
-  Take("Ease", function(Ease) {
-    var ANCHORS, Phase, getColor, getVibrant, lerpColor, smoothstep;
-    ANCHORS = [
-      {
-        phase: 0,
-        r: 236,
-        g: 33,
-        b: 37
-      },
-      {
-        phase: 120,
-        r: 0,
-        g: 155,
-        b: 0
-      },
-      {
-        phase: 240,
-        r: 57,
-        g: 84,
-        b: 163
-      }
-    ];
-    smoothstep = function(t) {
-      return t * t * (3 - 2 * t);
-    };
-    lerpColor = function(a, b, t) {
-      return {
-        r: a.r + (b.r - a.r) * t,
-        g: a.g + (b.g - a.g) * t,
-        b: a.b + (b.b - a.b) * t
-      };
-    };
-    getVibrant = function(phase) {
-      var a, b, bPhase, i, m, n, ref, t;
-      phase = ((phase % 360) + 360) % 360;
-      n = ANCHORS.length;
-      for (i = m = 0, ref = n; (0 <= ref ? m < ref : m > ref); i = 0 <= ref ? ++m : --m) {
-        a = ANCHORS[i];
-        b = ANCHORS[(i + 1) % n];
-        bPhase = b.phase === 0 ? 360 : b.phase;
-        if (phase >= a.phase && phase < bPhase) {
-          t = smoothstep((phase - a.phase) / (bPhase - a.phase));
-          return lerpColor(a, b, t);
-        }
-      }
-      return ANCHORS[0];
-    };
-    getColor = function(phase, saturation = 1) {
-      var b, desat, g, lum, r, tint, toHex, vibrant;
-      vibrant = getVibrant(phase);
-      // Desaturated base: luminance-weighted gray with a hint of the hue
-      lum = 0.299 * vibrant.r + 0.587 * vibrant.g + 0.114 * vibrant.b;
-      tint = 0.18;
-      desat = {
-        r: lum * (1 - tint) + vibrant.r * tint,
-        g: lum * (1 - tint) + vibrant.g * tint,
-        b: lum * (1 - tint) + vibrant.b * tint
-      };
-      // Blend between desaturated base and full vibrant color
-      r = Math.round(desat.r + (vibrant.r - desat.r) * saturation);
-      g = Math.round(desat.g + (vibrant.g - desat.g) * saturation);
-      b = Math.round(desat.b + (vibrant.b - desat.b) * saturation);
-      toHex = function(v) {
-        return Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0');
-      };
-      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-    };
-    Phase = function(phase, alpha = 1) {
-      return getColor(phase, 1);
-    };
-    // phase: 0 to 360  
-    return Make("Phase", Phase);
   });
 
   (function() {

@@ -6428,6 +6428,59 @@ xmlns:svg="http://www.w3.org/2000/svg">
     });
   });
 
+  Take(["AC", "Registry", "ScopeCheck", "SVG"], function(AC, Registry, ScopeCheck, SVG) {
+    return Registry.add("ScopeProcessor", function(scope) {
+      var ac;
+      ScopeCheck(scope, "ac");
+      ac = {};
+      Object.defineProperties(ac, {
+        phase: {
+          get: function() {
+            return ac._phase != null ? ac._phase : ac._phase = 0;
+          },
+          set: function(val) {
+            if (val !== ac._phase) {
+              ac._phase = val;
+              if (scope._setColor != null) {
+                return scope._setColor(AC(ac._phase, ac._voltage));
+              } else {
+                return scope.fill = Pressure(scope.pressure);
+              }
+            }
+          }
+        },
+        voltage: {
+          get: function() {
+            return ac._voltage != null ? ac._voltage : ac._voltage = 0;
+          },
+          set: function(val) {
+            if (val !== ac._voltage) {
+              ac._voltage = val;
+              if (scope._setColor != null) {
+                return scope._setColor(AC(ac._phase, ac._voltage));
+              } else {
+                return scope.fill = Pressure(scope.pressure);
+              }
+            }
+          }
+        }
+      });
+      return Object.defineProperty(scope, "ac", {
+        get: function() {
+          return ac;
+        },
+        set: function(val) {
+          if ((val != null ? val.phase : void 0) != null) {
+            ac.phase = val.phase;
+          }
+          if ((val != null ? val.voltage : void 0) != null) {
+            return ac.voltage = val.voltage;
+          }
+        }
+      });
+    });
+  });
+
   Take(["Ease", "Registry", "ScopeCheck", "SVG"], function(Ease, Registry, ScopeCheck, SVG) {
     return Registry.add("ScopeProcessor", function(scope) {
       var alpha, element, placeholder;
@@ -6943,59 +6996,6 @@ xmlns:svg="http://www.w3.org/2000/svg">
             }
           }
         });
-      });
-    });
-  });
-
-  Take(["AC", "Registry", "ScopeCheck", "SVG"], function(AC, Registry, ScopeCheck, SVG) {
-    return Registry.add("ScopeProcessor", function(scope) {
-      var ac;
-      ScopeCheck(scope, "ac");
-      ac = {};
-      Object.defineProperties(ac, {
-        phase: {
-          get: function() {
-            return ac._phase != null ? ac._phase : ac._phase = 0;
-          },
-          set: function(val) {
-            if (val !== ac._phase) {
-              ac._phase = val;
-              if (scope._setColor != null) {
-                return scope._setColor(AC(ac._phase, ac._voltage));
-              } else {
-                return scope.fill = Pressure(scope.pressure);
-              }
-            }
-          }
-        },
-        voltage: {
-          get: function() {
-            return ac._voltage != null ? ac._voltage : ac._voltage = 0;
-          },
-          set: function(val) {
-            if (val !== ac._voltage) {
-              ac._voltage = val;
-              if (scope._setColor != null) {
-                return scope._setColor(AC(ac._phase, ac._voltage));
-              } else {
-                return scope.fill = Pressure(scope.pressure);
-              }
-            }
-          }
-        }
-      });
-      return Object.defineProperty(scope, "ac", {
-        get: function() {
-          return ac;
-        },
-        set: function(val) {
-          if ((val != null ? val.phase : void 0) != null) {
-            ac.phase = val.phase;
-          }
-          if ((val != null ? val.voltage : void 0) != null) {
-            return ac.voltage = val.voltage;
-          }
-        }
       });
     });
   });
@@ -8575,26 +8575,26 @@ xmlns:svg="http://www.w3.org/2000/svg">
     });
   });
 
-  Take("Ease", function(Ease) {
+  Take(["Ease", "Voltage"], function(Ease, Voltage) {
     var AC, ANCHORS, getColor, getVibrant, lerpColor, smoothstep, voltageToSaturation;
     ANCHORS = [
       {
         phase: 0,
-        r: 236,
+        r: 255,
         g: 33,
         b: 37
       },
       {
         phase: 120,
-        r: 0,
-        g: 155,
-        b: 0
+        r: 34,
+        g: 201,
+        b: 79
       },
       {
         phase: 240,
-        r: 57,
-        g: 84,
-        b: 163
+        r: 27,
+        g: 33,
+        b: 255
       }
     ];
     smoothstep = function(t) {
@@ -8622,28 +8622,102 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
       return ANCHORS[0];
     };
-    getColor = function(phase, saturation = 1) {
+    getColor = function(phase, saturation) {
       var b, desat, g, lum, r, tint, toHex, vibrant;
-      vibrant = getVibrant(phase);
-      lum = 0.299 * vibrant.r + 0.587 * vibrant.g + 0.114 * vibrant.b;
-      tint = 0.18;
-      desat = {
-        r: lum * (1 - tint) + vibrant.r * tint,
-        g: lum * (1 - tint) + vibrant.g * tint,
-        b: lum * (1 - tint) + vibrant.b * tint
-      };
-      r = Math.round(desat.r + (vibrant.r - desat.r) * saturation);
-      g = Math.round(desat.g + (vibrant.g - desat.g) * saturation);
-      b = Math.round(desat.b + (vibrant.b - desat.b) * saturation);
       toHex = function(v) {
         return Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0');
       };
+      switch (false) {
+        case saturation.type !== "saturation":
+          vibrant = getVibrant(phase);
+          lum = 0.299 * vibrant.r + 0.587 * vibrant.g + 0.114 * vibrant.b;
+          tint = 0.18;
+          desat = {
+            r: lum * (1 - tint) + vibrant.r * tint,
+            g: lum * (1 - tint) + vibrant.g * tint,
+            b: lum * (1 - tint) + vibrant.b * tint
+          };
+          r = Math.round(desat.r + (vibrant.r - desat.r) * saturation.value);
+          g = Math.round(desat.g + (vibrant.g - desat.g) * saturation.value);
+          b = Math.round(desat.b + (vibrant.b - desat.b) * saturation.value);
+          break;
+        case !(saturation.type === "black" || saturation.type === "zero"):
+          r = 0;
+          g = 0;
+          b = 0;
+          break;
+        case saturation.type !== "white":
+          r = 0xFF;
+          g = 0xFF;
+          b = 0xFF;
+          break;
+        case saturation.type !== "inert":
+          r = 116;
+          g = 137;
+          b = 139;
+          break;
+        case saturation.type !== "magnetic":
+          r = 141;
+          g = 2;
+          b = 155;
+      }
       return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     };
     voltageToSaturation = function(voltage) {
-      var t;
-      t = Math.max(0, Math.min(1, voltage));
-      return 0.2 + t * 0.8;
+      var saturation, t;
+      saturation = {
+        type: "inert",
+        value: 1
+      };
+      switch (false) {
+        // Pass-through for string values
+        case typeof voltage !== "string":
+          console.log("Cannot assign string to ac.voltage");
+          saturation.value = 1;
+          saturation.type = "inert";
+          break;
+        // Schematic — black
+        case voltage !== Voltage.black:
+          saturation.value = 1;
+          saturation.type = "black";
+          break;
+        // Schematic — white
+        case voltage !== Voltage.white:
+          saturation.value = 1;
+          saturation.type = "white";
+          break;
+        // Legacy Electric
+        case voltage !== Voltage.electric:
+          console.log("Voltage.electric not supported for AC lines");
+          saturation.value = 1;
+          saturation.type = "inert";
+          break;
+        // Magnetic
+        case voltage !== Voltage.magnetic:
+          saturation.value = 1;
+          saturation.type = "magnetic";
+          break;
+        // return renderString 141, 2, 155, alpha
+
+          // Inert
+        case voltage !== Voltage.inert:
+          saturation.value = 1;
+          saturation.type = "inert";
+          break;
+        // return renderHSLString 184, 9, 50, alpha
+
+          // Zero voltage
+        case voltage !== Voltage.zero:
+          saturation.value = 1;
+          saturation.type = "zero";
+          break;
+        default:
+          // Normal — green to blue
+          t = (Math.max(1, Math.min(100, voltage)) - 1) / 99;
+          saturation.value = 0.2 + t * 0.8;
+          saturation.type = "saturation";
+      }
+      return saturation;
     };
     AC = function(phase, voltage = 0) {
       var saturation;

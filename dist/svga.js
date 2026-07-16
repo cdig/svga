@@ -647,9 +647,9 @@ void main() {
           
             // We return a function that, when called, loops through the meshes
           return (...args) => {
-            var len, m, obj;
-            for (m = 0, len = target.length; m < len; m++) {
-              obj = target[m];
+            var len1, obj, u;
+            for (u = 0, len1 = target.length; u < len1; u++) {
+              obj = target[u];
               if (typeof obj[prop] === 'function') {
                 obj[prop](...args);
               }
@@ -659,9 +659,9 @@ void main() {
         // Handles assignments: @group.pressure = 1
         // CRITICAL for Tweens and Sliders!
         set: (target, prop, value) => {
-          var len, m, obj;
-          for (m = 0, len = target.length; m < len; m++) {
-            obj = target[m];
+          var len1, obj, u;
+          for (u = 0, len1 = target.length; u < len1; u++) {
+            obj = target[u];
             obj[prop] = value;
           }
           return true; // Standard Proxy requirement
@@ -896,7 +896,7 @@ void main() {
     }
 
     restructureSVGALayers() {
-      var ele, len, m, ref, svgaClone;
+      var ele, len1, ref, svgaClone, u;
       if (this.svgaRestructured) {
         return;
       }
@@ -927,8 +927,8 @@ void main() {
       svgaClone.style.pointerEvents = 'none';
       ref = this.scopes.GUI.elm.querySelectorAll(':scope > g');
       // @scopes.GUI.elm.style.pointerEvents = 'none'
-      for (m = 0, len = ref.length; m < len; m++) {
-        ele = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        ele = ref[u];
         ele.style.pointerEvents = 'all';
         ele.style.touchAction = 'none';
       }
@@ -982,6 +982,471 @@ void main() {
 
   Take(["Pressure", "GUI", "Resize", "SVG"], function(Pressure, GUI, Resize, SVG) {
     return Make("Model", new Model({Pressure, GUI, Resize, SVG}));
+  });
+
+  Take(["ACLine:dot", "ACLine:line", "SVG"], function(Dot, Line, SVG) {
+    var ACLine, TARGET_FPS, TARGET_INTERVAL, _instances, _lastTime, _rafHandle, _register, _tick, _unregister;
+    // ── Shared scheduler ──────────────────────────────────────────────────────
+    TARGET_FPS = 60;
+    TARGET_INTERVAL = 1000 / TARGET_FPS;
+    _instances = [];
+    _rafHandle = null;
+    _lastTime = null;
+    _tick = function(timestamp) {
+      var dt, elapsed, inst, len1, results, u;
+      _rafHandle = requestAnimationFrame(_tick); // schedule next before work
+      if (_lastTime == null) {
+        _lastTime = timestamp;
+      }
+      elapsed = timestamp - _lastTime;
+      if (elapsed < TARGET_INTERVAL * 0.9) { // gate to target fps
+        return;
+      }
+      dt = Math.min(elapsed, TARGET_INTERVAL * 3) / TARGET_INTERVAL;
+      _lastTime = timestamp;
+// drive every line
+      results = [];
+      for (u = 0, len1 = _instances.length; u < len1; u++) {
+        inst = _instances[u];
+        results.push(inst.step(dt));
+      }
+      return results;
+    };
+    _register = function(inst) {
+      _instances.push(inst);
+      if (_instances.length === 1) { // first line starts the loop
+        _lastTime = null;
+        return _rafHandle = requestAnimationFrame(_tick);
+      }
+    };
+    _unregister = function(inst) {
+      _instances = _instances.filter(function(i) {
+        return i !== inst;
+      });
+      if (_instances.length === 0) {
+        cancelAnimationFrame(_rafHandle);
+        return _rafHandle = null;
+      }
+    };
+    // ──────────────────────────────────────────────────────────────────────────
+    ACLine = function(scope, ...segments) {
+      var acl, createDots, hideMarkerBoxAndLine, line;
+      line = Line(segments);
+      hideMarkerBoxAndLine = function() {
+        var child, len1, ref, results, u;
+        ref = scope.children;
+        results = [];
+        for (u = 0, len1 = ref.length; u < len1; u++) {
+          child = ref[u];
+          results.push(child.hide(false));
+        }
+        return results;
+      };
+      createDots = function(acl) {
+        var d, dotsArray, offset, ref, ref1, u;
+        dotsArray = [];
+        for (offset = u = 0, ref = line.totalLength, ref1 = acl.spacing; ref1 !== 0 && (ref1 > 0 ? u < ref : u > ref); offset = u += ref1) {
+          d = Dot(acl, scope, line.offsetToPos(offset));
+          d.startOffset = offset;
+          dotsArray.push(d);
+        }
+        return dotsArray;
+      };
+      acl = {
+        MAX_DOT_TRAVEL: 30,
+        flow: 0.5,
+        _flow: 0.5,
+        wiggle: 0,
+        shift: 0,
+        phase: 0,
+        _phase: 0,
+        wigglePhase: 0,
+        frequency: 0.5,
+        _frequency: 0.5,
+        _reversed: false,
+        scale: ACLine.SCALE,
+        _spacing: ACLine.SPACING,
+        // Flips which end of the point list is treated as the start.
+        // Chainable, and toggles back if called again.
+        reverse: function() {
+          this._reversed = !this._reversed;
+          return this;
+        },
+        // Called by the shared scheduler with a normalised dt
+        step: function(dt) {
+          var d, len1, ref, results, targetOffset, u;
+          this._flow = 0.2 * Math.abs(this.flow) + 0.8 * this._flow;
+          this._frequency = 0.5 * this.frequency + 0.5 * this._frequency;
+          this._phase = 0.5 * this.phase + 0.5 * this._phase;
+          this.wigglePhase = (this.wigglePhase + 0.1 * this._frequency * 2 * dt) % (Math.PI * 2);
+          this.wiggle = Math.sin(this.wigglePhase + this._phase / 57.295) * this.MAX_DOT_TRAVEL / 2;
+          this.radius = (2 + Math.abs(Math.cos(this.wigglePhase + this._phase / 57.295)) * 1.5) * this._flow * this.scale;
+          ref = this.dots;
+          results = [];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            d = ref[u];
+            targetOffset = d.startOffset + this.wiggle + this.shift;
+            if (this._reversed) {
+              targetOffset = line.totalLength - targetOffset;
+            }
+            if (targetOffset < 0 || targetOffset > line.totalLength) {
+              results.push(d.setVisible(false));
+            } else {
+              d.setVisible(true);
+              results.push(d.update(line.offsetToPos(targetOffset), this));
+            }
+          }
+          return results;
+        },
+        destroy: function() {
+          return _unregister(this);
+        }
+      };
+      // Re-lays-out the dots (and cleans up their old DOM elements) whenever spacing changes.
+      Object.defineProperty(acl, "spacing", {
+        get: function() {
+          return this._spacing;
+        },
+        set: function(value) {
+          var d, len1, ref, u;
+          if (value === this._spacing) {
+            return;
+          }
+          this._spacing = value;
+          if (this.dots != null) {
+            ref = this.dots;
+            for (u = 0, len1 = ref.length; u < len1; u++) {
+              d = ref[u];
+              SVG.remove(scope.element, d.ele);
+            }
+          }
+          return this.dots = createDots(this);
+        }
+      });
+      hideMarkerBoxAndLine();
+      acl.dots = createDots(acl);
+      _register(acl);
+      return acl;
+    };
+    ACLine.computeLineColor = function(color) {
+      return void 0;
+    };
+    if (ACLine.SCALE == null) {
+      ACLine.SCALE = 1;
+    }
+    if (ACLine.SPACING == null) {
+      ACLine.SPACING = 60;
+    }
+    return Make(["ACLine"], ACLine);
+  });
+
+  Take(["SVG", "AC"], function(SVG, AC) {
+    return Make(["ACLine:dot"], function(parentLine, scope, opts) {
+      var d, ele;
+      ele = SVG.create("circle", scope.element, {
+        r: 4,
+        cx: opts.x,
+        cy: opts.y
+      });
+      d = {
+        ele: ele,
+        pressure: 0,
+        visible: true,
+        update: function(point, ACLine) {
+          return SVG.attrs(this.ele, {
+            cx: point.x,
+            cy: point.y,
+            r: ACLine.radius,
+            fill: AC(ACLine.phase, ACLine.voltage)
+          });
+        },
+        setVisible: function(visible) {
+          if (visible === this.visible) {
+            return;
+          }
+          this.visible = visible;
+          return SVG.attrs(this.ele, {
+            opacity: (visible ? 1 : 0)
+          });
+        }
+      };
+      return d;
+    });
+  });
+
+  Make(["ACLine:line"], function(rawPairs) {
+    var EPSILON, buildGraph, buildResult, close, farthestFrom, largestComponent, longestChain, precompute, wrap;
+    // HELPERS
+    EPSILON = 0.01;
+    close = function(a, b) {
+      var dx, dy;
+      dx = a.x - b.x;
+      dy = a.y - b.y;
+      return dx * dx + dy * dy < EPSILON;
+    };
+    wrap = function(data) {
+      return {
+        process: function(fn) {
+          return wrap(fn(data));
+        },
+        result: data
+      };
+    };
+    // PROCESSING STEPS
+
+    // Point data comes from an external source and isn't guaranteed to be a
+    // single clean tip-to-tail polyline: it can contain small dead-end stubs
+    // (e.g. arrowhead-marker glyphs) grafted onto the real path at a shared
+    // point, or even wholly disconnected fragments. Rather than requiring
+    // every caller to pre-clean their points, treat the pairs as a weighted
+    // graph and automatically walk its longest path, which routes around
+    // short dead-end branches and ignores any smaller disconnected pieces.
+    buildGraph = function(rawPairs) {
+      var adj, dx, dy, edge, edges, ei, i, ia, ib, len1, n, nPairs, nodeIndex, nodes, pa, pb, ref, u, w;
+      nodes = [];
+      nodeIndex = function(p) {
+        var i, len1, n, u;
+        for (i = u = 0, len1 = nodes.length; u < len1; i = ++u) {
+          n = nodes[i];
+          if (close(n, p)) {
+            return i;
+          }
+        }
+        nodes.push(p);
+        return nodes.length - 1;
+      };
+      edges = [];
+      nPairs = rawPairs.length / 2;
+      for (i = u = 0, ref = nPairs; (0 <= ref ? u < ref : u > ref); i = 0 <= ref ? ++u : --u) {
+        pa = rawPairs[i * 2];
+        pb = rawPairs[i * 2 + 1];
+        ia = nodeIndex(pa);
+        ib = nodeIndex(pb);
+        if (ia === ib) { // drop degenerate (zero-length) segments
+          continue;
+        }
+        dx = pb.x - pa.x;
+        dy = pb.y - pa.y;
+        edges.push({
+          a: ia,
+          b: ib,
+          len: Math.sqrt(dx * dx + dy * dy)
+        });
+      }
+      adj = (function() {
+        var len1, results, w;
+        results = [];
+        for (w = 0, len1 = nodes.length; w < len1; w++) {
+          n = nodes[w];
+          results.push([]);
+        }
+        return results;
+      })();
+      for (ei = w = 0, len1 = edges.length; w < len1; ei = ++w) {
+        edge = edges[ei];
+        adj[edge.a].push({
+          to: edge.b,
+          edge: ei
+        });
+        adj[edge.b].push({
+          to: edge.a,
+          edge: ei
+        });
+      }
+      return {nodes, edges, adj};
+    };
+    // Isolate the richest connected component (by total edge length), in
+    // case the point data describes more than one disconnected piece.
+    largestComponent = function({nodes, edges, adj}) {
+      var best, compId, edge, group, i, i1, id, j1, l, len1, len2, len3, lengths, m, members, n, node, ref, ref1, stack, start, to, u, w;
+      compId = (function() {
+        var len1, results, u;
+        results = [];
+        for (u = 0, len1 = nodes.length; u < len1; u++) {
+          n = nodes[u];
+          results.push(-1);
+        }
+        return results;
+      })();
+      members = [];
+      for (start = u = 0, ref = nodes.length; (0 <= ref ? u < ref : u > ref); start = 0 <= ref ? ++u : --u) {
+        if (compId[start] !== -1) {
+          continue;
+        }
+        id = members.length;
+        stack = [start];
+        compId[start] = id;
+        group = [start];
+        while (stack.length) {
+          node = stack.pop();
+          ref1 = adj[node];
+          for (w = 0, len1 = ref1.length; w < len1; w++) {
+            ({to} = ref1[w]);
+            if (compId[to] === -1) {
+              compId[to] = id;
+              group.push(to);
+              stack.push(to);
+            }
+          }
+        }
+        members.push(group);
+      }
+      if (members.length === 0) {
+        return [];
+      }
+      lengths = (function() {
+        var i1, len2, results;
+        results = [];
+        for (i1 = 0, len2 = members.length; i1 < len2; i1++) {
+          m = members[i1];
+          results.push(0);
+        }
+        return results;
+      })();
+      for (i1 = 0, len2 = edges.length; i1 < len2; i1++) {
+        edge = edges[i1];
+        lengths[compId[edge.a]] += edge.len;
+      }
+      best = 0;
+      for (i = j1 = 0, len3 = lengths.length; j1 < len3; i = ++j1) {
+        l = lengths[i];
+        if (l > lengths[best]) {
+          best = i;
+        }
+      }
+      return members[best];
+    };
+    // Walk from an arbitrary node to its farthest point, then from there to
+    // *its* farthest point — the standard tree-diameter technique. Any short
+    // dead-end branch off the main path (a stub) simply isn't the farthest
+    // point from either end, so it's naturally excluded from the result.
+    farthestFrom = function(start, adj, edges) {
+      var dist, edge, farthest, len1, node, prevEdge, prevNode, ref, stack, to, u, visited;
+      dist = {};
+      prevNode = {};
+      prevEdge = {};
+      visited = {};
+      dist[start] = 0;
+      visited[start] = true;
+      stack = [start];
+      farthest = start;
+      while (stack.length) {
+        node = stack.pop();
+        if (dist[node] > dist[farthest]) {
+          farthest = node;
+        }
+        ref = adj[node];
+        for (u = 0, len1 = ref.length; u < len1; u++) {
+          ({to, edge} = ref[u]);
+          if (visited[to]) {
+            continue;
+          }
+          visited[to] = true;
+          dist[to] = dist[node] + edges[edge].len;
+          prevNode[to] = node;
+          prevEdge[to] = edge;
+          stack.push(to);
+        }
+      }
+      return {farthest, prevNode};
+    };
+    longestChain = function(graph) {
+      var a, b, component, cur, i, len1, path, prevNode, results, u;
+      component = largestComponent(graph);
+      if (component.length === 0) {
+        return [];
+      }
+      if (component.length === 1) {
+        return [graph.nodes[component[0]]];
+      }
+      ({
+        farthest: a
+      } = farthestFrom(component[0], graph.adj, graph.edges));
+      ({
+        farthest: b,
+        prevNode
+      } = farthestFrom(a, graph.adj, graph.edges));
+      path = [b];
+      cur = b;
+      while (cur !== a) {
+        cur = prevNode[cur];
+        path.unshift(cur);
+      }
+      results = [];
+      for (u = 0, len1 = path.length; u < len1; u++) {
+        i = path[u];
+        results.push(graph.nodes[i]);
+      }
+      return results;
+    };
+    precompute = function(chain) {
+      var cumLen, dx, dy, i, len, n, p0, p1, ref, segDX, segDY, segInvLen, startPts, u;
+      n = chain.length - 1;
+      segDX = new Float64Array(n);
+      segDY = new Float64Array(n);
+      segInvLen = new Float64Array(n);
+      cumLen = new Float64Array(n + 1);
+      startPts = new Float64Array(n * 2);
+      for (i = u = 0, ref = n; (0 <= ref ? u < ref : u > ref); i = 0 <= ref ? ++u : --u) {
+        p0 = chain[i];
+        p1 = chain[i + 1];
+        dx = p1.x - p0.x;
+        dy = p1.y - p0.y;
+        len = Math.sqrt(dx * dx + dy * dy);
+        segDX[i] = dx;
+        segDY[i] = dy;
+        segInvLen[i] = len > 0 ? 1 / len : 0;
+        cumLen[i + 1] = cumLen[i] + len;
+        startPts[i * 2] = p0.x;
+        startPts[i * 2 + 1] = p0.y;
+      }
+      return {
+        n,
+        segDX,
+        segDY,
+        segInvLen,
+        cumLen,
+        startPts,
+        totalLength: cumLen[n]
+      };
+    };
+    buildResult = function({n, segDX, segDY, segInvLen, cumLen, startPts, totalLength}) {
+      return {
+        totalLength: totalLength,
+        offsetToPos: function(offset, wrap = false) {
+          var hi, i2, lo, mid, t;
+          if (wrap) {
+            offset = offset % totalLength;
+            if (offset < 0) {
+              offset += totalLength;
+            }
+          } else {
+            offset = Math.max(0, Math.min(offset, totalLength));
+          }
+          lo = 0;
+          hi = n - 1;
+          while (lo < hi) {
+            mid = (lo + hi) >> 1;
+            if (cumLen[mid + 1] < offset) {
+              lo = mid + 1;
+            } else {
+              hi = mid;
+            }
+          }
+          while (lo < n - 1 && segInvLen[lo] === 0) {
+            lo++;
+          }
+          t = Math.min(1, (offset - cumLen[lo]) * segInvLen[lo]);
+          i2 = lo * 2;
+          return {
+            x: startPts[i2] + t * segDX[lo],
+            y: startPts[i2 + 1] + t * segDY[lo]
+          };
+        }
+      };
+    };
+    // MAIN ########################################################################################
+    return wrap(rawPairs).process(buildGraph).process(longestChain).process(precompute).process(buildResult).result; // dedupe points into nodes, build a weighted edge graph // pick the richest component, walk its longest path // build typed arrays for O(log n) offset lookups // expose totalLength and offsetToPos
   });
 
   Take(["Registry", "Scene", "SVG", "ParentData"], function(Registry, Scene, SVG) {
@@ -1053,26 +1518,26 @@ void main() {
         return tree;
       },
       build: function(tree) {
-        var m, setup, setups;
+        var setup, setups, u;
         buildScopes(tree, setups = []);
 // loop backwards, to set up children before parents
-        for (m = setups.length - 1; m >= 0; m += -1) {
-          setup = setups[m];
+        for (u = setups.length - 1; u >= 0; u += -1) {
+          setup = setups[u];
           setup();
         }
         return void 0;
       }
     });
     cleanupIds = function(elm) {
-      var element, len, m, ref;
+      var element, len1, ref, u;
       if (!Mode.dev) {
         return;
       }
       ref = elm.querySelectorAll("[id]");
       // By default, elements with an ID are added to the window object.
       // For the sake of better typo handling, we replace those references with a proxy.
-      for (m = 0, len = ref.length; m < len; m++) {
-        element = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        element = ref[u];
         if (window[element.id] != null) {
           (function(element) {
             var handlers;
@@ -1093,21 +1558,21 @@ void main() {
       return void 0;
     };
     removeUselessLayers = function(containerElm) {
-      var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len, len1, m, ref, ref1, results, u;
+      var childElm, isGroup, isUselessLayer, layerSuspect, layerSuspects, len1, len2, ref, ref1, results, u, w;
       // In recent versions of Adobe Animate, groups are sometimes created to house layer contents,
       // where previous versions wouldn't do this. This creates a weird mismatch between new and old code.
       // To work around this, we detect these extra layer elements, and remove them before building
       // the scope tree.
       layerSuspects = Array.prototype.slice.call(containerElm.childNodes);
       results = [];
-      for (m = 0, len = layerSuspects.length; m < len; m++) {
-        layerSuspect = layerSuspects[m];
+      for (u = 0, len1 = layerSuspects.length; u < len1; u++) {
+        layerSuspect = layerSuspects[u];
         isGroup = layerSuspect instanceof SVGGElement;
         isUselessLayer = ((ref = layerSuspect.id) != null ? ref.search(/L_\d+/) : void 0) >= 0;
         if (isGroup && isUselessLayer) {
           ref1 = Array.prototype.slice.call(layerSuspect.childNodes);
-          for (u = 0, len1 = ref1.length; u < len1; u++) {
-            childElm = ref1[u];
+          for (w = 0, len2 = ref1.length; w < len2; w++) {
+            childElm = ref1[w];
             containerElm.insertBefore(childElm, layerSuspect);
           }
           results.push(containerElm.removeChild(layerSuspect));
@@ -1118,15 +1583,15 @@ void main() {
       return results;
     };
     processElm = function(elm) {
-      var childElm, childNodes, clone, def, defId, len, m, ref, ref1, tree;
+      var childElm, childNodes, clone, def, defId, len1, ref, ref1, tree, u;
       tree = {
         elm: elm,
         sub: []
       };
       removeUselessLayers(elm);
       childNodes = Array.prototype.slice.call(elm.childNodes);
-      for (m = 0, len = childNodes.length; m < len; m++) {
-        childElm = childNodes[m];
+      for (u = 0, len1 = childNodes.length; u < len1; u++) {
+        childElm = childNodes[u];
         if ((ref = childElm.id, indexOf.call(deprecations, ref) >= 0)) {
           console.log(`#${childElm.id} is obsolete. Please remove it from your FLA and re-export this SVG.`);
           elm.removeChild(childElm);
@@ -1160,7 +1625,7 @@ void main() {
     };
     // BUILD SCOPES ##################################################################################
     return buildScopes = function(tree, setups, parentScope = null) {
-      var baseName, len, m, props, ref, ref1, scope, subTarget, symbol;
+      var baseName, len1, props, ref, ref1, scope, subTarget, symbol, u;
       props = {
         parent: parentScope
       };
@@ -1180,8 +1645,8 @@ void main() {
         setups.push(scope.setup.bind(scope));
       }
       ref1 = tree.sub;
-      for (m = 0, len = ref1.length; m < len; m++) {
-        subTarget = ref1[m];
+      for (u = 0, len1 = ref1.length; u < len1; u++) {
+        subTarget = ref1[u];
         buildScopes(subTarget, setups, scope);
       }
       return void 0;
@@ -1200,7 +1665,7 @@ void main() {
       return null;
     };
     return Make("Scope", Scope = function(element, symbol, props = {}) {
-      var attr, attrs, len, len1, m, parentScope, ref, scope, scopeProcessor, u;
+      var attr, attrs, len1, len2, parentScope, ref, scope, scopeProcessor, u, w;
       if (!element instanceof SVGElement) {
         console.log(element);
         throw new Error("Scope() takes an element as the first argument. Got ^^^");
@@ -1236,8 +1701,8 @@ void main() {
         }
         attrs = Array.prototype.slice.call(element.attributes);
 // Sort attrs so that dev names come first
-        for (m = 0, len = attrs.length; m < len; m++) {
-          attr = attrs[m];
+        for (u = 0, len1 = attrs.length; u < len1; u++) {
+          attr = attrs[u];
           if (!(attr.name !== "SCOPE" && attr.name !== "SYMBOL")) {
             continue;
           }
@@ -1246,8 +1711,8 @@ void main() {
         }
       }
       ref = Registry.all("ScopeProcessor");
-      for (u = 0, len1 = ref.length; u < len1; u++) {
-        scopeProcessor = ref[u];
+      for (w = 0, len2 = ref.length; w < len2; w++) {
+        scopeProcessor = ref[w];
         // Forcing a reflow fixes an IE bug — disabled, not deleted, until we can verify this doesn't affect Edge
         // window.getComputedStyle element
 
@@ -1363,12 +1828,12 @@ void main() {
           return direction *= -1;
         },
         update: function(parentFlow, parentScale) {
-          var child, f, len, m, s;
+          var child, f, len1, s, u;
           if (active) {
             f = flow * direction * parentFlow;
             s = volume * scale * parentScale;
-            for (m = 0, len = children.length; m < len; m++) {
-              child = children[m];
+            for (u = 0, len1 = children.length; u < len1; u++) {
+              child = children[u];
               child.update(f, s);
             }
           }
@@ -1456,18 +1921,18 @@ void main() {
     sets = [];
     visible = true; // Default to true, in case we don't have an arrows button
     enableAll = function() {
-      var len, m, set;
-      for (m = 0, len = sets.length; m < len; m++) {
-        set = sets[m];
+      var len1, set, u;
+      for (u = 0, len1 = sets.length; u < len1; u++) {
+        set = sets[u];
         set.enabled = visible;
       }
       return void 0;
     };
     Tick(function(time, dt) {
-      var f, len, m, s, set;
+      var f, len1, s, set, u;
       if (visible) {
-        for (m = 0, len = sets.length; m < len; m++) {
-          set = sets[m];
+        for (u = 0, len1 = sets.length; u < len1; u++) {
+          set = sets[u];
           if (set.parentScope.alpha > 0) {
             f = dt * Config.SPEED * FlowArrows.speed;
             s = Config.SCALE;
@@ -1532,12 +1997,12 @@ void main() {
       return a;
     };
     formSegments = function(lineData) {
-      var i, m, pointA, pointB, ref, segmentEdges, segments;
+      var i, pointA, pointB, ref, segmentEdges, segments, u;
       segments = []; // array of segments
       segmentEdges = null; // array of edges in the current segment
 
       // loop in pairs, since lineData is alternating start/end points of edges
-      for (i = m = 0, ref = lineData.length; m < ref; i = m += 2) {
+      for (i = u = 0, ref = lineData.length; u < ref; i = u += 2) {
         pointA = lineData[i];
         pointB = lineData[i + 1];
         // if we're already making a segment, and the new edge is a continuation of the last edge
@@ -1668,14 +2133,14 @@ void main() {
       return segments;
     };
     reifyVectors = function(segments) {
-      var i, len, m, pointA, pointB, results, segment, vector;
+      var i, len1, pointA, pointB, results, segment, u, vector;
       results = [];
-      for (m = 0, len = segments.length; m < len; m++) {
-        segment = segments[m];
+      for (u = 0, len1 = segments.length; u < len1; u++) {
+        segment = segments[u];
         results.push((function() {
-          var len1, results1, u;
+          var len2, results1, w;
           results1 = [];
-          for (i = u = 0, len1 = segment.length; u < len1; i = ++u) {
+          for (i = w = 0, len2 = segment.length; w < len2; i = ++w) {
             pointA = segment[i];
             if (pointB = segment[i + 1]) {
               results1.push(vector = {
@@ -1692,13 +2157,13 @@ void main() {
       return results;
     };
     reifySegments = function(set) {
-      var dist, len, len1, m, results, segment, segmentVectors, u, vector;
+      var dist, len1, len2, results, segment, segmentVectors, u, vector, w;
       results = [];
-      for (m = 0, len = set.length; m < len; m++) {
-        segmentVectors = set[m];
+      for (u = 0, len1 = set.length; u < len1; u++) {
+        segmentVectors = set[u];
         dist = 0;
-        for (u = 0, len1 = segmentVectors.length; u < len1; u++) {
-          vector = segmentVectors[u];
+        for (w = 0, len2 = segmentVectors.length; w < len2; w++) {
+          vector = segmentVectors[w];
           dist += vector.dist;
         }
         results.push(segment = {
@@ -1753,7 +2218,7 @@ void main() {
   Take(["FlowArrows:Arrow", "FlowArrows:Config", "FlowArrows:Containerize", "Mode"], function(Arrow, Config, Containerize, Mode) {
     return Make("FlowArrows:Segment", function(parentElm, segmentData, segmentName, topElm) {
       return Containerize(parentElm, function(scope) { // This function must return an array of children
-        var arrow, arrowCount, i, m, ref, results, segmentPosition, segmentSpacing, vector, vectorIndex, vectorPosition;
+        var arrow, arrowCount, i, ref, results, segmentPosition, segmentSpacing, u, vector, vectorIndex, vectorPosition;
         if (Mode.dev) {
           scope.element.addEventListener("mouseover", function() {
             var counter, currentElm, ids;
@@ -1780,7 +2245,7 @@ void main() {
         vectorIndex = 0;
         vector = segmentData.vectors[vectorIndex];
         results = [];
-        for (i = m = 0, ref = arrowCount; (0 <= ref ? m < ref : m > ref); i = 0 <= ref ? ++m : --m) {
+        for (i = u = 0, ref = arrowCount; (0 <= ref ? u < ref : u > ref); i = 0 <= ref ? ++u : --u) {
           while (vectorPosition > vector.dist) {
             vectorPosition -= vector.dist;
             vector = segmentData.vectors[++vectorIndex];
@@ -1798,9 +2263,9 @@ void main() {
   Take(["FlowArrows:Config", "FlowArrows:Containerize", "FlowArrows:Segment"], function(Config, Containerize, Segment) {
     return Make("FlowArrows:Set", function(parentElm, setData) {
       return Containerize(parentElm, function(scope) { // This function must return an array of children
-        var child, childName, i, len, m, results, segmentData;
+        var child, childName, i, len1, results, segmentData, u;
         results = [];
-        for (i = m = 0, len = setData.length; m < len; i = ++m) {
+        for (i = u = 0, len1 = setData.length; u < len1; i = ++u) {
           segmentData = setData[i];
           if (segmentData.dist < Config.FADE_LENGTH * 2) {
             throw new Error(`You have a FlowArrows segment that is only ${Math.round(segmentData.dist)} units long, which is clashing with your fade length of ${Config.FADE_LENGTH} units. Please don't set MIN_SEGMENT_LENGTH less than FADE_LENGTH * 2.`);
@@ -2016,14 +2481,14 @@ void main() {
     }, Mode, SVG) {
     var checkPanelSize, constructLayout;
     constructLayout = function(groups, desiredColumnHeight, vertical) {
-      var column, columns, group, innerPanelSize, len, len1, len2, m, tallestColumnHeight, u, w;
+      var column, columns, group, i1, innerPanelSize, len1, len2, len3, tallestColumnHeight, u, w;
       columns = [];
       column = null;
 
       // Whether we're in horizontal or vertical, our layout is built of columns.
 // Controls may be grouped together with a color, and a color group is never split across columns.
-      for (m = 0, len = groups.length; m < len; m++) {
-        group = groups[m];
+      for (u = 0, len1 = groups.length; u < len1; u++) {
+        group = groups[u];
         
         // Start a new column if we need one
         if ((column == null) || column.height > desiredColumnHeight) {
@@ -2052,14 +2517,14 @@ void main() {
       
       // Figure out which column is tallest, so we know how tall to make the panel
       tallestColumnHeight = 0;
-      for (u = 0, len1 = columns.length; u < len1; u++) {
-        column = columns[u];
+      for (w = 0, len2 = columns.length; w < len2; w++) {
+        column = columns[w];
         tallestColumnHeight = Math.max(tallestColumnHeight, column.height);
       }
 
       // Set the y position for each column
-      for (w = 0, len2 = columns.length; w < len2; w++) {
-        column = columns[w];
+      for (i1 = 0, len3 = columns.length; i1 < len3; i1++) {
+        column = columns[i1];
         // In vertical orientation, center-align
         // In horizontal orientation, bottom-align
         column.y = vertical ? tallestColumnHeight / 2 - column.height / 2 : tallestColumnHeight - column.height;
@@ -2074,7 +2539,7 @@ void main() {
     };
     Make("ControlPanelLayout", {
       vertical: function(groups, marginedSpace) {
-        var desiredColumnHeight, desiredNumberOfColumns, group, len, m, maxHeight;
+        var desiredColumnHeight, desiredNumberOfColumns, group, len1, maxHeight, u;
         if (!(marginedSpace.h > 0 && groups.length > 0)) { // Bail if the screen is too small or we have no controls
           return [
             {
@@ -2087,8 +2552,8 @@ void main() {
         
         // First, get the height of the panel if it was just 1 column wide
         maxHeight = 0;
-        for (m = 0, len = groups.length; m < len; m++) {
-          group = groups[m];
+        for (u = 0, len1 = groups.length; u < len1; u++) {
+          group = groups[u];
           maxHeight += group.height;
         }
         maxHeight += GUI.groupMargin * (groups.length - 1); // Add padding between all groups
@@ -2118,20 +2583,20 @@ void main() {
         return constructLayout(groups, desiredColumnHeight, false);
       },
       applyLayout: function(columns, getColumnElm) {
-        var c, column, columnElm, groupInfo, len, m, results;
+        var c, column, columnElm, groupInfo, len1, results, u;
         results = [];
-        for (c = m = 0, len = columns.length; m < len; c = ++m) {
+        for (c = u = 0, len1 = columns.length; u < len1; c = ++u) {
           column = columns[c];
           columnElm = getColumnElm(c);
           SVG.attrs(columnElm, {
             transform: `translate(${column.x},${column.y})`
           });
           results.push((function() {
-            var len1, ref, results1, u;
+            var len2, ref, results1, w;
             ref = column.groups;
             results1 = [];
-            for (u = 0, len1 = ref.length; u < len1; u++) {
-              groupInfo = ref[u];
+            for (w = 0, len2 = ref.length; w < len2; w++) {
+              groupInfo = ref[w];
               SVG.append(columnElm, groupInfo.scope.element);
               results1.push(groupInfo.scope.y = groupInfo.y);
             }
@@ -2142,13 +2607,13 @@ void main() {
       }
     });
     return checkPanelSize = function(columnHeight, groups, marginedSpace) {
-      var consumedHeight, consumedWidth, group, len, m, nthGroupInColumn;
+      var consumedHeight, consumedWidth, group, len1, nthGroupInColumn, u;
       // We'll always have at least 1 column's worth of width, plus padding on both sides
       consumedWidth = GUI.colInnerWidth + GUI.panelPadding * 2;
       consumedHeight = GUI.panelPadding * 2;
       nthGroupInColumn = 0;
-      for (m = 0, len = groups.length; m < len; m++) {
-        group = groups[m];
+      for (u = 0, len1 = groups.length; u < len1; u++) {
+        group = groups[u];
         // Move to the next column if needed
         if (consumedHeight > columnHeight) {
           consumedWidth += GUI.colInnerWidth + GUI.columnMargin;
@@ -2263,15 +2728,15 @@ void main() {
       });
       // Hack around bugginess in chrome
       click = function() {
-        var handler, len, m, results;
+        var handler, len1, results, u;
         // if input.state.clicking # breaks control disabling/enabling...
         if (!scope.enabled) { // ...so we do this instead (see enabled.coffee)
           return;
         }
         toClicked();
         results = [];
-        for (m = 0, len = handlers.length; m < len; m++) {
-          handler = handlers[m];
+        for (u = 0, len1 = handlers.length; u < len1; u++) {
+          handler = handlers[u];
           results.push(handler());
         }
         return results;
@@ -2510,21 +2975,21 @@ void main() {
       };
       tickBG(blueBG);
       update = function() {
-        var button, len, m;
+        var button, len1, u;
         if (showing) {
           panel.show(0);
           resize();
-          for (m = 0, len = buttons.length; m < len; m++) {
-            button = buttons[m];
+          for (u = 0, len1 = buttons.length; u < len1; u++) {
+            button = buttons[u];
             button.enable(true);
           }
         } else {
           panel.hide(0.2);
           requestAnimationFrame(function() {
-            var len1, results, u;
+            var len2, results, w;
             results = [];
-            for (u = 0, len1 = buttons.length; u < len1; u++) {
-              button = buttons[u];
+            for (w = 0, len2 = buttons.length; w < len2; w++) {
+              button = buttons[w];
               results.push(button.enable(false));
             }
             return results;
@@ -2749,13 +3214,13 @@ void main() {
         return isActive = false;
       };
       click = function(e, state) {
-        var handler, len, m;
+        var handler, len1, u;
         props.setActive(props, unclick);
         isActive = true;
         toActive();
         if (e !== false) {
-          for (m = 0, len = handlers.length; m < len; m++) {
-            handler = handlers[m];
+          for (u = 0, len1 = handlers.length; u < len1; u++) {
+            handler = handlers[u];
             handler();
           }
         }
@@ -2922,40 +3387,40 @@ void main() {
           }
         },
         down: function() {
-          var len, m, onHandler;
+          var len1, onHandler, u;
           if (isActive) {
             return;
           }
           isActive = true;
           toClicking();
-          for (m = 0, len = onHandlers.length; m < len; m++) {
-            onHandler = onHandlers[m];
+          for (u = 0, len1 = onHandlers.length; u < len1; u++) {
+            onHandler = onHandlers[u];
             onHandler();
           }
           return void 0;
         },
         up: function() {
-          var len, m, offHandler;
+          var len1, offHandler, u;
           if (!isActive) {
             return;
           }
           isActive = false;
           toHover();
-          for (m = 0, len = offHandlers.length; m < len; m++) {
-            offHandler = offHandlers[m];
+          for (u = 0, len1 = offHandlers.length; u < len1; u++) {
+            offHandler = offHandlers[u];
             offHandler();
           }
           return void 0;
         },
         miss: function() {
-          var len, m, offHandler;
+          var len1, offHandler, u;
           if (!isActive) {
             return;
           }
           isActive = false;
           toNormal();
-          for (m = 0, len = offHandlers.length; m < len; m++) {
-            offHandler = offHandlers[m];
+          for (u = 0, len1 = offHandlers.length; u < len1; u++) {
+            offHandler = offHandlers[u];
             offHandler();
           }
           return void 0;
@@ -2971,13 +3436,13 @@ void main() {
         height: height,
         input: input,
         setValue: function(activate, runHandlers = true) {
-          var len, len1, m, offHandler, onHandler, u;
+          var len1, len2, offHandler, onHandler, u, w;
           if (activate && !isActive) {
             isActive = true;
             toClicking();
             if (runHandlers) {
-              for (m = 0, len = onHandlers.length; m < len; m++) {
-                onHandler = onHandlers[m];
+              for (u = 0, len1 = onHandlers.length; u < len1; u++) {
+                onHandler = onHandlers[u];
                 onHandler();
               }
             }
@@ -2989,8 +3454,8 @@ void main() {
               toNormal();
             }
             if (runHandlers) {
-              for (u = 0, len1 = offHandlers.length; u < len1; u++) {
-                offHandler = offHandlers[u];
+              for (w = 0, len2 = offHandlers.length; w < len2; w++) {
+                offHandler = offHandlers[w];
                 offHandler();
               }
             }
@@ -3091,7 +3556,7 @@ void main() {
       return scope = {
         height: height,
         button: function(props) {
-          var button, buttonElm, buttonScope, buttonWidth, i, len, m;
+          var button, buttonElm, buttonScope, buttonWidth, i, len1, u;
           props.setActive = setActive;
           // We check for this property in some control-specific scope-processors
           props._isControl = true;
@@ -3102,7 +3567,7 @@ void main() {
           // so we flag them in a way that highlight can see.
           buttonScope._dontHighlightOnHover = true;
           buttonWidth = GUI.colInnerWidth / buttons.length;
-          for (i = m = 0, len = buttons.length; m < len; i = ++m) {
+          for (i = u = 0, len1 = buttons.length; u < len1; i = ++u) {
             button = buttons[i];
             button.resize(buttonWidth);
             button.x = buttonWidth * i;
@@ -3110,7 +3575,7 @@ void main() {
           return buttonScope;
         },
         _highlight: function(enable) {
-          var button, len, m, results;
+          var button, len1, results, u;
           if (enable) {
             if (label != null) {
               SVG.attrs(label, {
@@ -3131,8 +3596,8 @@ void main() {
             });
           }
           results = [];
-          for (m = 0, len = buttons.length; m < len; m++) {
-            button = buttons[m];
+          for (u = 0, len1 = buttons.length; u < len1; u++) {
+            button = buttons[u];
             results.push(button._highlight(enable));
           }
           return results;
@@ -3238,12 +3703,12 @@ void main() {
         return isActive = false;
       };
       click = function() {
-        var handler, len, m;
+        var handler, len1, u;
         props.setActive(unclick);
         isActive = true;
         toActive();
-        for (m = 0, len = handlers.length; m < len; m++) {
-          handler = handlers[m];
+        for (u = 0, len1 = handlers.length; u < len1; u++) {
+          handler = handlers[u];
           handler();
         }
         return void 0;
@@ -3301,14 +3766,14 @@ void main() {
         click: attachClick,
         input: input,
         setValue: function(activate, runHandlers = true) {
-          var handler, len, m;
+          var handler, len1, u;
           if (activate && !isActive) {
             props.setActive(unclick);
             isActive = true;
             toActive();
             if (runHandlers) {
-              for (m = 0, len = handlers.length; m < len; m++) {
-                handler = handlers[m];
+              for (u = 0, len1 = handlers.length; u < len1; u++) {
+                handler = handlers[u];
                 handler();
               }
             }
@@ -3423,11 +3888,11 @@ void main() {
       }));
       if (props.snaps != null) {
         snapElms = (function() {
-          var len, m, ref, results;
+          var len1, ref, results, u;
           ref = props.snaps;
           results = [];
-          for (m = 0, len = ref.length; m < len; m++) {
-            snap = ref[m];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            snap = ref[u];
             results.push(SVG.create("circle", elm, {
               cx: thumbSize / 2 + (GUI.colInnerWidth - thumbSize) * snap,
               cy: labelHeight + thumbSize / 2,
@@ -3474,10 +3939,10 @@ void main() {
       };
       tickBG(blueBG);
       updateSnaps = function(input) {
-        var i, inMax, inMin, len, len1, m, outMax, outMin, ref, ref1, u;
+        var i, inMax, inMin, len1, len2, outMax, outMin, ref, ref1, u, w;
         ref = props.snaps;
         // Reset all snaps
-        for (i = m = 0, len = ref.length; m < len; i = ++m) {
+        for (i = u = 0, len1 = ref.length; u < len1; i = ++u) {
           snap = ref[i];
           SVG.attrs(snapElms[i], {
             r: 2,
@@ -3486,7 +3951,7 @@ void main() {
         }
         ref1 = props.snaps;
         // Map our input to the right position, move the slider, and highlight the proper dot if needed
-        for (i = u = 0, len1 = ref1.length; u < len1; i = ++u) {
+        for (i = w = 0, len2 = ref1.length; w < len2; i = ++w) {
           snap = ref1[i];
           // Input is inside this snap point
           if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
@@ -3563,29 +4028,29 @@ void main() {
         });
       };
       handleDown = function(e, state) {
-        var downHandler, len, m;
+        var downHandler, len1, u;
         startDrag = e.clientX / range - v;
-        for (m = 0, len = downHandlers.length; m < len; m++) {
-          downHandler = downHandlers[m];
+        for (u = 0, len1 = downHandlers.length; u < len1; u++) {
+          downHandler = downHandlers[u];
           downHandler(v);
         }
         return void 0;
       };
       handleDrag = function(e, state) {
-        var changeHandler, len, m;
+        var changeHandler, len1, u;
         if (state.clicking) {
           update(e.clientX / range - startDrag);
-          for (m = 0, len = changeHandlers.length; m < len; m++) {
-            changeHandler = changeHandlers[m];
+          for (u = 0, len1 = changeHandlers.length; u < len1; u++) {
+            changeHandler = changeHandlers[u];
             changeHandler(v);
           }
           return void 0;
         }
       };
       handleUp = function(e, state) {
-        var len, m, upHandler;
-        for (m = 0, len = upHandlers.length; m < len; m++) {
-          upHandler = upHandlers[m];
+        var len1, u, upHandler;
+        for (u = 0, len1 = upHandlers.length; u < len1; u++) {
+          upHandler = upHandlers[u];
           upHandler(v);
         }
         return void 0;
@@ -3620,11 +4085,11 @@ void main() {
         height: height,
         input: input,
         setValue: function(v, runHandlers = true) {
-          var changeHandler, len, m;
+          var changeHandler, len1, u;
           update(v);
           if (runHandlers) {
-            for (m = 0, len = changeHandlers.length; m < len; m++) {
-              changeHandler = changeHandlers[m];
+            for (u = 0, len1 = changeHandlers.length; u < len1; u++) {
+              changeHandler = changeHandlers[u];
               changeHandler(v);
             }
           }
@@ -4216,11 +4681,11 @@ void main() {
       }));
       if (props.snaps != null) {
         snapElms = (function() {
-          var len, m, ref, results;
+          var len1, ref, results, u;
           ref = props.snaps;
           results = [];
-          for (m = 0, len = ref.length; m < len; m++) {
-            snap = ref[m];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            snap = ref[u];
             results.push(SVG.create("circle", elm, {
               cx: thumbSize / 2 + labelWidth + (trackWidth - thumbSize) * snap,
               cy: thumbSize / 2,
@@ -4262,10 +4727,10 @@ void main() {
       };
       tickBG(blueBG);
       updateSnaps = function(input) {
-        var i, inMax, inMin, len, len1, m, outMax, outMin, ref, ref1, u;
+        var i, inMax, inMin, len1, len2, outMax, outMin, ref, ref1, u, w;
         ref = props.snaps;
         // Reset all snaps
-        for (i = m = 0, len = ref.length; m < len; i = ++m) {
+        for (i = u = 0, len1 = ref.length; u < len1; i = ++u) {
           snap = ref[i];
           SVG.attrs(snapElms[i], {
             r: 2,
@@ -4274,7 +4739,7 @@ void main() {
         }
         ref1 = props.snaps;
         // Map our input to the right position, move the slider, and highlight the proper dot if needed
-        for (i = u = 0, len1 = ref1.length; u < len1; i = ++u) {
+        for (i = w = 0, len2 = ref1.length; w < len2; i = ++w) {
           snap = ref1[i];
           // Input is inside this snap point
           if (input >= snap - snapTolerance && input <= snap + snapTolerance) {
@@ -4561,17 +5026,17 @@ void main() {
       fill: "hsl(220, 10%, 92%)"
     });
     click = function() {
-      var control, controlsElm, info, infoLines, len, line, m, panel, ref, ref1, results, title;
+      var control, controlsElm, info, infoLines, len1, line, panel, ref, ref1, results, title, u;
       title = (ref = Mode.get("meta")) != null ? ref.title : void 0;
       if ((title == null) && !Mode.embed) {
         title = document.title.replace("| ", "").replace("LunchBox Sessions", "");
       }
       if (infoLines = (ref1 = Mode.get("meta")) != null ? ref1.info : void 0) {
         info = ((function() {
-          var len, m, results;
+          var len1, results, u;
           results = [];
-          for (m = 0, len = infoLines.length; m < len; m++) {
-            line = infoLines[m];
+          for (u = 0, len1 = infoLines.length; u < len1; u++) {
+            line = infoLines[u];
             results.push(`<p>${line}</p>`);
           }
           return results;
@@ -4583,8 +5048,8 @@ void main() {
 <small settings-copyright>© CD Industrial Group Inc.</small>`);
       controlsElm = panel.querySelector("[settings-controls]");
       results = [];
-      for (m = 0, len = controls.length; m < len; m++) {
-        control = controls[m];
+      for (u = 0, len1 = controls.length; u < len1; u++) {
+        control = controls[u];
         if (control != null) {
           results.push(DOOM.append(controlsElm, control));
         }
@@ -4664,15 +5129,15 @@ void main() {
         return this.webRTCTools.disconnect();
       };
       this.webRTCTools.onData = (data) => {
-        var e, len, m, packet, ref, target;
+        var e, len1, packet, ref, target, u;
         try {
           packet = JSON.parse(data);
           if (packet.data) {
             // If the packet is data
             if (Array.isArray(packet.data) && packet.data.length === 2) {
               ref = this.aliasIndex.get(packet.data[0]);
-              for (m = 0, len = ref.length; m < len; m++) {
-                target = ref[m];
+              for (u = 0, len1 = ref.length; u < len1; u++) {
+                target = ref[u];
                 this.cachedData.set(target, packet.data[1]);
               }
               return;
@@ -4913,21 +5378,21 @@ void main() {
     }
 
     setDescriptions(descriptionMap, aliasIndex) {
-      var alias, input, inputs, len, len1, m, results, target, targets, u, x1;
+      var alias, input, inputs, len1, len2, results, target, targets, u, w, x1;
       // Delete all old channels
       this.subContainer.innerHTML = "";
       for (x1 of aliasIndex) {
         [alias, targets] = x1;
-        for (m = 0, len = targets.length; m < len; m++) {
-          target = targets[m];
+        for (u = 0, len1 = targets.length; u < len1; u++) {
+          target = targets[u];
           this._insertChannel(target, descriptionMap.get(target), alias);
         }
       }
       // Ensure event listners
       inputs = document.querySelectorAll('.otp-channel-input');
       results = [];
-      for (u = 0, len1 = inputs.length; u < len1; u++) {
-        input = inputs[u];
+      for (w = 0, len2 = inputs.length; w < len2; w++) {
+        input = inputs[w];
         results.push(input.addEventListener('change', (e) => {
           var el, og, value;
           el = e.target;
@@ -5671,15 +6136,15 @@ xmlns:svg="http://www.w3.org/2000/svg">
         });
         // Listen for answer
         this.socket.on("SDPanswer", ({answerPackage}) => {
-          var c, len, m, ref;
+          var c, len1, ref, u;
           if (cid !== this.connectionId) {
             return;
           }
           this.debug.log("Got remote SDP answer", answerPackage);
           this.pc.setRemoteDescription(answerPackage);
           ref = this.pendingRemoteCandidates;
-          for (m = 0, len = ref.length; m < len; m++) {
-            c = ref[m];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            c = ref[u];
             this.pc.addIceCandidate(c);
           }
           return this.pendingRemoteCandidates = [];
@@ -5736,7 +6201,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
     }
 
     tareDownConnection() {
-      var dc, len, m, ref;
+      var dc, len1, ref, u;
       this.cancelTaredown();
       this.debug.log("P2P took too long to connect, beginning taredown");
       if (this.socket != null) {
@@ -5746,8 +6211,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
       if (this.pc != null) {
         ref = this.pc.dataChannels != null;
         // Close all data channels
-        for (m = 0, len = ref.length; m < len; m++) {
-          dc = ref[m];
+        for (u = 0, len1 = ref.length; u < len1; u++) {
+          dc = ref[u];
           if (dc.readyState !== "closed") {
             dc.close();
           }
@@ -6296,9 +6761,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return cbs.push(cb);
     };
     Resize._fire = function(info) {
-      var cb, len, m;
-      for (m = 0, len = cbs.length; m < len; m++) {
-        cb = cbs[m];
+      var cb, len1, u;
+      for (u = 0, len1 = cbs.length; u < len1; u++) {
+        cb = cbs[u];
         cb(info);
       }
       return void 0;
@@ -6370,11 +6835,11 @@ xmlns:svg="http://www.w3.org/2000/svg">
     cloneTouches = function(e) {
       var t;
       lastTouches = (function() {
-        var len, m, ref, results;
+        var len1, ref, results, u;
         ref = e.touches;
         results = [];
-        for (m = 0, len = ref.length; m < len; m++) {
-          t = ref[m];
+        for (u = 0, len1 = ref.length; u < len1; u++) {
+          t = ref[u];
           results.push({
             clientX: t.clientX,
             clientY: t.clientY
@@ -6570,9 +7035,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
       };
       scope.detachScope = function(child) {
-        var c, i, m, ref;
+        var c, i, ref, u;
         ref = scope.children;
-        for (i = m = ref.length - 1; m >= 0; i = m += -1) {
+        for (i = u = ref.length - 1; u >= 0; i = u += -1) {
           c = ref[i];
           if (c === child) {
             scope.children.splice(i, 1);
@@ -6585,10 +7050,10 @@ xmlns:svg="http://www.w3.org/2000/svg">
         return delete child.parent;
       };
       scope.detachAllScopes = function() {
-        var child, len, m, ref;
+        var child, len1, ref, u;
         ref = scope.children;
-        for (m = 0, len = ref.length; m < len; m++) {
-          child = ref[m];
+        for (u = 0, len1 = ref.length; u < len1; u++) {
+          child = ref[u];
           delete scope[child.id];
           if (child.id.indexOf("child") !== -1) {
             delete child.id;
@@ -6622,9 +7087,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
       ScopeCheck(scope, "dash");
       paths = scope.element.querySelectorAll("path");
       scope.dash = function(v) {
-        var len, m, path;
-        for (m = 0, len = paths.length; m < len; m++) {
-          path = paths[m];
+        var len1, path, u;
+        for (u = 0, len1 = paths.length; u < len1; u++) {
+          path = paths[u];
           SVG.attrs(path, {
             "stroke-dasharray": v
           });
@@ -6981,14 +7446,14 @@ xmlns:svg="http://www.w3.org/2000/svg">
             return value;
           },
           set: function(v) {
-            var childPath, len, m, results;
+            var childPath, len1, results, u;
             if (value !== v) {
               SVG.attr(scope.element, prop, value = v);
               if (!childPropsCleared) {
                 childPropsCleared = true;
                 results = [];
-                for (m = 0, len = childPaths.length; m < len; m++) {
-                  childPath = childPaths[m];
+                for (u = 0, len1 = childPaths.length; u < len1; u++) {
+                  childPath = childPaths[u];
                   results.push(SVG.attr(childPath, prop, null));
                 }
                 return results;
@@ -7568,13 +8033,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return scope = {
         setup: function() {
           return Reaction("Background:Set", function(v) {
-            var c, current, l, len, len1, m, ref, ref1, ref2, results, u;
+            var c, current, l, len1, len2, ref, ref1, ref2, results, u, w;
             l = (ref = v.split(", ")[2]) != null ? ref.split("%")[0] : void 0;
             l /= 100;
             l = (l / 2 + .8) % 1;
             ref1 = svgElement.querySelectorAll("[fill]");
-            for (m = 0, len = ref1.length; m < len; m++) {
-              c = ref1[m];
+            for (u = 0, len1 = ref1.length; u < len1; u++) {
+              c = ref1[u];
               current = SVG.attr(c, "fill");
               if (current !== "none" && current !== "transparent") {
                 SVG.attr(c, "fill", `hsl(227, 4%, ${l * 100}%)`);
@@ -7582,8 +8047,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
             }
             ref2 = svgElement.querySelectorAll("[stroke]");
             results = [];
-            for (u = 0, len1 = ref2.length; u < len1; u++) {
-              c = ref2[u];
+            for (w = 0, len2 = ref2.length; w < len2; w++) {
+              c = ref2[w];
               current = SVG.attr(c, "stroke");
               if (current !== "none" && current !== "transparent") {
                 results.push(SVG.attr(c, "stroke", `hsl(227, 4%, ${l * 100}%)`));
@@ -7625,7 +8090,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       fillElms = [];
       highlightActive = false;
       strip = function(elm) {
-        var child, len, m, ref;
+        var child, len1, ref, u;
         if ((typeof elm.hasAttribute === "function" ? elm.hasAttribute("fill") : void 0) && elm.getAttribute("fill") !== "none") {
           if (elm !== element) {
             fillElms.push(elm);
@@ -7640,8 +8105,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
         if (elm.childNodes.length) {
           ref = elm.childNodes;
-          for (m = 0, len = ref.length; m < len; m++) {
-            child = ref[m];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            child = ref[u];
             strip(child);
           }
         }
@@ -7650,13 +8115,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
       strip(element);
       element.setAttribute("fill", "transparent");
       applyColor = function(stroke, fill = stroke) {
-        var elm, len, len1, m, u;
-        for (m = 0, len = strokeElms.length; m < len; m++) {
-          elm = strokeElms[m];
+        var elm, len1, len2, u, w;
+        for (u = 0, len1 = strokeElms.length; u < len1; u++) {
+          elm = strokeElms[u];
           SVG.attr(elm, "stroke", stroke);
         }
-        for (u = 0, len1 = fillElms.length; u < len1; u++) {
-          elm = fillElms[u];
+        for (w = 0, len2 = fillElms.length; w < len2; w++) {
+          elm = fillElms[w];
           SVG.attr(elm, "fill", fill);
         }
         return void 0;
@@ -7707,13 +8172,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
             return scope.alpha = true;
           });
           return Reaction("Background:Set", function(v) {
-            var c, current, l, len, len1, m, ref, ref1, ref2, results, u;
+            var c, current, l, len1, len2, ref, ref1, ref2, results, u, w;
             l = (ref = v.split(", ")[2]) != null ? ref.split("%")[0] : void 0;
             l /= 100;
             l = (l / 2 + .8) % 1;
             ref1 = svgElement.querySelectorAll("[fill]");
-            for (m = 0, len = ref1.length; m < len; m++) {
-              c = ref1[m];
+            for (u = 0, len1 = ref1.length; u < len1; u++) {
+              c = ref1[u];
               current = SVG.attr(c, "fill");
               if (current !== "none" && current !== "transparent") {
                 SVG.attr(c, "fill", `hsl(227, 4%, ${l * 100}%)`);
@@ -7721,8 +8186,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
             }
             ref2 = svgElement.querySelectorAll("[stroke]");
             results = [];
-            for (u = 0, len1 = ref2.length; u < len1; u++) {
-              c = ref2[u];
+            for (w = 0, len2 = ref2.length; w < len2; w++) {
+              c = ref2[w];
               current = SVG.attr(c, "stroke");
               if (current !== "none" && current !== "transparent") {
                 results.push(SVG.attr(c, "stroke", `hsl(227, 4%, ${l * 100}%)`));
@@ -7852,7 +8317,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
     // RECEIVING #####################################################################################
     port.addEventListener("message", function(e) {
-      var cb, k, len, m, results, v;
+      var cb, k, len1, results, u, v;
       if (e.data === "INIT") {
         return typeof finishSetup === "function" ? finishSetup() : void 0;
       } else {
@@ -7860,8 +8325,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         if ((k != null) && (v != null)) {
           inbox[k] = v;
           results = [];
-          for (m = 0, len = listeners.length; m < len; m++) {
-            cb = listeners[m];
+          for (u = 0, len1 = listeners.length; u < len1; u++) {
+            cb = listeners[u];
             results.push(cb(inbox));
           }
           return results;
@@ -7925,10 +8390,10 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
     // SETUP #########################################################################################
     setupPaths = function() {
-      var len, len1, len2, m, path, ref, ref1, ref2, set, setIndex, u, w;
+      var i1, len1, len2, len3, path, ref, ref1, ref2, set, setIndex, u, w;
       ref = activeConfig.paths;
-      for (m = 0, len = ref.length; m < len; m++) {
-        path = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        path = ref[u];
         if (path == null) {
           throw "One of the paths given to Tracer is null";
         }
@@ -7939,13 +8404,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
         resetTracerProp(path);
       }
       ref1 = activeConfig.solution;
-      for (setIndex = u = 0, len1 = ref1.length; u < len1; setIndex = ++u) {
+      for (setIndex = w = 0, len2 = ref1.length; w < len2; setIndex = ++w) {
         set = ref1[setIndex];
         setupSolutionSet(set, setIndex);
       }
       ref2 = activeConfig.paths;
-      for (w = 0, len2 = ref2.length; w < len2; w++) {
-        path = ref2[w];
+      for (i1 = 0, len3 = ref2.length; i1 < len3; i1++) {
+        path = ref2[i1];
         stylePath(path);
       }
       return updateZoomScaling(true, true);
@@ -7970,21 +8435,21 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return path.tracer = {
         originalChildren: Array.from(path.element.children),
         glows: (function() {
-          var len, m, ref, results;
+          var len1, ref, results, u;
           ref = path.children;
           results = [];
-          for (m = 0, len = ref.length; m < len; m++) {
-            child = ref[m];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            child = ref[u];
             results.push(buildGlow(path, child));
           }
           return results;
         })(),
         hits: (function() {
-          var len, m, ref, results;
+          var len1, ref, results, u;
           ref = path.children;
           results = [];
-          for (m = 0, len = ref.length; m < len; m++) {
-            child = ref[m];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            child = ref[u];
             results.push(buildHit(path, child));
           }
           return results;
@@ -8045,11 +8510,11 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return scope;
     };
     setupSolutionSet = function(set, setIndex) {
-      var colorIndex, len, m, path, results;
+      var colorIndex, len1, path, results, u;
       colorIndex = setIndex + 1;
       results = [];
-      for (m = 0, len = set.length; m < len; m++) {
-        path = set[m];
+      for (u = 0, len1 = set.length; u < len1; u++) {
+        path = set[u];
         path.tracer.desiredClicks = colorIndex;
         if (editing) {
           path.tracer.clickCount = colorIndex;
@@ -8088,7 +8553,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
     });
     updateZoomScaling = function(updateHits, updateBadges) {
-      var badgeScale, hit, hitScale, len, len1, m, path, ref, ref1, scale, u;
+      var badgeScale, hit, hitScale, len1, len2, path, ref, ref1, scale, u, w;
       if (activeConfig == null) {
         return;
       }
@@ -8097,15 +8562,15 @@ xmlns:svg="http://www.w3.org/2000/svg">
       hitScale = Math.max(3, 20 / scale);
       ref = activeConfig.paths;
       // path.parent.alpha is how we support multiple sheets — avoid scaling stuff on sheets that aren't visible
-      for (m = 0, len = ref.length; m < len; m++) {
-        path = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        path = ref[u];
         if (!(path.parent.alpha > 0)) {
           continue;
         }
         if (updateHits || path === hoveredPath) {
           ref1 = path.tracer.hits;
-          for (u = 0, len1 = ref1.length; u < len1; u++) {
-            hit = ref1[u];
+          for (w = 0, len2 = ref1.length; w < len2; w++) {
+            hit = ref1[w];
             hit.strokeWidth = hitScale;
           }
         }
@@ -8119,22 +8584,22 @@ xmlns:svg="http://www.w3.org/2000/svg">
     };
     // STYLING #######################################################################################
     stylePath = function(path) {
-      var child, color, colorIndex, glow, hit, isColored, isHover, len, len1, len2, m, ref, ref1, ref2, u, w;
+      var child, color, colorIndex, glow, hit, i1, isColored, isHover, len1, len2, len3, ref, ref1, ref2, u, w;
       colorIndex = path.tracer.clickCount % activeConfig.colors.length;
       color = activeConfig.colors[colorIndex] || "#000";
       isHover = path.tracer.hovering;
       isColored = colorIndex !== 0;
       path.stroke = color;
       ref = path.children;
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        child = ref[u];
         if (child !== path.tracer.badge) {
           child.alpha = isColored;
         }
       }
       ref1 = path.tracer.glows;
-      for (u = 0, len1 = ref1.length; u < len1; u++) {
-        glow = ref1[u];
+      for (w = 0, len2 = ref1.length; w < len2; w++) {
+        glow = ref1[w];
         glow.stroke = color;
         glow.alpha = (function() {
           switch (false) {
@@ -8150,8 +8615,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         })();
       }
       ref2 = path.tracer.hits;
-      for (w = 0, len2 = ref2.length; w < len2; w++) {
-        hit = ref2[w];
+      for (i1 = 0, len3 = ref2.length; i1 < len3; i1++) {
+        hit = ref2[i1];
         // Even when the color is "transparent", there's a sizable perf benefit to having opaque alpha
         hit.stroke = isHover ? color : "transparent";
         hit.alpha = isHover ? .2 : 1;
@@ -8201,21 +8666,21 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
     };
     unstylePath = function(path) {
-      var child, glow, hit, len, len1, len2, m, ref, ref1, ref2, u, w;
+      var child, glow, hit, i1, len1, len2, len3, ref, ref1, ref2, u, w;
       path.stroke = "#000";
       ref = path.children;
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        child = ref[u];
         child.alpha = 1;
       }
       ref1 = path.tracer.glows;
-      for (u = 0, len1 = ref1.length; u < len1; u++) {
-        glow = ref1[u];
+      for (w = 0, len2 = ref1.length; w < len2; w++) {
+        glow = ref1[w];
         glow.alpha = 0;
       }
       ref2 = path.tracer.hits;
-      for (w = 0, len2 = ref2.length; w < len2; w++) {
-        hit = ref2[w];
+      for (i1 = 0, len3 = ref2.length; i1 < len3; i1++) {
+        hit = ref2[i1];
         hit.alpha = 0;
       }
       Tween.cancel(path.tracer.tween);
@@ -8305,7 +8770,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       };
     };
     setPathClickPos = function(path) {
-      var child, closestDist, closestPoint, d, i, len, len1, m, p, p_path, p_screen, pathElm, ref, ref1, runtime, screenToPath, startTime, stepSize, u;
+      var child, closestDist, closestPoint, d, i, len1, len2, p, p_path, p_screen, pathElm, ref, ref1, runtime, screenToPath, startTime, stepSize, u, w;
       // Create a point at the root of the SVG, and move it to the screen coords of the mouse position
       p_screen = SVG.svg.createSVGPoint();
       p_screen.x = path.tracer.clicking.x;
@@ -8320,14 +8785,14 @@ xmlns:svg="http://www.w3.org/2000/svg">
       closestDist = 2e308;
       startTime = performance.now(); // Measure the perf because querySelectorAll might be slow
       ref = path.tracer.originalChildren;
-      for (m = 0, len = ref.length; m < len; m++) {
-        child = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        child = ref[u];
         if (child._tracer_paths == null) {
           child._tracer_paths = child.querySelectorAll("path");
         }
         ref1 = child._tracer_paths;
-        for (u = 0, len1 = ref1.length; u < len1; u++) {
-          pathElm = ref1[u];
+        for (w = 0, len2 = ref1.length; w < len2; w++) {
+          pathElm = ref1[w];
           i = pathElm.getTotalLength();
           while (i > 0) {
             p = pathElm.getPointAtLength(i);
@@ -8372,11 +8837,11 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
     };
     getReaction = function(path) {
-      var len, m, reaction, ref, ref1;
+      var len1, reaction, ref, ref1, u;
       if (((ref = activeConfig.reactions) != null ? ref.length : void 0) > 0) {
         ref1 = activeConfig.reactions;
-        for (m = 0, len = ref1.length; m < len; m++) {
-          reaction = ref1[m];
+        for (u = 0, len1 = ref1.length; u < len1; u++) {
+          reaction = ref1[u];
           if (indexOf.call(reaction.paths, path) >= 0) {
             return reaction.fn;
           }
@@ -8428,11 +8893,11 @@ xmlns:svg="http://www.w3.org/2000/svg">
     window.addEventListener("click", checkForIncorrectPaths, true);
     window.addEventListener("touchend", checkForIncorrectPaths, true); // Hack: Input touchend preventDefault blocks click
     getIncorrectPaths = function() {
-      var len, m, path, ref, results;
+      var len1, path, ref, results, u;
       ref = activeConfig.paths;
       results = [];
-      for (m = 0, len = ref.length; m < len; m++) {
-        path = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        path = ref[u];
         if (!path.tracer.isCorrect) {
           results.push(path);
         }
@@ -8513,20 +8978,20 @@ xmlns:svg="http://www.w3.org/2000/svg">
       });
     };
     saveConfiguration = function() {
-      var c, colorIndex, len, m, nSets, path, ref, solution, text;
+      var c, colorIndex, len1, nSets, path, ref, solution, text, u;
       // Sort all selected paths into solution sets
       nSets = activeConfig.colors.length;
       solution = (function() {
-        var m, ref, results;
+        var ref, results, u;
         results = [];
-        for (c = m = 0, ref = nSets; (0 <= ref ? m < ref : m > ref); c = 0 <= ref ? ++m : --m) {
+        for (c = u = 0, ref = nSets; (0 <= ref ? u < ref : u > ref); c = 0 <= ref ? ++u : --u) {
           results.push([]);
         }
         return results;
       })();
       ref = activeConfig.paths;
-      for (m = 0, len = ref.length; m < len; m++) {
-        path = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        path = ref[u];
         colorIndex = path.tracer.clickCount % nSets;
         solution[colorIndex].push(path);
       }
@@ -8557,12 +9022,12 @@ xmlns:svg="http://www.w3.org/2000/svg">
         return setupPaths();
       },
       stop: function() {
-        var len, m, path, ref;
+        var len1, path, ref, u;
         if (activeConfig != null) {
           editing = false;
           ref = activeConfig.paths;
-          for (m = 0, len = ref.length; m < len; m++) {
-            path = ref[m];
+          for (u = 0, len1 = ref.length; u < len1; u++) {
+            path = ref[u];
             unstylePath(path);
           }
           return activeConfig = null;
@@ -8608,10 +9073,10 @@ xmlns:svg="http://www.w3.org/2000/svg">
       };
     };
     getVibrant = function(phase) {
-      var a, b, bPhase, i, m, n, ref, t;
+      var a, b, bPhase, i, n, ref, t, u;
       phase = ((phase % 360) + 360) % 360;
       n = ANCHORS.length;
-      for (i = m = 0, ref = n; (0 <= ref ? m < ref : m > ref); i = 0 <= ref ? ++m : --m) {
+      for (i = u = 0, ref = n; (0 <= ref ? u < ref : u > ref); i = 0 <= ref ? ++u : --u) {
         a = ANCHORS[i];
         b = ANCHORS[(i + 1) % n];
         bPhase = b.phase === 0 ? 360 : b.phase;
@@ -8738,11 +9203,11 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
     });
     return Make("Action", function(name, ...args) {
-      var cb, len, m, ref;
+      var cb, len1, ref, u;
       if (cbs[name] != null) {
         ref = cbs[name];
-        for (m = 0, len = ref.length; m < len; m++) {
-          cb = ref[m];
+        for (u = 0, len1 = ref.length; u < len1; u++) {
+          cb = ref[u];
           cb(...args);
         }
       }
@@ -9066,11 +9531,11 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
       },
       updateStops: function(gradient, ...stops) {
-        var attrs, dirty, i, len, len1, m, ref, stop, u;
+        var attrs, dirty, i, len1, len2, ref, stop, u, w;
         if (gradient._stops != null) {
           dirty = false;
           ref = gradient._stops;
-          for (i = m = 0, len = ref.length; m < len; i = ++m) {
+          for (i = u = 0, len1 = ref.length; u < len1; i = ++u) {
             stop = ref[i];
             dirty = (stop.color != null) && (stops[i].color != null) ? stop.color !== stops[i].color || stop.offset !== stops[i].offset || stop.opacity !== stops[i].opacity : stop !== stops[i];
             if (dirty) {
@@ -9086,7 +9551,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
           gradient.removeChild(gradient.lastChild);
         }
         stops = stops[0] instanceof Array ? stops[0] : stops;
-        for (i = u = 0, len1 = stops.length; u < len1; i = ++u) {
+        for (i = w = 0, len2 = stops.length; w < len2; i = ++w) {
           stop = stops[i];
           if (typeof stop === "string") {
             SVG.create("stop", gradient, {
@@ -9187,7 +9652,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       active = false;
       timeout = null;
       setup = function(elm) {
-        var doFill, doFunction, doStroke, e, fill, len, m, ref, ref1, ref2, ref3, stroke, width;
+        var doFill, doFunction, doStroke, e, fill, len1, ref, ref1, ref2, ref3, stroke, u, width;
         fill = SVG.attr(elm, "fill");
         stroke = SVG.attr(elm, "stroke");
         width = SVG.attr(elm, "stroke-width");
@@ -9218,8 +9683,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
         if (!doFunction) {
           ref3 = elm.childNodes;
-          for (m = 0, len = ref3.length; m < len; m++) {
-            elm = ref3[m];
+          for (u = 0, len1 = ref3.length; u < len1; u++) {
+            elm = ref3[u];
             if (elm.tagName === "g" || elm.tagName === "path" || elm.tagName === "text" || elm.tagName === "tspan" || elm.tagName === "rect" || elm.tagName === "circle") {
               setup(elm);
             }
@@ -9229,7 +9694,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
       };
       activate = function(currentTarget) {
         return function() {
-          var h, len, m;
+          var h, len1, u;
           if (active || !enabled) {
             return;
           }
@@ -9239,8 +9704,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
           }
           activeHighlight = deactivate; // Set this to be the new active highlight
           timeout = setTimeout(deactivate, 4000);
-          for (m = 0, len = highlights.length; m < len; m++) {
-            h = highlights[m];
+          for (u = 0, len1 = highlights.length; u < len1; u++) {
+            h = highlights[u];
             if (h.dontHighlightOnHover && currentTarget.element === h.elm) {
 
             // skip
@@ -9295,13 +9760,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
         };
       };
       deactivate = function() {
-        var h, len, m;
+        var h, len1, u;
         if (active) {
           active = false;
           clearTimeout(timeout);
           activeHighlight = null;
-          for (m = 0, len = highlights.length; m < len; m++) {
-            h = highlights[m];
+          for (u = 0, len1 = highlights.length; u < len1; u++) {
+            h = highlights[u];
             if (h.function != null) {
               h.function(false);
             } else {
@@ -9315,9 +9780,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
       // by the @tick() function (eg: an @linearGradient is created), we can capture those changes.
       // See: https://github.com/cdig/svga/issues/133
       RAF(function() {
-        var len, len1, m, mouseProps, t, target, touchProps, u;
-        for (m = 0, len = targets.length; m < len; m++) {
-          target = targets[m];
+        var len1, len2, mouseProps, t, target, touchProps, u, w;
+        for (u = 0, len1 = targets.length; u < len1; u++) {
+          target = targets[u];
           if (target == null) {
             console.log(targets.map(function(e) {
               return e != null ? e.element : void 0;
@@ -9338,8 +9803,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
             console.log("Warning: it looks like you're setting up Highlighter every frame. Don't do that.");
           }
         }
-        for (u = 0, len1 = targets.length; u < len1; u++) {
-          target = targets[u];
+        for (w = 0, len2 = targets.length; w < len2; w++) {
+          target = targets[w];
           t = target.element || target; // Support both scopes and elements
           if (!t._Highlighter) {
             t._Highlighter = true;
@@ -9741,10 +10206,10 @@ xmlns:svg="http://www.w3.org/2000/svg">
       }
     };
     runCallbacks = function(callbacks, modifier) {
-      var command, len, m;
+      var command, len1, u;
       if (callbacks != null) {
-        for (m = 0, len = callbacks.length; m < len; m++) {
-          command = callbacks[m];
+        for (u = 0, len1 = callbacks.length; u < len1; u++) {
+          command = callbacks[u];
           if (command.modifier === modifier) {
             command.callback();
           }
@@ -9992,9 +10457,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
           ({type, count, typeSpecificSettings = {}} = this.opts.particle);
           throttle = (ref = this.opts.throttle) != null ? ref : 1;
           return this.particles = (function() {
-            var m, ref1, results;
+            var ref1, results, u;
             results = [];
-            for (i = m = 0, ref1 = count; (0 <= ref1 ? m < ref1 : m > ref1); i = 0 <= ref1 ? ++m : --m) {
+            for (i = u = 0, ref1 = count; (0 <= ref1 ? u < ref1 : u > ref1); i = 0 <= ref1 ? ++u : --u) {
               particle = type(typeSpecificSettings);
               particle.createElement();
               shouldStartActive = i < (count * throttle);
@@ -10086,7 +10551,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         },
         // Accepts a raw timestamp provided natively by requestAnimationFrame
         update: function(timestamp) {
-          var deltaTime, i, len, m, particle, ref, results;
+          var deltaTime, i, len1, particle, ref, results, u;
           if (!this.lastTime) {
             this.lastTime = timestamp;
           }
@@ -10099,7 +10564,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
           }
           ref = this.particles;
           results = [];
-          for (i = m = 0, len = ref.length; m < len; i = ++m) {
+          for (i = u = 0, len1 = ref.length; u < len1; i = ++u) {
             particle = ref[i];
             this.updateParticle(particle, i, deltaTime);
             results.push(particle.updateElement());
@@ -10217,16 +10682,16 @@ xmlns:svg="http://www.w3.org/2000/svg">
     aboutToRun = false;
     callbacksByPriority = [[], []]; // Assume 2 priorities will be used in most cases
     run = function(time) {
-      var callbacks, cb, len, len1, m, priority, u;
+      var callbacks, cb, len1, len2, priority, u, w;
       aboutToRun = false;
-      for (priority = m = 0, len = callbacksByPriority.length; m < len; priority = ++m) {
+      for (priority = u = 0, len1 = callbacksByPriority.length; u < len1; priority = ++u) {
         callbacks = callbacksByPriority[priority];
         if (!(callbacks != null)) {
           continue;
         }
         callbacksByPriority[priority] = [];
-        for (u = 0, len1 = callbacks.length; u < len1; u++) {
-          cb = callbacks[u];
+        for (w = 0, len2 = callbacks.length; w < len2; w++) {
+          cb = callbacks[w];
           cb(time);
         }
       }
@@ -10245,13 +10710,13 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return attemptToRun();
     });
     return Make("RAF", function(cb, ignoreDuplicates = false, priority = 0) {
-      var c, len, m, ref;
+      var c, len1, ref, u;
       if (cb == null) {
         throw new Error("RAF(null)");
       }
       ref = callbacksByPriority[priority];
-      for (m = 0, len = ref.length; m < len; m++) {
-        c = ref[m];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        c = ref[u];
         if (!(c === cb)) {
           continue;
         }
@@ -10321,9 +10786,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
   })();
 
   Make("ScopeCheck", function(scope, ...props) {
-    var len, m, prop;
-    for (m = 0, len = props.length; m < len; m++) {
-      prop = props[m];
+    var len1, prop, u;
+    for (u = 0, len1 = props.length; u < len1; u++) {
+      prop = props[u];
       if (!(scope[prop] != null)) {
         continue;
       }
@@ -10397,7 +10862,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
         return elm; // Composable
       },
       clone: function(source, parent, attrs) {
-        var attr, child, elm, len, len1, m, ref, ref1, u;
+        var attr, child, elm, len1, len2, ref, ref1, u, w;
         if (source == null) {
           throw new Error("Clone source is undefined in SVG.clone(source, parent, attrs)");
         }
@@ -10406,8 +10871,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
         }
         elm = document.createElementNS(svgNS, "g");
         ref = source.attributes;
-        for (m = 0, len = ref.length; m < len; m++) {
-          attr = ref[m];
+        for (u = 0, len1 = ref.length; u < len1; u++) {
+          attr = ref[u];
           SVG.attr(elm, attr.name, attr.value);
         }
         SVG.attrs(elm, {
@@ -10417,8 +10882,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
           SVG.attrs(elm, attrs);
         }
         ref1 = source.childNodes;
-        for (u = 0, len1 = ref1.length; u < len1; u++) {
-          child = ref1[u];
+        for (w = 0, len2 = ref1.length; w < len2; w++) {
+          child = ref1[w];
           SVG.append(elm, child.cloneNode(true));
         }
         if (parent != null) {
@@ -10560,11 +11025,11 @@ xmlns:svg="http://www.w3.org/2000/svg">
   Take("Registry", function(Registry) {
     var Symbol;
     Symbol = function(symbolName, instanceNames, symbol) {
-      var instanceName, len, m;
+      var instanceName, len1, u;
       symbol.symbolName = symbolName;
       Registry.set("Symbols", symbolName, symbol);
-      for (m = 0, len = instanceNames.length; m < len; m++) {
-        instanceName = instanceNames[m];
+      for (u = 0, len1 = instanceNames.length; u < len1; u++) {
+        instanceName = instanceNames[u];
         Registry.set("SymbolNames", instanceName, symbol);
       }
       return void 0;
@@ -10589,22 +11054,22 @@ xmlns:svg="http://www.w3.org/2000/svg">
     wallTime = ((typeof performance !== "undefined" && performance !== null ? performance.now() : void 0) || 0) / 1000;
     internalTime = 0;
     RAF(tick = function(t) {
-      var cb, dt, len, m;
+      var cb, dt, len1, u;
       dt = Math.min(t / 1000 - wallTime, maximumDt);
       wallTime = t / 1000;
       if (!(Mode.embed && ParentData.get("disabled") === "true")) {
         internalTime += dt;
-        for (m = 0, len = callbacks.length; m < len; m++) {
-          cb = callbacks[m];
+        for (u = 0, len1 = callbacks.length; u < len1; u++) {
+          cb = callbacks[u];
           cb(internalTime, dt);
         }
       }
       return RAF(tick);
     });
     return Make("Tick", function(cb, ignoreDuplicates = false) {
-      var c, len, m;
-      for (m = 0, len = callbacks.length; m < len; m++) {
-        c = callbacks[m];
+      var c, len1, u;
+      for (u = 0, len1 = callbacks.length; u < len1; u++) {
+        c = callbacks[u];
         if (!(c === cb)) {
           continue;
         }
@@ -10850,19 +11315,19 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return results;
     };
     clone = function(i, keys) {
-      var k, len, m, o;
+      var k, len1, o, u;
       o = {};
-      for (m = 0, len = keys.length; m < len; m++) {
-        k = keys[m];
+      for (u = 0, len1 = keys.length; u < len1; u++) {
+        k = keys[u];
         o[k] = i[k];
       }
       return o;
     };
     dist = function(from, to, keys) {
-      var k, len, m, o;
+      var k, len1, o, u;
       o = {};
-      for (m = 0, len = keys.length; m < len; m++) {
-        k = keys[m];
+      for (u = 0, len1 = keys.length; u < len1; u++) {
+        k = keys[u];
         o[k] = to[k] - from[k];
       }
       return o;
@@ -10900,9 +11365,9 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return null;
     };
     Tween.cancel = function(...tweensToCancel) {
-      var len, m, tween;
-      for (m = 0, len = tweensToCancel.length; m < len; m++) {
-        tween = tweensToCancel[m];
+      var len1, tween, u;
+      for (u = 0, len1 = tweensToCancel.length; u < len1; u++) {
+        tween = tweensToCancel[u];
         if (tween != null) {
           tween.cancelled = true;
         }
@@ -10916,10 +11381,10 @@ xmlns:svg="http://www.w3.org/2000/svg">
       return timeScale;
     };
     return Tick(function(t, dt) {
-      var e, k, len, len1, m, ref, remainingDt, tween, u, v;
+      var e, k, len1, len2, ref, remainingDt, tween, u, v, w;
       skipGC = true; // It's probably not safe to GC in the middle of our tick loop
-      for (m = 0, len = tweens.length; m < len; m++) {
-        tween = tweens[m];
+      for (u = 0, len1 = tweens.length; u < len1; u++) {
+        tween = tweens[u];
         if (!(!tween.cancelled)) {
           continue;
         }
@@ -10934,8 +11399,8 @@ xmlns:svg="http://www.w3.org/2000/svg">
           tween.pos = tween.time <= 0 ? 1 : Math.min(1, tween.pos + remainingDt / tween.time);
           e = tween.ease(tween.pos);
           ref = tween.keys;
-          for (u = 0, len1 = ref.length; u < len1; u++) {
-            k = ref[u];
+          for (w = 0, len2 = ref.length; w < len2; w++) {
+            k = ref[w];
             tween.value[k] = tween.from[k] + tween.delta[k] * e;
           }
           v = tween.multi ? tween.value : tween.value.v;
@@ -11043,7 +11508,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
     // This is a basic text-wrapping utility that works fine for monospace,
     // but does not account for text metrics with variable width fonts.
     return Make("WrapText", WrapText = function(string, maxLineLength) {
-      var currentLine, currentWord, i, len, line, lineLength, lines, m, words;
+      var currentLine, currentWord, i, len1, line, lineLength, lines, u, words;
       if (!((string != null) && string.length > 0)) {
         return [];
       }
@@ -11073,7 +11538,7 @@ xmlns:svg="http://www.w3.org/2000/svg">
           lineLength += 1;
         }
       }
-      for (i = m = 0, len = lines.length; m < len; i = ++m) {
+      for (i = u = 0, len1 = lines.length; u < len1; i = ++u) {
         line = lines[i];
         lines[i] = line.join(" ");
       }

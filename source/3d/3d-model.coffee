@@ -64,22 +64,17 @@ class Panel3d
                 # 2. Determine Direction & Target
                 # If coords.y < center, point is in TOP half -> Popover should go DOWN
                 # If coords.y > center, point is in BOTTOM half -> Popover should go UP
-                isAboveCenter = coords.y < viewportCenter
+                isAboveCenter = coords.y < viewportCenter-2
                 
                 targetX = coords.x; # Keep horizontal offset consistent
                 
                 # If above center, push popover down (+100). If below, push up (-100).
-                yOffset = if isAboveCenter then -100 else 100
+                yOffset = if isAboveCenter then 200 else -200
                 targetY = coords.y + yOffset
-
-                # 3. Corner Connection Logic
-                # The line starts at 'coords'. We want it to end at the corner of the box.
-                # If popover is BELOW (targetY > coords.y), connect to Top-Right corner of box.
-                # If popover is ABOVE (targetY < coords.y), connect to Bottom-Right corner of box.
-                # Since targetX is coords.x - 100, the right edge of the box is at targetX + width.
                 
                 dx = targetX - coords.x
                 dy = targetY - coords.y
+                # console.log coords
                 
                 # 4. Calculate Line Geometry
                 distance = Math.sqrt(dx * dx + dy * dy) + 5
@@ -104,7 +99,7 @@ class Panel3d
                     display: 'block'
                     left: (targetX - rect.width/2) + 'px'
                     top: (targetY - 2) + 'px'
-                    transform: if isAboveCenter then "translateY(-100%)" else "none"
+                    transform: if isAboveCenter then "None" else "translateY(-100%)"
             else
                 value.div.style.display = 'none'
                 value.line.style.display = 'none'
@@ -277,6 +272,7 @@ class Panel3d
                 @mouse.y = -(event.offsetY / @canvas.clientHeight) * 2 + 1;
                 @raycaster.setFromCamera @mouse, @camera
                 intersects = @raycaster.intersectObjects @scene.children, true
+                intersects = intersects.filter (i) -> i.object.visible
                 
                 # 1. Find the "Logical" owner of the hit mesh
                 newLogicalTarget = null
@@ -321,6 +317,7 @@ class Panel3d
 
                 @raycaster.setFromCamera @mouse, @camera
                 intersects = @raycaster.intersectObjects @scene.children, true
+                intersects = intersects.filter (i) -> i.object.visible
                 
                 if intersects.length > 0
                     hit = intersects[0]
@@ -613,6 +610,15 @@ class Panel3d
                     console.warn "Target index out of bounds"
                     return
                 object.morphTargetInfluences[target] = val
+
+            hide: () ->
+                object.visible = false
+            
+            show: () ->
+                object.visible = true
+
+            toggle: () ->
+                object.visible = !object.visible
             
             methods: methods
 

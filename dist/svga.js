@@ -85,18 +85,14 @@ void main() {
           // 2. Determine Direction & Target
           // If coords.y < center, point is in TOP half -> Popover should go DOWN
           // If coords.y > center, point is in BOTTOM half -> Popover should go UP
-          isAboveCenter = coords.y < viewportCenter;
+          isAboveCenter = coords.y < viewportCenter - 2;
           targetX = coords.x;
-          yOffset = isAboveCenter ? -100 : 100;
+          yOffset = isAboveCenter ? 200 : -200;
           targetY = coords.y + yOffset;
-          // 3. Corner Connection Logic
-          // The line starts at 'coords'. We want it to end at the corner of the box.
-          // If popover is BELOW (targetY > coords.y), connect to Top-Right corner of box.
-          // If popover is ABOVE (targetY < coords.y), connect to Bottom-Right corner of box.
-          // Since targetX is coords.x - 100, the right edge of the box is at targetX + width.
           dx = targetX - coords.x;
           dy = targetY - coords.y;
-          
+          // console.log coords
+
           // 4. Calculate Line Geometry
           distance = Math.sqrt(dx * dx + dy * dy) + 5;
           angle = Math.atan2(dy, dx) * 180 / Math.PI;
@@ -119,7 +115,7 @@ void main() {
             display: 'block',
             left: (targetX - rect.width / 2) + 'px',
             top: (targetY - 2) + 'px',
-            transform: isAboveCenter ? "translateY(-100%)" : "none"
+            transform: isAboveCenter ? "None" : "translateY(-100%)"
           }));
         } else {
           value.div.style.display = 'none';
@@ -313,6 +309,9 @@ void main() {
           this.mouse.y = -(event.offsetY / this.canvas.clientHeight) * 2 + 1;
           this.raycaster.setFromCamera(this.mouse, this.camera);
           intersects = this.raycaster.intersectObjects(this.scene.children, true);
+          intersects = intersects.filter(function(i) {
+            return i.object.visible;
+          });
           
           // 1. Find the "Logical" owner of the hit mesh
           newLogicalTarget = null;
@@ -365,6 +364,9 @@ void main() {
           this.cameraPosOnMouseDown = this.camera.position.clone();
           this.raycaster.setFromCamera(this.mouse, this.camera);
           intersects = this.raycaster.intersectObjects(this.scene.children, true);
+          intersects = intersects.filter(function(i) {
+            return i.object.visible;
+          });
           if (intersects.length > 0) {
             hit = intersects[0];
             target = hit.object;
@@ -694,6 +696,15 @@ void main() {
             return;
           }
           return object.morphTargetInfluences[target] = val;
+        },
+        hide: function() {
+          return object.visible = false;
+        },
+        show: function() {
+          return object.visible = true;
+        },
+        toggle: function() {
+          return object.visible = !object.visible;
         },
         methods: methods,
         // Required DOM mocks for Highlight class compatibility

@@ -87,7 +87,7 @@ void main() {
           // If coords.y > center, point is in BOTTOM half -> Popover should go UP
           isAboveCenter = coords.y < viewportCenter - 2;
           targetX = coords.x;
-          yOffset = isAboveCenter ? 200 : -200;
+          yOffset = isAboveCenter ? -150 : 150;
           targetY = coords.y + yOffset;
           dx = targetX - coords.x;
           dy = targetY - coords.y;
@@ -115,7 +115,7 @@ void main() {
             display: 'block',
             left: (targetX - rect.width / 2) + 'px',
             top: (targetY - 2) + 'px',
-            transform: isAboveCenter ? "None" : "translateY(-100%)"
+            transform: isAboveCenter ? "translateY(-100%)" : "None"
           }));
         } else {
           value.div.style.display = 'none';

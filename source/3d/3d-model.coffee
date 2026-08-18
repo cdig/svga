@@ -69,7 +69,7 @@ class Panel3d
                 targetX = coords.x; # Keep horizontal offset consistent
                 
                 # If above center, push popover down (+100). If below, push up (-100).
-                yOffset = if isAboveCenter then 200 else -200
+                yOffset = if isAboveCenter then -150 else 150
                 targetY = coords.y + yOffset
                 
                 dx = targetX - coords.x
@@ -99,7 +99,7 @@ class Panel3d
                     display: 'block'
                     left: (targetX - rect.width/2) + 'px'
                     top: (targetY - 2) + 'px'
-                    transform: if isAboveCenter then "None" else "translateY(-100%)"
+                    transform: if isAboveCenter then "translateY(-100%)" else "None" 
             else
                 value.div.style.display = 'none'
                 value.line.style.display = 'none'

@@ -9051,6 +9051,64 @@ xmlns:svg="http://www.w3.org/2000/svg">
     });
   });
 
+  // Units
+  // use Units.pick(imperialValue, siValue)
+  Take(["Action", "Mode", "ParentData", "SVG", "SVGReady"], function(Action, Mode, ParentData, SVG) {
+    var cleanId, elm, elms, set, units;
+    units = null;
+    cleanId = function(elm) {
+      return elm.id.replace(/_FL/g, "");
+    };
+    elms = (function() {
+      var len1, ref, results, u;
+      ref = SVG.root.querySelectorAll("[id]");
+      results = [];
+      for (u = 0, len1 = ref.length; u < len1; u++) {
+        elm = ref[u];
+        if (/_(imperial|si)$/.test(cleanId(elm))) {
+          results.push(elm);
+        }
+      }
+      return results;
+    })();
+    set = function(val) {
+      var len1, u;
+      if (val === units || (val !== "imperial" && val !== "si")) {
+        return;
+      }
+      units = val;
+      for (u = 0, len1 = elms.length; u < len1; u++) {
+        elm = elms[u];
+        elm.style.display = (cleanId(elm).endsWith(`_${units}`) ? "" : "none");
+      }
+      return Action("Units:Set", units);
+    };
+    Make("Units", {
+      get: function() {
+        return units;
+      },
+      pick: function(imperial, si) {
+        if (units === "si") {
+          return si;
+        } else {
+          return imperial;
+        }
+      },
+      set: set
+    });
+    // Mode.get only reaches for ParentData when we're embedded — on its own, ParentData isn't a real object.
+    set(Mode.get("units") || new URLSearchParams(location.search).get("units") || document.documentElement.getAttribute("units") || "imperial");
+    if (Mode.embed) {
+      ParentData.listen((function(inbox) {
+        return set(inbox.units);
+      }));
+    }
+    // Symbols are built well after SVGReady, so repeat ourselves once everything is listening.
+    return Take("AllReady", function() {
+      return Action("Units:Set", units);
+    });
+  });
+
   Take(["Ease", "Voltage"], function(Ease, Voltage) {
     var AC, ANCHORS, getColor, getVibrant, lerpColor, smoothstep, voltageToSaturation;
     ANCHORS = [
